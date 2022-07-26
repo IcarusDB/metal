@@ -8,6 +8,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 public abstract class Metal {
     private String id;
     private String name;
+    public Metal() {}
+    public Metal(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
     public abstract void forge(ForgeMaster master);
 
