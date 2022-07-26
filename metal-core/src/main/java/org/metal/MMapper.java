@@ -1,9 +1,11 @@
 package org.metal;
 
-public abstract class MMapper <T, R> extends Metal{
-    public MMapper() {}
-    public MMapper(String id, String name) {
-        super(id, name);
+import org.metal.props.IMMapperProps;
+
+public abstract class MMapper <T, R, P extends IMMapperProps> extends Metal <P>{
+
+    public MMapper(P props) {
+        super(props);
     }
 
     @Override

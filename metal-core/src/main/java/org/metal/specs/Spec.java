@@ -1,4 +1,7 @@
-package org.metal;
+package org.metal.specs;
+
+import org.metal.Metal;
+import org.metal.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

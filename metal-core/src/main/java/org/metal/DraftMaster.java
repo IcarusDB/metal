@@ -2,6 +2,7 @@ package org.metal;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import org.metal.specs.Spec;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -15,15 +16,15 @@ public class DraftMaster {
 
         spec.getMetals().stream().forEach(builder::add);
         spec.getMetals().stream().map((metal) -> {
-            return Pair.of(metal.getId(), metal);
+            return Pair.of(metal.id(), metal);
         }).forEach(pair -> {
-            id2Metals.put(pair.getLeft(), pair.getRight());
+            id2Metals.put(pair.left(), pair.right());
         });
 
         spec.getEdges().stream().map(pair -> {
-            return Pair.of(id2Metals.get(pair.getLeft()), id2Metals.get(pair.getRight()));
+            return Pair.of(id2Metals.get(pair.left()), id2Metals.get(pair.right()));
         }).forEach(pair -> {
-            builder.addEdge(pair.getLeft(), pair.getRight());
+            builder.addEdge(pair.left(), pair.right());
         });
 
         return builder.build();

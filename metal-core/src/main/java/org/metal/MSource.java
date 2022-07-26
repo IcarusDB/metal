@@ -1,9 +1,10 @@
 package org.metal;
 
-public abstract class MSource <R> extends Metal{
-    public MSource() {}
-    public MSource(String id, String name) {
-        super(id, name);
+import org.metal.props.IMSourceProps;
+
+public abstract class MSource<R, P extends IMSourceProps> extends Metal <P>{
+    public MSource(P props) {
+        super(props);
     }
 
     @Override

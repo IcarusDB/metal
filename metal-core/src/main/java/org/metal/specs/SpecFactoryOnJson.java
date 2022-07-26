@@ -1,6 +1,7 @@
-package org.metal;
+package org.metal.specs;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+
 import java.io.IOException;
 
 public class SpecFactoryOnJson implements SpecFactory{

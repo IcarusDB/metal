@@ -1,35 +1,33 @@
 package org.metal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 
 public class Pair<L, R> implements Serializable {
+    @JsonProperty
     private L left;
+
+    @JsonProperty
     private R right;
 
-    public static <L, R> Pair<L, R> of(L left, R right) {
+    @JsonCreator
+    public static <L, R> Pair<L, R> of(@JsonProperty("left") L left, @JsonProperty("right") R right) {
         return new Pair<L, R>(left, right);
     }
 
-    public Pair() {}
-
-    public Pair(L left, R right) {
+    private Pair(L left, R right) {
         this.left = left;
         this.right = right;
     }
 
-    public L getLeft() {
+    public L left() {
         return left;
     }
 
-    public R getRight() {
+    public R right() {
         return right;
     }
 
-    public void setLeft(L left) {
-        this.left = left;
-    }
-
-    public void setRight(R right) {
-        this.right = right;
-    }
 }

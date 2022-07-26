@@ -1,6 +1,8 @@
 package org.metal;
 
 import org.junit.Test;
+import org.metal.specs.SpecFactory;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 

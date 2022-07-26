@@ -1,34 +1,36 @@
 package org.metal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import org.metal.props.IMetalProps;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @JsonTypeInfo(use = Id.CLASS, property = "type", include = As.PROPERTY, visible = false)
-public abstract class Metal {
-    private String id;
-    private String name;
-    public Metal() {}
-    public Metal(String id, String name) {
-        this.id = id;
-        this.name = name;
+public abstract class Metal <P extends IMetalProps> {
+
+    @JsonProperty
+    private P props;
+
+    public Metal(P props) {
+        this.props = props;
     }
 
     public abstract void forge(ForgeMaster master);
 
-    public String getId() {
-        return id;
+    public P props() throws NullPointerException, NoSuchElementException {
+        return Optional.of(props).get();
     }
 
-    public String getName() {
-        return name;
+    public String id() throws NullPointerException, NoSuchElementException {
+        return Optional.of(props).get().id();
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public String name() throws NullPointerException, NoSuchElementException {
+        return Optional.of(props).get().name();
     }
 }

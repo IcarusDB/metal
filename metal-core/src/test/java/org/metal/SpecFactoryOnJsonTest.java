@@ -1,17 +1,57 @@
 package org.metal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import org.immutables.value.Value;
 import org.junit.Test;
+import org.metal.props.IMFusionProps;
+import org.metal.props.IMMapperProps;
+import org.metal.props.IMSinkProps;
+import org.metal.props.IMSourceProps;
+import org.metal.specs.Spec;
+import org.metal.specs.SpecFactory;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 import java.util.List;
 
+@Value.Immutable
+@JsonDeserialize(as = ImmutableMSourcePropsFoo.class)
+@JsonSerialize(as = ImmutableMSourcePropsFoo.class)
+interface MSourcePropsFoo extends IMSourceProps{
 
-class MSourceImpl extends MSource<String> {
-    public MSourceImpl() {}
-    public MSourceImpl(String id, String name) {
-        super(id, name);
+}
+
+@Value.Immutable
+@JsonDeserialize(as = ImmutableMMapperPropsFoo.class)
+@JsonSerialize(as = ImmutableMMapperPropsFoo.class)
+interface MMapperPropsFoo extends IMMapperProps{
+
+}
+
+@Value.Immutable
+@JsonDeserialize(as = ImmutableMSinkPropsFoo.class)
+@JsonSerialize(as = ImmutableMSinkPropsFoo.class)
+interface MSinkPropsFoo extends IMSinkProps {
+
+}
+
+@Value.Immutable
+@JsonDeserialize(as = ImmutableMFusionPropsFoo.class)
+@JsonSerialize(as = ImmutableMFusionPropsFoo.class)
+interface MFusionPropsFoo extends IMFusionProps {
+
+}
+
+class MSourceImpl extends MSource<String, MSourcePropsFoo> {
+    @JsonCreator
+    public MSourceImpl(@JsonProperty("props") MSourcePropsFoo props) {
+        super(props);
     }
 
     @Override
@@ -20,10 +60,11 @@ class MSourceImpl extends MSource<String> {
     }
 }
 
-class MMapperImpl extends MMapper<String, String> {
-    public MMapperImpl() {}
-    public MMapperImpl(String id, String name) {
-        super(id, name);
+class MMapperImpl extends MMapper<String, String, MMapperPropsFoo> {
+
+    @JsonCreator
+    public MMapperImpl(@JsonProperty("props") MMapperPropsFoo props) {
+        super(props);
     }
 
     @Override
@@ -32,10 +73,11 @@ class MMapperImpl extends MMapper<String, String> {
     }
 }
 
-class MFusionImpl extends MFusion<String, String> {
-    public MFusionImpl() {}
-    public MFusionImpl(String id, String name) {
-        super(id, name);
+class MFusionImpl extends MFusion<String, String, MFusionPropsFoo> {
+
+    @JsonCreator
+    public MFusionImpl(@JsonProperty("props") MFusionPropsFoo props) {
+        super(props);
     }
 
     @Override
@@ -44,10 +86,11 @@ class MFusionImpl extends MFusion<String, String> {
     }
 }
 
-class MSinkImpl extends MSink<String> {
-    public MSinkImpl() {}
-    public MSinkImpl(String id, String name) {
-        super(id, name);
+class MSinkImpl extends MSink<String, MSinkPropsFoo> {
+
+    @JsonCreator
+    public MSinkImpl(@JsonProperty("props") MSinkPropsFoo props) {
+        super(props);
     }
 
     @Override
@@ -57,84 +100,96 @@ class MSinkImpl extends MSink<String> {
 }
 
 public class SpecFactoryOnJsonTest {
-    private String json = "{\n" +
-            "  \"version\" : \"1.0\",\n" +
-            "  \"metals\" : [ {\n" +
-            "    \"type\" : \"org.metal.MSourceImpl\",\n" +
-            "    \"id\" : \"00-00\",\n" +
-            "    \"name\" : \"source-00\"\n" +
-            "  }, {\n" +
-            "    \"type\" : \"org.metal.MMapperImpl\",\n" +
-            "    \"id\" : \"01-00\",\n" +
-            "    \"name\" : \"mapper-00\"\n" +
-            "  }, {\n" +
-            "    \"type\" : \"org.metal.MMapperImpl\",\n" +
-            "    \"id\" : \"01-01\",\n" +
-            "    \"name\" : \"mapper-01\"\n" +
-            "  }, {\n" +
-            "    \"type\" : \"org.metal.MFusionImpl\",\n" +
-            "    \"id\" : \"02-00\",\n" +
-            "    \"name\" : \"fusion-00\"\n" +
-            "  }, {\n" +
-            "    \"type\" : \"org.metal.MSinkImpl\",\n" +
-            "    \"id\" : \"03-00\",\n" +
-            "    \"name\" : \"sink-00\"\n" +
-            "  } ],\n" +
-            "  \"edges\" : [ {\n" +
-            "    \"left\" : \"00-00\",\n" +
-            "    \"right\" : \"01-00\"\n" +
-            "  }, {\n" +
-            "    \"left\" : \"00-00\",\n" +
-            "    \"right\" : \"01-01\"\n" +
-            "  }, {\n" +
-            "    \"left\" : \"01-00\",\n" +
-            "    \"right\" : \"02-00\"\n" +
-            "  }, {\n" +
-            "    \"left\" : \"01-01\",\n" +
-            "    \"right\" : \"02-00\"\n" +
-            "  }, {\n" +
-            "    \"left\" : \"02-00\",\n" +
-            "    \"right\" : \"03-00\"\n" +
-            "  } ]\n" +
-            "}";
     @Test
-    public void get() {
-        SpecFactory factory = new SpecFactoryOnJson();
-        MSourceImpl mSource = new MSourceImpl("00-00", "source-00");
-        MMapperImpl mMapper0 = new MMapperImpl("01-00", "mapper-00");
-        MMapperImpl mMapper1 = new MMapperImpl("01-01", "mapper-01");
-        MFusionImpl mFusion = new MFusionImpl("02-00", "fusion-00");
-        MSinkImpl mSink = new MSinkImpl("03-00", "sink-00");
+    public void testSer() throws JsonProcessingException {
+        MSourcePropsFoo mSourcePropsFoo = ImmutableMSourcePropsFoo.builder().id("00-00").name("source-00").schema("{}").build();
+        MMapperPropsFoo mMapperPropsFoo0 = ImmutableMMapperPropsFoo.builder().id("01-00").name("mapper-00").build();
+        MMapperPropsFoo mMapperPropsFoo1 = ImmutableMMapperPropsFoo.builder().id("01-01").name("mapper-01").build();
+        MFusionPropsFoo mFusionPropsFoo = ImmutableMFusionPropsFoo.builder().id("02-00").name("fusion-00").build();
+        MSinkPropsFoo mSinkPropsFoo = ImmutableMSinkPropsFoo.builder().id("03-00").name("sink-00").build();
 
-        JsonMapper mapper = new JsonMapper();
-        Spec spec = new Spec("1.0");
+        MSourceImpl mSource = new MSourceImpl(mSourcePropsFoo);
+        MMapperImpl mMapper0 = new MMapperImpl(mMapperPropsFoo0);
+        MMapperImpl mMapper1 = new MMapperImpl(mMapperPropsFoo1);
+        MFusionImpl mFusion = new MFusionImpl(mFusionPropsFoo);
+        MSinkImpl mSink = new MSinkImpl(mSinkPropsFoo);
+
+        Spec spec = new Spec("0.0.1");
         spec.getMetals().addAll(List.of(mSource, mMapper0, mMapper1, mFusion, mSink));
-        spec.getEdges().addAll(List.of(
-                Pair.of(mSource.getId(), mMapper0.getId()),
-                Pair.of(mSource.getId(), mMapper1.getId()),
-                Pair.of(mMapper0.getId(), mFusion.getId()),
-                Pair.of(mMapper1.getId(), mFusion.getId()),
-                Pair.of(mFusion.getId(), mSink.getId())
-        ));
+        spec.getEdges().add(Pair.of("00-00", "01-00"));
+        spec.getEdges().add(Pair.of("00-00", "01-01"));
+        spec.getEdges().add(Pair.of("01-00", "02-00"));
+        spec.getEdges().add(Pair.of("01-01", "02-00"));
+        spec.getEdges().add(Pair.of("02-00", "03-00"));
 
-        try {
-            System.out.println(
-                    mapper.writerWithDefaultPrettyPrinter().writeValueAsString(spec)
-            );
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
+        ObjectMapper mapper = new ObjectMapper();
+        System.out.println(
+                mapper.writerWithDefaultPrettyPrinter().writeValueAsString(spec)
+        );
     }
 
     @Test
-    public void json() {
+    public void testDeser() throws IOException {
+        String json = "{\n" +
+                "  \"version\" : \"0.0.1\",\n" +
+                "  \"metals\" : [ {\n" +
+                "    \"type\" : \"org.metal.MSourceImpl\",\n" +
+                "    \"props\" : {\n" +
+                "      \"id\" : \"00-00\",\n" +
+                "      \"name\" : \"source-00\",\n" +
+                "      \"schema\" : \"{}\"\n" +
+                "    }\n" +
+                "  }, {\n" +
+                "    \"type\" : \"org.metal.MMapperImpl\",\n" +
+                "    \"props\" : {\n" +
+                "      \"id\" : \"01-00\",\n" +
+                "      \"name\" : \"mapper-00\"\n" +
+                "    }\n" +
+                "  }, {\n" +
+                "    \"type\" : \"org.metal.MMapperImpl\",\n" +
+                "    \"props\" : {\n" +
+                "      \"id\" : \"01-01\",\n" +
+                "      \"name\" : \"mapper-01\"\n" +
+                "    }\n" +
+                "  }, {\n" +
+                "    \"type\" : \"org.metal.MFusionImpl\",\n" +
+                "    \"props\" : {\n" +
+                "      \"id\" : \"02-00\",\n" +
+                "      \"name\" : \"fusion-00\"\n" +
+                "    }\n" +
+                "  }, {\n" +
+                "    \"type\" : \"org.metal.MSinkImpl\",\n" +
+                "    \"props\" : {\n" +
+                "      \"id\" : \"03-00\",\n" +
+                "      \"name\" : \"sink-00\"\n" +
+                "    }\n" +
+                "  } ],\n" +
+                "  \"edges\" : [ {\n" +
+                "    \"left\" : \"00-00\",\n" +
+                "    \"right\" : \"01-00\"\n" +
+                "  }, {\n" +
+                "    \"left\" : \"00-00\",\n" +
+                "    \"right\" : \"01-01\"\n" +
+                "  }, {\n" +
+                "    \"left\" : \"01-00\",\n" +
+                "    \"right\" : \"02-00\"\n" +
+                "  }, {\n" +
+                "    \"left\" : \"01-01\",\n" +
+                "    \"right\" : \"02-00\"\n" +
+                "  }, {\n" +
+                "    \"left\" : \"02-00\",\n" +
+                "    \"right\" : \"03-00\"\n" +
+                "  } ]\n" +
+                "}\n";
         SpecFactory factory = new SpecFactoryOnJson();
-        try {
-            Spec spec = factory.get(json);
-            System.out.println(spec);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Spec spec = factory.get(json);
+        System.out.println(spec);
+        System.out.println(spec.getVersion());
+        System.out.println(spec.getEdges());
+        System.out.println(spec.getMetals());
+        spec.getMetals().forEach(metal -> {
+            System.out.println(metal.props());
+        });
     }
+
 }

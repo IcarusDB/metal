@@ -1,4 +1,4 @@
-package org.metal;
+package org.metal.props;
 
 public interface IMetalProps {
     public String id();

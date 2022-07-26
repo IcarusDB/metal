@@ -2,13 +2,22 @@ package org.metal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.immutables.value.Value;
 import org.junit.Test;
+import org.metal.props.IMSourceProps;
 
 public class IMSourcePropsTest {
+    @Value.Immutable
+    @JsonDeserialize(as = ImmutableIMSourcePropsFoo.class)
+    @JsonSerialize(as = ImmutableIMSourcePropsFoo.class)
+    static interface IMSourcePropsFoo extends IMSourceProps {
 
+    }
     @Test
     public void testSer() {
-        IMSourceProps properties = ImmutableIMSourceProps.builder()
+        IMSourcePropsFoo properties = ImmutableIMSourcePropsFoo.builder()
                 .id("00")
                 .name("s-0")
                 .schema("{}")
@@ -33,7 +42,7 @@ public class IMSourcePropsTest {
         ObjectMapper mapper = new ObjectMapper();
         try {
             System.out.println(
-                    mapper.readValue(json, IMSourceProps.class)
+                    mapper.readValue(json, IMSourcePropsFoo.class)
             );
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -43,12 +52,12 @@ public class IMSourcePropsTest {
 
     public static class Outter {
         public String z;
-        public IMSourceProps properties;
+        public IMSourcePropsFoo properties;
     }
 
     @Test
     public void testInnerSer() {
-        IMSourceProps properties = ImmutableIMSourceProps.builder()
+        IMSourcePropsFoo properties = ImmutableIMSourcePropsFoo.builder()
                 .id("00")
                 .name("s-0")
                 .schema("{}")

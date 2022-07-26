@@ -1,9 +1,11 @@
 package org.metal;
 
-public abstract class MSink <T> extends Metal{
-    public MSink() {}
-    public MSink(String id, String name) {
-        super(id, name);
+import org.metal.props.IMSinkProps;
+
+public abstract class MSink <T, P extends IMSinkProps> extends Metal <P>{
+
+    public MSink(P props) {
+        super(props);
     }
 
     @Override
