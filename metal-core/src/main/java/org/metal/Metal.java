@@ -12,11 +12,18 @@ import java.util.Optional;
 
 @JsonTypeInfo(use = Id.CLASS, property = "type", include = As.PROPERTY, visible = false)
 public abstract class Metal <P extends IMetalProps> {
+    @JsonProperty("id")
+    private String id;
+
+    @JsonProperty("name")
+    private String name;
 
     @JsonProperty
     private P props;
 
-    public Metal(P props) {
+    public Metal(String id, String name, P props) {
+        this.id = id;
+        this.name = name;
         this.props = props;
     }
 
@@ -27,10 +34,10 @@ public abstract class Metal <P extends IMetalProps> {
     }
 
     public String id() throws NullPointerException, NoSuchElementException {
-        return Optional.of(props).get().id();
+        return Optional.of(id).get();
     }
 
     public String name() throws NullPointerException, NoSuchElementException {
-        return Optional.of(props).get().name();
+        return Optional.of(name).get();
     }
 }

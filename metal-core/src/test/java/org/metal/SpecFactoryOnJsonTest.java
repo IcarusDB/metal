@@ -50,8 +50,11 @@ interface MFusionPropsFoo extends IMFusionProps {
 
 class MSourceImpl extends MSource<String, MSourcePropsFoo> {
     @JsonCreator
-    public MSourceImpl(@JsonProperty("props") MSourcePropsFoo props) {
-        super(props);
+    public MSourceImpl(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("props") MSourcePropsFoo props) {
+        super(id, name, props);
     }
 
     @Override
@@ -63,8 +66,11 @@ class MSourceImpl extends MSource<String, MSourcePropsFoo> {
 class MMapperImpl extends MMapper<String, String, MMapperPropsFoo> {
 
     @JsonCreator
-    public MMapperImpl(@JsonProperty("props") MMapperPropsFoo props) {
-        super(props);
+    public MMapperImpl(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("props") MMapperPropsFoo props) {
+        super(id, name, props);
     }
 
     @Override
@@ -76,8 +82,11 @@ class MMapperImpl extends MMapper<String, String, MMapperPropsFoo> {
 class MFusionImpl extends MFusion<String, String, MFusionPropsFoo> {
 
     @JsonCreator
-    public MFusionImpl(@JsonProperty("props") MFusionPropsFoo props) {
-        super(props);
+    public MFusionImpl(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("props") MFusionPropsFoo props) {
+        super(id, name, props);
     }
 
     @Override
@@ -89,8 +98,11 @@ class MFusionImpl extends MFusion<String, String, MFusionPropsFoo> {
 class MSinkImpl extends MSink<String, MSinkPropsFoo> {
 
     @JsonCreator
-    public MSinkImpl(@JsonProperty("props") MSinkPropsFoo props) {
-        super(props);
+    public MSinkImpl(
+            @JsonProperty("id") String id,
+            @JsonProperty("name") String name,
+            @JsonProperty("props") MSinkPropsFoo props) {
+        super(id, name, props);
     }
 
     @Override
@@ -102,17 +114,17 @@ class MSinkImpl extends MSink<String, MSinkPropsFoo> {
 public class SpecFactoryOnJsonTest {
     @Test
     public void testSer() throws JsonProcessingException {
-        MSourcePropsFoo mSourcePropsFoo = ImmutableMSourcePropsFoo.builder().id("00-00").name("source-00").schema("{}").build();
-        MMapperPropsFoo mMapperPropsFoo0 = ImmutableMMapperPropsFoo.builder().id("01-00").name("mapper-00").build();
-        MMapperPropsFoo mMapperPropsFoo1 = ImmutableMMapperPropsFoo.builder().id("01-01").name("mapper-01").build();
-        MFusionPropsFoo mFusionPropsFoo = ImmutableMFusionPropsFoo.builder().id("02-00").name("fusion-00").build();
-        MSinkPropsFoo mSinkPropsFoo = ImmutableMSinkPropsFoo.builder().id("03-00").name("sink-00").build();
+        MSourcePropsFoo mSourcePropsFoo = ImmutableMSourcePropsFoo.builder().schema("{}").build();
+        MMapperPropsFoo mMapperPropsFoo0 = ImmutableMMapperPropsFoo.builder().build();
+        MMapperPropsFoo mMapperPropsFoo1 = ImmutableMMapperPropsFoo.builder().build();
+        MFusionPropsFoo mFusionPropsFoo = ImmutableMFusionPropsFoo.builder().build();
+        MSinkPropsFoo mSinkPropsFoo = ImmutableMSinkPropsFoo.builder().build();
 
-        MSourceImpl mSource = new MSourceImpl(mSourcePropsFoo);
-        MMapperImpl mMapper0 = new MMapperImpl(mMapperPropsFoo0);
-        MMapperImpl mMapper1 = new MMapperImpl(mMapperPropsFoo1);
-        MFusionImpl mFusion = new MFusionImpl(mFusionPropsFoo);
-        MSinkImpl mSink = new MSinkImpl(mSinkPropsFoo);
+        MSourceImpl mSource = new MSourceImpl("00-00", "source-00", mSourcePropsFoo);
+        MMapperImpl mMapper0 = new MMapperImpl("01-00", "mapper-00", mMapperPropsFoo0);
+        MMapperImpl mMapper1 = new MMapperImpl("01-01", "mapper-01", mMapperPropsFoo1);
+        MFusionImpl mFusion = new MFusionImpl("02-00", "fusion-00", mFusionPropsFoo);
+        MSinkImpl mSink = new MSinkImpl("03-00", "sink-00", mSinkPropsFoo);
 
         Spec spec = new Spec("0.0.1");
         spec.getMetals().addAll(List.of(mSource, mMapper0, mMapper1, mFusion, mSink));
@@ -134,35 +146,31 @@ public class SpecFactoryOnJsonTest {
                 "  \"version\" : \"0.0.1\",\n" +
                 "  \"metals\" : [ {\n" +
                 "    \"type\" : \"org.metal.MSourceImpl\",\n" +
+                "    \"id\" : \"00-00\",\n" +
+                "    \"name\" : \"source-00\",\n" +
                 "    \"props\" : {\n" +
-                "      \"id\" : \"00-00\",\n" +
-                "      \"name\" : \"source-00\",\n" +
                 "      \"schema\" : \"{}\"\n" +
                 "    }\n" +
                 "  }, {\n" +
                 "    \"type\" : \"org.metal.MMapperImpl\",\n" +
-                "    \"props\" : {\n" +
-                "      \"id\" : \"01-00\",\n" +
-                "      \"name\" : \"mapper-00\"\n" +
-                "    }\n" +
+                "    \"id\" : \"01-00\",\n" +
+                "    \"name\" : \"mapper-00\",\n" +
+                "    \"props\" : { }\n" +
                 "  }, {\n" +
                 "    \"type\" : \"org.metal.MMapperImpl\",\n" +
-                "    \"props\" : {\n" +
-                "      \"id\" : \"01-01\",\n" +
-                "      \"name\" : \"mapper-01\"\n" +
-                "    }\n" +
+                "    \"id\" : \"01-01\",\n" +
+                "    \"name\" : \"mapper-01\",\n" +
+                "    \"props\" : { }\n" +
                 "  }, {\n" +
                 "    \"type\" : \"org.metal.MFusionImpl\",\n" +
-                "    \"props\" : {\n" +
-                "      \"id\" : \"02-00\",\n" +
-                "      \"name\" : \"fusion-00\"\n" +
-                "    }\n" +
+                "    \"id\" : \"02-00\",\n" +
+                "    \"name\" : \"fusion-00\",\n" +
+                "    \"props\" : { }\n" +
                 "  }, {\n" +
                 "    \"type\" : \"org.metal.MSinkImpl\",\n" +
-                "    \"props\" : {\n" +
-                "      \"id\" : \"03-00\",\n" +
-                "      \"name\" : \"sink-00\"\n" +
-                "    }\n" +
+                "    \"id\" : \"03-00\",\n" +
+                "    \"name\" : \"sink-00\",\n" +
+                "    \"props\" : { }\n" +
                 "  } ],\n" +
                 "  \"edges\" : [ {\n" +
                 "    \"left\" : \"00-00\",\n" +
@@ -180,7 +188,7 @@ public class SpecFactoryOnJsonTest {
                 "    \"left\" : \"02-00\",\n" +
                 "    \"right\" : \"03-00\"\n" +
                 "  } ]\n" +
-                "}\n";
+                "}";
         SpecFactory factory = new SpecFactoryOnJson();
         Spec spec = factory.get(json);
         System.out.println(spec);

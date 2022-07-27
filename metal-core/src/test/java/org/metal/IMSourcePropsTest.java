@@ -18,8 +18,6 @@ public class IMSourcePropsTest {
     @Test
     public void testSer() {
         IMSourcePropsFoo properties = ImmutableIMSourcePropsFoo.builder()
-                .id("00")
-                .name("s-0")
                 .schema("{}")
                 .build();
         ObjectMapper mapper = new ObjectMapper();
@@ -35,8 +33,6 @@ public class IMSourcePropsTest {
     @Test
     public void testDeser() {
         String json = "{\n" +
-                "  \"id\" : \"00\",\n" +
-                "  \"name\" : \"s-0\",\n" +
                 "  \"schema\" : \"{}\"\n" +
                 "}";
         ObjectMapper mapper = new ObjectMapper();
@@ -58,8 +54,6 @@ public class IMSourcePropsTest {
     @Test
     public void testInnerSer() {
         IMSourcePropsFoo properties = ImmutableIMSourcePropsFoo.builder()
-                .id("00")
-                .name("s-0")
                 .schema("{}")
                 .build();
         Outter outter = new Outter();
@@ -81,8 +75,6 @@ public class IMSourcePropsTest {
         String json = "{\n" +
                 "  \"z\" : \"zz\",\n" +
                 "  \"properties\" : {\n" +
-                "    \"id\" : \"00\",\n" +
-                "    \"name\" : \"s-0\",\n" +
                 "    \"schema\" : \"{}\"\n" +
                 "  }\n" +
                 "}";

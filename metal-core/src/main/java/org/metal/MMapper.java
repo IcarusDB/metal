@@ -3,9 +3,8 @@ package org.metal;
 import org.metal.props.IMMapperProps;
 
 public abstract class MMapper <T, R, P extends IMMapperProps> extends Metal <P>{
-
-    public MMapper(P props) {
-        super(props);
+    public MMapper(String id, String name, P props) {
+        super(id, name, props);
     }
 
     @Override

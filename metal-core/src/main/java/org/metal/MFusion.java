@@ -7,8 +7,8 @@ import org.metal.props.IMFusionProps;
 import java.util.List;
 
 public abstract class MFusion <T, R, P extends IMFusionProps> extends Metal <P>{
-    public MFusion(P props) {
-        super(props);
+    public MFusion(String id, String name, P props) {
+        super(id, name, props);
     }
 
     @Override

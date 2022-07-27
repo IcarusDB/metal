@@ -7,13 +7,14 @@ import java.util.*;
 public class Draft {
 
     public static class Builder {
-        private Draft inner = new Draft();
+        private final Draft inner = new Draft();
 
         private Builder() {}
 
         public Builder add(Metal metal) throws NullPointerException, NoSuchElementException {
-            metal = Optional.of(metal).get();
-            ((MutableGraph<Metal>)inner.graph).addNode(metal);
+            ((MutableGraph<Metal>)inner.graph).addNode(
+                    Optional.of(metal).get()
+            );
             return this;
         }
 
