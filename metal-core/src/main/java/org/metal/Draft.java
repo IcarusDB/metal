@@ -1,6 +1,7 @@
 package org.metal;
 
 import com.google.common.graph.*;
+import org.metal.props.IMetalProps;
 
 import java.util.*;
 

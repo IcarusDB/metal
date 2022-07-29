@@ -7,11 +7,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.metal.props.IMetalProps;
 
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @JsonTypeInfo(use = Id.CLASS, property = "type", include = As.PROPERTY, visible = false)
-public abstract class Metal <P extends IMetalProps> {
+public abstract class Metal <D, S, P extends IMetalProps> {
     @JsonProperty("id")
     private String id;
 
@@ -27,7 +28,7 @@ public abstract class Metal <P extends IMetalProps> {
         this.props = props;
     }
 
-    public abstract void forge(ForgeMaster master);
+    public abstract void forge(ForgeMaster<D, S> master) throws IOException;
 
     public P props() throws NullPointerException, NoSuchElementException {
         return Optional.of(props).get();

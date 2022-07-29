@@ -1,20 +1,20 @@
 package org.metal;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.metal.props.IMFusionProps;
 
+import java.io.IOException;
 import java.util.List;
 
-public abstract class MFusion <T, R, P extends IMFusionProps> extends Metal <P>{
+public abstract class MFusion <D, S, P extends IMFusionProps> extends Metal<D, S, P> {
     public MFusion(String id, String name, P props) {
         super(id, name, props);
     }
 
     @Override
-    public void forge(ForgeMaster master) {
-
+    public void forge(ForgeMaster<D, S> master) throws IOException {
+        List<D> datas = master.dependency(this);
+        master.stageDF(this, fusion(datas));
     }
 
-    public abstract R fusion(List<T> datas);
+    public abstract D fusion(List<D> datas);
 }

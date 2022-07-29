@@ -1,4 +1,6 @@
 package org.metal.props;
 
-public interface IMetalProps {
+import java.io.Serializable;
+
+public interface IMetalProps extends Serializable {
 }
