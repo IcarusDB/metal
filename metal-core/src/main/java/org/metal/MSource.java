@@ -10,8 +10,8 @@ public abstract class MSource<D, S, P extends IMSourceProps> extends Metal <D, S
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master) throws IOException {
-        master.stageDF(this, this.source());
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+        master.stageDF(this, this.source(), context);
     }
 
     public abstract D source();

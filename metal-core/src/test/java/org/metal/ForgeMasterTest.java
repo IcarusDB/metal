@@ -1,18 +1,18 @@
 package org.metal;
 
-import com.google.common.collect.*;
-import com.google.common.graph.Traverser;
+import com.google.common.collect.HashMultimap;
 import com.google.common.hash.HashCode;
 import org.junit.Test;
 import org.metal.props.IMetalProps;
+import org.metal.specs.Spec;
 import org.metal.specs.SpecFactory;
 import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.function.BiConsumer;
 
-public class DraftMasterTest {
+public class ForgeMasterTest {
     private String json = "{\n" +
             "  \"version\" : \"0.0.1\",\n" +
             "  \"metals\" : [ {\n" +
@@ -60,15 +60,38 @@ public class DraftMasterTest {
             "    \"right\" : \"03-00\"\n" +
             "  } ]\n" +
             "}";
+
     @Test
-    public void draft() {
-        SpecFactory factory = new SpecFactoryOnJson();
-        try {
-            Draft draft = DraftMaster.draft(factory.get(json));
-            System.out.println(draft);
-            Traverser.forGraph(draft.getGraph()).breadthFirst(draft.getSources()).forEach(System.out::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void testForge() throws IOException {
+        SpecFactory specFactory = new SpecFactoryOnJson();
+        Spec spec = specFactory.get(json);
+        Draft draft = DraftMaster.draft(spec);
+        ForgeMaster master = new ForgeMaster();
+        master.forge(draft);
+        HashMap<HashCode, IMProduct> mProducts = master.context().mProducts();
+        mProducts.forEach((HashCode hashCode, IMProduct mProduct) -> {
+            System.out.println(hashCode.toString());
+            mProduct.exec();
+        });
+
+        HashMap<HashCode, String> dfs = master.context().dfs();
+        dfs.forEach((HashCode hashCode, String df) -> {
+            System.out.println(hashCode);
+            System.out.println(df);
+        });
+
+        HashMultimap<HashCode, Metal<String, Thread, IMetalProps>> hash2metal = master.context().hash2metal();
+        hash2metal.forEach((hashcode, metal) -> {
+            System.out.println(hashcode);
+            System.out.println(metal);
+        });
+
+        HashMap<Metal<String, Thread, IMetalProps>, HashCode> metal2hash = master.context().metal2hash();
+        metal2hash.forEach((metal, hash) -> {
+            System.out.println(metal);
+            System.out.println(hash);
+        });
+
+
     }
 }

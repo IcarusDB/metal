@@ -28,7 +28,7 @@ public abstract class Metal <D, S, P extends IMetalProps> {
         this.props = props;
     }
 
-    public abstract void forge(ForgeMaster<D, S> master) throws IOException;
+    public abstract void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException;
 
     public P props() throws NullPointerException, NoSuchElementException {
         return Optional.of(props).get();
@@ -40,5 +40,14 @@ public abstract class Metal <D, S, P extends IMetalProps> {
 
     public String name() throws NullPointerException, NoSuchElementException {
         return Optional.of(name).get();
+    }
+
+    @Override
+    public String toString() {
+        return "Metal{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", props=" + props +
+                '}';
     }
 }

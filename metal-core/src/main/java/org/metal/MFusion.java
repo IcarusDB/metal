@@ -11,9 +11,9 @@ public abstract class MFusion <D, S, P extends IMFusionProps> extends Metal<D, S
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master) throws IOException {
-        List<D> datas = master.dependency(this);
-        master.stageDF(this, fusion(datas));
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+        List<D> datas = master.dependency(this, context);
+        master.stageDF(this, fusion(datas), context);
     }
 
     public abstract D fusion(List<D> datas);

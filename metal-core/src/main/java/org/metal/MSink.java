@@ -10,14 +10,14 @@ public abstract class MSink <D, S, P extends IMSinkProps> extends Metal <D, S, P
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master) throws IOException {
-        D data = master.dependency(this).get(0);
-        master.stageIMProduct(new IMProduct() {
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+        D data = master.dependency(this, context).get(0);
+        master.stageIMProduct(this, new IMProduct() {
             @Override
             public void exec() throws RuntimeException {
                 sink(data);
             }
-        });
+        }, context);
     }
 
     public abstract void sink(D data);

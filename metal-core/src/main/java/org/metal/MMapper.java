@@ -11,9 +11,9 @@ public abstract class MMapper <D, S, P extends IMMapperProps> extends Metal <D, 
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master) throws IOException {
-        D data = master.dependency(this).get(0);
-        master.stageDF(this, map(data));
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+        D data = master.dependency(this, context).get(0);
+        master.stageDF(this, map(data), context);
     }
 
     public abstract D map(D data);

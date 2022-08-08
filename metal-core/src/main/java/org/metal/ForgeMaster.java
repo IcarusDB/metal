@@ -2,99 +2,130 @@ package org.metal;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Streams;
 import com.google.common.graph.Traverser;
 import com.google.common.hash.HashCode;
-import org.metal.props.IMetalProps;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class ForgeMaster <D, S> {
-    private Draft stagingDraft;
-    private Map<HashCode, D> stagingDF;
-    private Map<Metal, HashCode> stagingMetal2hash;
-    private List<IMProduct> stagingMProducts;
+    private ForgeContext<D, S> stagingContext;
 
-    public void updateStaging(Draft draft) {
-
+    public ForgeMaster() {
+        this.stagingContext = ImmutableForgeContext.<D, S>builder()
+                .dfs(new HashMap<>())
+                .hash2metal(HashMultimap.create())
+                .metal2hash(new HashMap<>())
+                .mProducts(new HashMap<>())
+                .draft(Draft.builder().build())
+                .build();
     }
 
-    public D stagingDF(Metal metal) {
-        return stagingDF.get(stagingMetal2hash.get(metal));
+    public ForgeMaster(ForgeContext<D, S> context) {
+        this.stagingContext = context;
     }
 
-    public void stageDF(Metal metal, D df) throws IOException {
+    public D stagingDF(Metal metal, ForgeContext<D, S> context) {
+        return context.dfs().get(context.metal2hash().get(metal));
+    }
+
+    public void stageDF(Metal metal, D df, ForgeContext<D, S> context) throws IOException {
         HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
                 metal.props(),
-                stagingDraft.getGraph().predecessors(metal).stream()
-                        .map(stagingMetal2hash::get)
+                context.draft().getGraph().predecessors(metal).stream()
+                        .map(context.metal2hash()::get)
                         .sorted(Comparator.comparing(HashCode::toString))
                         .collect(Collectors.toList())
         );
-        stagingMetal2hash.put(metal, hashCode);
-        stagingDF.put(stagingMetal2hash.get(metal), df);
+        context.metal2hash().put(metal, hashCode);
+        context.hash2metal().put(hashCode, metal);
+        context.dfs().put(hashCode, df);
     }
 
-    public void stageIMProduct(IMProduct product) {
-        this.stagingMProducts.add(product);
+    public void stageIMProduct(Metal metal, IMProduct product, ForgeContext<D, S> context) throws IOException {
+        HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
+                metal.props(),
+                context.draft().getGraph().predecessors(metal).stream()
+                        .map(context.metal2hash()::get)
+                        .sorted(Comparator.comparing(HashCode::toString))
+                        .collect(Collectors.toList())
+        );
+        context.metal2hash().put(metal, hashCode);
+        context.hash2metal().put(hashCode, metal);
+        context.mProducts().put(hashCode, product);
     }
 
-    public List<D> dependency(Metal metal) {
-        return stagingDraft.getGraph().predecessors(metal).stream()
-                .map(stagingMetal2hash::get)
+    public List<D> dependency(Metal metal, ForgeContext<D, S> context) {
+        return context.draft().getGraph().predecessors(metal).stream()
+                .map(context.metal2hash()::get)
                 .sorted(Comparator.comparing(HashCode::toString))
-                .map(stagingDF::get)
+                .map(context.dfs()::get)
                 .collect(Collectors.toList());
     }
 
-    public List<IMProduct> forge(Draft draft) {
-        Multimap<HashCode, Metal> hash2metal = HashMultimap.create();
-        Map<Metal, HashCode> metal2hash = new HashMap<>();
+    public void forge(Draft draft) throws IOException{
+        HashMultimap<HashCode, Metal> hash2metal = HashMultimap.create();
+        HashMap<Metal, HashCode> metal2hash = new HashMap<>();
 
         Iterable<Metal> dependencyTrace = Traverser.forGraph(draft.getGraph())
                 .breadthFirst(draft.getSources());
-        dependencyTrace.forEach((Metal metal) -> {
-            try {
-                HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
-                        metal.props(),
-                        draft.getGraph().predecessors(metal).stream()
-                                .map(metal2hash::get)
-                                .sorted(Comparator.comparing(HashCode::toString))
-                                .collect(Collectors.toList())
-                );
-                metal2hash.put(metal, hashCode);
-                hash2metal.put(hashCode, metal);
-            } catch (IOException e) {
-                e.printStackTrace();
+
+        for (Metal metal : dependencyTrace) {
+            HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
+                    metal.props(),
+                    draft.getGraph().predecessors(metal).stream()
+                            .map(metal2hash::get)
+                            .sorted(Comparator.comparing(HashCode::toString))
+                            .collect(Collectors.toList())
+            );
+            metal2hash.put(metal, hashCode);
+            hash2metal.put(hashCode, metal);
+        }
+
+        Set<HashCode> retain = new HashSet<>(stagingContext.dfs().keySet());
+        retain.retainAll(hash2metal.keySet());
+
+        HashMap<HashCode, D> dfs = new HashMap<>();
+        for (HashCode hashCode: stagingContext.dfs().keySet()) {
+            if (retain.contains(hashCode)) {
+               dfs.put(hashCode, stagingContext.dfs().get(hashCode));
             }
-        });
+        }
 
-        Set<HashCode> intersection = new HashSet<>(stagingDF.keySet());
-        intersection.retainAll(hash2metal.keySet());
-        Map<HashCode, D> df = new HashMap<>();
-        intersection.forEach(hashCode -> {
-            df.put(hashCode, stagingDF.get(hashCode));
-        });
+        HashMap<HashCode, IMProduct> mProducts = new HashMap<>();
+        for (HashCode hashCode: stagingContext.mProducts().keySet()) {
+            if (retain.contains(hashCode)) {
+                mProducts.put(hashCode, stagingContext.mProducts().get(hashCode));
+            }
+        }
 
-        Set<HashCode> unstaging = new HashSet<>(hash2metal.keySet());
-        unstaging.removeAll(intersection);
-        List<Metal> unstagingDependencyTrace = StreamSupport.stream(dependencyTrace.spliterator(), false)
+        ForgeContext<D, S> nextContext = (ForgeContext<D, S>) ImmutableForgeContext
+                .<D, S>builder()
+                .draft(draft)
+                .dfs(dfs)
+                .hash2metal(hash2metal)
+                .metal2hash(metal2hash)
+                .mProducts(mProducts)
+                .build();
+        /***
+         * Switch Context
+         */
+        this.stagingContext = nextContext;
+
+        List<Metal> unStagingDependencyTrace = StreamSupport.stream(dependencyTrace.spliterator(), false)
                 .filter(metal -> {
-                    return !intersection.contains(metal2hash.get(metal));
-                }).collect(Collectors.toList());
+                    return !retain.contains(metal2hash.get(metal));
+                })
+                .collect(Collectors.toList());
 
-        unstagingDependencyTrace.forEach(metal -> {
-            try {
-                metal.forge(this);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        for (Metal metal : unStagingDependencyTrace) {
+            metal.forge(this, nextContext);
+        }
+    }
 
-        return null;
+    public ForgeContext<D, S> context() {
+        return stagingContext;
     }
 }
