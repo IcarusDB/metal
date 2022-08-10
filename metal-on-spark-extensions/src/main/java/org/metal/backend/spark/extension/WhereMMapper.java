@@ -2,19 +2,18 @@ package org.metal.backend.spark.extension;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMMapper;
 import org.metal.core.exception.MetalForgeException;
 
-public class WhereSparkMMapper extends SparkMMapper <IWhereSparkMMapperProps> {
+public class WhereMMapper extends SparkMMapper <IWhereMMapperProps> {
     @JsonCreator
-    public WhereSparkMMapper(
+    public WhereMMapper(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name,
-            @JsonProperty("props") IWhereSparkMMapperProps props) {
+            @JsonProperty("props") IWhereMMapperProps props) {
         super(id, name, props);
     }
 

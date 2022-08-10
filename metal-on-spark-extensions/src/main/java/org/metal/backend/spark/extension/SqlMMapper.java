@@ -6,22 +6,24 @@ import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.metal.backend.spark.SparkMSource;
+import org.metal.backend.spark.SparkMMapper;
 import org.metal.core.exception.MetalForgeException;
 
-public class JsonFileSparkMSource extends SparkMSource <IJsonFileSparkMSourceProps> {
+public class SqlMMapper extends SparkMMapper <ISqlMMapperProps> {
     @JsonCreator
-    public JsonFileSparkMSource(
+    public SqlMMapper(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name,
-            @JsonProperty("props") IJsonFileSparkMSourceProps props) {
+            @JsonProperty("props") ISqlMMapperProps props) {
         super(id, name, props);
     }
 
     @Override
-    public Dataset<Row> source(SparkSession platform) throws MetalForgeException {
+    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalForgeException {
         try {
-            return platform.read().json(this.props().path());
+            data.createOrReplaceTempView(this.props().tableAlias());
+            Dataset<Row> ret = platform.sql(this.props().sql());
+            return ret;
         } catch (Exception e) {
             throw new MetalForgeException(e);
         }

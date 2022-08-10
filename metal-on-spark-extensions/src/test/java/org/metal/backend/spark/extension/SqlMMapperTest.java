@@ -9,10 +9,11 @@ import org.metal.core.Pair;
 import org.metal.core.draft.Draft;
 import org.metal.core.draft.DraftMaster;
 import org.metal.core.exception.MetalAnalysedException;
+import org.metal.core.exception.MetalExecuteException;
 import org.metal.core.props.IMetalProps;
 import org.metal.core.specs.Spec;
 
-public class WhereSparkMMapperTest {
+public class SqlMMapperTest {
     @Test
     public void case0() {
         JsonFileMSource source = new JsonFileMSource(
@@ -24,11 +25,12 @@ public class WhereSparkMMapperTest {
                         .build()
         );
 
-        WhereMMapper mapper = new WhereMMapper(
+        SqlMMapper mapper = new SqlMMapper(
                 "01-00",
                 "mapper-00",
-                ImmutableIWhereMMapperProps.builder()
-                        .conditionExpr("ids = \"0001\"")
+                ImmutableISqlMMapperProps.builder()
+                        .tableAlias("source")
+                        .sql("select * from source where id != \"0001\"")
                         .build()
         );
 
@@ -59,12 +61,11 @@ public class WhereSparkMMapperTest {
         SparkMetalService<IMetalProps> service = SparkMetalService.<IMetalProps>of(forgeMaster);
         try {
             service.analyse(draft);
+            service.exec();
         } catch (MetalAnalysedException e) {
-            System.out.println("==============unAnalysed");
-            System.out.println(service.unAnalysed());
-            System.out.println("================Analysed");
-            System.out.println(service.analysed());
-            Assert.assertTrue(true);
+            e.printStackTrace();
+        } catch (MetalExecuteException e) {
+            e.printStackTrace();
         }
     }
 }

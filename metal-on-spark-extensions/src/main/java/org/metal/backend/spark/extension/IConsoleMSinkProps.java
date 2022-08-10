@@ -6,8 +6,8 @@ import org.immutables.value.Value;
 import org.metal.core.props.IMSinkProps;
 
 @Value.Immutable
-@JsonDeserialize(as = ImmutableIConsoleSparkMSinkProps.class)
-@JsonSerialize(as = ImmutableIConsoleSparkMSinkProps.class)
-public interface IConsoleSparkMSinkProps extends IMSinkProps {
+@JsonDeserialize(as = ImmutableIConsoleMSinkProps.class)
+@JsonSerialize(as = ImmutableIConsoleMSinkProps.class)
+public interface IConsoleMSinkProps extends IMSinkProps {
     public int numRows();
 }

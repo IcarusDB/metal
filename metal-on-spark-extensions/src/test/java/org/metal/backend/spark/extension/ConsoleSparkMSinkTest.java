@@ -19,21 +19,21 @@ public class ConsoleSparkMSinkTest {
     @Test
     public void testConsoleSink() throws JsonProcessingException {
         String path = "src/test/resources/test.json";
-        IJsonFileSparkMSourceProps sourceProps = ImmutableIJsonFileSparkMSourceProps.builder()
+        IJsonFileMSourceProps sourceProps = ImmutableIJsonFileMSourceProps.builder()
                 .path(path)
                 .schema("")
                 .build();
         System.out.println(sourceProps);
-        JsonFileSparkMSource source = new JsonFileSparkMSource(
+        JsonFileMSource source = new JsonFileMSource(
                 "00-00",
                 "source-00",
                 sourceProps
         );
 
-        IConsoleSparkMSinkProps sinkProps = ImmutableIConsoleSparkMSinkProps.builder()
+        IConsoleMSinkProps sinkProps = ImmutableIConsoleMSinkProps.builder()
                 .numRows(10)
                 .build();
-        ConsoleSparkMSink sink = new ConsoleSparkMSink(
+        ConsoleMSink sink = new ConsoleMSink(
                 "01-00",
                 "sink-00",
                 sinkProps
@@ -70,20 +70,20 @@ public class ConsoleSparkMSinkTest {
     private String json = "{\n" +
             "  \"version\" : \"1.0\",\n" +
             "  \"metals\" : [ {\n" +
-            "    \"type\" : \"org.metal.backend.spark.extension.JsonFileSparkMSource\",\n" +
+            "    \"type\" : \"org.metal.backend.spark.extension.JsonFileMSource\",\n" +
+            "    \"id\" : \"00-00\",\n" +
+            "    \"name\" : \"source-00\",\n" +
             "    \"props\" : {\n" +
             "      \"schema\" : \"\",\n" +
             "      \"path\" : \"src/test/resources/test.json\"\n" +
-            "    },\n" +
-            "    \"id\" : \"00-00\",\n" +
-            "    \"name\" : \"source-00\"\n" +
+            "    }\n" +
             "  }, {\n" +
-            "    \"type\" : \"org.metal.backend.spark.extension.ConsoleSparkMSink\",\n" +
+            "    \"type\" : \"org.metal.backend.spark.extension.ConsoleMSink\",\n" +
+            "    \"id\" : \"01-00\",\n" +
+            "    \"name\" : \"sink-00\",\n" +
             "    \"props\" : {\n" +
             "      \"numRows\" : 10\n" +
-            "    },\n" +
-            "    \"id\" : \"01-00\",\n" +
-            "    \"name\" : \"sink-00\"\n" +
+            "    }\n" +
             "  } ],\n" +
             "  \"edges\" : [ {\n" +
             "    \"left\" : \"00-00\",\n" +

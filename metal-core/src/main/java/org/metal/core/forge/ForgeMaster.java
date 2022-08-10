@@ -4,7 +4,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.graph.Traverser;
 import com.google.common.hash.HashCode;
 import org.metal.core.exception.MetalForgeException;
-import org.metal.core.forge.ImmutableForgeContext;
 import org.metal.core.IMProduct;
 import org.metal.core.props.IMetalPropsUtil;
 import org.metal.core.Metal;
@@ -48,9 +47,6 @@ public class ForgeMaster <D, S> {
                         .sorted(Comparator.comparing(HashCode::toString))
                         .collect(Collectors.toList())
         );
-//        context.metal2hash().put(metal, hashCode);
-//        context.hash2metal().put(hashCode, metal);
-//        context.id2metal().put(metal.id(), metal);
         context.dfs().put(hashCode, df);
     }
 
@@ -73,6 +69,17 @@ public class ForgeMaster <D, S> {
                 .sorted(Comparator.comparing(HashCode::toString))
                 .map(context.dfs()::get)
                 .collect(Collectors.toList());
+    }
+
+    public Map<String, D> dependencyWithId(Metal metal, ForgeContext<D, S> context) {
+        Set<Metal> dependency = context.draft().getGraph().predecessors(metal);
+        Map<String, D> ret = new HashMap<>();
+        for (Metal dep: dependency) {
+            HashCode code = context.metal2hash().get(dep);
+            D df = context.dfs().get(code);
+            ret.put(dep.id(), df);
+        }
+        return Collections.unmodifiableMap(ret);
     }
 
     public void forge(Draft draft) throws IllegalStateException, MetalForgeException {

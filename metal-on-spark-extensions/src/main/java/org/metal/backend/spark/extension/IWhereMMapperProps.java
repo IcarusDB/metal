@@ -6,8 +6,8 @@ import org.immutables.value.Value;
 import org.metal.core.props.IMMapperProps;
 
 @Value.Immutable
-@JsonDeserialize(as = ImmutableIWhereSparkMMapperProps.class)
-@JsonSerialize(as = ImmutableIWhereSparkMMapperProps.class)
-public interface IWhereSparkMMapperProps extends IMMapperProps {
+@JsonDeserialize(as = ImmutableIWhereMMapperProps.class)
+@JsonSerialize(as = ImmutableIWhereMMapperProps.class)
+public interface IWhereMMapperProps extends IMMapperProps {
     public String conditionExpr();
 }

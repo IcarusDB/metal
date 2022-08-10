@@ -12,6 +12,7 @@ import org.metal.core.props.IMSinkProps;
 import org.metal.core.props.IMSourceProps;
 
 import java.util.List;
+import java.util.Map;
 
 public class Mock {
     public static class MFusionImpl extends MFusion<String, Thread, MFusionPropsFoo> {
@@ -25,7 +26,7 @@ public class Mock {
         }
 
         @Override
-        public String fusion(Thread platform, List<String> datas) {
+        public String fusion(Thread platform, Map<String, String> datas) {
             return "I amm fusion";
         }
     }
