@@ -1,5 +1,6 @@
 package org.metal.core;
 
+import org.metal.core.exception.MetalForgeException;
 import org.metal.core.forge.ForgeContext;
 import org.metal.core.forge.ForgeMaster;
 import org.metal.core.props.IMFusionProps;
@@ -13,10 +14,14 @@ public abstract class MFusion <D, S, P extends IMFusionProps> extends Metal<D, S
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws MetalForgeException {
         List<D> datas = master.dependency(this, context);
-        master.stageDF(this, fusion(master.platform(), datas), context);
+        try {
+            master.stageDF(this, fusion(master.platform(), datas), context);
+        } catch (IOException e) {
+            throw new MetalForgeException(e);
+        }
     }
 
-    public abstract D fusion(S platform, List<D> datas);
+    public abstract D fusion(S platform, List<D> datas) throws MetalForgeException;
 }

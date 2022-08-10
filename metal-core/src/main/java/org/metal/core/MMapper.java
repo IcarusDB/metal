@@ -1,5 +1,6 @@
 package org.metal.core;
 
+import org.metal.core.exception.MetalForgeException;
 import org.metal.core.forge.ForgeContext;
 import org.metal.core.forge.ForgeMaster;
 import org.metal.core.props.IMMapperProps;
@@ -12,10 +13,14 @@ public abstract class MMapper <D, S, P extends IMMapperProps> extends Metal <D, 
     }
 
     @Override
-    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws IOException {
+    public void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws MetalForgeException {
         D data = master.dependency(this, context).get(0);
-        master.stageDF(this, map(master.platform(), data), context);
+        try {
+            master.stageDF(this, map(master.platform(), data), context);
+        } catch (IOException e) {
+            throw new MetalForgeException(e);
+        }
     }
 
-    public abstract D map(S platform, D data);
+    public abstract D map(S platform, D data) throws MetalForgeException;
 }

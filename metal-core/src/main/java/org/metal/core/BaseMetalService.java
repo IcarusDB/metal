@@ -2,7 +2,9 @@ package org.metal.core;
 
 import com.google.common.hash.HashCode;
 import org.metal.core.draft.Draft;
-import org.metal.core.exception.UnAnalysedException;
+import org.metal.core.exception.MetalAnalysedException;
+import org.metal.core.exception.MetalExecuteException;
+import org.metal.core.exception.MetalForgeException;
 import org.metal.core.forge.ForgeContext;
 import org.metal.core.forge.ForgeMaster;
 import org.metal.core.props.IMetalProps;
@@ -37,37 +39,54 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
 
     @Override
     public List<String> analysed() {
-        return List.<String>copyOf(this.context().id2metal().keySet());
+        Set<HashCode> analysed = this.context().dfs().keySet();
+        return analysed.stream().flatMap((code) -> {
+            return this.context().hash2metal().get(code).stream().map(Metal::id);
+        }).collect(Collectors.toList());
     }
 
     @Override
     public List<String> unAnalysed() {
-        Set<String> ids = this.context().id2metal().keySet();
-        return this.context().draft().getGraph().nodes()
+        Set<HashCode> analysed = this.context().dfs().keySet();
+        return this.context().metal2hash().keySet()
                 .stream()
                 .map(Metal::id)
-                .filter(id -> !ids.contains(id))
+                .filter((id) -> {
+                    HashCode code = this.context().metal2hash().get(
+                            this.context().id2metal().get(id)
+                    );
+                    return !analysed.contains(code);
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
-    public void analyse(Draft draft) throws UnAnalysedException {
+    public void analyse(Draft draft) throws MetalAnalysedException, IllegalStateException {
         if (this.context().id2metal().size() ==
                 this.context().draft().getGraph().nodes().size()) {
             try {
                 this.forgeMaster.forge(draft);
-            } catch (IOException e) {
-                throw new UnAnalysedException();
+            } catch (MetalForgeException e) {
+                throw new MetalAnalysedException(e);
+            } catch (IllegalStateException e) {
+                throw new IllegalStateException(e);
             }
         } else {
-            throw new UnAnalysedException();
+            /**
+             * The ForgeMaster will not change context.
+             */
+            throw new IllegalStateException("Some metals has same id.");
         }
     }
 
     @Override
-    public void exec() {
+    public void exec() throws MetalExecuteException {
         for (Map.Entry<HashCode, IMProduct> kv : this.context().mProducts().entrySet()) {
-            kv.getValue().exec();
+            try {
+                kv.getValue().exec();
+            } catch (Throwable t) {
+                throw new MetalExecuteException(t);
+            }
         }
     }
 

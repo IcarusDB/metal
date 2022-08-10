@@ -6,26 +6,24 @@ import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.metal.backend.spark.SparkMSink;
-import org.metal.core.exception.MetalExecuteException;
+import org.metal.backend.spark.SparkMMapper;
 import org.metal.core.exception.MetalForgeException;
 
-public class ConsoleSparkMSink extends SparkMSink <IConsoleSparkMSinkProps> {
-
+public class WhereSparkMMapper extends SparkMMapper <IWhereSparkMMapperProps> {
     @JsonCreator
-    public ConsoleSparkMSink(
+    public WhereSparkMMapper(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name,
-            @JsonProperty("props") IConsoleSparkMSinkProps props) {
+            @JsonProperty("props") IWhereSparkMMapperProps props) {
         super(id, name, props);
     }
 
     @Override
-    public void sink(SparkSession platform, Dataset<Row> data) throws MetalExecuteException {
+    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalForgeException {
         try {
-            data.show(this.props().numRows());
+            return data.where(this.props().conditionExpr());
         } catch (Exception e) {
-            throw new MetalExecuteException(e);
+            throw new MetalForgeException(e);
         }
     }
 }

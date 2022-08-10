@@ -108,6 +108,5 @@ public class ConsoleSparkMSinkTest {
         System.out.println(service.analysed());
         System.out.println(service.unAnalysed());
         service.exec();
-
     }
 }

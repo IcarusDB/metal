@@ -3,6 +3,7 @@ package org.metal.core.forge;
 import com.google.common.collect.HashMultimap;
 import com.google.common.graph.Traverser;
 import com.google.common.hash.HashCode;
+import org.metal.core.exception.MetalForgeException;
 import org.metal.core.forge.ImmutableForgeContext;
 import org.metal.core.IMProduct;
 import org.metal.core.props.IMetalPropsUtil;
@@ -47,9 +48,9 @@ public class ForgeMaster <D, S> {
                         .sorted(Comparator.comparing(HashCode::toString))
                         .collect(Collectors.toList())
         );
-        context.metal2hash().put(metal, hashCode);
-        context.hash2metal().put(hashCode, metal);
-        context.id2metal().put(metal.id(), metal);
+//        context.metal2hash().put(metal, hashCode);
+//        context.hash2metal().put(hashCode, metal);
+//        context.id2metal().put(metal.id(), metal);
         context.dfs().put(hashCode, df);
     }
 
@@ -74,7 +75,7 @@ public class ForgeMaster <D, S> {
                 .collect(Collectors.toList());
     }
 
-    public void forge(Draft draft) throws IOException{
+    public void forge(Draft draft) throws IllegalStateException, MetalForgeException {
         HashMultimap<HashCode, Metal> hash2metal = HashMultimap.create();
         HashMap<Metal, HashCode> metal2hash = new HashMap<>();
 
@@ -82,15 +83,22 @@ public class ForgeMaster <D, S> {
                 .breadthFirst(draft.getSources());
 
         for (Metal metal : dependencyTrace) {
-            HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
-                    metal.props(),
-                    draft.getGraph().predecessors(metal).stream()
-                            .map(metal2hash::get)
-                            .sorted(Comparator.comparing(HashCode::toString))
-                            .collect(Collectors.toList())
-            );
-            metal2hash.put(metal, hashCode);
-            hash2metal.put(hashCode, metal);
+            try {
+                HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
+                        metal.props(),
+                        draft.getGraph().predecessors(metal).stream()
+                                .map(metal2hash::get)
+                                .sorted(Comparator.comparing(HashCode::toString))
+                                .collect(Collectors.toList())
+                );
+                metal2hash.put(metal, hashCode);
+                hash2metal.put(hashCode, metal);
+            } catch (IOException e) {
+                /**
+                 * Illegal State happened, the ForgeMaster Context will not change.
+                 */
+                throw new IllegalStateException("Illegal State happened, the ForgeMaster Context will not change.", e);
+            }
         }
 
         Set<HashCode> retain = new HashSet<>(stagingContext.dfs().keySet());
