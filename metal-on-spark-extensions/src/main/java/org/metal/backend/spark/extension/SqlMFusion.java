@@ -30,6 +30,22 @@ public class SqlMFusion extends SparkMFusion<ISqlMFusionProps> {
             throw new MetalForgeException(msg);
         }
 
+        SqlParserUtil.Tables tables = SqlParserUtil.table(this.props().sql());
+        if (tables.primary().size() <= 1) {
+            String msg = String.format("%s should access more than one primary table.", this.props().sql());
+            throw new MetalForgeException(msg);
+        }
+
+        if (!SqlParserUtil.isQuery(this.props().sql())) {
+            String msg = String.format("%s must be one query like select clause.", this.props().sql());
+            throw new MetalForgeException(msg);
+        }
+
+        if (!tables.primary().equals(this.props().tableAlias().values())) {
+            String msg = String.format("%s accessed table should be same with configured Table Alias{%s}.", this.props().sql(), this.props().tableAlias().values());
+            throw new MetalForgeException(msg);
+        }
+
         for(Map.Entry<String, Dataset<Row>> data: datas.entrySet()) {
             String id = data.getKey();
             Dataset<Row> dataset = data.getValue();
