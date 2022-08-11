@@ -69,6 +69,21 @@ public class SqlParserUtil {
         parser.removeParseListeners();
         Tables.Builder builder = Tables.builder();
         parser.addParseListener(new SqlBaseParserBaseListener() {
+            @Override
+            public void exitTableName(SqlBaseParser.TableNameContext ctx) {
+                builder.addPrimary(ctx.getText());
+                super.exitTableName(ctx);
+            }
+//
+//            @Override
+//            public void exitRelation(SqlBaseParser.RelationContext ctx) {
+//                if (ctx.relationPrimary() != null &&
+//                        ctx.relationPrimary() instanceof SqlBaseParser.TableNameContext) {
+//                    SqlBaseParser.TableNameContext subCtx = (SqlBaseParser.TableNameContext)ctx.relationPrimary();
+//                    System.out.println("HIT TABLE:" + subCtx.getText());
+//                }
+//                super.exitRelation(ctx);
+//            }
 
             @Override
             public void exitTableAlias(SqlBaseParser.TableAliasContext ctx) {
@@ -80,23 +95,23 @@ public class SqlParserUtil {
             }
 
 
-            @Override
-            public void exitIdentifier(SqlBaseParser.IdentifierContext ctx) {
-                ParserRuleContext parentCtx = ctx.getParent();
-                if (!(parentCtx instanceof SqlBaseParser.ErrorCapturingIdentifierContext)) {
-                    return;
-                }
-                parentCtx = parentCtx.getParent();
-                if (!(parentCtx instanceof SqlBaseParser.MultipartIdentifierContext)) {
-                    return;
-                }
-                parentCtx = parentCtx.getParent();
-                if (!(parentCtx instanceof SqlBaseParser.RelationPrimaryContext)) {
-                    return;
-                }
-                builder.addPrimary(ctx.getText());
-                super.exitIdentifier(ctx);
-            }
+//            @Override
+//            public void exitIdentifier(SqlBaseParser.IdentifierContext ctx) {
+//                ParserRuleContext parentCtx = ctx.getParent();
+//                if (!(parentCtx instanceof SqlBaseParser.ErrorCapturingIdentifierContext)) {
+//                    return;
+//                }
+//                parentCtx = parentCtx.getParent();
+//                if (!(parentCtx instanceof SqlBaseParser.MultipartIdentifierContext)) {
+//                    return;
+//                }
+//                parentCtx = parentCtx.getParent();
+//                if (!(parentCtx instanceof SqlBaseParser.RelationPrimaryContext)) {
+//                    return;
+//                }
+//                builder.addPrimary(ctx.getText());
+//                super.exitIdentifier(ctx);
+//            }
         });
         parser.statement();
         return builder.build();
