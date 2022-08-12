@@ -124,14 +124,4 @@ public class SqlMMapperTest {
             e.printStackTrace();
         }
     }
-
-    @Test
-    public void case3() {
-        SparkSession platform = SparkSession.builder()
-                .appName("test")
-                .master("local[*]")
-                .getOrCreate();
-
-        platform.sql("select * from t1 inner join (select * from t2) as t3 on t3.id = t1.id");
-    }
 }
