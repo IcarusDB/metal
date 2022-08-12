@@ -1,5 +1,7 @@
 package org.metal.backend.spark.extension.ml;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 import org.metal.core.props.IMMapperProps;
 import org.metal.core.props.IMSinkProps;
@@ -7,6 +9,8 @@ import org.metal.core.props.IMSinkProps;
 import java.util.Optional;
 
 @Value.Immutable
+@JsonDeserialize(as = ImmutableILogisticRegressionLearnerProps.class)
+@JsonSerialize(as = ImmutableILogisticRegressionLearnerProps.class)
 public interface ILogisticRegressionLearnerProps extends IMSinkProps, ILearnerProps {
     public Optional<Integer> aggregationDepth();
     public Optional<Double> elasticNetParam();
