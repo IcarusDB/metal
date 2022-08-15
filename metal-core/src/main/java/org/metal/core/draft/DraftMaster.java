@@ -2,6 +2,7 @@ package org.metal.core.draft;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import org.metal.core.MSink;
 import org.metal.core.Metal;
 import org.metal.core.Pair;
 import org.metal.core.specs.Spec;
@@ -33,6 +34,19 @@ public class DraftMaster {
             builder.addEdge(pair.left(), pair.right());
         });
 
-        return builder.build();
+        Draft.WithWaitFor withWait = builder.withWait();
+
+        for (Pair<String, String> wait : spec.getWaitFor()) {
+            Metal metal = id2Metals.get(wait.right());
+            if (!(metal instanceof MSink)) {
+                String msg = String.format("Metal{%s} is must be MSink.", wait.right());
+                throw new IllegalArgumentException(msg);
+            }
+            MSink mSink = (MSink) metal;
+            Metal affectedMetal = id2Metals.get(wait.left());
+            withWait.waitFor(affectedMetal, mSink);
+        }
+
+        return withWait.build();
     }
 }

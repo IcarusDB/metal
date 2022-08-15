@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.metal.core.exception.MetalForgeException;
-import org.metal.core.forge.ForgeContext;
-import org.metal.core.forge.ForgeMaster;
+import org.metal.core.translator.TranslatorContext;
+import org.metal.core.translator.Translator;
 import org.metal.core.props.IMetalProps;
 
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ public abstract class Metal <D, S, P extends IMetalProps> {
         this.props = props;
     }
 
-    public abstract void forge(ForgeMaster<D, S> master, ForgeContext<D, S> context) throws MetalForgeException;
+    public abstract void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalForgeException;
 
     public P props() throws NullPointerException, NoSuchElementException {
         return Optional.of(props).get();

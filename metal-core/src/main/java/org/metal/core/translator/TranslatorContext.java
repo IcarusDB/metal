@@ -1,4 +1,4 @@
-package org.metal.core.forge;
+package org.metal.core.translator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.hash.HashCode;
@@ -10,7 +10,7 @@ import org.metal.core.draft.Draft;
 import java.util.HashMap;
 
 @Value.Immutable
-public interface ForgeContext <D, S> {
+public interface TranslatorContext<D, S> {
     public Draft draft();
     public HashMap<HashCode, D> dfs();
     public HashMap<Metal, HashCode> metal2hash();

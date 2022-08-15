@@ -1,28 +1,29 @@
 package org.metal.core;
 
+import com.google.common.graph.*;
 import com.google.common.hash.HashCode;
 import org.metal.core.draft.Draft;
 import org.metal.core.exception.MetalAnalysedException;
 import org.metal.core.exception.MetalExecuteException;
 import org.metal.core.exception.MetalForgeException;
-import org.metal.core.forge.ForgeContext;
-import org.metal.core.forge.ForgeMaster;
+import org.metal.core.translator.TranslatorContext;
+import org.metal.core.translator.Translator;
 import org.metal.core.props.IMetalProps;
 
-import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalService <D, S, P> {
-    private ForgeMaster<D, S> forgeMaster;
-    protected BaseMetalService(ForgeMaster<D, S> forgeMaster) {
-        this.forgeMaster = forgeMaster;
+    private Translator<D, S> translator;
+    protected BaseMetalService(Translator<D, S> translator) {
+        this.translator = translator;
     }
 
-    public static <D, S, P extends IMetalProps> BaseMetalService<D, S, P> of(ForgeMaster<D, S> forgeMaster) {
-        return new BaseMetalService<>(forgeMaster);
+    public static <D, S, P extends IMetalProps> BaseMetalService<D, S, P> of(Translator<D, S> translator) {
+        return new BaseMetalService<>(translator);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
         if (this.context().id2metal().size() ==
                 this.context().draft().getGraph().nodes().size()) {
             try {
-                this.forgeMaster.forge(draft);
+                this.translator.translate(draft);
             } catch (MetalForgeException e) {
                 throw new MetalAnalysedException(e);
             } catch (IllegalStateException e) {
@@ -73,7 +74,7 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
             }
         } else {
             /**
-             * The ForgeMaster will not change context.
+             * The Translator will not change context.
              */
             throw new IllegalStateException("Some metals has same id.");
         }
@@ -81,16 +82,51 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
 
     @Override
     public void exec() throws MetalExecuteException {
-        for (Map.Entry<HashCode, IMProduct> kv : this.context().mProducts().entrySet()) {
+        Graph<MSink> wait = GraphBuilder.directed().build();
+        for(MSink sink: this.context().draft().getWaitFor().nodes()) {
+            ((MutableGraph<MSink>)wait).addNode(sink);
+        }
+        for(EndpointPair<MSink> edge: this.context().draft().getWaitFor().edges()) {
+            ((MutableGraph<MSink>)wait).putEdge(edge);
+        }
+
+        for(MSink sink: this.context().draft().getSinks()) {
+            ((MutableGraph<MSink>)wait).addNode(sink);
+        }
+
+        Set<MSink> starters = wait.nodes().stream().filter((MSink sink)->{
+            return wait.inDegree(sink) == 0;
+        }).collect(Collectors.toSet());
+
+        List<HashCode> execOrder = StreamSupport.stream(
+                Traverser.forGraph(wait)
+                        .breadthFirst(starters).spliterator(),
+                false
+        ).map((MSink sink) -> {
+           return this.context().metal2hash().get(sink);
+        }).collect(Collectors.toList());
+
+        LinkedHashSet<HashCode> execOrderDeDup = new LinkedHashSet<>(execOrder);
+
+        for (HashCode code : execOrderDeDup) {
+            if (!this.context().mProducts().containsKey(code)) {
+                String msg = String.format("MSink{%s}{hashcode=%s} is not used in any IMProducts.",
+                        this.context().hash2metal().get(code),
+                        code);
+                throw new MetalExecuteException(msg);
+            }
+        }
+
+        for (HashCode code : execOrderDeDup) {
             try {
-                kv.getValue().exec();
+                this.context().mProducts().get(code).exec();
             } catch (Throwable t) {
                 throw new MetalExecuteException(t);
             }
         }
     }
 
-    private ForgeContext<D, S> context() {
-        return this.forgeMaster.context();
+    private TranslatorContext<D, S> context() {
+        return this.translator.context();
     }
 }

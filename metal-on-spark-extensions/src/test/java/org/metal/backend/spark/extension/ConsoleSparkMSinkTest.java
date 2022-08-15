@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Test;
-import org.metal.backend.spark.SparkForgeMaster;
+import org.metal.backend.spark.SparkTranslator;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.core.Pair;
 import org.metal.core.draft.Draft;
@@ -61,7 +61,7 @@ public class ConsoleSparkMSinkTest {
                 .master("local[*]")
                 .getOrCreate();
 
-        SparkForgeMaster forgeMaster = new SparkForgeMaster(platform);
+        SparkTranslator forgeMaster = new SparkTranslator(platform);
         SparkMetalService<IMetalProps> service = SparkMetalService.<IMetalProps>of(forgeMaster);
         service.analyse(draft);
         service.exec();
@@ -101,7 +101,7 @@ public class ConsoleSparkMSinkTest {
                 .master("local[*]")
                 .getOrCreate();
         SparkMetalService<IMetalProps> service = SparkMetalService.<IMetalProps>of(
-                new SparkForgeMaster(platform)
+                new SparkTranslator(platform)
         );
 
         service.analyse(draft);

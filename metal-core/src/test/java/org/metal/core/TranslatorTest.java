@@ -5,7 +5,7 @@ import com.google.common.hash.HashCode;
 import org.junit.Test;
 import org.metal.core.draft.Draft;
 import org.metal.core.draft.DraftMaster;
-import org.metal.core.forge.ForgeMaster;
+import org.metal.core.translator.Translator;
 import org.metal.core.props.IMetalProps;
 import org.metal.core.specs.Spec;
 import org.metal.core.specs.SpecFactory;
@@ -14,7 +14,7 @@ import org.metal.core.specs.SpecFactoryOnJson;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class ForgeMasterTest {
+public class TranslatorTest {
     private String json = "{\n" +
             "  \"version\" : \"0.0.1\",\n" +
             "  \"metals\" : [ {\n" +
@@ -68,8 +68,8 @@ public class ForgeMasterTest {
         SpecFactory specFactory = new SpecFactoryOnJson();
         Spec spec = specFactory.get(json);
         Draft draft = DraftMaster.draft(spec);
-        ForgeMaster master = new ForgeMaster(Thread.currentThread());
-        master.forge(draft);
+        Translator master = new Translator(Thread.currentThread());
+        master.translate(draft);
         HashMap<HashCode, IMProduct> mProducts = master.context().mProducts();
         mProducts.forEach((HashCode hashCode, IMProduct mProduct) -> {
             System.out.println(hashCode.toString());

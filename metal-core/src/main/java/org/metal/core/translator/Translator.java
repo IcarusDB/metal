@@ -1,4 +1,4 @@
-package org.metal.core.forge;
+package org.metal.core.translator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.graph.Traverser;
@@ -14,12 +14,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ForgeMaster <D, S> {
-    private ForgeContext<D, S> stagingContext;
+public class Translator<D, S> {
+    private TranslatorContext<D, S> stagingContext;
     private S platform;
 
-    public ForgeMaster(S platform) {
-        this.stagingContext = ImmutableForgeContext.<D, S>builder()
+    public Translator(S platform) {
+        this.stagingContext = ImmutableTranslatorContext.<D, S>builder()
                 .dfs(new HashMap<>())
                 .hash2metal(HashMultimap.create())
                 .metal2hash(new HashMap<>())
@@ -30,16 +30,16 @@ public class ForgeMaster <D, S> {
         this.platform = platform;
     }
 
-    public ForgeMaster(S platform, ForgeContext<D, S> context) {
+    public Translator(S platform, TranslatorContext<D, S> context) {
         this.stagingContext = context;
         this.platform = platform;
     }
 
-    public D stagingDF(Metal metal, ForgeContext<D, S> context) {
+    public D stagingDF(Metal metal, TranslatorContext<D, S> context) {
         return context.dfs().get(context.metal2hash().get(metal));
     }
 
-    public void stageDF(Metal metal, D df, ForgeContext<D, S> context) throws IOException {
+    public void stageDF(Metal metal, D df, TranslatorContext<D, S> context) throws IOException {
         HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
                 metal.props(),
                 context.draft().getGraph().predecessors(metal).stream()
@@ -50,7 +50,7 @@ public class ForgeMaster <D, S> {
         context.dfs().put(hashCode, df);
     }
 
-    public void stageIMProduct(Metal metal, IMProduct product, ForgeContext<D, S> context) throws IOException {
+    public void stageIMProduct(Metal metal, IMProduct product, TranslatorContext<D, S> context) throws IOException {
         HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
                 metal.props(),
                 context.draft().getGraph().predecessors(metal).stream()
@@ -63,7 +63,7 @@ public class ForgeMaster <D, S> {
         context.mProducts().put(hashCode, product);
     }
 
-    public List<D> dependency(Metal metal, ForgeContext<D, S> context) {
+    public List<D> dependency(Metal metal, TranslatorContext<D, S> context) {
         return context.draft().getGraph().predecessors(metal).stream()
                 .map(context.metal2hash()::get)
                 .sorted(Comparator.comparing(HashCode::toString))
@@ -71,7 +71,7 @@ public class ForgeMaster <D, S> {
                 .collect(Collectors.toList());
     }
 
-    public Map<String, D> dependencyWithId(Metal metal, ForgeContext<D, S> context) {
+    public Map<String, D> dependencyWithId(Metal metal, TranslatorContext<D, S> context) {
         Set<Metal> dependency = context.draft().getGraph().predecessors(metal);
         Map<String, D> ret = new HashMap<>();
         for (Metal dep: dependency) {
@@ -82,7 +82,7 @@ public class ForgeMaster <D, S> {
         return Collections.unmodifiableMap(ret);
     }
 
-    public void forge(Draft draft) throws IllegalStateException, MetalForgeException {
+    public void translate(Draft draft) throws IllegalStateException, MetalForgeException {
         HashMultimap<HashCode, Metal> hash2metal = HashMultimap.create();
         HashMap<Metal, HashCode> metal2hash = new HashMap<>();
 
@@ -130,7 +130,7 @@ public class ForgeMaster <D, S> {
             id2metal.put(metal.id(), metal);
         }
 
-        ForgeContext<D, S> nextContext = (ForgeContext<D, S>) ImmutableForgeContext
+        TranslatorContext<D, S> nextContext = (TranslatorContext<D, S>) ImmutableTranslatorContext
                 .<D, S>builder()
                 .draft(draft)
                 .dfs(dfs)
@@ -151,11 +151,11 @@ public class ForgeMaster <D, S> {
                 .collect(Collectors.toList());
 
         for (Metal metal : unStagingDependencyTrace) {
-            metal.forge(this, nextContext);
+            metal.translate(this, nextContext);
         }
     }
 
-    public ForgeContext<D, S> context() {
+    public TranslatorContext<D, S> context() {
         return stagingContext;
     }
 

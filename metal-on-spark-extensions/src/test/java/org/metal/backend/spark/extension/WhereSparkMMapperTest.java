@@ -3,7 +3,7 @@ package org.metal.backend.spark.extension;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
 import org.junit.Test;
-import org.metal.backend.spark.SparkForgeMaster;
+import org.metal.backend.spark.SparkTranslator;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.core.Pair;
 import org.metal.core.draft.Draft;
@@ -55,7 +55,7 @@ public class WhereSparkMMapperTest {
                 .master("local[*]")
                 .getOrCreate();
 
-        SparkForgeMaster forgeMaster = new SparkForgeMaster(platform);
+        SparkTranslator forgeMaster = new SparkTranslator(platform);
         SparkMetalService<IMetalProps> service = SparkMetalService.<IMetalProps>of(forgeMaster);
         try {
             service.analyse(draft);

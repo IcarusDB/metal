@@ -11,13 +11,21 @@ public class Spec {
     private List<Metal> metals;
     private List<Pair<String, String>> edges;
 
+    /**
+     * Left : affected metal id
+     * Right : metal id which need to be waited.
+     */
+    private List<Pair<String, String>> waitFor;
+
     public Spec() {
+        this.waitFor = new ArrayList<>();
     }
 
     public Spec(String version) {
         this.version = version;
         this.metals = new ArrayList<>();
         this.edges = new ArrayList<>();
+        this.waitFor = new ArrayList<>();
     }
 
     public String getVersion() {
@@ -28,5 +36,9 @@ public class Spec {
     }
     public List<Pair<String, String>> getEdges() {
         return edges;
+    }
+
+    public List<Pair<String, String>> getWaitFor() {
+        return waitFor;
     }
 }
