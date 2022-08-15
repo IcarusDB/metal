@@ -59,7 +59,7 @@ public class Draft {
             return new WithWaitFor(this);
         }
 
-        public Draft build() {
+        public Draft build() throws IllegalArgumentException{
             inner.graph = ImmutableGraph.copyOf(inner.graph);
             inner.waitFor = ImmutableGraph.copyOf(inner.waitFor);
             Set<MSource> mSources = new HashSet<>();
@@ -78,6 +78,39 @@ public class Draft {
                     mSinks.add((MSink) metal);
                 }
             }));
+
+            for (MSink mSink : mSinks) {
+                if (inner.graph.inDegree(mSink) == 0) {
+                    String msg = String.format("MSink{%s} don\'t have any input!", mSink);
+                    throw new IllegalArgumentException(msg);
+                }
+
+                if (inner.graph.outDegree(mSink) != 0) {
+                    String msg = String.format("MSink{%s} should not have any output!", mSink);
+                    throw new IllegalArgumentException(msg);
+                }
+            }
+
+            for (MSource mSource: mSources) {
+                if (inner.graph.inDegree(mSource) != 0) {
+                    String msg = String.format("MSource{%s} should not have any input!", mSource);
+                    throw new IllegalArgumentException(msg);
+                }
+            }
+
+            for (MMapper mMapper: mMappers) {
+                if (inner.graph.inDegree(mMapper) != 1) {
+                    String msg = String.format("MMapper{%s} must have only one input!", mMapper);
+                    throw new IllegalArgumentException(msg);
+                }
+            }
+
+            for (MFusion mFusion: mFusions) {
+                if (inner.graph.inDegree(mFusion) < 2) {
+                    String msg = String.format("MFusion{%s} must have at least two inputs!", mFusion);
+                    throw new IllegalArgumentException(msg);
+                }
+            }
 
             inner.sources = Collections.unmodifiableSet(mSources);
             inner.mappers = Collections.unmodifiableSet(mMappers);
@@ -120,7 +153,7 @@ public class Draft {
             return this;
         }
 
-        public Draft build() {
+        public Draft build() throws IllegalArgumentException{
             return this.innerBuilder.build();
         }
     }

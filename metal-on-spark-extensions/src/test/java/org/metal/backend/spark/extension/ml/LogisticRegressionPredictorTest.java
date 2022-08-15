@@ -113,11 +113,11 @@ public class LogisticRegressionPredictorTest {
                 .add(mapper)
                 .add(learner)
                 .add(predictor)
-                .add(console)
+//                .add(console)
                 .addEdge(source, mapper)
                 .addEdge(mapper, learner)
                 .addEdge(mapper, predictor)
-                .addEdge(predictor, console)
+//                .addEdge(predictor, console)
                 .withWait()
                 .waitFor(predictor, learner)
                 .build();
