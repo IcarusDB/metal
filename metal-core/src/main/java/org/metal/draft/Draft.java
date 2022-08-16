@@ -1,4 +1,4 @@
-package org.metal.core.draft;
+package org.metal.draft;
 
 import com.google.common.graph.*;
 import org.metal.core.*;

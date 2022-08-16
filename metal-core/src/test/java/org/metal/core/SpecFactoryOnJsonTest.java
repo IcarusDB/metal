@@ -3,9 +3,9 @@ package org.metal.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.metal.core.specs.Spec;
-import org.metal.core.specs.SpecFactory;
-import org.metal.core.specs.SpecFactoryOnJson;
+import org.metal.specs.Spec;
+import org.metal.specs.SpecFactory;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 import java.util.List;

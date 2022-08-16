@@ -7,11 +7,11 @@ import org.junit.Test;
 import org.metal.backend.spark.SparkTranslator;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.core.Pair;
-import org.metal.core.draft.Draft;
-import org.metal.core.draft.DraftMaster;
+import org.metal.draft.Draft;
+import org.metal.draft.DraftMaster;
 import org.metal.core.props.IMetalProps;
-import org.metal.core.specs.Spec;
-import org.metal.core.specs.SpecFactoryOnJson;
+import org.metal.specs.Spec;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 

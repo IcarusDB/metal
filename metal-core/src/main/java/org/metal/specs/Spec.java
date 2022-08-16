@@ -1,4 +1,4 @@
-package org.metal.core.specs;
+package org.metal.specs;
 
 import org.metal.core.Metal;
 import org.metal.core.Pair;

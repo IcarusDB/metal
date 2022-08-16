@@ -6,12 +6,12 @@ import org.junit.Test;
 import org.metal.backend.spark.SparkTranslator;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.core.Pair;
-import org.metal.core.draft.Draft;
-import org.metal.core.draft.DraftMaster;
-import org.metal.core.exception.MetalAnalysedException;
-import org.metal.core.exception.MetalExecuteException;
+import org.metal.draft.Draft;
+import org.metal.draft.DraftMaster;
+import org.metal.exception.MetalAnalysedException;
+import org.metal.exception.MetalExecuteException;
 import org.metal.core.props.IMetalProps;
-import org.metal.core.specs.Spec;
+import org.metal.specs.Spec;
 
 public class SqlMMapperTest {
     @Test

@@ -1,11 +1,11 @@
-package org.metal.core.translator;
+package org.metal.translator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.hash.HashCode;
 import org.immutables.value.Value;
-import org.metal.core.IMProduct;
+import org.metal.core.IMExecutor;
 import org.metal.core.Metal;
-import org.metal.core.draft.Draft;
+import org.metal.draft.Draft;
 
 import java.util.HashMap;
 
@@ -15,6 +15,6 @@ public interface TranslatorContext<D, S> {
     public HashMap<HashCode, D> dfs();
     public HashMap<Metal, HashCode> metal2hash();
     public HashMultimap<HashCode, Metal> hash2metal();
-    public HashMap<HashCode, IMProduct> mProducts();
+    public HashMap<HashCode, IMExecutor> mProducts();
     public HashMap<String, Metal> id2metal();
 }

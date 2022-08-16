@@ -1,4 +1,4 @@
-package org.metal.core.specs;
+package org.metal.specs;
 
 import java.io.IOException;
 

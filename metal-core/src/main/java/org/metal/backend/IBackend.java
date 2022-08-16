@@ -1,6 +1,6 @@
-package org.metal.core.backend;
+package org.metal.backend;
 
-import org.metal.core.BaseMetalService;
+import org.metal.service.BaseMetalService;
 
 public interface IBackend {
     public void start() throws IllegalArgumentException;

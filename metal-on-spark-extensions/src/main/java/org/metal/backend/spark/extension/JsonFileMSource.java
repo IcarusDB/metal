@@ -6,7 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMSource;
-import org.metal.core.exception.MetalForgeException;
+import org.metal.exception.MetalTranslateException;
 
 public class JsonFileMSource extends SparkMSource <IJsonFileMSourceProps> {
     @JsonCreator
@@ -18,11 +18,11 @@ public class JsonFileMSource extends SparkMSource <IJsonFileMSourceProps> {
     }
 
     @Override
-    public Dataset<Row> source(SparkSession platform) throws MetalForgeException {
+    public Dataset<Row> source(SparkSession platform) throws MetalTranslateException {
         try {
             return platform.read().json(this.props().path());
         } catch (Exception e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
         }
     }
 }

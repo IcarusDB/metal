@@ -2,10 +2,10 @@ package org.metal.core;
 
 import com.google.common.graph.Traverser;
 import org.junit.Test;
-import org.metal.core.draft.Draft;
-import org.metal.core.draft.DraftMaster;
-import org.metal.core.specs.SpecFactory;
-import org.metal.core.specs.SpecFactoryOnJson;
+import org.metal.draft.Draft;
+import org.metal.draft.DraftMaster;
+import org.metal.specs.SpecFactory;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 

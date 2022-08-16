@@ -1,7 +1,7 @@
 package org.metal.core;
 
 import org.junit.Test;
-import org.metal.core.draft.Draft;
+import org.metal.draft.Draft;
 
 public class DraftTest {
     @Test

@@ -1,8 +1,8 @@
 package org.metal.core;
 
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.translator.TranslatorContext;
-import org.metal.core.translator.Translator;
+import org.metal.exception.MetalTranslateException;
+import org.metal.translator.TranslatorContext;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMMapperProps;
 
 import java.io.IOException;
@@ -13,14 +13,14 @@ public abstract class MMapper <D, S, P extends IMMapperProps> extends Metal <D, 
     }
 
     @Override
-    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalForgeException {
+    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalTranslateException {
         D data = master.dependency(this, context).get(0);
         try {
             master.stageDF(this, map(master.platform(), data), context);
         } catch (IOException e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
         }
     }
 
-    public abstract D map(S platform, D data) throws MetalForgeException;
+    public abstract D map(S platform, D data) throws MetalTranslateException;
 }

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.translator.TranslatorContext;
-import org.metal.core.translator.Translator;
+import org.metal.exception.MetalTranslateException;
+import org.metal.translator.TranslatorContext;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMetalProps;
 
 import java.util.NoSuchElementException;
@@ -29,7 +29,7 @@ public abstract class Metal <D, S, P extends IMetalProps> {
         this.props = props;
     }
 
-    public abstract void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalForgeException;
+    public abstract void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalTranslateException;
 
     public P props() throws NullPointerException, NoSuchElementException {
         return Optional.of(props).get();

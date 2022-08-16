@@ -3,13 +3,13 @@ package org.metal.core;
 import com.google.common.collect.HashMultimap;
 import com.google.common.hash.HashCode;
 import org.junit.Test;
-import org.metal.core.draft.Draft;
-import org.metal.core.draft.DraftMaster;
-import org.metal.core.translator.Translator;
+import org.metal.draft.Draft;
+import org.metal.draft.DraftMaster;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMetalProps;
-import org.metal.core.specs.Spec;
-import org.metal.core.specs.SpecFactory;
-import org.metal.core.specs.SpecFactoryOnJson;
+import org.metal.specs.Spec;
+import org.metal.specs.SpecFactory;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -70,8 +70,8 @@ public class TranslatorTest {
         Draft draft = DraftMaster.draft(spec);
         Translator master = new Translator(Thread.currentThread());
         master.translate(draft);
-        HashMap<HashCode, IMProduct> mProducts = master.context().mProducts();
-        mProducts.forEach((HashCode hashCode, IMProduct mProduct) -> {
+        HashMap<HashCode, IMExecutor> mProducts = master.context().mProducts();
+        mProducts.forEach((HashCode hashCode, IMExecutor mProduct) -> {
             System.out.println(hashCode.toString());
             mProduct.exec();
         });

@@ -12,7 +12,7 @@ import org.metal.backend.spark.SparkBackend;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.backend.spark.extension.*;
 import org.metal.backend.spark.extension.ml.udf.AsVector;
-import org.metal.core.draft.Draft;
+import org.metal.draft.Draft;
 import org.metal.core.props.IMetalProps;
 
 import java.util.Arrays;
@@ -113,11 +113,11 @@ public class LogisticRegressionPredictorTest {
                 .add(mapper)
                 .add(learner)
                 .add(predictor)
-//                .add(console)
+                .add(console)
                 .addEdge(source, mapper)
                 .addEdge(mapper, learner)
                 .addEdge(mapper, predictor)
-//                .addEdge(predictor, console)
+                .addEdge(predictor, console)
                 .withWait()
                 .waitFor(predictor, learner)
                 .build();

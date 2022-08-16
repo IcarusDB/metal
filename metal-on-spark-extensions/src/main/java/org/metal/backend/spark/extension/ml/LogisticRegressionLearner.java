@@ -10,7 +10,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMSink;
-import org.metal.core.exception.MetalExecuteException;
+import org.metal.core.IMExecutor;
+import org.metal.exception.MetalExecuteException;
+import org.metal.exception.MetalTranslateException;
 
 import java.io.IOException;
 
@@ -24,7 +26,7 @@ public class LogisticRegressionLearner extends SparkMSink<ILogisticRegressionLea
     }
 
     @Override
-    public void sink(SparkSession platform, Dataset<Row> data) throws MetalExecuteException {
+    public IMExecutor sink(SparkSession platform, Dataset<Row> data) throws MetalTranslateException {
         LogisticRegression learner = new LogisticRegression();
         ILogisticRegressionLearnerProps props = this.props();
 
@@ -78,11 +80,13 @@ public class LogisticRegressionLearner extends SparkMSink<ILogisticRegressionLea
 
         LogisticRegressionModel model = learner.fit(data);
 
-        try {
-            model.write().overwrite().save(props.savePath());
-        } catch (IOException e) {
-            throw new MetalExecuteException(e);
-        }
+        return () -> {
+            try {
+                model.write().overwrite().save(props.savePath());
+            } catch (IOException e) {
+                throw new MetalExecuteException(e);
+            }
+        };
     }
 
 }

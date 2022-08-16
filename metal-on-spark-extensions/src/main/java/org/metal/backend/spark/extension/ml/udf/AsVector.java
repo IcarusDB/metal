@@ -5,7 +5,7 @@ import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.linalg.VectorUDT;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF1;
-import org.metal.core.backend.ISetup;
+import org.metal.backend.ISetup;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 

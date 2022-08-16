@@ -1,9 +1,8 @@
 package org.metal.core;
 
-import org.metal.core.exception.MetalExecuteException;
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.translator.TranslatorContext;
-import org.metal.core.translator.Translator;
+import org.metal.exception.MetalTranslateException;
+import org.metal.translator.TranslatorContext;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMSinkProps;
 
 import java.io.IOException;
@@ -14,19 +13,18 @@ public abstract class MSink <D, S, P extends IMSinkProps> extends Metal <D, S, P
     }
 
     @Override
-    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalForgeException {
+    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalTranslateException {
         D data = master.dependency(this, context).get(0);
         try {
-            master.stageIMProduct(this, new IMProduct() {
-                @Override
-                public void exec() throws MetalExecuteException {
-                    sink(master.platform(), data);
-                }
-            }, context);
+            master.stageIMProduct(this, sink(master.platform(), data), context);
         } catch (IOException e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
+        } catch (MetalTranslateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new MetalTranslateException(e);
         }
     }
 
-    public abstract void sink(S platform, D data) throws MetalExecuteException;
+    public abstract IMExecutor sink(S platform, D data) throws MetalTranslateException;
 }

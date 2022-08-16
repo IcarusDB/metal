@@ -13,8 +13,6 @@ import org.apache.spark.sql.types.StructType;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,7 +36,6 @@ public class LogisticRegressionLearnerTest {
         });
 
         Dataset<Row> training = platform.createDataFrame(dataTraining, schema);
-
         LogisticRegressionLearner learner = new LogisticRegressionLearner(
                 "00-00",
                 "l-00",
@@ -50,6 +47,6 @@ public class LogisticRegressionLearnerTest {
                         .build()
         );
 
-        learner.sink(platform, training);
+        learner.sink(platform, training).exec();
     }
 }

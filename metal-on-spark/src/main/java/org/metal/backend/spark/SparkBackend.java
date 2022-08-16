@@ -1,9 +1,8 @@
 package org.metal.backend.spark;
 
 import org.apache.spark.sql.SparkSession;
-import org.metal.core.BaseMetalService;
-import org.metal.core.backend.IBackend;
-import org.metal.core.backend.ISetup;
+import org.metal.backend.IBackend;
+import org.metal.backend.ISetup;
 import org.metal.core.props.IMetalProps;
 
 import java.util.*;

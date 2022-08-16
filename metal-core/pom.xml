@@ -24,6 +24,7 @@
     <jackson.version>2.13.3</jackson.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
     <immutables.version>2.9.0</immutables.version>
+    <arrow-vector.version>7.0.0</arrow-vector.version>
   </properties>
 
   <dependencies>
@@ -47,6 +48,11 @@
       <artifactId>value</artifactId>
       <version>${immutables.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-vector</artifactId>
+      <version>${arrow-vector.version}</version>
     </dependency>
   </dependencies>
 </project>

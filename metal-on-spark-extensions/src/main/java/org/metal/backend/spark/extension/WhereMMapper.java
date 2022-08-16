@@ -6,7 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMMapper;
-import org.metal.core.exception.MetalForgeException;
+import org.metal.exception.MetalTranslateException;
 
 public class WhereMMapper extends SparkMMapper <IWhereMMapperProps> {
     @JsonCreator
@@ -18,11 +18,11 @@ public class WhereMMapper extends SparkMMapper <IWhereMMapperProps> {
     }
 
     @Override
-    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalForgeException {
+    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalTranslateException {
         try {
             return data.where(this.props().conditionExpr());
         } catch (Exception e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
         }
     }
 }

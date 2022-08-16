@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import org.metal.exception.MetalTranslateException;
 import org.metal.core.props.IMFusionProps;
 import org.metal.core.props.IMMapperProps;
 import org.metal.core.props.IMSinkProps;
 import org.metal.core.props.IMSourceProps;
 
-import java.util.List;
 import java.util.Map;
 
 public class Mock {
@@ -74,8 +74,10 @@ public class Mock {
         }
 
         @Override
-        public void sink(Thread platform, String data) {
-            System.out.println("I am sink");
+        public IMExecutor sink(Thread platform, String data) throws MetalTranslateException {
+            return () -> {
+                System.out.println("I am sink");
+            };
         }
     }
 

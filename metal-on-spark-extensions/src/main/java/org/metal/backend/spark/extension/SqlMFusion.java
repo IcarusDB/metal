@@ -6,7 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMFusion;
-import org.metal.core.exception.MetalForgeException;
+import org.metal.exception.MetalTranslateException;
 
 import java.util.Map;
 
@@ -20,30 +20,30 @@ public class SqlMFusion extends SparkMFusion<ISqlMFusionProps> {
     }
 
     @Override
-    public Dataset<Row> fusion(SparkSession platform, Map<String, Dataset<Row>> datas) throws MetalForgeException {
+    public Dataset<Row> fusion(SparkSession platform, Map<String, Dataset<Row>> datas) throws MetalTranslateException {
         if (!this.props().tableAlias().keySet().equals(datas.keySet())) {
             String msg = String.format("The metal[%s]\'s dependency is %s, but TableAlias is %s. These should be same.",
                     this.id(),
                     datas.keySet(),
                     this.props().tableAlias().keySet()
             );
-            throw new MetalForgeException(msg);
+            throw new MetalTranslateException(msg);
         }
 
         SqlParserUtil.Tables tables = SqlParserUtil.table(this.props().sql());
         if (tables.primary().size() <= 1) {
             String msg = String.format("%s should access more than one primary table.", this.props().sql());
-            throw new MetalForgeException(msg);
+            throw new MetalTranslateException(msg);
         }
 
         if (!SqlParserUtil.isQuery(this.props().sql())) {
             String msg = String.format("%s must be one query like select clause.", this.props().sql());
-            throw new MetalForgeException(msg);
+            throw new MetalTranslateException(msg);
         }
 
         if (!tables.primary().equals(this.props().tableAlias().values())) {
             String msg = String.format("%s accessed table should be same with configured Table Alias{%s}.", this.props().sql(), this.props().tableAlias().values());
-            throw new MetalForgeException(msg);
+            throw new MetalTranslateException(msg);
         }
 
         for(Map.Entry<String, Dataset<Row>> data: datas.entrySet()) {
@@ -55,7 +55,7 @@ public class SqlMFusion extends SparkMFusion<ISqlMFusionProps> {
         try {
             return platform.sql(this.props().sql());
         } catch (Exception e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
         }
     }
 }

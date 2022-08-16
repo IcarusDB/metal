@@ -1,4 +1,4 @@
-package org.metal.core.exception;
+package org.metal.exception;
 
 public class MetalAnalysedException extends RuntimeException{
     public MetalAnalysedException() {

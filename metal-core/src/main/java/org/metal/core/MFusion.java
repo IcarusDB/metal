@@ -1,8 +1,8 @@
 package org.metal.core;
 
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.translator.TranslatorContext;
-import org.metal.core.translator.Translator;
+import org.metal.exception.MetalTranslateException;
+import org.metal.translator.TranslatorContext;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMFusionProps;
 
 import java.io.IOException;
@@ -14,14 +14,14 @@ public abstract class MFusion <D, S, P extends IMFusionProps> extends Metal<D, S
     }
 
     @Override
-    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalForgeException {
+    public void translate(Translator<D, S> master, TranslatorContext<D, S> context) throws MetalTranslateException {
         Map<String, D> datas = master.dependencyWithId(this, context);
         try {
             master.stageDF(this, fusion(master.platform(), datas), context);
         } catch (IOException e) {
-            throw new MetalForgeException(e);
+            throw new MetalTranslateException(e);
         }
     }
 
-    public abstract D fusion(S platform, Map<String, D> datas) throws MetalForgeException;
+    public abstract D fusion(S platform, Map<String, D> datas) throws MetalTranslateException;
 }

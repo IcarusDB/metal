@@ -1,22 +1,27 @@
-package org.metal.core;
+package org.metal.service;
 
 import com.google.common.graph.*;
 import com.google.common.hash.HashCode;
-import org.metal.core.draft.Draft;
-import org.metal.core.exception.MetalAnalysedException;
-import org.metal.core.exception.MetalExecuteException;
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.translator.TranslatorContext;
-import org.metal.core.translator.Translator;
+import org.apache.arrow.vector.types.pojo.Schema;
+import org.metal.core.MSink;
+import org.metal.core.Metal;
+import org.metal.draft.Draft;
+import org.metal.exception.MetalAnalysedException;
+import org.metal.exception.MetalExecuteException;
+import org.metal.exception.MetalServiceException;
+import org.metal.exception.MetalTranslateException;
+import org.metal.translator.TranslatorContext;
+import org.metal.translator.Translator;
 import org.metal.core.props.IMetalProps;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalService <D, S, P> {
+public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalService<D, S, P> {
     private Translator<D, S> translator;
     protected BaseMetalService(Translator<D, S> translator) {
         this.translator = translator;
@@ -27,15 +32,29 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
     }
 
     @Override
-    public D df(String id) {
+    public D df(String id) throws NoSuchElementException {
         Metal metal = this.context().id2metal().get(id);
+        if (metal == null) {
+            String msg = String.format("Metal{id=%s} can\'t found in context.", id);
+            throw new NoSuchElementException(msg);
+        }
         HashCode hashCode = this.context().metal2hash().get(metal);
+        if (hashCode == null) {
+            String msg = String.format("Metal{%s} can\'t found hashcode in context.", metal);
+            throw new NoSuchElementException(msg);
+        }
+
         return this.context().dfs().get(hashCode);
     }
 
     @Override
-    public Metal<D, S, P> metal(String id) {
-        return this.context().id2metal().get(id);
+    public Metal<D, S, P> metal(String id) throws NoSuchElementException{
+        Metal metal = this.context().id2metal().get(id);
+        if (metal == null) {
+            String msg = String.format("Metal{id=%s} can\'t found in context.", id);
+            throw new NoSuchElementException(msg);
+        }
+        return metal;
     }
 
     @Override
@@ -67,7 +86,7 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
                 this.context().draft().getGraph().nodes().size()) {
             try {
                 this.translator.translate(draft);
-            } catch (MetalForgeException e) {
+            } catch (MetalTranslateException e) {
                 throw new MetalAnalysedException(e);
             } catch (IllegalStateException e) {
                 throw new IllegalStateException(e);
@@ -126,7 +145,16 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
         }
     }
 
-    private TranslatorContext<D, S> context() {
+    @Override
+    public Schema schema(String id) throws MetalServiceException {
+        throw new MetalServiceException("This method is not implemented.");
+    }
+
+    protected TranslatorContext<D, S> context() {
         return this.translator.context();
+    }
+
+    protected Translator<D, S> translator() {
+        return this.translator;
     }
 }

@@ -1,13 +1,13 @@
-package org.metal.core.translator;
+package org.metal.translator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.graph.Traverser;
 import com.google.common.hash.HashCode;
-import org.metal.core.exception.MetalForgeException;
-import org.metal.core.IMProduct;
+import org.metal.core.IMExecutor;
+import org.metal.exception.MetalTranslateException;
 import org.metal.core.props.IMetalPropsUtil;
 import org.metal.core.Metal;
-import org.metal.core.draft.Draft;
+import org.metal.draft.Draft;
 
 import java.io.IOException;
 import java.util.*;
@@ -50,7 +50,7 @@ public class Translator<D, S> {
         context.dfs().put(hashCode, df);
     }
 
-    public void stageIMProduct(Metal metal, IMProduct product, TranslatorContext<D, S> context) throws IOException {
+    public void stageIMProduct(Metal metal, IMExecutor product, TranslatorContext<D, S> context) throws IOException {
         HashCode hashCode = IMetalPropsUtil.sha256WithPrev(
                 metal.props(),
                 context.draft().getGraph().predecessors(metal).stream()
@@ -82,7 +82,7 @@ public class Translator<D, S> {
         return Collections.unmodifiableMap(ret);
     }
 
-    public void translate(Draft draft) throws IllegalStateException, MetalForgeException {
+    public void translate(Draft draft) throws IllegalStateException, MetalTranslateException {
         HashMultimap<HashCode, Metal> hash2metal = HashMultimap.create();
         HashMap<Metal, HashCode> metal2hash = new HashMap<>();
 
@@ -118,7 +118,7 @@ public class Translator<D, S> {
             }
         }
 
-        HashMap<HashCode, IMProduct> mProducts = new HashMap<>();
+        HashMap<HashCode, IMExecutor> mProducts = new HashMap<>();
         for (HashCode hashCode: stagingContext.mProducts().keySet()) {
             if (retain.contains(hashCode)) {
                 mProducts.put(hashCode, stagingContext.mProducts().get(hashCode));

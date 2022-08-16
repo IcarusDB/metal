@@ -1,11 +1,11 @@
-package org.metal.core.draft;
+package org.metal.draft;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.metal.core.MSink;
 import org.metal.core.Metal;
 import org.metal.core.Pair;
-import org.metal.core.specs.Spec;
+import org.metal.specs.Spec;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;

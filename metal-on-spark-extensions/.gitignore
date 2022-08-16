@@ -1,5 +1,5 @@
 .idea
 target/
-/src/test/resources/lr-model/
-/src/test/resources/learner-0.model/
-/src/test/resources/learner.model/
+src/test/resources/lr-model/
+src/test/resources/learner-0.model/
+src/test/resources/learner.model/

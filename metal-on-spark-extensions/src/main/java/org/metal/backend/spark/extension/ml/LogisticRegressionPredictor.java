@@ -7,7 +7,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMMapper;
-import org.metal.core.exception.MetalForgeException;
+import org.metal.exception.MetalTranslateException;
 
 public class LogisticRegressionPredictor extends SparkMMapper<ILogisticRegressionPredictorProps> {
     @JsonCreator
@@ -19,7 +19,7 @@ public class LogisticRegressionPredictor extends SparkMMapper<ILogisticRegressio
     }
 
     @Override
-    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalForgeException {
+    public Dataset<Row> map(SparkSession platform, Dataset<Row> data) throws MetalTranslateException {
         ILogisticRegressionPredictorProps props = this.props();
         LogisticRegressionModel model = LogisticRegressionModel.load(props.modelPath());
 
