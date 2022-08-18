@@ -1,5 +1,8 @@
 package org.metal.backend.spark.extension.ml.udf;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.spark.ml.linalg.DenseVector;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.linalg.VectorUDT;
@@ -12,6 +15,23 @@ import scala.collection.Seq;
 import java.io.Serializable;
 
 public class AsVector implements UDF1<Seq<Double>, Vector>, ISetup<SparkSession>, Serializable {
+    @JsonProperty(value = "name")
+    private String name = "as_vector";
+
+    @JsonCreator
+    public AsVector() {
+        System.out.println("{}");
+    }
+
+    public AsVector(String name) {
+        this.name = name;
+        System.out.println("{name}");
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public Vector call(Seq<Double> field) throws Exception {
         double[] fieldInJava = new double[field.size()];
@@ -24,6 +44,6 @@ public class AsVector implements UDF1<Seq<Double>, Vector>, ISetup<SparkSession>
 
     @Override
     public void setup(SparkSession platform) {
-        platform.udf().register("as_vector", this, new VectorUDT());
+        platform.udf().register(this.name, this, new VectorUDT());
     }
 }
