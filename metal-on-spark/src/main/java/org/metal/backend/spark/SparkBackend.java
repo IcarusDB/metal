@@ -1,5 +1,7 @@
 package org.metal.backend.spark;
 
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.IBackend;
 import org.metal.backend.ISetup;
@@ -7,7 +9,7 @@ import org.metal.core.props.IMetalProps;
 
 import java.util.*;
 
-public class SparkBackend implements IBackend {
+public class SparkBackend implements IBackend <Dataset<Row>, SparkSession, IMetalProps> {
     @Override
     public void start() throws IllegalArgumentException{
         SparkSession.Builder builder = SparkSession.builder();
@@ -26,15 +28,17 @@ public class SparkBackend implements IBackend {
         if (confs.containsKey("master")) {
             String master = (String) confs.get("master");
             builder.master(master);
-        } else {
-            throw new IllegalArgumentException("Master is not set!");
         }
+//        else {
+//            throw new IllegalArgumentException("Master is not set!");
+//        }
         if (confs.containsKey("appName")) {
             String appName = (String) confs.get("appName");
             builder.appName(appName);
-        } else {
-            builder.appName("SparkBackend-"+this.hashCode());
         }
+//        else {
+//            builder.appName("SparkBackend-"+this.hashCode());
+//        }
 
         this.platform = builder.getOrCreate();
         for (ISetup<SparkSession> setup: setups){
@@ -75,9 +79,9 @@ public class SparkBackend implements IBackend {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder implements IBuilder<Dataset<Row>, SparkSession, IMetalProps> {
         private SparkBackend innerBackend;
-        private Builder() {
+        public Builder() {
             this.innerBackend = new SparkBackend();
         }
 
