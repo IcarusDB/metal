@@ -53,9 +53,9 @@
       <groupId>org.apache.arrow</groupId>
       <artifactId>arrow-vector</artifactId>
       <version>${arrow-vector.version}</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
-
   <build>
     <plugins>
       <plugin>
@@ -70,10 +70,8 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <outputDirectory>target/lib</outputDirectory>
-              <excludeArtifactIds>
-                spring-boot-devtools,junit
-              </excludeArtifactIds>
+              <outputDirectory>../libs</outputDirectory>
+              <excludeScope>provided</excludeScope>
               <overWriteSnapshots>true</overWriteSnapshots>
             </configuration>
           </execution>
