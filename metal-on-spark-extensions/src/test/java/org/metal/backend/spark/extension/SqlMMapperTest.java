@@ -1,5 +1,7 @@
 package org.metal.backend.spark.extension;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
 import org.junit.Test;
@@ -125,7 +127,7 @@ public class SqlMMapperTest {
     }
 
     @Test
-    public void case2() {
+    public void case2() throws JsonProcessingException {
         JsonFileMSource source = new JsonFileMSource(
                 "00-00",
                 "source-00",
@@ -171,6 +173,10 @@ public class SqlMMapperTest {
         spec.getEdges().add(Pair.of("00-00", "02-01"));
 
         spec.getWaitFor().add(Pair.of("02-00", "02-01"));
+
+        System.out.println(
+                new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(spec)
+        );
 
         Draft draft = DraftMaster.draft(spec);
 

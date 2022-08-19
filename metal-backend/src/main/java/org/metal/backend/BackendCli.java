@@ -1,11 +1,11 @@
 package org.metal.backend;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.*;
 import org.metal.specs.Spec;
+import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,12 +43,39 @@ public class BackendCli {
             .desc("Backend Deploy Options conf file path.")
             .build();
 
+    public final static Option CMD_OPT = Option.builder()
+            .longOpt("cmd-mode")
+            .hasArg(false)
+            .desc("When CMD mode is enable, Backend will analysis and execute metal SPEC. This mode will not start interactive service.")
+            .build();
+
+    public final static Option SPEC_OPT = Option.builder()
+            .longOpt("spec")
+            .hasArg()
+            .desc("When CMD mode is enable, this option is used to set metal SPEC. And this option will lead to ignore --spec-file option.")
+            .build();
+
+    public final static Option SPEC_FILE_OPT = Option.builder()
+            .longOpt("spec-file")
+            .hasArg()
+            .desc("When CMD mode is enable, this option is used to set metal SPEC file path.")
+            .build();
+
+    public final static Option INTERACTIVE_OPT = Option.builder()
+            .longOpt("interactive-mode")
+            .desc("When INTERACTIVE mode is enable, Backend will start all related services. This option will lead to ignore --cmd-mode option.")
+            .build();
+
     public static Options create() {
         Options options = new Options();
         options.addOption(CONF_OPT);
         options.addOption(CONF_FILE_OPT);
         options.addOption(SETUP_OPT);
         options.addOption(SETUP_FILE_OPT);
+        options.addOption(CMD_OPT);
+        options.addOption(SPEC_OPT);
+        options.addOption(SPEC_FILE_OPT);
+        options.addOption(INTERACTIVE_OPT);
         return options;
     }
 
@@ -61,17 +88,21 @@ public class BackendCli {
         Options options = create();
         try {
             CommandLine cli = parser(args, options);
-            BackendDeployOptions deployOptions = new BackendDeployOptions();
-            deployOptions.getConfs().putAll(parseConfFile(cli));
-            deployOptions.getConfs().putAll(parseConf(cli));
-            deployOptions.getSetups().addAll(parseSetupFile(cli));
-            deployOptions.getSetups().addAll(parseSetup(cli));
-
-            return deployOptions;
+            return parseDeployOptions(cli);
         } catch (ParseException e) {
             String msg = String.format("Fail to parse args:%s.", Arrays.asList(args));
             throw new IllegalArgumentException(e);
         }
+    }
+
+    public static BackendDeployOptions parseDeployOptions(CommandLine cli) {
+        BackendDeployOptions deployOptions = new BackendDeployOptions();
+        deployOptions.getConfs().putAll(parseConfFile(cli));
+        deployOptions.getConfs().putAll(parseConf(cli));
+        deployOptions.getSetups().addAll(parseSetupFile(cli));
+        deployOptions.getSetups().addAll(parseSetup(cli));
+
+        return deployOptions;
     }
 
     public static Map<String, Object> parseConf(CommandLine cli) throws IllegalArgumentException{
@@ -183,4 +214,72 @@ public class BackendCli {
         return setups;
     }
 
+    public static Optional<Spec> parseSpec(CommandLine cli) throws IllegalArgumentException{
+        if (!cli.hasOption(CMD_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        if (!cli.hasOption(SPEC_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        String value = cli.getOptionValue(SPEC_OPT);
+        try {
+            Spec spec = new SpecFactoryOnJson().get(value);
+            return Optional.<Spec>of(spec);
+        } catch (IOException e) {
+            e.printStackTrace();
+            String msg = String.format("Fail to get one Spec from %s.", value);
+            throw new IllegalArgumentException(msg, e);
+        }
+    }
+
+    public static Optional<Spec> parseSpecFile(CommandLine cli) throws IllegalArgumentException{
+        if (!cli.hasOption(CMD_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        if (cli.hasOption(SPEC_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        if (!cli.hasOption(SPEC_FILE_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        Path specPath = Paths.get(cli.getOptionValue(SPEC_FILE_OPT));
+        if (!Files.exists(specPath)) {
+            String msg = String.format("%s is not exist.", specPath);
+            throw new IllegalArgumentException(msg);
+        }
+
+        if (Files.isDirectory(specPath)) {
+            String msg = String.format("%s is one directory and not one file.", specPath);
+            throw new IllegalArgumentException(msg);
+        }
+
+        try {
+            byte[] buffer = Files.readAllBytes(specPath);
+            Spec spec = new SpecFactoryOnJson().get(buffer);
+            return Optional.<Spec>of(spec);
+        } catch (IOException e) {
+            String msg = String.format("Fail to get one Spec from %s.", specPath);
+            throw new IllegalArgumentException(msg, e);
+        }
+    }
+
+    public static Optional<Spec> tryCmdMode(CommandLine cli) {
+        if (cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<Spec>empty();
+        }
+
+        if (!cli.hasOption(CMD_OPT)) {
+            return Optional.<Spec>empty();
+        }
+        Optional<Spec> optionalSpec = parseSpec(cli);
+        if (optionalSpec.isEmpty()) {
+            optionalSpec = parseSpecFile(cli);
+        }
+        return optionalSpec;
+    }
 }

@@ -3,6 +3,7 @@ package org.metal.backend.spark;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.metal.backend.BackendDeployOptions;
 import org.metal.backend.IBackend;
 import org.metal.backend.ISetup;
 import org.metal.core.props.IMetalProps;
@@ -92,6 +93,18 @@ public class SparkBackend implements IBackend <Dataset<Row>, SparkSession, IMeta
 
         public Builder setup(ISetup<SparkSession> setup) {
             innerBackend.setups.add(setup);
+            return this;
+        }
+
+        @Override
+        public IBuilder deployOptions(BackendDeployOptions<SparkSession> options) {
+            for(Map.Entry<String, Object> kv: options.getConfs().entrySet()) {
+                conf(kv.getKey(), kv.getValue());
+            }
+
+            for(ISetup<SparkSession> setup: options.getSetups()) {
+                setup(setup);
+            }
             return this;
         }
 

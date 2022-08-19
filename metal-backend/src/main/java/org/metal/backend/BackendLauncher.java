@@ -1,18 +1,13 @@
 package org.metal.backend;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.metal.draft.Draft;
+import org.apache.commons.cli.*;
 import org.metal.draft.DraftMaster;
 import org.metal.service.BaseMetalService;
 import org.metal.specs.Spec;
-import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
 
 public class BackendLauncher {
     static String json = "{\n" +
@@ -40,19 +35,25 @@ public class BackendLauncher {
             "  \"waitFor\" : [ ]\n" +
             "}";
 
-    public static void main(String[] args) throws IOException {
-        BackendDeployOptions deployOptions = BackendCli.parseDeployOptions(args);
+    public static void main(String[] args) throws IOException, ParseException {
+        Options options = BackendCli.create();
+        CommandLine cli = BackendCli.parser(args, options);
+        BackendDeployOptions deployOptions = BackendCli.parseDeployOptions(cli);
         System.out.println(deployOptions);
+        tryRunCMD(cli, deployOptions);
+    }
 
-//        IBackend backend = BackendManager.getBackendBuilder().get()
-//                .build();
-//        backend.start();
-//        BaseMetalService service = backend.service();
-//
-//        Spec spec = new SpecFactoryOnJson().get(json);
-//        Draft draft = DraftMaster.draft(spec);
-//        service.analyse(draft);
-//        service.exec();
-//        backend.stop();
+    private static void tryRunCMD(CommandLine cli, BackendDeployOptions deployOptions) {
+        Optional<Spec> optionalSpec = BackendCli.tryCmdMode(cli);
+        if (optionalSpec.isPresent()) {
+            IBackend.IBuilder builder = BackendManager.getBackendBuilder().get();
+            builder.deployOptions(deployOptions);
+            IBackend backend = builder.build();
+            backend.start();
+            BaseMetalService service = backend.service();
+            service.analyse(DraftMaster.draft(optionalSpec.get()));
+            service.exec();
+            backend.stop();
+        }
     }
 }

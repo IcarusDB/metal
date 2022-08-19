@@ -10,6 +10,7 @@ public interface IBackend <D, S, P extends IMetalProps> {
     public static interface IBuilder<D, S, P extends IMetalProps> {
         public IBuilder conf(String key, Object value);
         public IBuilder setup(ISetup<S> setup);
+        public IBuilder deployOptions(BackendDeployOptions<S> options);
         public IBackend<D, S, P> build();
     }
 }
