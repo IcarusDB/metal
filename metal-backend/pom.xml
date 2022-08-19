@@ -78,6 +78,7 @@
             <configuration>
               <outputDirectory>../libs</outputDirectory>
               <excludeScope>runtime</excludeScope>
+              <includeScope>compile</includeScope>
               <overWriteSnapshots>true</overWriteSnapshots>
             </configuration>
           </execution>
