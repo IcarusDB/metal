@@ -1,5 +1,9 @@
 package org.metal.backend;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
 import org.metal.service.BaseMetalService;
@@ -7,6 +11,8 @@ import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class BackendLauncher {
     static String json = "{\n" +
@@ -35,16 +41,18 @@ public class BackendLauncher {
             "}";
 
     public static void main(String[] args) throws IOException {
-        IBackend backend = BackendManager.getBackendBuilder().get()
-                .build();
-        backend.start();
-        BaseMetalService service = backend.service();
+        BackendDeployOptions deployOptions = BackendCli.parseDeployOptions(args);
+        System.out.println(deployOptions);
 
-        Spec spec = new SpecFactoryOnJson().get(json);
-        Draft draft = DraftMaster.draft(spec);
-        service.analyse(draft);
-        service.exec();
-        backend.stop();
-//        service.analyse();
+//        IBackend backend = BackendManager.getBackendBuilder().get()
+//                .build();
+//        backend.start();
+//        BaseMetalService service = backend.service();
+//
+//        Spec spec = new SpecFactoryOnJson().get(json);
+//        Draft draft = DraftMaster.draft(spec);
+//        service.analyse(draft);
+//        service.exec();
+//        backend.stop();
     }
 }

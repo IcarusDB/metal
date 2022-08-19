@@ -20,12 +20,10 @@ public class AsVector implements UDF1<Seq<Double>, Vector>, ISetup<SparkSession>
 
     @JsonCreator
     public AsVector() {
-        System.out.println("{}");
     }
 
     public AsVector(String name) {
         this.name = name;
-        System.out.println("{name}");
     }
 
     public String getName() {
