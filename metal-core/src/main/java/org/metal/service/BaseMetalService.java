@@ -3,6 +3,7 @@ package org.metal.service;
 import com.google.common.graph.*;
 import com.google.common.hash.HashCode;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.metal.core.MFusion;
 import org.metal.core.MSink;
 import org.metal.core.Metal;
 import org.metal.draft.Draft;
@@ -38,6 +39,12 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
             String msg = String.format("Metal{id=%s} can\'t found in context.", id);
             throw new NoSuchElementException(msg);
         }
+
+        if (metal instanceof MSink) {
+            String msg = String.format("Metal{id=%s} is one MSink in context. It didn\'t have DF.", id);
+            throw new NoSuchElementException(msg);
+        }
+
         HashCode hashCode = this.context().metal2hash().get(metal);
         if (hashCode == null) {
             String msg = String.format("Metal{%s} can\'t found hashcode in context.", metal);
@@ -59,7 +66,7 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
 
     @Override
     public List<String> analysed() {
-        Set<HashCode> analysed = this.context().dfs().keySet();
+        Set<HashCode> analysed = this.context().hash2metal().keySet();
         return analysed.stream().flatMap((code) -> {
             return this.context().hash2metal().get(code).stream().map(Metal::id);
         }).collect(Collectors.toList());
@@ -67,7 +74,7 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
 
     @Override
     public List<String> unAnalysed() {
-        Set<HashCode> analysed = this.context().dfs().keySet();
+        Set<HashCode> analysed = this.context().hash2metal().keySet();
         return this.context().metal2hash().keySet()
                 .stream()
                 .map(Metal::id)
@@ -81,21 +88,19 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
     }
 
     @Override
-    public void analyse(Draft draft) throws MetalAnalysedException, IllegalStateException {
+    public void analyse(Draft draft) throws MetalAnalysedException {
         if (this.context().id2metal().size() ==
                 this.context().draft().getGraph().nodes().size()) {
             try {
                 this.translator.translate(draft);
             } catch (MetalTranslateException e) {
                 throw new MetalAnalysedException(e);
-            } catch (IllegalStateException e) {
-                throw new IllegalStateException(e);
             }
         } else {
             /**
              * The Translator will not change context.
              */
-            throw new IllegalStateException("Some metals has same id.");
+            throw new MetalAnalysedException("Some metals has same id.");
         }
     }
 

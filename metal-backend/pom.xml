@@ -19,6 +19,7 @@
     <spark.version>3.3.0</spark.version>
     <scala.version>2.13</scala.version>
     <commons-cli.version>1.5.0</commons-cli.version>
+    <vertx.version>4.3.3</vertx.version>
   </properties>
   <dependencies>
     <dependency>
@@ -60,6 +61,16 @@
       <artifactId>spark-mllib_${scala.version}</artifactId>
       <version>${spark.version}</version>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+      <version>${vertx.version}</version>
     </dependency>
   </dependencies>
   <build>

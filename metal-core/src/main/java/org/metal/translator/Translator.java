@@ -82,7 +82,7 @@ public class Translator<D, S> {
         return Collections.unmodifiableMap(ret);
     }
 
-    public void translate(Draft draft) throws IllegalStateException, MetalTranslateException {
+    public void translate(Draft draft) throws MetalTranslateException {
         HashMultimap<HashCode, Metal> hash2metal = HashMultimap.create();
         HashMap<Metal, HashCode> metal2hash = new HashMap<>();
 
@@ -104,7 +104,7 @@ public class Translator<D, S> {
                 /**
                  * Illegal State happened, the ForgeMaster Context will not change.
                  */
-                throw new IllegalStateException("Illegal State happened, the ForgeMaster Context will not change.", e);
+                throw new MetalTranslateException("Illegal State happened, the Translator Context will not change.", e);
             }
         }
 
