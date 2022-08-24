@@ -10,10 +10,12 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.arrow.vector.types.pojo.Schema;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
 import org.metal.exception.MetalAnalysedException;
 import org.metal.exception.MetalExecuteException;
+import org.metal.exception.MetalServiceException;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
@@ -98,6 +100,21 @@ public class BackendAPI extends AbstractVerticle {
     }
   }
 
+  private void schemaAdmit(RoutingContext ctx) {
+    if (status.get() == BackendAPIStatus.ANALYSING.ordinal()) {
+      JsonObject resp = new JsonObject();
+      resp.put("status", "FAIL");
+      resp.put("msg", "The request of schema should wait a moment.");
+      String payload = resp.toString();
+      ctx.response()
+          .putHeader("content-type", ctx.getAcceptableContentType())
+          .putHeader("content-length", String.valueOf(payload.length()))
+          .end(payload);
+    } else {
+      ctx.next();
+    }
+  }
+
   private void spec(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
     JsonObject resp = new JsonObject();
@@ -154,6 +171,33 @@ public class BackendAPI extends AbstractVerticle {
         });
   }
 
+  private void schemaRestApi(Router router) {
+    router.route(HttpMethod.GET, "/schemas/:mid")
+        .produces("application/json")
+        .handler(this::schemaAdmit)
+        .handler((RoutingContext ctx) -> {
+          String mid = ctx.pathParam("mid");
+          JsonObject resp = new JsonObject();
+          try {
+            Schema schema = backend.service().schema(mid);
+            resp.put("status", "OK")
+                .put("data", new JsonObject()
+                    .put("id", mid)
+                    .put("schema", new JsonObject(schema.toJson()))
+                );
+          } catch (MetalServiceException e) {
+            resp.put("status", "FAIL")
+                .put("msg", "Fail to found schema");
+          } finally {
+            String payload = resp.toString();
+            ctx.response()
+                .putHeader("content-type", ctx.getAcceptableContentType())
+                .putHeader("content-length", String.valueOf(payload.length()))
+                .end(payload);
+          }
+        });
+  }
+
   private void execRestApi(Router router) {
     router.route(HttpMethod.POST, "/execution")
         .produces("application/json")
@@ -195,7 +239,7 @@ public class BackendAPI extends AbstractVerticle {
           try {
             backend.service().exec();
           } catch (MetalExecuteException e) {
-
+            
           } finally {
             if (!status.compareAndSet(BackendAPIStatus.EXECUTING.ordinal(),
                 BackendAPIStatus.LIGHT.ordinal())) {
@@ -231,6 +275,7 @@ public class BackendAPI extends AbstractVerticle {
     heartRestApi(metalAPI);
     specRestApi(metalAPI);
     execRestApi(metalAPI);
+    schemaRestApi(metalAPI);
 
     Router identifyAPI = Router.router(getVertx());
     identifyAPI.route("/:id*")
