@@ -2,17 +2,23 @@ package org.metal.draft;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import java.util.Objects;
 import org.metal.core.MSink;
 import org.metal.core.Metal;
 import org.metal.core.Pair;
+import org.metal.exception.MetalDraftException;
 import org.metal.specs.Spec;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class DraftMaster {
-    public static Draft draft(Spec spec) throws NullPointerException, NoSuchElementException, IllegalArgumentException {
-        spec = Optional.of(spec).get();
+    public static Draft draft(Spec spec) throws MetalDraftException {
+        try {
+            spec = Objects.requireNonNull(spec);
+        } catch (NullPointerException e) {
+            throw new MetalDraftException(e);
+        }
 
         BiMap<String, Metal> id2Metals = HashBiMap.create(spec.getMetals().size());
         Draft.Builder builder = Draft.builder();
@@ -25,7 +31,8 @@ public class DraftMaster {
         });
 
         if (id2Metals.size() != spec.getMetals().size()) {
-            throw new IllegalArgumentException();
+            String msg = String.format("Metals in spec maybe duplicated.");
+            throw new MetalDraftException(msg);
         }
 
         spec.getEdges().stream().map(pair -> {
@@ -40,7 +47,7 @@ public class DraftMaster {
             Metal metal = id2Metals.get(wait.right());
             if (!(metal instanceof MSink)) {
                 String msg = String.format("Metal{%s} is must be MSink.", wait.right());
-                throw new IllegalArgumentException(msg);
+                throw new MetalDraftException(msg);
             }
             MSink mSink = (MSink) metal;
             Metal affectedMetal = id2Metals.get(wait.left());

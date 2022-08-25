@@ -3,7 +3,11 @@ package org.metal.backend;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.cli.*;
+import org.metal.exception.MetalSpecParseException;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
@@ -66,6 +70,54 @@ public class BackendCli {
             .desc("When INTERACTIVE mode is enable, Backend will start all related services. This option will lead to ignore --cmd-mode option.")
             .build();
 
+    public final static Option REST_API_ID_OPT = Option.builder()
+        .longOpt("rest-api-id")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option is used to set backend service rest api id.")
+        .build();
+
+    public final static Option REST_API_PORT_OPT = Option.builder()
+        .longOpt("rest-api-port")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option is used to set backend service rest api port.")
+        .build();
+
+    public final static Option REST_API_REGISTER_URL_OPT = Option.builder()
+        .longOpt("rest-api-register-url")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option is used to register service rest api by the url.")
+        .build();
+
+    public final static Option REST_API_REPORT_URL_OPT = Option.builder()
+        .longOpt("rest-api-report-url")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option is used to report executed long term task status by the url.")
+        .build();
+
+    public final static Option VERTX_OPTIONS_OPT = Option.builder()
+        .longOpt("vertx-options")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option in json format is used to configure vertx.")
+        .build();
+
+    public final static Option VERTX_OPTIONS_FILE_OPT = Option.builder()
+        .longOpt("vertx-options-file")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option about file path is used to configure vertx.")
+        .build();
+
+    public final static Option VERTX_DEPLOY_OPT = Option.builder()
+        .longOpt("vertx-deploy")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option in json format is used to configure vertx deployment.")
+        .build();
+
+    public final static Option VERTX_DEPLOY_FILE_OPT = Option.builder()
+        .longOpt("vertx-deploy-file")
+        .hasArg()
+        .desc("When INTERACTIVE mode is enable, this option about file path is used to configure vertx deployment.")
+        .build();
+
     public static Options create() {
         Options options = new Options();
         options.addOption(CONF_OPT);
@@ -76,6 +128,14 @@ public class BackendCli {
         options.addOption(SPEC_OPT);
         options.addOption(SPEC_FILE_OPT);
         options.addOption(INTERACTIVE_OPT);
+        options.addOption(REST_API_ID_OPT);
+        options.addOption(REST_API_PORT_OPT);
+        options.addOption(REST_API_REGISTER_URL_OPT);
+        options.addOption(REST_API_REPORT_URL_OPT);
+        options.addOption(VERTX_OPTIONS_OPT);
+        options.addOption(VERTX_OPTIONS_FILE_OPT);
+        options.addOption(VERTX_DEPLOY_OPT);
+        options.addOption(VERTX_DEPLOY_FILE_OPT);
         return options;
     }
 
@@ -105,6 +165,17 @@ public class BackendCli {
         return deployOptions;
     }
 
+    private static void validConfPath(Path confPath) throws IllegalArgumentException{
+        if (!Files.exists(confPath)) {
+            String msg = String.format("%s is not exist.", confPath);
+            throw new IllegalArgumentException(msg);
+        }
+        if (Files.isDirectory(confPath)) {
+            String msg = String.format("%s is directory and not a file path.", confPath);
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
     public static Map<String, Object> parseConf(CommandLine cli) throws IllegalArgumentException{
         Map<String, Object> confs = new HashMap<>();
         if (cli.hasOption(CONF_OPT)) {
@@ -125,14 +196,7 @@ public class BackendCli {
         Map<String, Object> confs = new HashMap<>();
         if (cli.hasOption(CONF_FILE_OPT)) {
             Path confPath = Paths.get(cli.getOptionValue(CONF_FILE_OPT));
-            if (!Files.exists(confPath)) {
-                String msg = String.format("%s is not exist.", confPath);
-                throw new IllegalArgumentException(msg);
-            }
-            if (Files.isDirectory(confPath)) {
-                String msg = String.format("%s is directory and not a file path.", confPath);
-                throw new IllegalArgumentException(msg);
-            }
+            validConfPath(confPath);
 
             try {
                 List<String> lines = Files.readAllLines(confPath);
@@ -184,14 +248,8 @@ public class BackendCli {
         }
         List<ISetup> setups = new ArrayList<>();
         Path setupPath = Paths.get(cli.getOptionValue(SETUP_FILE_OPT));
-        if (!Files.exists(setupPath)) {
-            String msg = String.format("%s is not exist.", setupPath);
-            throw new IllegalArgumentException(msg);
-        }
-        if (Files.isDirectory(setupPath)) {
-            String msg = String.format("%s is directory and not a file.", setupPath);
-            throw new IllegalArgumentException(msg);
-        }
+        validConfPath(setupPath);
+
         try {
             byte[] buffer = Files.readAllBytes(setupPath);
             ObjectMapper mapper = new ObjectMapper();
@@ -214,7 +272,7 @@ public class BackendCli {
         return setups;
     }
 
-    public static Optional<Spec> parseSpec(CommandLine cli) throws IllegalArgumentException{
+    public static Optional<Spec> parseSpec(CommandLine cli) throws IllegalArgumentException {
         if (!cli.hasOption(CMD_OPT)) {
             return Optional.<Spec>empty();
         }
@@ -227,10 +285,8 @@ public class BackendCli {
         try {
             Spec spec = new SpecFactoryOnJson().get(value);
             return Optional.<Spec>of(spec);
-        } catch (IOException e) {
-            e.printStackTrace();
-            String msg = String.format("Fail to get one Spec from %s.", value);
-            throw new IllegalArgumentException(msg, e);
+        } catch (MetalSpecParseException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
@@ -248,24 +304,159 @@ public class BackendCli {
         }
 
         Path specPath = Paths.get(cli.getOptionValue(SPEC_FILE_OPT));
-        if (!Files.exists(specPath)) {
-            String msg = String.format("%s is not exist.", specPath);
-            throw new IllegalArgumentException(msg);
-        }
-
-        if (Files.isDirectory(specPath)) {
-            String msg = String.format("%s is one directory and not one file.", specPath);
-            throw new IllegalArgumentException(msg);
-        }
+        validConfPath(specPath);
 
         try {
             byte[] buffer = Files.readAllBytes(specPath);
             Spec spec = new SpecFactoryOnJson().get(buffer);
             return Optional.<Spec>of(spec);
-        } catch (IOException e) {
+        } catch (IOException | MetalSpecParseException e) {
             String msg = String.format("Fail to get one Spec from %s.", specPath);
             throw new IllegalArgumentException(msg, e);
         }
+    }
+
+    public static Optional<String> parseRestApiId(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<String>empty();
+        }
+        if (!cli.hasOption(REST_API_ID_OPT)) {
+            return Optional.<String>empty();
+        }
+        String id = cli.getOptionValue(REST_API_ID_OPT);
+        return Optional.<String>of(id);
+    }
+
+    public static Optional<Integer> parseRestApiPort(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<Integer>empty();
+        }
+        if (!cli.hasOption(REST_API_PORT_OPT)) {
+            return Optional.<Integer>empty();
+        }
+        String port = cli.getOptionValue(REST_API_PORT_OPT);
+        try {
+            return Optional.<Integer>of(Integer.valueOf(port));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<String> parseRestApiRegisterUrl(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<String>empty();
+        }
+        if (!cli.hasOption(REST_API_REGISTER_URL_OPT)) {
+            return Optional.<String>empty();
+        }
+        String url = cli.getOptionValue(REST_API_REGISTER_URL_OPT);
+        return Optional.<String>of(url);
+    }
+
+    public static Optional<String> parseRestApiReportUrl(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<String>empty();
+        }
+        if (!cli.hasOption(REST_API_REPORT_URL_OPT)) {
+            return Optional.<String>empty();
+        }
+        String url = cli.getOptionValue(REST_API_REPORT_URL_OPT);
+        return Optional.<String>of(url);
+    }
+
+    public static Optional<VertxOptions> parseVertxOptions(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<VertxOptions>empty();
+        }
+        if (!cli.hasOption(VERTX_OPTIONS_OPT)) {
+            return Optional.<VertxOptions>empty();
+        }
+        String payload = cli.getOptionValue(VERTX_OPTIONS_OPT);
+        try {
+            JsonObject json = new JsonObject(payload);
+            VertxOptions vertxOptions = new VertxOptions(json);
+            return Optional.<VertxOptions>of(vertxOptions);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<VertxOptions> parseVertxOptionsFile(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<VertxOptions>empty();
+        }
+        if (cli.hasOption(VERTX_OPTIONS_OPT)) {
+            return Optional.<VertxOptions>empty();
+        }
+        if (!cli.hasOption(VERTX_OPTIONS_FILE_OPT)) {
+            return Optional.<VertxOptions>empty();
+        }
+
+        Path optPath = Paths.get(cli.getOptionValue(VERTX_OPTIONS_FILE_OPT));
+        validConfPath(optPath);
+
+        try {
+            JsonObject json  = new JsonObject(Files.readString(optPath));
+            VertxOptions vertxOptions = new VertxOptions(json);
+            return Optional.<VertxOptions>of(vertxOptions);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<DeploymentOptions> parseVertxDeployOptions(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<DeploymentOptions>empty();
+        }
+        if (!cli.hasOption(VERTX_DEPLOY_OPT)) {
+            return Optional.<DeploymentOptions>empty();
+        }
+
+        String payload = cli.getOptionValue(VERTX_DEPLOY_OPT);
+        try {
+            JsonObject json = new JsonObject(payload);
+            DeploymentOptions deploymentOptions = new DeploymentOptions(json);
+            return Optional.<DeploymentOptions>of(deploymentOptions);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<DeploymentOptions> parseVertxDeployOptionsFile(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<DeploymentOptions>empty();
+        }
+        if (cli.hasOption(VERTX_DEPLOY_OPT)) {
+            return Optional.<DeploymentOptions>empty();
+        }
+        if (!cli.hasOption(VERTX_DEPLOY_FILE_OPT)) {
+            return Optional.<DeploymentOptions>empty();
+        }
+
+        Path optPath = Paths.get(cli.getOptionValue(VERTX_DEPLOY_FILE_OPT));
+        validConfPath(optPath);
+
+        try {
+            JsonObject json = new JsonObject(Files.readString(optPath));
+            DeploymentOptions deploymentOptions = new DeploymentOptions(json);
+            return Optional.<DeploymentOptions>of(deploymentOptions);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static boolean isCmdMode(CommandLine cli) {
+        if (!cli.hasOption(CMD_OPT)) {
+            return false;
+        }
+        if (cli.hasOption(INTERACTIVE_OPT)) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean isInteractiveMode(CommandLine cli) {
+        return cli.hasOption(INTERACTIVE_OPT);
     }
 
     public static Optional<Spec> tryCmdMode(CommandLine cli) {

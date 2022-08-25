@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class Translator<D, S> {
-    private TranslatorContext<D, S> stagingContext;
+    private volatile TranslatorContext<D, S> stagingContext;
     private S platform;
 
     public Translator(S platform) {
