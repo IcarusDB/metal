@@ -11,6 +11,7 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.metal.backend.IBackendAPI.ConcurrentBackendAPI;
 
@@ -163,9 +164,14 @@ public class BackendRESTAPI extends AbstractVerticle {
         .subRouter(identifyAPI);
 
     server.requestHandler(restAPIv1);
+    Future<HttpServer> serverFuture;
+    if (props.port().isPresent()) {
+      serverFuture = server.listen(props.port().get());
+    } else {
+      serverFuture = server.listen();
+    }
 
-    server.listen(props.port().orElse(18000))
-        .onFailure(t -> {
+    serverFuture.onFailure(t -> {
           LOGGER.error(String.format("Fail to create http server on port[%d].", server.actualPort()));
           startPromise.fail(t);
         })
