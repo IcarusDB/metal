@@ -219,6 +219,5 @@ public class BackendRESTAPI extends AbstractVerticle {
         .onFailure(t -> {
           LOGGER.error("Fail to deploy verticle.");
         });
-
   }
 }

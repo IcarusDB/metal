@@ -1,0 +1,12 @@
+{
+  "name": "cheney",
+  "pwd": "123456",
+  "roles": [
+    {
+      "type": "Guest",
+      "conf": {
+        "k1": "v1"
+      }
+    }
+  ]
+}
