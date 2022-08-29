@@ -3,6 +3,8 @@ package org.metal.server;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoWriteException;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
@@ -15,6 +17,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.Optional;
+import org.metal.server.auth.Auth;
 
 public class Server extends AbstractVerticle {
   private final static Logger LOGGER = LoggerFactory.getLogger(Server.class);
@@ -22,6 +25,7 @@ public class Server extends AbstractVerticle {
   private IServerProps props;
   private HttpServer httpServer;
   private MongoClient mongo;
+  private Auth auth;
 
   public Server(IServerProps props) {
     this.props = props;
@@ -93,51 +97,37 @@ public class Server extends AbstractVerticle {
     mongo = MongoClient.createShared(getVertx(), new JsonObject()
         .put("connection_string", "mongodb://metal:123456@192.168.15.10:27017/metalDB")
     );
-
-    mongo.createCollection("users")
-        .onSuccess((e)->{
-          LOGGER.info(String.format("Success to create collection[users]."));
-        })
-        .onFailure(t -> {
-          MongoCommandException e = (MongoCommandException) t;
-          LOGGER.error(String.format("[%d:%s] Fail to create collection[users].", e.getErrorCode(), e.getErrorCodeName()), t);
-        })
-        .andThen(rt -> {
-          JsonObject index = new JsonObject()
-              .put("name", 1);
-          IndexOptions indexOptions = new IndexOptions()
-              .unique(true);
-          mongo.createIndexWithOptions("users", index, indexOptions)
-              .onSuccess((c)->{
-                LOGGER.info(String.format("Success to create index[%s] on users.", index.toString()));
-              })
-              .onFailure(t ->{
-                LOGGER.error(String.format("Fail to create index[%s] on users.", index.toString()), t);
-              });
-        });
-
     httpServer = getVertx().createHttpServer();
     Router router = Router.router(getVertx());
-    router.route(HttpMethod.GET,"/v1/users")
-        .produces("application/json")
-        .handler(this::findUsers);
-
-    router.post("/v1/users/:name")
-        .produces("application/json")
-        .handler(BodyHandler.create())
-        .handler(this::createUser);
-
 
     httpServer.requestHandler(router);
 
-    httpServer.listen(props.port())
+    Auth.create(mongo)
+        .onSuccess(auth -> {
+          this.auth = auth;
+          router.post("/api/v1/users")
+              .produces("application/json")
+              .handler(BodyHandler.create())
+              .handler(auth::registerUser);
+
+          router.post("/api/v1/tokens")
+              .produces("application/json")
+              .handler(BodyHandler.create())
+              .handler(auth::jwt);
+
+          router.route("/api/v1/something")
+              .produces("application/json")
+              .handler(auth::authenticationOnJwt)
+              .handler(this::something);
+        })
+        .compose(ar -> httpServer.listen(18000))
         .onSuccess(srv -> {
           LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Server.class, srv.actualPort()));
           startPromise.complete();
         })
-        .onFailure(t -> {
-          LOGGER.error(String.format("Fail to start Server[%s] on port[%d].", Server.class, props.port()), t);
-          startPromise.fail(t);
+        .onFailure(error -> {
+          LOGGER.error(error);
+          startPromise.fail(error);
         });
   }
 
@@ -160,5 +150,9 @@ public class Server extends AbstractVerticle {
               });
         });
 
+  }
+
+  private void something(RoutingContext ctx) {
+    ctx.response().end("OK");
   }
 }

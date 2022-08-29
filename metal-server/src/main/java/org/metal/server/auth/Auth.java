@@ -25,34 +25,21 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
-public class AuthVerticle extends AbstractVerticle {
+public class Auth extends AbstractVerticle {
 
   private final static String HASH_ALGO = "sha256";
-  private final static Logger LOGGER = LoggerFactory.getLogger(AuthVerticle.class);
+  private final static Logger LOGGER = LoggerFactory.getLogger(Auth.class);
   private MongoClient mongo;
   private MongoAuthentication authenticationProvider;
   private MongoAuthorization authorizationProvider;
   private JWTAuth jwtAuth;
   private HttpServer server;
 
-
-  @Override
-  public void start(Promise<Void> startPromise) throws Exception {
-    mongo = MongoClient.createShared(getVertx(), new JsonObject()
-        .put("connection_string", "mongodb://metal:123456@192.168.15.10:27017/metalDB")
-    );
+  private Auth(MongoClient client) {
+    this.mongo = client;
     MongoAuthenticationOptions options = new MongoAuthenticationOptions();
     authenticationProvider = MongoAuthentication.create(mongo, options);
-    mongo.createIndexWithOptions("user",
-            new JsonObject().put("username", 1),
-            new IndexOptions().unique(true))
-        .onSuccess(ar -> {
-          LOGGER.info("Success to create index option.");
-        })
-        .onFailure(ar -> {
-          LOGGER.error("Fail to create index option.");
-          LOGGER.error(ar.getLocalizedMessage());
-        });
+
     authorizationProvider = MongoAuthorization.create("authorization", mongo,
         new MongoAuthorizationOptions());
 
@@ -62,22 +49,16 @@ public class AuthVerticle extends AbstractVerticle {
     );
     jwtAuth = JWTAuth.create(getVertx(), jwtAuthOptions);
 
-    server = getVertx().createHttpServer();
-    Router router = Router.router(getVertx());
-    router.post("/tokens")
-        .produces("application/json")
-        .handler(BodyHandler.create())
-        .handler(this::jwt);
-    router.post("/users")
-        .produces("application/json")
-        .handler(BodyHandler.create())
-        .handler(this::registerUser);
+  }
 
-    router.route("/api")
-        .handler(this::authenticationOnJwt);
-
-    server.requestHandler(router);
-    server.listen(18000);
+  public static Future<Auth> create(MongoClient client) {
+    Auth auth = new Auth(client);
+    return auth.mongo.createIndexWithOptions("user",
+            new JsonObject().put("username", 1),
+            new IndexOptions().unique(true))
+        .compose(ar -> {
+          return Future.succeededFuture(auth);
+        });
   }
 
   private static boolean checkRole(String role) {
@@ -107,7 +88,7 @@ public class AuthVerticle extends AbstractVerticle {
     return true;
   }
 
-  private void registerUser(RoutingContext ctx) {
+  public void registerUser(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
     String username = body.getString("username");
     String password = body.getString("password");
@@ -151,7 +132,7 @@ public class AuthVerticle extends AbstractVerticle {
         });
   }
 
-  private Future<User> attachRoles(User user) {
+  public Future<User> attachRoles(User user) {
     return mongo.findOne("user",
             new JsonObject().put("username", user.get("username")),
             new JsonObject().put("roles", true))
@@ -166,7 +147,7 @@ public class AuthVerticle extends AbstractVerticle {
         });
   }
 
-  private void jwt(RoutingContext ctx) {
+  public void jwt(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
     String username = body.getString("username");
     String password = body.getString("password");
@@ -209,7 +190,7 @@ public class AuthVerticle extends AbstractVerticle {
         });
   }
 
-  private void authenticationOnJwt(RoutingContext ctx) {
+  public void authenticationOnJwt(RoutingContext ctx) {
     String authorization = ctx.request().getHeader("Authorization");
     String[] bearer = authorization.split("Bearer");
     if (bearer == null || bearer.length < 2) {
@@ -232,8 +213,7 @@ public class AuthVerticle extends AbstractVerticle {
         })
         .onSuccess(user -> {
           LOGGER.info(user);
-//          ctx.next();
-          ctx.response().end("OK");
+          ctx.next();
         })
         .onFailure(error -> {
           LOGGER.error(error);
@@ -248,30 +228,7 @@ public class AuthVerticle extends AbstractVerticle {
         });
   }
 
-  @Override
-  public void stop(Promise<Void> stopPromise) throws Exception {
-    mongo.close()
-        .compose(ar -> {
-          return server.close();
-        })
-        .onSuccess(ar -> {
-          LOGGER.info("Success to close.");
-        })
-        .onFailure(error -> {
-          LOGGER.error("Fail to close.");
-          LOGGER.error(error.getLocalizedMessage());
-        });
-  }
-
-  public static void main(String[] args) {
-    Vertx vertx = Vertx.vertx();
-    DeploymentOptions options = new DeploymentOptions();
-    vertx.deployVerticle(new AuthVerticle(), options)
-        .onSuccess(deployID -> {
-          LOGGER.info("Success to deploy:" + deployID);
-        })
-        .onFailure(error -> {
-          LOGGER.error(error);
-        });
+  private void something(RoutingContext ctx) {
+    ctx.response().end("OK");
   }
 }
