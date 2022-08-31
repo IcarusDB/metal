@@ -4,12 +4,12 @@
   <parent>
     <artifactId>metal</artifactId>
     <groupId>org.metal</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>metal-on-spark</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>${project.parent.version}</version>
   <name>metal-on-spark</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
