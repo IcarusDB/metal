@@ -18,6 +18,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import java.util.Optional;
 import org.metal.server.auth.Auth;
+import org.metal.server.repo.Repo;
 
 public class Server extends AbstractVerticle {
   private final static Logger LOGGER = LoggerFactory.getLogger(Server.class);
@@ -97,6 +98,8 @@ public class Server extends AbstractVerticle {
     mongo = MongoClient.createShared(getVertx(), new JsonObject()
         .put("connection_string", "mongodb://metal:123456@192.168.15.10:27017/metalDB")
     );
+    Repo repo = new Repo();
+
     httpServer = getVertx().createHttpServer();
     Router router = Router.router(getVertx());
 
@@ -119,6 +122,10 @@ public class Server extends AbstractVerticle {
               .produces("application/json")
               .handler(auth::authenticationOnJwt)
               .handler(this::something);
+
+          repo.createRepoProxy(router, getVertx());
+          router.post("/api/v1/repo/package")
+              .handler(repo::deploy);
         })
         .compose(ar -> httpServer.listen(18000))
         .onSuccess(srv -> {
