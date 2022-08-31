@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="org.metal.AppTest" time="0.035" tests="1" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="awt.toolkit" value="sun.awt.X11.XToolkit"/>
+    <property name="java.specification.version" value="11"/>
+    <property name="sun.cpu.isalist" value=""/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/cheney/expr/Metal/metal-maven-plugin/target/test-classes:/home/cheney/expr/Metal/metal-maven-plugin/target/classes:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.13.3/jackson-databind-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.13.3/jackson-annotations-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.13.3/jackson-core-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/module/jackson-module-jsonSchema/2.13.3/jackson-module-jsonSchema-2.13.3.jar:/home/cheney/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/home/cheney/.m2/repository/org/reflections/reflections/0.10.2/reflections-0.10.2.jar:/home/cheney/.m2/repository/org/javassist/javassist/3.28.0-GA/javassist-3.28.0-GA.jar:/home/cheney/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/home/cheney/.m2/repository/org/slf4j/slf4j-api/1.7.32/slf4j-api-1.7.32.jar:/home/cheney/.m2/repository/org/apache/maven/maven-plugin-api/3.8.4/maven-plugin-api-3.8.4.jar:/home/cheney/.m2/repository/org/apache/maven/maven-model/3.8.4/maven-model-3.8.4.jar:/home/cheney/.m2/repository/org/apache/maven/maven-artifact/3.8.4/maven-artifact-3.8.4.jar:/home/cheney/.m2/repository/org/apache/commons/commons-lang3/3.8.1/commons-lang3-3.8.1.jar:/home/cheney/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.plexus/0.3.5/org.eclipse.sisu.plexus-0.3.5.jar:/home/cheney/.m2/repository/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar:/home/cheney/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.inject/0.3.5/org.eclipse.sisu.inject-0.3.5.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-component-annotations/1.5.5/plexus-component-annotations-1.5.5.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-utils/3.3.0/plexus-utils-3.3.0.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-classworlds/2.6.0/plexus-classworlds-2.6.0.jar:/home/cheney/.m2/repository/org/apache/maven/plugin-tools/maven-plugin-annotations/3.6.2/maven-plugin-annotations-3.6.2.jar:/home/cheney/.m2/repository/org/apache/maven/maven-project/3.0-alpha-2/maven-project-3.0-alpha-2.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.1/plexus-interpolation-1.1.jar:/home/cheney/.m2/repository/org/apache/maven/maven-compat/3.0-alpha-2/maven-compat-3.0-alpha-2.jar:/home/cheney/.m2/repository/org/apache/maven/wagon/wagon-provider-api/1.0-beta-4/wagon-provider-api-1.0-beta-4.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-container-default/1.0-beta-3.0.5/plexus-container-default-1.0-beta-3.0.5.jar:/home/cheney/.m2/repository/org/apache/xbean/xbean-reflect/3.4/xbean-reflect-3.4.jar:/home/cheney/.m2/repository/log4j/log4j/1.2.12/log4j-1.2.12.jar:/home/cheney/.m2/repository/commons-logging/commons-logging-api/1.1/commons-logging-api-1.1.jar:/home/cheney/.m2/repository/com/google/code/google-collections/google-collect/snapshot-20080530/google-collect-snapshot-20080530.jar:/home/cheney/.m2/repository/org/codehaus/woodstox/wstx-asl/3.2.6/wstx-asl-3.2.6.jar:/home/cheney/.m2/repository/stax/stax-api/1.0.1/stax-api-1.0.1.jar:/home/cheney/.m2/repository/org/sonatype/spice/model-builder/1.3/model-builder-1.3.jar:/home/cheney/.m2/repository/org/apache/maven/maven-project-builder/3.0-alpha-2/maven-project-builder-3.0-alpha-2.jar:/home/cheney/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/home/cheney/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://openjdk.java.net/"/>
+    <property name="user.timezone" value=""/>
+    <property name="java.vm.specification.version" value="11"/>
+    <property name="os.name" value="Linux"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-11-openjdk/lib"/>
+    <property name="sun.java.command" value="/home/cheney/expr/Metal/metal-maven-plugin/target/surefire/surefirebooter7994263927061845676.jar /home/cheney/expr/Metal/metal-maven-plugin/target/surefire 2022-08-31T16-26-15_230-jvmRun1 surefire8120496063056508776tmp surefire_05978173572295284966tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/home/cheney/expr/Metal/metal-maven-plugin/target/test-classes:/home/cheney/expr/Metal/metal-maven-plugin/target/classes:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.13.3/jackson-databind-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.13.3/jackson-annotations-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.13.3/jackson-core-2.13.3.jar:/home/cheney/.m2/repository/com/fasterxml/jackson/module/jackson-module-jsonSchema/2.13.3/jackson-module-jsonSchema-2.13.3.jar:/home/cheney/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/home/cheney/.m2/repository/org/reflections/reflections/0.10.2/reflections-0.10.2.jar:/home/cheney/.m2/repository/org/javassist/javassist/3.28.0-GA/javassist-3.28.0-GA.jar:/home/cheney/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/home/cheney/.m2/repository/org/slf4j/slf4j-api/1.7.32/slf4j-api-1.7.32.jar:/home/cheney/.m2/repository/org/apache/maven/maven-plugin-api/3.8.4/maven-plugin-api-3.8.4.jar:/home/cheney/.m2/repository/org/apache/maven/maven-model/3.8.4/maven-model-3.8.4.jar:/home/cheney/.m2/repository/org/apache/maven/maven-artifact/3.8.4/maven-artifact-3.8.4.jar:/home/cheney/.m2/repository/org/apache/commons/commons-lang3/3.8.1/commons-lang3-3.8.1.jar:/home/cheney/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.plexus/0.3.5/org.eclipse.sisu.plexus-0.3.5.jar:/home/cheney/.m2/repository/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar:/home/cheney/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.inject/0.3.5/org.eclipse.sisu.inject-0.3.5.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-component-annotations/1.5.5/plexus-component-annotations-1.5.5.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-utils/3.3.0/plexus-utils-3.3.0.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-classworlds/2.6.0/plexus-classworlds-2.6.0.jar:/home/cheney/.m2/repository/org/apache/maven/plugin-tools/maven-plugin-annotations/3.6.2/maven-plugin-annotations-3.6.2.jar:/home/cheney/.m2/repository/org/apache/maven/maven-project/3.0-alpha-2/maven-project-3.0-alpha-2.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.1/plexus-interpolation-1.1.jar:/home/cheney/.m2/repository/org/apache/maven/maven-compat/3.0-alpha-2/maven-compat-3.0-alpha-2.jar:/home/cheney/.m2/repository/org/apache/maven/wagon/wagon-provider-api/1.0-beta-4/wagon-provider-api-1.0-beta-4.jar:/home/cheney/.m2/repository/org/codehaus/plexus/plexus-container-default/1.0-beta-3.0.5/plexus-container-default-1.0-beta-3.0.5.jar:/home/cheney/.m2/repository/org/apache/xbean/xbean-reflect/3.4/xbean-reflect-3.4.jar:/home/cheney/.m2/repository/log4j/log4j/1.2.12/log4j-1.2.12.jar:/home/cheney/.m2/repository/commons-logging/commons-logging-api/1.1/commons-logging-api-1.1.jar:/home/cheney/.m2/repository/com/google/code/google-collections/google-collect/snapshot-20080530/google-collect-snapshot-20080530.jar:/home/cheney/.m2/repository/org/codehaus/woodstox/wstx-asl/3.2.6/wstx-asl-3.2.6.jar:/home/cheney/.m2/repository/stax/stax-api/1.0.1/stax-api-1.0.1.jar:/home/cheney/.m2/repository/org/sonatype/spice/model-builder/1.3/model-builder-1.3.jar:/home/cheney/.m2/repository/org/apache/maven/maven-project-builder/3.0-alpha-2/maven-project-builder-3.0-alpha-2.jar:/home/cheney/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/home/cheney/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/cheney"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2022-04-19"/>
+    <property name="java.home" value="/usr/lib/jvm/java-11-openjdk"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/cheney/expr/Metal/metal-maven-plugin"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
+    <property name="surefire.real.class.path" value="/home/cheney/expr/Metal/metal-maven-plugin/target/surefire/surefirebooter7994263927061845676.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="11.0.15+10"/>
+    <property name="user.name" value="cheney"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="5.15.50-1-MANJARO"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="localRepository" value="/home/cheney/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="idea.version" value="2021.3"/>
+    <property name="java.version" value="11.0.15"/>
+    <property name="user.dir" value="/home/cheney/expr/Metal/metal-maven-plugin"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="java.vm.version" value="11.0.15+10"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="55.0"/>
+  </properties>
+  <testcase name="testApp" classname="org.metal.AppTest" time="0.003"/>
+</testsuite>

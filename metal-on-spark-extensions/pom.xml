@@ -72,6 +72,11 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.metal</groupId>
+        <artifactId>metal-maven-plugin</artifactId>
+        <version>${project.parent.version}</version>
+      </plugin>
     </plugins>
   </build>
 </project>

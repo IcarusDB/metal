@@ -1,99 +1,207 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    
   <modelVersion>4.0.0</modelVersion>
+    
   <groupId>org.metal</groupId>
+    
   <artifactId>metal</artifactId>
+    
   <packaging>pom</packaging>
+    
   <version>1.0.0-SNAPSHOT</version>
+    
   <name>metal</name>
 
-  <distributionManagement>
+  <repositories>
     <repository>
       <id>oss-releases</id>
       <name>oss-releases</name>
       <url>http://172.17.0.2:8081/repository/maven-releases/</url>
+      <releases></releases>
     </repository>
-    <snapshotRepository>
+    <repository>
       <id>oss-snapshots</id>
       <name>oss-snapshots</name>
       <url>http://124.223.66.8:8081/repository/maven-snapshots/</url>
+      <snapshots></snapshots>
+    </repository>
+  </repositories>
+    
+  <distributionManagement>
+        
+    <repository>
+            
+      <id>oss-releases</id>
+            
+      <name>oss-releases</name>
+            
+      <url>http://172.17.0.2:8081/repository/maven-releases/</url>
+          
+    </repository>
+        
+    <snapshotRepository>
+            
+      <id>oss-snapshots</id>
+            
+      <name>oss-snapshots</name>
+            
+      <url>http://124.223.66.8:8081/repository/maven-snapshots/</url>
+          
     </snapshotRepository>
+      
   </distributionManagement>
+    
   <properties>
+        
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
     <maven.compiler.source>11</maven.compiler.source>
+        
     <maven.compiler.target>11</maven.compiler.target>
+        
     <junit.version>4.13.2</junit.version>
+      
   </properties>
+    
   <modules>
+        
     <module>metal-core</module>
+        
     <module>metal-backend</module>
+        
     <module>metal-on-spark</module>
+        
     <module>metal-on-spark-extensions</module>
+        
     <module>metal-server</module>
+        
+    <module>metal-maven-plugin</module>
+      
   </modules>
+    
   <dependencies>
+        
     <dependency>
+            
       <groupId>junit</groupId>
+            
       <artifactId>junit</artifactId>
+            
       <version>${junit.version}</version>
+            
       <scope>test</scope>
+          
     </dependency>
+      
   </dependencies>
+    
   <build>
+        
     <pluginManagement>
+            
       <!-- lock down plugins versions to avoid using Maven defaults (maybe moved to parent pom) -->
+            
       <plugins>
+                
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
+                
         <plugin>
+                    
           <artifactId>maven-clean-plugin</artifactId>
+                    
           <version>3.1.0</version>
+                    
           <configuration>
+                        
             <excludeDefaultDirectories>false</excludeDefaultDirectories>
+                        
             <filesets>
+                            
               <fileset>
+                                
                 <directory>libs</directory>
+                              
               </fileset>
+                          
             </filesets>
+                      
           </configuration>
+                  
         </plugin>
+                
         <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
+                
         <plugin>
+                    
           <artifactId>maven-resources-plugin</artifactId>
+                    
           <version>3.0.2</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-compiler-plugin</artifactId>
+                    
           <version>3.8.0</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-surefire-plugin</artifactId>
+                    
           <version>2.22.1</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-jar-plugin</artifactId>
+                    
           <version>3.0.2</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-install-plugin</artifactId>
+                    
           <version>2.5.2</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-deploy-plugin</artifactId>
+                    
           <version>2.8.2</version>
+                  
         </plugin>
+                
         <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+                
         <plugin>
+                    
           <artifactId>maven-site-plugin</artifactId>
+                    
           <version>3.7.1</version>
+                  
         </plugin>
+                
         <plugin>
+                    
           <artifactId>maven-project-info-reports-plugin</artifactId>
+                    
           <version>3.0.0</version>
+                  
         </plugin>
+              
       </plugins>
+          
     </pluginManagement>
+      
   </build>
+  
 </project>
