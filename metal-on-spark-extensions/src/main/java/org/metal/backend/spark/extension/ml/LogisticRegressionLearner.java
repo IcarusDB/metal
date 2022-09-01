@@ -10,6 +10,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMSink;
+import org.metal.core.FormJsonSchema;
+import org.metal.core.FormSchemaMethod;
 import org.metal.core.IMExecutor;
 import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalTranslateException;
@@ -87,6 +89,11 @@ public class LogisticRegressionLearner extends SparkMSink<ILogisticRegressionLea
                 throw new MetalExecuteException(e);
             }
         };
+    }
+
+    @FormSchemaMethod
+    public static String formSchema() {
+        return FormJsonSchema.formSchema(ILogisticRegressionLearnerProps.class);
     }
 
 }

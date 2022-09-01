@@ -179,6 +179,7 @@ public class Manifest extends AbstractMojo {
           JsonNode schemaNode = mapper.readTree(schema);
           ObjectNode metalPkg = mapper.createObjectNode();
           metalPkg.put("pkg", groupId + ":" + artifactId + ":" + version);
+          metalPkg.put("class", subClz.getName());
 
           JsonNode formSchema = schemaNode.get("formSchema");
           JsonNode uiSchema = schemaNode.get("uiSchema");

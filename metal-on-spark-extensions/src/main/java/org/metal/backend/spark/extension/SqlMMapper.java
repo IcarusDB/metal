@@ -56,19 +56,6 @@ public class SqlMMapper extends SparkMMapper <ISqlMMapperProps> {
 
     @FormSchemaMethod
     public static String formSchema() {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode schema = mapper.createObjectNode();
-        JsonNode formSchema = null;
-        try {
-            formSchema = mapper.readTree(
-                mapper.writer().writeValueAsString(
-                    FormJsonSchema.of(ISqlMMapperProps.class)
-                )
-            );
-            schema.putIfAbsent("formSchema", formSchema);
-            return schema.toPrettyString();
-        } catch (JsonProcessingException e) {
-            return null;
-        }
+        return FormJsonSchema.formSchema(ISqlMMapperProps.class);
     }
 }

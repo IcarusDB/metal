@@ -7,6 +7,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMMapper;
+import org.metal.backend.spark.extension.IConsoleMSinkProps;
+import org.metal.core.FormJsonSchema;
+import org.metal.core.FormSchemaMethod;
 import org.metal.exception.MetalTranslateException;
 
 public class LogisticRegressionPredictor extends SparkMMapper<ILogisticRegressionPredictorProps> {
@@ -32,5 +35,10 @@ public class LogisticRegressionPredictor extends SparkMMapper<ILogisticRegressio
         model.setFeaturesCol(props.featuresCol());
 
         return model.transform(data);
+    }
+
+    @FormSchemaMethod
+    public static String formSchema() {
+        return FormJsonSchema.formSchema(ILogisticRegressionPredictorProps.class);
     }
 }

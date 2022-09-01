@@ -9,6 +9,9 @@ import org.apache.spark.ml.linalg.VectorUDT;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF1;
 import org.metal.backend.ISetup;
+import org.metal.backend.spark.extension.IConsoleMSinkProps;
+import org.metal.core.FormJsonSchema;
+import org.metal.core.FormSchemaMethod;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -43,5 +46,10 @@ public class AsVector implements UDF1<Seq<Double>, Vector>, ISetup<SparkSession>
     @Override
     public void setup(SparkSession platform) {
         platform.udf().register(this.name, this, new VectorUDT());
+    }
+
+    @FormSchemaMethod
+    public static String formSchema() {
+        return FormJsonSchema.formSchema(AsVector.class);
     }
 }
