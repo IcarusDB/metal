@@ -2,10 +2,20 @@ package org.metal.backend.spark.extension;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.metal.backend.spark.SparkMMapper;
+
+import org.metal.core.FormJsonSchema;
+import org.metal.core.FormSchema;
+import org.metal.core.FormSchemaMethod;
 import org.metal.exception.MetalTranslateException;
 
 public class SqlMMapper extends SparkMMapper <ISqlMMapperProps> {
@@ -41,6 +51,24 @@ public class SqlMMapper extends SparkMMapper <ISqlMMapperProps> {
             return ret;
         } catch (Exception e) {
             throw new MetalTranslateException(e);
+        }
+    }
+
+    @FormSchemaMethod
+    public static String formSchema() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode schema = mapper.createObjectNode();
+        JsonNode formSchema = null;
+        try {
+            formSchema = mapper.readTree(
+                mapper.writer().writeValueAsString(
+                    FormJsonSchema.of(ISqlMMapperProps.class)
+                )
+            );
+            schema.putIfAbsent("formSchema", formSchema);
+            return schema.toPrettyString();
+        } catch (JsonProcessingException e) {
+            return null;
         }
     }
 }

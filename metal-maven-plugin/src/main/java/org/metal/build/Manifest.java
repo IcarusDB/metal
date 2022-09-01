@@ -2,16 +2,29 @@ package org.metal.build;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import javassist.tools.reflect.Reflection;
@@ -24,6 +37,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.metal.core.FormSchema;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanner;
 import org.reflections.scanners.Scanners;
@@ -40,6 +54,9 @@ public class Manifest extends AbstractMojo {
 
   @Parameter(property = "manifest.excluded.packages")
   private Set<String> excludedPackages;
+
+  @Parameter(property = "manifest.file", defaultValue = "manifest.json")
+  private String manifestPath;
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
@@ -68,6 +85,7 @@ public class Manifest extends AbstractMojo {
     URL[] urlArray  = urls.toArray(URL[]::new);
     URLClassLoader classLoader = new URLClassLoader(urlArray);
 
+
     List<Scanner> scanners = new ArrayList<>();
     for (String pkg: this.packages) {
       Scanner scanner = Scanners.SubTypes.filterResultsBy(
@@ -83,35 +101,116 @@ public class Manifest extends AbstractMojo {
             .addScanners(scanners.toArray(Scanner[]::new))
     );
 
-    String sourceClz = "org.metal.core.MSource";
-    extractSchema(classLoader, reflections, sourceClz);
-    String mapperClz = "org.metal.core.MMapper";
-    extractSchema(classLoader, reflections, mapperClz);
+    Class<?> formOfClz = null;
+    try {
+      formOfClz = classLoader.loadClass("org.metal.core.FormSchemaMethods");
+    } catch (ClassNotFoundException e) {
+      getLog().error(e);
+      throw new MojoFailureException(e);
+    }
+    Map<String, String> metalTypes = new HashMap<>();
+    metalTypes.put("sources", "org.metal.core.MSource");
+    metalTypes.put("mappers", "org.metal.core.MMapper");
+    metalTypes.put("fusions", "org.metal.core.MFusion");
+    metalTypes.put("sinks", "org.metal.core.MSink");
+    metalTypes.put("setups", "org.metal.backend.ISetup");
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectNode manifest = objectMapper.createObjectNode();
+
+    for(Map.Entry<String, String> entry: metalTypes.entrySet()) {
+      String type = entry.getKey();
+      String clz = entry.getValue();
+      ArrayNode pkgs = objectMapper.createArrayNode();
+      extractSchema(
+          groupId, artifactId, version,
+          pkgs,
+          classLoader, reflections, clz, formOfClz
+      );
+      manifest.putIfAbsent(type, pkgs);
+    }
+
+    String manifestPretty = manifest.toPrettyString();
+    getLog().info(manifestPretty);
+    try {
+      dump(manifestPretty);
+    } catch (IOException e) {
+      getLog().error("Fail to dump mainfest.");
+      getLog().error(e);
+    }
   }
 
-  private void extractSchema(URLClassLoader classLoader, Reflections reflections, String clz) {
+  private void extractSchema(
+      String groupId, String artifactId, String version,
+      ArrayNode metalPkgs,
+      URLClassLoader classLoader,
+      Reflections reflections,
+      String clz,
+      Class<?> formOfClz)
+      throws MojoFailureException {
     Set<Class<?>> subClzs = reflections.get(
         Scanners.SubTypes.of(clz).asClass(classLoader)
     );
+    for(Class<?> subClz : subClzs) {
+      Method formOf = null;
+      for(Method method: formOfClz.getMethods()) {
+        if (!method.getName().equals("of")) {
+          continue;
+        }
+        if (!Modifier.isStatic(method.getModifiers())) {
+          continue;
+        }
+        if (method.getParameterCount() != 1) {
+          continue;
+        }
+        if (method.getReturnType() != String.class) {
+          continue;
+        }
 
-    List<String> clzs = new ArrayList<>();
-    for (Class<?> subClz : subClzs) {
-      if(excludedPkgs(subClz)) {
-        continue;
-      }
-      clzs.add(subClz.getName());
-      getLog().info(subClz.getName());
-      ObjectMapper mapper = new ObjectMapper();
-      JsonSchemaGenerator generator = new JsonSchemaGenerator(mapper);
-      try {
-        JsonSchema schema = generator.generateSchema(subClz);
-        getLog().info(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema));
-      } catch (JsonMappingException e) {
-        e.printStackTrace();
-      } catch (JsonProcessingException e) {
-        e.printStackTrace();
-      }
+        try {
+          getLog().info(subClz.getName());
+          String schema = (String) method.invoke(null, subClz);
+          if (schema == null) {
+            getLog().warn("[PASS] " + subClz.getName());
+            continue;
+          }
+          getLog().info(schema);
+          ObjectMapper mapper = new ObjectMapper();
+          JsonNode schemaNode = mapper.readTree(schema);
+          ObjectNode metalPkg = mapper.createObjectNode();
+          metalPkg.put("pkg", groupId + ":" + artifactId + ":" + version);
 
+          JsonNode formSchema = schemaNode.get("formSchema");
+          JsonNode uiSchema = schemaNode.get("uiSchema");
+          JsonNode description = schemaNode.get("description");
+
+          if (formSchema == null) {
+            getLog().error("formSchema is lost in " + schema);
+            getLog().warn("[PASS] " + subClz.getName());
+            continue;
+          }
+          metalPkg.putIfAbsent("formSchema", formSchema);
+          if (uiSchema != null) {
+            metalPkg.putIfAbsent("uiSchema", uiSchema);
+          }
+          if (description != null) {
+            metalPkg.putIfAbsent("description", description);
+          }
+          metalPkgs.add(metalPkg);
+        } catch (IllegalAccessException e) {
+          getLog().error(e);
+          throw new MojoFailureException(e);
+        } catch (InvocationTargetException e) {
+          getLog().error(e);
+          throw new MojoFailureException(e);
+        } catch (JsonMappingException e) {
+          getLog().error(e);
+          throw new MojoFailureException(e);
+        } catch (JsonProcessingException e) {
+          getLog().error(e);
+          throw new MojoFailureException(e);
+        }
+      }
     }
   }
 
@@ -123,5 +222,17 @@ public class Manifest extends AbstractMojo {
       }
     }
     return false;
+  }
+
+  private void dump(String manifest) throws IOException {
+    File baseDir = project.getBasedir();
+    Path path = Path.of(baseDir.getPath() + File.separator + manifestPath);
+    Files.createDirectories(path.getParent());
+    path.toFile().createNewFile();
+
+    FileWriter writer = new FileWriter(path.toFile());
+    writer.write(manifest);
+    writer.close();
+    getLog().info("Manifest dump into " + path.toString());
   }
 }

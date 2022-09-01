@@ -26,6 +26,11 @@
   </properties>
   <dependencies>
     <dependency>
+      <groupId>org.metal</groupId>
+      <artifactId>metal-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>

@@ -2,11 +2,18 @@ package org.metal.backend.spark.extension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import org.apache.spark.sql.SparkSession;
 import org.junit.Assert;
 import org.junit.Test;
 import org.metal.backend.spark.SparkTranslator;
 import org.metal.backend.spark.SparkMetalService;
+import org.metal.core.FormJsonSchema;
+import org.metal.core.FormSchema;
+import org.metal.core.FormSchemaMethod;
+import org.metal.core.FormSchemaMethods;
 import org.metal.core.Pair;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
@@ -195,5 +202,10 @@ public class SqlMMapperTest {
         } catch (MetalExecuteException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void case4() throws InvocationTargetException, IllegalAccessException {
+        System.out.println(FormSchemaMethods.of(SqlMMapper.class));
     }
 }

@@ -35,6 +35,13 @@
           <description></description>
         </parameter>
         <parameter>
+          <name>manifestPath</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
           <name>packages</name>
           <type>java.util.Set</type>
           <required>false</required>
@@ -51,12 +58,97 @@
       </parameters>
       <configuration>
         <excludedPackages implementation="java.util.Set">${manifest.excluded.packages}</excludedPackages>
+        <manifestPath implementation="java.lang.String" default-value="manifest.json">${manifest.file}</manifestPath>
         <packages implementation="java.util.Set">${manifest.packages}</packages>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
       </configuration>
     </mojo>
   </mojos>
   <dependencies>
+    <dependency>
+      <groupId>org.metal</groupId>
+      <artifactId>metal-core</artifactId>
+      <type>jar</type>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <type>jar</type>
+      <version>31.1-jre</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>failureaccess</artifactId>
+      <type>jar</type>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>listenablefuture</artifactId>
+      <type>jar</type>
+      <version>9999.0-empty-to-avoid-conflict-with-guava</version>
+    </dependency>
+    <dependency>
+      <groupId>org.checkerframework</groupId>
+      <artifactId>checker-qual</artifactId>
+      <type>jar</type>
+      <version>3.12.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_annotations</artifactId>
+      <type>jar</type>
+      <version>2.11.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.j2objc</groupId>
+      <artifactId>j2objc-annotations</artifactId>
+      <type>jar</type>
+      <version>1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <type>jar</type>
+      <version>3.12.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-vector</artifactId>
+      <type>jar</type>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-format</artifactId>
+      <type>jar</type>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory-core</artifactId>
+      <type>jar</type>
+      <version>7.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <type>jar</type>
+      <version>1.10</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-common</artifactId>
+      <type>jar</type>
+      <version>4.1.68.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.flatbuffers</groupId>
+      <artifactId>flatbuffers-java</artifactId>
+      <type>jar</type>
+      <version>1.12.0</version>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -128,12 +220,6 @@
       <artifactId>maven-artifact</artifactId>
       <type>jar</type>
       <version>3.8.4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <type>jar</type>
-      <version>3.8.1</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.sisu</groupId>

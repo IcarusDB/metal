@@ -33,6 +33,13 @@
           <description></description>
         </parameter>
         <parameter>
+          <name>manifestPath</name>
+          <type>java.lang.String</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
           <name>packages</name>
           <type>java.util.Set</type>
           <required>false</required>
@@ -42,6 +49,7 @@
       </parameters>
       <configuration>
         <excludedPackages implementation="java.util.Set">${manifest.excluded.packages}</excludedPackages>
+        <manifestPath implementation="java.lang.String" default-value="manifest.json">${manifest.file}</manifestPath>
         <packages implementation="java.util.Set">${manifest.packages}</packages>
       </configuration>
     </mojo>
