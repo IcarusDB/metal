@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.AuthenticationProvider;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -23,13 +24,14 @@ import org.metal.server.SendJson;
 
 public class Auth extends AbstractVerticle {
 
-  private final static String HASH_ALGO = "sha256";
+  public final static String HASH_ALGO = "sha256";
   private final static Logger LOGGER = LoggerFactory.getLogger(Auth.class);
   private MongoClient mongo;
   private MongoAuthentication authenticationProvider;
   private MongoAuthorization authorizationProvider;
   private JWTAuth jwtAuth;
   private HttpServer server;
+  private AttachRoles attachRoles;
 
   public MongoAuthentication getAuthenticationProvider() {
     return authenticationProvider;
@@ -43,6 +45,7 @@ public class Auth extends AbstractVerticle {
     return jwtAuth;
   }
 
+
   private Auth(MongoClient client) {
     this.mongo = client;
     MongoAuthenticationOptions options = new MongoAuthenticationOptions();
@@ -50,11 +53,14 @@ public class Auth extends AbstractVerticle {
     authorizationProvider = MongoAuthorization.create("authorization", mongo,
         new MongoAuthorizationOptions());
 
+    attachRoles = AttachRoles.create(mongo);
+
     JWTAuthOptions jwtAuthOptions = new JWTAuthOptions();
     jwtAuthOptions.addPubSecKey(
         new PubSecKeyOptions().setAlgorithm("HS256").setBuffer("123456")
     );
     jwtAuth = JWTAuth.create(getVertx(), jwtAuthOptions);
+    jwtAuth = JWTAuthWithAttachRoles.create(jwtAuth, attachRoles);
   }
 
   public static Future<Auth> create(MongoClient client) {
@@ -145,5 +151,9 @@ public class Auth extends AbstractVerticle {
         .put("status", "OK")
         .put("jwt", jwt);
     SendJson.send(ctx, resp, 201);
+  }
+
+  public static RoleBasedAuthorization adminAuthor() {
+    return RoleBasedAuthorization.create(Roles.ADMIN.toString());
   }
 }

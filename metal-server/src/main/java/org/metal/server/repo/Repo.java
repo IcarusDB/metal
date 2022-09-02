@@ -42,7 +42,7 @@ public class Repo {
     ctx.reroute(HttpMethod.POST, MVN_REPO_API_URL + "/components?repository=" + repository);
   }
 
-  public void submitPackageManifest(RoutingContext ctx) {
+  public void submitPkgManifest(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
   }
 }

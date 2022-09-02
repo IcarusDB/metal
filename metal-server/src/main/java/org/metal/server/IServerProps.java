@@ -6,4 +6,5 @@ import org.immutables.value.Value;
 public interface IServerProps {
   public int port();
   public String mongoConnection();
+  public boolean init();
 }

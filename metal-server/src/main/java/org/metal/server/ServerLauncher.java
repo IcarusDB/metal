@@ -14,6 +14,7 @@ public class ServerLauncher {
     IServerProps props = ImmutableIServerProps.builder()
         .port(19000)
         .mongoConnection("mongodb://metal:123456@192.168.15.10:27017/metalDB")
+        .init(false)
         .build();
     Server srv = new Server(props);
 

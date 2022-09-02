@@ -11,15 +11,19 @@ import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.AuthenticationHandler;
+import io.vertx.ext.web.handler.AuthorizationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.JWTAuthHandler;
 import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
+import org.metal.server.db.Init;
 import org.metal.server.repo.Repo;
 
 public class Server extends AbstractVerticle {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(Server.class);
 
   private IServerProps props;
@@ -36,6 +40,8 @@ public class Server extends AbstractVerticle {
     router.post("/api/v1/users")
         .produces("application/json")
         .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(this.auth.adminAuthor()))
         .handler(this.auth::registerUser);
 
     router.post("/api/v1/tokens")
@@ -53,7 +59,6 @@ public class Server extends AbstractVerticle {
         .handler(AttachRoles.create(mongo)::attach)
         .handler(this::something);
 
-
     repo.createRepoProxy(router, getVertx());
     router.post("/api/v1/repo/package")
         .handler(repo::deploy);
@@ -68,7 +73,17 @@ public class Server extends AbstractVerticle {
 
     httpServer = getVertx().createHttpServer();
     repo = new Repo();
-    Auth.create(mongo)
+
+    Future<Void> init;
+    if (props.init()) {
+      init = Init.initUser(mongo);
+    } else {
+      init = Future.succeededFuture();
+    }
+
+    init.compose(ret -> {
+          return Auth.create(mongo);
+        })
         .compose((Auth auth) -> {
           this.auth = auth;
           return Future.succeededFuture(auth);
@@ -83,13 +98,14 @@ public class Server extends AbstractVerticle {
           return httpServer.listen(props.port());
         })
         .onSuccess(srv -> {
-          LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Server.class, srv.actualPort()));
+          LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Server.class,
+              srv.actualPort()));
           startPromise.complete();
         })
         .onFailure(error -> {
           LOGGER.error(error);
           startPromise.fail(error);
-        });;
+        });
   }
 
   @Override
@@ -98,13 +114,15 @@ public class Server extends AbstractVerticle {
         .compose(ret -> {
           return mongo.close();
         }, error -> {
-          LOGGER.error(String.format("Fail to stop Server[%s] on port[%d].", Server.class, props.port()), error);
+          LOGGER.error(
+              String.format("Fail to stop Server[%s] on port[%d].", Server.class, props.port()),
+              error);
           return mongo.close();
         })
-        .onSuccess(ret ->{
+        .onSuccess(ret -> {
           LOGGER.info(String.format("Success to close mongoDB connection."));
         })
-        .onFailure(error->{
+        .onFailure(error -> {
           LOGGER.info(String.format("Fail to close mongoDB connection."), error);
         });
   }
