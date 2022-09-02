@@ -8,13 +8,16 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.UsernamePasswordCredentials;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import io.vertx.ext.auth.jwt.authorization.JWTAuthorization;
 import io.vertx.ext.auth.mongo.MongoAuthentication;
 import io.vertx.ext.auth.mongo.MongoAuthenticationOptions;
 import io.vertx.ext.auth.mongo.MongoAuthorization;
@@ -35,6 +38,18 @@ public class Auth extends AbstractVerticle {
   private JWTAuth jwtAuth;
   private HttpServer server;
 
+  public MongoAuthentication getAuthenticationProvider() {
+    return authenticationProvider;
+  }
+
+  public MongoAuthorization getAuthorizationProvider() {
+    return authorizationProvider;
+  }
+
+  public JWTAuth getJwtAuth() {
+    return jwtAuth;
+  }
+
   private Auth(MongoClient client) {
     this.mongo = client;
     MongoAuthenticationOptions options = new MongoAuthenticationOptions();
@@ -48,7 +63,6 @@ public class Auth extends AbstractVerticle {
         new PubSecKeyOptions().setAlgorithm("HS256").setBuffer("123456")
     );
     jwtAuth = JWTAuth.create(getVertx(), jwtAuthOptions);
-
   }
 
   public static Future<Auth> create(MongoClient client) {
@@ -148,46 +162,31 @@ public class Auth extends AbstractVerticle {
   }
 
   public void jwt(RoutingContext ctx) {
-    JsonObject body = ctx.body().asJsonObject();
-    String username = body.getString("username");
-    String password = body.getString("password");
-    JsonObject authInfo = new JsonObject()
-        .put("username", username)
-        .put("password", password);
-
-    LOGGER.info(authInfo);
-
-    authenticationProvider.authenticate(authInfo)
-        .compose(this::attachRoles)
-        .compose(user -> {
-          ctx.setUser(user);
-          return Future.succeededFuture(user);
-        })
-        .onSuccess(user -> {
-          LOGGER.info(user);
-          String jwt = jwtAuth.generateToken(
-              new JsonObject().put("username", user.get("username")));
-          JsonObject resp = new JsonObject()
-              .put("status", "OK")
-              .put("jwt", jwt);
-          String payload = resp.toString();
-          ctx.response()
-              .putHeader("content-type", ctx.getAcceptableContentType())
-              .putHeader("content-length", String.valueOf(payload.length()))
-              .end(payload);
-        })
-        .onFailure(error -> {
-          LOGGER.error("Fail to authenticate.");
-          LOGGER.error(error);
-          JsonObject resp = new JsonObject();
-          resp.put("status", "FAIL")
-              .put("msg", "Fail to authenticate.");
-          String payload = resp.toString();
-          ctx.response()
-              .putHeader("content-type", ctx.getAcceptableContentType())
-              .putHeader("content-length", String.valueOf(payload.length()))
-              .end(payload);
-        });
+    LOGGER.info("Online User:" + ctx.user().get("username"));
+    User user = ctx.user();
+    if (user == null) {
+      LOGGER.error("Fail to authenticate because no user has been authenticated.");
+      JsonObject resp = new JsonObject();
+      resp.put("status", "FAIL")
+          .put("msg", "Fail to authenticate.");
+      String payload = resp.toString();
+      ctx.response()
+          .setStatusCode(401)
+          .putHeader("content-type", ctx.getAcceptableContentType())
+          .putHeader("content-length", String.valueOf(payload.length()))
+          .end(payload);
+      return;
+    }
+    String jwt = jwtAuth.generateToken(new JsonObject().put("username", user.get("username")));
+    JsonObject resp = new JsonObject()
+        .put("status", "OK")
+        .put("jwt", jwt);
+    String payload = resp.toString();
+    ctx.response()
+        .setStatusCode(200)
+        .putHeader("content-type", ctx.getAcceptableContentType())
+        .putHeader("content-length", String.valueOf(payload.length()))
+        .end(payload);
   }
 
   public void authenticationOnJwt(RoutingContext ctx) {
@@ -226,9 +225,5 @@ public class Auth extends AbstractVerticle {
               .putHeader("content-length", String.valueOf(payload.length()))
               .end(payload);
         });
-  }
-
-  private void something(RoutingContext ctx) {
-    ctx.response().end("OK");
   }
 }
