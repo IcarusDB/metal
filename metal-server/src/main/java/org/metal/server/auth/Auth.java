@@ -1,32 +1,25 @@
 package org.metal.server.auth;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
-import io.vertx.ext.auth.authentication.UsernamePasswordCredentials;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
-import io.vertx.ext.auth.jwt.authorization.JWTAuthorization;
 import io.vertx.ext.auth.mongo.MongoAuthentication;
 import io.vertx.ext.auth.mongo.MongoAuthenticationOptions;
 import io.vertx.ext.auth.mongo.MongoAuthorization;
 import io.vertx.ext.auth.mongo.MongoAuthorizationOptions;
 import io.vertx.ext.mongo.IndexOptions;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
+import org.metal.server.SendJson;
 
 public class Auth extends AbstractVerticle {
 
@@ -54,7 +47,6 @@ public class Auth extends AbstractVerticle {
     this.mongo = client;
     MongoAuthenticationOptions options = new MongoAuthenticationOptions();
     authenticationProvider = MongoAuthentication.create(mongo, options);
-
     authorizationProvider = MongoAuthorization.create("authorization", mongo,
         new MongoAuthorizationOptions());
 
@@ -112,10 +104,7 @@ public class Auth extends AbstractVerticle {
       JsonObject resp = new JsonObject();
       resp.put("status", "FAIL")
           .put("msg", String.format("roles[%s] must be of %s.", roles, Roles.values()));
-      String payload = resp.toString();
-      ctx.response().putHeader("content-type", ctx.getAcceptableContentType())
-          .putHeader("content-length", String.valueOf(payload.length()))
-          .end(payload);
+      SendJson.send(ctx, resp, 415);
       return;
     }
 
@@ -129,39 +118,18 @@ public class Auth extends AbstractVerticle {
           JsonObject resp = new JsonObject();
           resp.put("status", "OK")
               .put("userId", userId);
-          String payload = resp.toString();
-          ctx.response().putHeader("content-type", ctx.getAcceptableContentType())
-              .putHeader("content-length", String.valueOf(payload.length()))
-              .end(payload);
+          SendJson.send(ctx, resp, 201);
         })
         .onFailure(error -> {
           LOGGER.error("Fail to register user.", error);
           JsonObject resp = new JsonObject();
           resp.put("status", "FAIL")
               .put("msg", error.getLocalizedMessage());
-          String payload = resp.toString();
-          ctx.response().putHeader("content-type", ctx.getAcceptableContentType())
-              .putHeader("content-length", String.valueOf(payload.length()))
-              .end(payload);
+          SendJson.send(ctx, resp, 409);
         });
   }
 
-  public Future<User> attachRoles(User user) {
-    return mongo.findOne("user",
-            new JsonObject().put("username", user.get("username")),
-            new JsonObject().put("roles", true))
-        .compose(json -> {
-          JsonArray roles = json.getJsonArray("roles");
-          for (int idx = 0; idx < roles.size(); idx++) {
-            RoleBasedAuthorization authorization = RoleBasedAuthorization.create(
-                roles.getString(idx));
-            user.authorizations().add("", authorization);
-          }
-          return Future.succeededFuture(user);
-        });
-  }
-
-  public void jwt(RoutingContext ctx) {
+  public void createJWT(RoutingContext ctx) {
     LOGGER.info("Online User:" + ctx.user().get("username"));
     User user = ctx.user();
     if (user == null) {
@@ -169,61 +137,13 @@ public class Auth extends AbstractVerticle {
       JsonObject resp = new JsonObject();
       resp.put("status", "FAIL")
           .put("msg", "Fail to authenticate.");
-      String payload = resp.toString();
-      ctx.response()
-          .setStatusCode(401)
-          .putHeader("content-type", ctx.getAcceptableContentType())
-          .putHeader("content-length", String.valueOf(payload.length()))
-          .end(payload);
+      SendJson.send(ctx, resp, 401);
       return;
     }
     String jwt = jwtAuth.generateToken(new JsonObject().put("username", user.get("username")));
     JsonObject resp = new JsonObject()
         .put("status", "OK")
         .put("jwt", jwt);
-    String payload = resp.toString();
-    ctx.response()
-        .setStatusCode(200)
-        .putHeader("content-type", ctx.getAcceptableContentType())
-        .putHeader("content-length", String.valueOf(payload.length()))
-        .end(payload);
-  }
-
-  public void authenticationOnJwt(RoutingContext ctx) {
-    String authorization = ctx.request().getHeader("Authorization");
-    String[] bearer = authorization.split("Bearer");
-    if (bearer == null || bearer.length < 2) {
-      JsonObject resp = new JsonObject();
-      resp.put("status", "FAIL")
-          .put("msg", "Fail to authentication");
-      String payload = resp.toString();
-      ctx.response()
-          .putHeader("content-type", ctx.getAcceptableContentType())
-          .putHeader("content-length", String.valueOf(payload.length()))
-          .end(payload);
-      return;
-    }
-    String jwt = bearer[1].strip();
-    jwtAuth.authenticate(new JsonObject().put("token", jwt))
-        .compose(this::attachRoles)
-        .compose(user -> {
-          ctx.setUser(user);
-          return Future.succeededFuture(user);
-        })
-        .onSuccess(user -> {
-          LOGGER.info(user);
-          ctx.next();
-        })
-        .onFailure(error -> {
-          LOGGER.error(error);
-          JsonObject resp = new JsonObject();
-          resp.put("status", "FAIL")
-              .put("msg", error.getLocalizedMessage());
-          String payload = resp.toString();
-          ctx.response()
-              .putHeader("content-type", ctx.getAcceptableContentType())
-              .putHeader("content-length", String.valueOf(payload.length()))
-              .end(payload);
-        });
+    SendJson.send(ctx, resp, 201);
   }
 }

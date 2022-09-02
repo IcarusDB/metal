@@ -44,6 +44,5 @@ public class Repo {
 
   public void submitPackageManifest(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
-
   }
 }
