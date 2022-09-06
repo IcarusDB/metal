@@ -18,6 +18,7 @@
     <immutables.version>2.9.0</immutables.version>
     <arrow-vector.version>7.0.0</arrow-vector.version>
     <vertx.version>4.3.3</vertx.version>
+    <jackson.version>2.13.3</jackson.version>
   </properties>
   <dependencies>
     <dependency>
@@ -55,6 +56,11 @@
       <artifactId>value</artifactId>
       <version>${immutables.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
   </dependencies>
 </project>

@@ -20,6 +20,7 @@ import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
 import org.metal.server.db.Init;
+import org.metal.server.project.Project;
 import org.metal.server.repo.Repo;
 
 public class Server extends AbstractVerticle {
@@ -31,6 +32,7 @@ public class Server extends AbstractVerticle {
   private MongoClient mongo;
   private Auth auth;
   private Repo repo;
+  private Project project;
 
   public Server(IServerProps props) {
     this.props = props;
@@ -62,6 +64,25 @@ public class Server extends AbstractVerticle {
     repo.createRepoProxy(router, getVertx());
     router.post("/api/v1/repo/package")
         .handler(repo::deploy);
+
+    router.post("/api/v1/projects")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::add);
+
+    router.get("/api/v1/projects/:projectName")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::get);
+
+    router.get("/api/v1/projects")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::getAll);
+
     return Future.succeededFuture(router);
   }
 
@@ -73,6 +94,7 @@ public class Server extends AbstractVerticle {
 
     httpServer = getVertx().createHttpServer();
     repo = new Repo();
+    project = Project.create(mongo);
 
     Future<Void> init;
     if (props.init()) {
