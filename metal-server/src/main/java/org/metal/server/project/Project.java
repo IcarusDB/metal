@@ -13,6 +13,7 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.impl.MappingStream;
 import io.vertx.ext.web.RoutingContext;
+import java.util.UUID;
 import org.metal.server.SendJson;
 
 public class Project extends AbstractVerticle {
@@ -30,6 +31,8 @@ public class Project extends AbstractVerticle {
 
   public void add(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
+
+
     User user = ctx.user();
     mongo.findOne(
         "user",
@@ -38,12 +41,13 @@ public class Project extends AbstractVerticle {
     ).compose(
         (ret) -> {
           String id = ret.getString("_id");
+          String backendId = UUID.randomUUID().toString();
           body.put("user", new JsonObject()
                   .put("$ref", "user")
                   .put("$id", id)
-//                  .put("$db", "metalDB")
               )
-              .put("createTime", System.currentTimeMillis());
+              .put("createTime", System.currentTimeMillis())
+              .put("backendId", backendId);
           return Future.succeededFuture(body.copy());
         }
     ).compose(
@@ -91,6 +95,7 @@ public class Project extends AbstractVerticle {
                 .put("_id", true)
                 .put("name", true)
                 .put("createTime", true)
+                .put("backendId", true)
                 .put("userInfo", new JsonObject().put("username", true)));
 
     JsonArray pipeline = new JsonArray()
@@ -139,6 +144,7 @@ public class Project extends AbstractVerticle {
             .put("_id", true)
             .put("name", true)
             .put("createTime", true)
+            .put("backendId", true)
             .put("userInfo", new JsonObject().put("username", true))
         );
 
