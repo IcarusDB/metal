@@ -3,6 +3,7 @@ package org.metal.backend.api.impl;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
@@ -25,6 +26,7 @@ public class BackendServiceImpl implements BackendService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
   private IBackend backend;
   private Vertx vertx;
+  private WorkerExecutor workerExecutor;
 
   @Override
   public Future<JsonObject> analyse(JsonObject spec) {
@@ -86,7 +88,7 @@ public class BackendServiceImpl implements BackendService {
       return Future.failedFuture("Some unAnalysed metals exist in context.");
     }
 
-    return vertx.executeBlocking(
+    return workerExecutor.executeBlocking(
         (promise) -> {
           try {
             backend.service().exec();
