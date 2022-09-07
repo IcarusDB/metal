@@ -173,4 +173,14 @@ public class Project extends AbstractVerticle {
           LOGGER.error(error);
         });
   }
+
+  public void setBackendLauncher(RoutingContext ctx) {
+    JsonObject body = ctx.body().asJsonObject();
+    Platform p= Platform.valueOf(body.getString("platform"));
+    switch (p) {
+      case SPARK: {
+
+      }
+    }
+  }
 }
