@@ -1,6 +1,8 @@
 package org.metal.backend.api.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
@@ -22,6 +24,7 @@ import org.metal.specs.SpecFactoryOnJson;
 public class BackendServiceImpl implements BackendService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
   private IBackend backend;
+  private Vertx vertx;
 
   @Override
   public Future<JsonObject> analyse(JsonObject spec) {
@@ -83,11 +86,15 @@ public class BackendServiceImpl implements BackendService {
       return Future.failedFuture("Some unAnalysed metals exist in context.");
     }
 
-    try {
-      backend.service().exec();
-      return Future.succeededFuture();
-    } catch (MetalExecuteException e) {
-      return Future.failedFuture(e);
-    }
+    return vertx.executeBlocking(
+        (promise) -> {
+          try {
+            backend.service().exec();
+            promise.complete();
+          } catch (MetalExecuteException e) {
+            promise.fail(e);
+          }
+        }, true
+    );
   }
 }
