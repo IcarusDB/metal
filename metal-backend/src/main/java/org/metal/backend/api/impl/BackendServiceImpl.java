@@ -9,24 +9,35 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.metal.backend.IBackend;
 import org.metal.backend.api.BackendService;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
+import org.metal.exception.MetalAnalyseAcquireException;
 import org.metal.exception.MetalAnalysedException;
 import org.metal.exception.MetalDraftException;
+import org.metal.exception.MetalExecAcquireException;
 import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
+import org.metal.exception.MetalStatusAcquireException;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
 public class BackendServiceImpl implements BackendService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
   private IBackend backend;
-  private Vertx vertx;
   private WorkerExecutor workerExecutor;
+
+  private BackendServiceImpl(IBackend backend, WorkerExecutor workerExecutor) {
+    this.backend = backend;
+    this.workerExecutor = workerExecutor;
+  }
 
   @Override
   public Future<JsonObject> analyse(JsonObject spec) {
@@ -98,5 +109,110 @@ public class BackendServiceImpl implements BackendService {
           }
         }, true
     );
+  }
+
+  public static BackendService concurrency(IBackend backend, WorkerExecutor workerExecutor) {
+    return new ConcurrencyService(
+        new BackendServiceImpl(backend, workerExecutor)
+    );
+  }
+
+  private static class ConcurrencyService implements BackendService {
+    private BackendService innerService;
+    private ReadLock analyseReadLock;
+    private WriteLock analyseWriteLock;
+    private ReentrantLock execLock;
+
+    private ConcurrencyService(BackendService backendService) throws IllegalArgumentException{
+      if (backendService instanceof  ConcurrencyService) {
+        throw new IllegalArgumentException(
+            String.format("Fail to construct object, because the backendService is one instance of %s", ConcurrencyService.class)
+        );
+      }
+      this.innerService = backendService;
+      ReentrantReadWriteLock analyseLock = new ReentrantReadWriteLock();
+      this.analyseReadLock = analyseLock.readLock();
+      this.analyseWriteLock = analyseLock.writeLock();
+      this.execLock = new ReentrantLock();
+    }
+
+    @Override
+    public Future<JsonObject> analyse(JsonObject spec) {
+      if (analyseWriteLock.tryLock()) {
+        return innerService.analyse(spec).compose(
+            ret -> {
+              analyseWriteLock.unlock();
+              return Future.succeededFuture(ret);
+            },
+            error -> {
+              analyseWriteLock.unlock();
+              return Future.failedFuture(error);
+            }
+        );
+      }
+      return Future.failedFuture(new MetalAnalyseAcquireException());
+    }
+
+    @Override
+    public Future<JsonObject> schemaAPI(String metalId) {
+      if (analyseReadLock.tryLock()) {
+        return innerService.schemaAPI(metalId).compose(
+            ret -> {
+              analyseReadLock.unlock();
+              return Future.succeededFuture(ret);
+            },
+            error -> {
+              analyseReadLock.unlock();
+              return Future.failedFuture(error);
+            }
+        );
+      }
+      return Future.failedFuture(new MetalAnalyseAcquireException());
+    }
+
+    @Override
+    public Future<JsonObject> heartAPI() {
+      return innerService.heartAPI();
+    }
+
+    @Override
+    public Future<JsonObject> statusAPI() {
+      if (analyseReadLock.tryLock()) {
+        return innerService.statusAPI().compose(
+            ret -> {
+              analyseReadLock.unlock();
+              return Future.succeededFuture(ret);
+            },
+            error -> {
+              analyseReadLock.unlock();
+              return Future.failedFuture(error);
+            }
+        );
+      }
+      return Future.failedFuture(new MetalStatusAcquireException());
+
+    }
+
+    @Override
+    public Future<JsonObject> execAPI() {
+      if (analyseReadLock.tryLock()) {
+        if (execLock.tryLock()) {
+          return innerService.execAPI().compose(
+              ret -> {
+                execLock.unlock();
+                analyseReadLock.unlock();
+                return Future.succeededFuture(ret);
+              },
+              error -> {
+                execLock.unlock();
+                analyseReadLock.unlock();
+                return Future.failedFuture(error);
+              }
+          );
+        }
+        analyseReadLock.unlock();
+      }
+      return Future.failedFuture(new MetalExecAcquireException());
+    }
   }
 }
