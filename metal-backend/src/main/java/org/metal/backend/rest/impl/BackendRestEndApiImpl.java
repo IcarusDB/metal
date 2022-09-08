@@ -1,5 +1,7 @@
 package org.metal.backend.rest.impl;
 
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import java.time.LocalDateTime;
@@ -12,9 +14,13 @@ import org.metal.exception.MetalDraftException;
 import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
+import org.metal.server.api.BackendReport;
 
 public class BackendRestEndApiImpl implements IBackendRestEndApi {
+  private final static Logger LOGGER = LoggerFactory.getLogger(BackendRestEndApiImpl.class);
+
   private BackendService backendService;
+  private BackendReport backendReport;
 
   @Override
   public void analyseAPI(RoutingContext ctx) {
@@ -114,18 +120,16 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
 
   @Override
   public void execAPI(RoutingContext ctx) {
-
-    backendService.execAPI()
+    String execId = ctx.pathParam("execId");
+    backendService.execAPI(new JsonObject().put("id", execId))
         .onSuccess((JsonObject ret) -> {
           /***
            * Report Finish
-           * TODO
            */
-          JsonObject resp = new JsonObject();
-          resp.put("status", "OK")
-              .put("data", ret);
-//          SendJson.send(ctx, resp, 200);
-
+          backendReport.reportFinish(ret)
+              .onFailure(error -> {
+                LOGGER.error(String.format("Fail to report exec[%d] has finished.", execId), error);
+              });
         })
         .onFailure((Throwable error) -> {
           /***
@@ -133,20 +137,24 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
            * TODO
            */
           JsonObject resp = new JsonObject();
-          resp.put("status", "FAIL");
+          resp.put("id", execId)
+              .put("status", "FAIL")
+              .put("finishTime", System.currentTimeMillis());
           if (error instanceof MetalExecuteException) {
-//            resp.put("msg", error.getLocalizedMessage());
-//            SendJson.send(ctx, resp, 500);
+            resp.put("msg", error.getLocalizedMessage());
+            backendReport.reportFailure(resp);
             return;
           }
 
-//          resp.put("msg", error.getLocalizedMessage());
-//          SendJson.send(ctx, resp, 500);
-
+          resp.put("msg", error.getLocalizedMessage());
+          backendReport.reportFailure(resp);
         });
+
     JsonObject resp = new JsonObject();
-    resp.put("status", "OK")
-        .put("submitTime", LocalDateTime.now());
+    resp.put("id", execId)
+        .put("status", "OK")
+        .put("submitTime", System.currentTimeMillis());
     SendJson.send(ctx, resp, 202);
+    backendReport.reportCreate(resp);
   }
 }

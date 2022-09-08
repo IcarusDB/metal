@@ -90,7 +90,8 @@ public class BackendServiceImpl implements BackendService {
   }
 
   @Override
-  public Future<JsonObject> execAPI() {
+  public Future<JsonObject> execAPI(JsonObject exec) {
+    String execId = exec.getString("id");
     if (backend.service().analysed().isEmpty()) {
       return Future.failedFuture("Not any analysed metal in context.");
     }
@@ -103,7 +104,11 @@ public class BackendServiceImpl implements BackendService {
         (promise) -> {
           try {
             backend.service().exec();
-            promise.complete();
+            JsonObject resp = new JsonObject();
+            resp.put("id", execId)
+                .put("status", "FINISH")
+                .put("finishTime", System.currentTimeMillis());
+            promise.complete(resp);
           } catch (MetalExecuteException e) {
             promise.fail(e);
           }
@@ -194,10 +199,10 @@ public class BackendServiceImpl implements BackendService {
     }
 
     @Override
-    public Future<JsonObject> execAPI() {
+    public Future<JsonObject> execAPI(JsonObject exec) {
       if (analyseReadLock.tryLock()) {
         if (execLock.tryLock()) {
-          return innerService.execAPI().compose(
+          return innerService.execAPI(exec).compose(
               ret -> {
                 execLock.unlock();
                 analyseReadLock.unlock();
