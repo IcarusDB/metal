@@ -150,7 +150,7 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalAnalyseAcquireException());
+      return Future.failedFuture(new MetalAnalyseAcquireException("Analyse has been acquired by other request, wait a moment."));
     }
 
     @Override
@@ -167,7 +167,7 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalAnalyseAcquireException());
+      return Future.failedFuture(new MetalAnalyseAcquireException("Now analyse has been acquired by other request, wait a moment."));
     }
 
     @Override
@@ -189,7 +189,7 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalStatusAcquireException());
+      return Future.failedFuture(new MetalStatusAcquireException("Now analyse has been acquired by other request, wait a moment."));
 
     }
 
@@ -211,8 +211,9 @@ public class BackendServiceImpl implements BackendService {
           );
         }
         analyseReadLock.unlock();
+        return Future.failedFuture(new MetalExecAcquireException("Now executor has been acquired by other request, wait a moment."));
       }
-      return Future.failedFuture(new MetalExecAcquireException());
+      return Future.failedFuture(new MetalExecAcquireException("Now analyse has been acquired by other request, wait a moment."));
     }
   }
 }
