@@ -10,8 +10,31 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportCreate(JsonObject create) {
+    if (!"OK".equals(create.getString("status"))) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s is not in \'OK\' status.", create.toString())
+      );
+    }
 
-    return null;
+    if (create.getString("id") == null) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s lost id.", create.toString())
+      );
+    }
+
+    if (create.getLong("submitTime") == null) {
+      return Future.failedFuture(
+        String.format("The parameter create:%s lost submitTime.", create.toString())
+      );
+    }
+
+    return mongo.findOneAndUpdate(
+        "exec",
+        new JsonObject().put("id", create.getString("id")),
+        create
+        ).compose((JsonObject ret) -> {
+          return Future.succeededFuture();
+    });
   }
 
   @Override
@@ -21,11 +44,59 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportFinish(JsonObject finish) {
-    return null;
+    if (!"FINISH".equals(finish.getString("status"))) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s is not in \'FINISH\' status.", finish.toString())
+      );
+    }
+
+    if (finish.getString("id") == null) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s lost id.", finish.toString())
+      );
+    }
+
+    if (finish.getLong("finishTime") == null) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s lost finishTime.", finish.toString())
+      );
+    }
+
+    return mongo.findOneAndUpdate(
+        "exec",
+        new JsonObject().put("id", finish.getString("id")),
+        finish
+    ).compose((JsonObject ret) -> {
+      return Future.succeededFuture();
+    });
   }
 
   @Override
   public Future<Void> reportFailure(JsonObject failure) {
-    return null;
+    if (!"FINISH".equals(failure.getString("status"))) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s is not in \'FINISH\' status.", failure.toString())
+      );
+    }
+
+    if (failure.getString("id") == null) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s lost id.", failure.toString())
+      );
+    }
+
+    if (failure.getLong("finishTime") == null) {
+      return Future.failedFuture(
+          String.format("The parameter create:%s lost finishTime.", failure.toString())
+      );
+    }
+
+    return mongo.findOneAndUpdate(
+        "exec",
+        new JsonObject().put("id", failure.getString("id")),
+        failure
+    ).compose((JsonObject ret) -> {
+      return Future.succeededFuture();
+    });
   }
 }

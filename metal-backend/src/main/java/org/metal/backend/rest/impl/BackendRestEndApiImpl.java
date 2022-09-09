@@ -18,9 +18,7 @@ import org.metal.server.api.BackendReport;
 
 public class BackendRestEndApiImpl implements IBackendRestEndApi {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendRestEndApiImpl.class);
-
   private BackendService backendService;
-  private BackendReport backendReport;
 
   @Override
   public void analyseAPI(RoutingContext ctx) {
@@ -121,40 +119,11 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
   @Override
   public void execAPI(RoutingContext ctx) {
     String execId = ctx.pathParam("execId");
-    backendService.execAPI(new JsonObject().put("id", execId))
-        .onSuccess((JsonObject ret) -> {
-          /***
-           * Report Finish
-           */
-          backendReport.reportFinish(ret)
-              .onFailure(error -> {
-                LOGGER.error(String.format("Fail to report exec[%d] has finished.", execId), error);
-              });
-        })
-        .onFailure((Throwable error) -> {
-          /***
-           * Report Exception
-           * TODO
-           */
-          JsonObject resp = new JsonObject();
-          resp.put("id", execId)
-              .put("status", "FAIL")
-              .put("finishTime", System.currentTimeMillis());
-          if (error instanceof MetalExecuteException) {
-            resp.put("msg", error.getLocalizedMessage());
-            backendReport.reportFailure(resp);
-            return;
-          }
-
-          resp.put("msg", error.getLocalizedMessage());
-          backendReport.reportFailure(resp);
-        });
+    backendService.execAPI(new JsonObject().put("id", execId));
 
     JsonObject resp = new JsonObject();
     resp.put("id", execId)
-        .put("status", "OK")
-        .put("submitTime", System.currentTimeMillis());
+        .put("status", "OK");
     SendJson.send(ctx, resp, 202);
-    backendReport.reportCreate(resp);
   }
 }

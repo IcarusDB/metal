@@ -26,13 +26,16 @@ import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
 import org.metal.exception.MetalStatusAcquireException;
+import org.metal.server.api.BackendReport;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
 public class BackendServiceImpl implements BackendService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
+  private IBackendServiceProps serviceProps;
   private IBackend backend;
   private WorkerExecutor workerExecutor;
+  private BackendReport reportor;
 
   private BackendServiceImpl(IBackend backend, WorkerExecutor workerExecutor) {
     this.backend = backend;
@@ -90,8 +93,9 @@ public class BackendServiceImpl implements BackendService {
   }
 
   @Override
-  public Future<JsonObject> execAPI(JsonObject exec) {
+  public Future<Void> execAPI(JsonObject exec) {
     String execId = exec.getString("id");
+
     if (backend.service().analysed().isEmpty()) {
       return Future.failedFuture("Not any analysed metal in context.");
     }
@@ -100,16 +104,43 @@ public class BackendServiceImpl implements BackendService {
       return Future.failedFuture("Some unAnalysed metals exist in context.");
     }
 
+    JsonObject create = new JsonObject();
+    create.put("id", execId)
+        .put("address", serviceProps.backendServiceAddress())
+        .put("status", "SUBMIT")
+        .put("submitTime", System.currentTimeMillis());
+
+    reportor.reportCreate(create)
+        .onFailure(error -> {
+          LOGGER.error("Fail to report create exec " + execId, error);
+        });
+
     return workerExecutor.executeBlocking(
         (promise) -> {
           try {
             backend.service().exec();
-            JsonObject resp = new JsonObject();
-            resp.put("id", execId)
+            JsonObject finish = new JsonObject();
+            finish.put("id", execId)
+                .put("address", serviceProps.backendServiceAddress())
                 .put("status", "FINISH")
                 .put("finishTime", System.currentTimeMillis());
-            promise.complete(resp);
+            reportor.reportFinish(finish)
+                    .onFailure(error -> {
+                      LOGGER.error("Fail to reprot finish exec " + execId, error);
+                    });
+            promise.complete();
           } catch (MetalExecuteException e) {
+            JsonObject failure = new JsonObject();
+            failure.put("id", execId)
+                .put("address", serviceProps.backendServiceAddress())
+                .put("status", "FINISH")
+                .put("finishTime", System.currentTimeMillis())
+                .put("msg", e.getLocalizedMessage());
+
+            reportor.reportFailure(failure)
+                .onFailure(error -> {
+                  LOGGER.error("Fail to report failure of exec " + execId, error);
+                });
             promise.fail(e);
           }
         }, true
@@ -199,7 +230,7 @@ public class BackendServiceImpl implements BackendService {
     }
 
     @Override
-    public Future<JsonObject> execAPI(JsonObject exec) {
+    public Future<Void> execAPI(JsonObject exec) {
       if (analyseReadLock.tryLock()) {
         if (execLock.tryLock()) {
           return innerService.execAPI(exec).compose(

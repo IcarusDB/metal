@@ -23,5 +23,5 @@ public interface BackendService {
 
   public Future<JsonObject> statusAPI();
 
-  public Future<JsonObject> execAPI(JsonObject exec);
+  public Future<Void> execAPI(JsonObject exec);
 }
