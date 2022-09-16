@@ -146,7 +146,12 @@ public class Auth extends AbstractVerticle {
       SendJson.send(ctx, resp, 401);
       return;
     }
-    String jwt = jwtAuth.generateToken(new JsonObject().put("username", user.get("username")));
+
+    String jwt = jwtAuth.generateToken(
+        new JsonObject()
+            .put("username", user.get("username"))
+            .put("_id", user.get("_id"))
+    );
     JsonObject resp = new JsonObject()
         .put("status", "OK")
         .put("jwt", jwt);

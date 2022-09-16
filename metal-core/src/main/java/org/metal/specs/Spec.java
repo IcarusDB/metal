@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Spec {
+    public final static String VERSION = "1.0";
     private String version;
     private List<Metal> metals;
     private List<Pair<String, String>> edges;

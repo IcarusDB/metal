@@ -32,7 +32,6 @@ public class Project extends AbstractVerticle {
   public void add(RoutingContext ctx) {
     JsonObject body = ctx.body().asJsonObject();
 
-
     User user = ctx.user();
     mongo.findOne(
         "user",
@@ -41,13 +40,19 @@ public class Project extends AbstractVerticle {
     ).compose(
         (ret) -> {
           String id = ret.getString("_id");
-          String backendId = UUID.randomUUID().toString();
+          String deployId = UUID.randomUUID().toString();
+          JsonObject deployArgs = new JsonObject()
+              .put("platform", Platform.SPARK.toString())
+              .put("platformArgs", new JsonObject())
+              .put("backendArgs", new JsonObject());
+
           body.put("user", new JsonObject()
                   .put("$ref", "user")
                   .put("$id", id)
               )
               .put("createTime", System.currentTimeMillis())
-              .put("backendId", backendId);
+              .put("deployId", deployId)
+              .put("deployArgs", deployArgs);
           return Future.succeededFuture(body.copy());
         }
     ).compose(
