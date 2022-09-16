@@ -10,6 +10,7 @@ public class BackendDeployManagerTest {
         System.out.println(BackendDeployManager.getBackendDeploy().get());
     }
 
+    @Test
     public void case1() {
         String[] args = {
                 "--class", "org.metal.backend.BackendLauncher",

@@ -21,8 +21,12 @@ public class BackendLauncher {
         Options options = BackendCli.create();
         CommandLine cli = BackendCli.parser(args, options);
         BackendDeployOptions deployOptions = BackendCli.parseDeployOptions(cli);
-        tryRunCMD(cli, deployOptions);
-        tryRunInteractive(cli, deployOptions);
+        if (cli.hasOption(BackendCli.HELP_OPT)) {
+            BackendCli.printHelp();
+        } else {
+            tryRunCMD(cli, deployOptions);
+            tryRunInteractive(cli, deployOptions);
+        }
     }
 
     private static void tryRunCMD(CommandLine cli, BackendDeployOptions deployOptions) {

@@ -20,4 +20,10 @@ public class BackendLauncherTest {
         };
         BackendLauncher.main(args);
     }
+
+    @Test
+    public void case1() throws IOException, ParseException {
+        String[] args = {"--help"};
+        BackendLauncher.main(args);
+    }
 }

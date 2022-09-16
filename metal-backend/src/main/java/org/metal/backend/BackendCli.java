@@ -18,6 +18,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class BackendCli {
+    public final static Option HELP_OPT = Option.builder()
+        .longOpt("help")
+        .build();
+
     public final static Option CONF_OPT = Option.builder()
             .option("c")
             .longOpt("conf")
@@ -120,6 +124,7 @@ public class BackendCli {
 
     public static Options create() {
         Options options = new Options();
+        options.addOption(HELP_OPT);
         options.addOption(CONF_OPT);
         options.addOption(CONF_FILE_OPT);
         options.addOption(SETUP_OPT);
@@ -472,5 +477,10 @@ public class BackendCli {
             optionalSpec = parseSpecFile(cli);
         }
         return optionalSpec;
+    }
+
+    public static void printHelp() {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("BackendCli", create());
     }
 }
