@@ -30,7 +30,6 @@ public class ProjectDB {
   public static Future<String> add(
       MongoClient mongo,
       String userId,
-      Optional<String> userName,
       String projectName,
       Platform platform, JsonObject platformArgs, JsonObject backendArgs,
       JsonObject spec
@@ -52,30 +51,6 @@ public class ProjectDB {
         .put("spec", spec);
 
     return mongo.insert(DB, project);
-  }
-
-  public static Future<String> add(
-      MongoClient mongo, String username,
-      String projectName,
-      Platform platform, JsonObject platformArgs, JsonObject backendArgs,
-      JsonObject spec
-      ) {
-    return mongo.findOne(
-        "user",
-        new JsonObject().put("username", username),
-        new JsonObject().put("_id", true)
-    ).compose((JsonObject user) -> {
-      return add(
-          mongo,
-          user.getString("_id"),
-          Optional.<String>of(username),
-          projectName,
-          platform,
-          platformArgs,
-          backendArgs,
-          spec
-          );
-    });
   }
 
   public static Future<String> copyFrom(MongoClient mongo, String userId, String projectName) {
@@ -100,7 +75,6 @@ public class ProjectDB {
           JsonObject deployArgs = exec.getJsonObject("deployArgs");
           return add(mongo,
               userId,
-              Optional.<String>empty(),
               "recover_" + execId,
               Platform.valueOf(exec.getString("platform")),
               deployArgs.getJsonObject("platformArgs"),
@@ -117,14 +91,14 @@ public class ProjectDB {
         .put("edges", new JsonArray());
   }
 
-  public static Future<String> add( MongoClient mongo, String username, String projectName) {
-    return ProjectDB.add(mongo, username, projectName,
+  public static Future<String> add( MongoClient mongo, String userId, String projectName) {
+    return ProjectDB.add(mongo, userId, projectName,
         Platform.SPARK, new JsonObject(), new JsonObject(),
         emptySpec());
   }
 
-  public static Future<String> add( MongoClient mongo, String username, String projectName, Platform platform) {
-    return ProjectDB.add(mongo, username, projectName,
+  public static Future<String> add( MongoClient mongo, String userId, String projectName, Platform platform) {
+    return ProjectDB.add(mongo, userId, projectName,
         platform, new JsonObject(), new JsonObject(),
         emptySpec());
   }
