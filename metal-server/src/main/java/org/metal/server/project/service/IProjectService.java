@@ -7,6 +7,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
+import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
 import java.util.Optional;
 import org.metal.server.project.Platform;
@@ -14,6 +15,11 @@ import org.metal.server.project.Platform;
 @ProxyGen
 @VertxGen
 public interface IProjectService {
+  public static IProjectService createProvider(Vertx vertx, MongoClient mongo) {
+    IProjectService provider = new ProjectServiceImpl(vertx, mongo);
+    return provider;
+  }
+
   public static IProjectService create(Vertx vertx, JsonObject conf) {
     String address = conf.getString("address");
     return new IProjectServiceVertxEBProxy(vertx, address);

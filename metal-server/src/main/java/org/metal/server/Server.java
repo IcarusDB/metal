@@ -32,7 +32,7 @@ public class Server extends AbstractVerticle {
   private MongoClient mongo;
   private Auth auth;
   private Repo repo;
-  private Project project;
+  private Project.RestApi project;
 
   public Server(IServerProps props) {
     this.props = props;
@@ -81,20 +81,21 @@ public class Server extends AbstractVerticle {
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-        .handler(project::getAll);
+        .handler(project::getAllOfUser);
 
     return Future.succeededFuture(router);
   }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
+    String projectAddress = config().getString("projectAddress");
     mongo = MongoClient.createShared(getVertx(), new JsonObject()
         .put("connection_string", props.mongoConnection())
     );
 
     httpServer = getVertx().createHttpServer();
     repo = new Repo();
-    project = Project.create(mongo);
+    project = Project.createRestApi(getVertx(), projectAddress);
 
     Future<Void> init;
     if (props.init()) {

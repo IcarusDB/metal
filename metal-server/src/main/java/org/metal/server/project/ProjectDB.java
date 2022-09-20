@@ -165,9 +165,6 @@ public class ProjectDB {
     JsonObject matchProjectName = new JsonObject()
         .put("$match", new JsonObject().put("name", projectName));
 
-    JsonObject matchUserId = new JsonObject()
-        .put("$match", new JsonObject().put("user", new JsonObject().put("$id", userId)));
-
     JsonObject lookup = new JsonObject()
         .put("$lookup", new JsonObject()
             .put("from", "user")
@@ -182,14 +179,24 @@ public class ProjectDB {
             .put("createTime", true)
             .put("deployId", true)
             .put("deployArgs", true)
-            .put("userInfo", new JsonObject().put("username", true)));
+            .put("userInfo", new JsonObject().put("$arrayElemAt", new JsonArray().add("$userInfo").add(0))));
+
+    JsonObject matchUserId = new JsonObject()
+        .put("$match", new JsonObject().put("userInfo._id", userId));
+
+    JsonObject projectPWD = new JsonObject()
+        .put("$project", new JsonObject()
+            .put("userInfo", new JsonObject().put("password", false))
+        );
+
 
     JsonArray pipeline = new JsonArray()
         .add(matchProjectName)
-        .add(matchUserId)
         .add(lookup)
-        .add(project);
-
+        .add(project)
+        .add(matchUserId)
+        .add(projectPWD);
+    System.out.println(pipeline.toString());
     return mongo.aggregate(DB, pipeline);
   }
 

@@ -1,6 +1,7 @@
 package org.metal.server.project.service;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -11,7 +12,15 @@ import org.metal.server.project.ProjectDB;
 
 public class ProjectServiceImpl implements IProjectService{
   private MongoClient mongo;
-  private VertxInternal vertxInternal;
+  private Vertx vertx;
+  public ProjectServiceImpl(MongoClient mongo) {
+    this.mongo = mongo;
+  }
+
+  public ProjectServiceImpl(Vertx vertx, MongoClient mongo) {
+    this.vertx = vertx;
+    this.mongo = mongo;
+  }
 
   @Override
   public Future<String> createEmptyProject(String userId, String projectName) {
@@ -79,7 +88,9 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<List<JsonObject>> getOfName(String userId, String projectName) {
+    System.out.println(vertx instanceof VertxInternal);
     return ReadStreamCollector.<JsonObject>toList(
+        (VertxInternal)vertx,
         ProjectDB.get(mongo, userId, projectName)
     );
   }

@@ -1,9 +1,12 @@
 package org.metal.server.project;
 
-import com.mongodb.DBRef;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -13,179 +16,179 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.impl.MappingStream;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.serviceproxy.ServiceBinder;
+import java.util.List;
 import java.util.UUID;
 import org.metal.server.SendJson;
+import org.metal.server.project.service.IProjectService;
 
 public class Project extends AbstractVerticle {
   private final static Logger LOGGER = LoggerFactory.getLogger(Project.class);
 
   private MongoClient mongo;
+  private ServiceBinder binder;
+  private MessageConsumer<JsonObject> consumer;
+  private IProjectService provider;
 
-  private Project(MongoClient mongo) {
-    this.mongo = mongo;
+  private Project() {}
+
+  public static Project create() {
+    return new Project();
   }
 
-  public static Project create(MongoClient mongo) {
-    return new Project(mongo);
-  }
-
-  public void add(RoutingContext ctx) {
-    JsonObject body = ctx.body().asJsonObject();
-
-    User user = ctx.user();
-    mongo.findOne(
-        "user",
-        new JsonObject().put("username", user.get("username")),
-        new JsonObject().put("_id", true)
-    ).compose(
-        (ret) -> {
-          String id = ret.getString("_id");
-          String deployId = UUID.randomUUID().toString();
-          JsonObject deployArgs = new JsonObject()
-              .put("platform", Platform.SPARK.toString())
-              .put("platformArgs", new JsonObject())
-              .put("backendArgs", new JsonObject());
-
-          body.put("user", new JsonObject()
-                  .put("$ref", "user")
-                  .put("$id", id)
-              )
-              .put("createTime", System.currentTimeMillis())
-              .put("deployId", deployId)
-              .put("deployArgs", deployArgs);
-          return Future.succeededFuture(body.copy());
-        }
-    ).compose(
-        (JsonObject ret) -> {
-          return mongo.insert("projects", ret);
-        }
-    ).onSuccess(id -> {
-      LOGGER.info("Project ID:" + id);
-      JsonObject resp = new JsonObject();
-      resp.put("status", "OK");
-      SendJson.send(ctx, resp, 201);
-    }).onFailure(error -> {
-      LOGGER.error(error);
-      JsonObject resp = new JsonObject();
-      resp.put("status", "FAIL")
-          .put("msg", error.getLocalizedMessage());
-      SendJson.send(ctx, resp, 500);
-    });
-  }
-
-  public void getAll(RoutingContext ctx) {
-    User user = ctx.user();
-    if (user == null) {
-      JsonObject resp = new JsonObject();
-      resp.put("status", "FAIL")
-          .put("msg", "No user has been authenicated.");
-      SendJson.send(ctx, resp, 401);
-      return;
-    }
-
-    JsonObject lookup = new JsonObject()
-        .put("$lookup", new JsonObject()
-            .put("from", "user")
-            .put("localField", "user.$id")
-            .put("foreignField", "_id")
-            .put("as", "userInfo")
-        );
-
-    JsonObject match = new JsonObject()
-        .put("$match", new JsonObject()
-            .put("userInfo.username", user.get("username")));
-
-    JsonObject project = new JsonObject()
-        .put("$project",new JsonObject()
-                .put("_id", true)
-                .put("name", true)
-                .put("createTime", true)
-                .put("backendId", true)
-                .put("userInfo", new JsonObject().put("username", true)));
-
-    JsonArray pipeline = new JsonArray()
-        .add(lookup)
-        .add(match)
-        .add(project);
-    ReadStream<JsonObject> readStream = mongo.aggregate("projects", pipeline);
-    ReadStream<Buffer> bufferReadStream = new MappingStream<JsonObject, Buffer>(readStream, (JsonObject json) -> {
-      return json.toBuffer();
-    });
-
-    bufferReadStream.exceptionHandler(error -> {
-      JsonObject resp = new JsonObject()
-          .put("status", "FAIL")
-          .put("msg", error.getLocalizedMessage());
-      LOGGER.error(error);
-      SendJson.send(ctx, resp, 500);
-    });
-
-    ctx.response().send(bufferReadStream)
-        .onFailure(error -> {
-          LOGGER.error(error);
-        });
-  }
-
-  public void get(RoutingContext ctx) {
-    String projectName = ctx.request().params().get("projectName");
-    if (projectName == null || projectName.strip().isEmpty()) {
-      JsonObject resp = new JsonObject();
-      SendJson.send(ctx, resp, 404);
-      return;
-    }
-
-    JsonObject match = new JsonObject()
-        .put("$match", new JsonObject().put("name", projectName));
-
-    JsonObject lookup = new JsonObject()
-        .put("$lookup", new JsonObject()
-            .put("from", "user")
-            .put("localField", "user.$id")
-            .put("foreignField", "_id")
-            .put("as", "userInfo"));
-
-    JsonObject project = new JsonObject()
-        .put("$project", new JsonObject()
-            .put("_id", true)
-            .put("name", true)
-            .put("createTime", true)
-            .put("backendId", true)
-            .put("userInfo", new JsonObject().put("username", true))
-        );
-
-    JsonArray pipeline = new JsonArray()
-        .add(match)
-        .add(lookup)
-        .add(project);
-
-    ReadStream<JsonObject> readStream = mongo.aggregate("projects", pipeline);
-    ReadStream<Buffer> bufferReadStream = new MappingStream<JsonObject, Buffer>(
-        readStream,
-        (JsonObject json) -> {
-          return json.toBuffer();
-        }
+  @Override
+  public void start(Promise<Void> startPromise) throws Exception {
+    String mongoConnection = config().getString("mongoConnection");
+    mongo = MongoClient.createShared(
+        getVertx(),
+        new JsonObject().put("connection_string", mongoConnection)
     );
 
-    bufferReadStream.exceptionHandler(error -> {
-      JsonObject resp = new JsonObject()
-          .put("status", "FAIL")
-          .put("msg", error.getLocalizedMessage());
-      SendJson.send(ctx, resp, 500);
-    });
+    provider = IProjectService.createProvider(getVertx(), mongo);
+    binder = new ServiceBinder(getVertx());
+    String address = config().getString("projectAddress");
+    binder.setAddress(address);
+    consumer = binder.register(IProjectService.class, provider);
 
-    ctx.response().send(bufferReadStream)
-        .onFailure(error -> {
-          LOGGER.error(error);
-        });
+    startPromise.complete();
   }
 
-  public void setBackendLauncher(RoutingContext ctx) {
-    JsonObject body = ctx.body().asJsonObject();
-    Platform p= Platform.valueOf(body.getString("platform"));
-    switch (p) {
-      case SPARK: {
+  public static RestApi createRestApi(Vertx vertx, String provider) {
+    return new RestApi(vertx, provider);
+  }
 
+  @Override
+  public void stop(Promise<Void> stopPromise) throws Exception {
+    binder.unregister(consumer);
+    mongo.close();
+  }
+
+  public static class RestApi {
+    private final static Logger LOGGER = LoggerFactory.getLogger(RestApi.class);
+    private IProjectService service;
+
+    private RestApi(Vertx vertx, String provider) {
+      service = IProjectService.create(vertx, new JsonObject().put("address", provider));
+    }
+
+    public void add(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = body.getString("projectName");
+      String platform = body.getString("platform");
+
+      if (projectName == null || projectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL");
+        resp.put("msg", "Fail to found projectName in request.");
+        SendJson.send(ctx, resp, 400);
+        return ;
       }
+
+      if (platform == null) {
+        service.createEmptyProject(userId, projectName)
+            .onSuccess((String projectId) -> {
+              JsonObject resp = new JsonObject();
+              resp.put("status", "OK");
+              resp.put("data", new JsonObject().put("id", projectId));
+              SendJson.send(ctx, resp, 201);
+            })
+            .onFailure((Throwable error) -> {
+              JsonObject resp = new JsonObject();
+              resp.put("status", "FAIL");
+              resp.put("msg", error.getLocalizedMessage());
+              SendJson.send(ctx, resp, 500);
+              LOGGER.error(error);
+            });
+        return;
+      }
+
+      try {
+        Platform.valueOf(platform);
+      } catch (IllegalArgumentException e) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL");
+        resp.put("msg", e.getLocalizedMessage());
+        SendJson.send(ctx, resp, 400);
+        return;
+      }
+
+      JsonObject platformArgs = body.getJsonObject("platformArgs", new JsonObject());
+      JsonObject backendArgs = body.getJsonObject("backendArgs", new JsonObject());
+      JsonObject spec = body.getJsonObject("spec", new JsonObject());
+
+      service.createProject(
+          userId,
+          projectName,
+          platform,
+          platformArgs,
+          backendArgs,
+          spec
+      ).onSuccess((String projectId) -> {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "OK")
+            .put("data", new JsonObject().put("id", projectId));
+        SendJson.send(ctx, resp, 201);
+      }).onFailure((Throwable error) -> {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", error.getLocalizedMessage());
+        SendJson.send(ctx, resp, 400);
+      });
+    }
+
+    public void get(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = ctx.request().params().get("projectName");
+      if (projectName == null || projectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        SendJson.send(ctx, resp, 404);
+        return;
+      }
+
+      service.getOfName(userId, projectName)
+          .onComplete((AsyncResult<List<JsonObject>> ret ) -> {
+            if (ret.succeeded()) {
+              JsonObject resp = new JsonObject();
+              resp.put("status", "OK");
+              resp.put("data", JsonObject.mapFrom(ret.result()));
+              SendJson.send(ctx, resp, 200);
+            }
+          })
+          .onSuccess((List<JsonObject> projects) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", JsonObject.mapFrom(projects));
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
+    public void getAllOfUser(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      service.getAllOfUser(userId)
+          .onSuccess((List<JsonObject> projects) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", JsonObject.mapFrom(projects));
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          });
     }
   }
+
 }
