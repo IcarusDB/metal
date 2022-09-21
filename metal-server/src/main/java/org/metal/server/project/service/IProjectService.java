@@ -54,7 +54,7 @@ public interface IProjectService {
 
   public Future<JsonObject> getOfId(String userId, String projectId);
 
-  public Future<List<JsonObject>> getOfName(String userId, String projectName);
+  public Future<JsonObject> getOfName(String userId, String projectName);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);
 

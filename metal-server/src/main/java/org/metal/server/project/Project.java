@@ -149,18 +149,10 @@ public class Project extends AbstractVerticle {
       }
 
       service.getOfName(userId, projectName)
-          .onComplete((AsyncResult<List<JsonObject>> ret ) -> {
-            if (ret.succeeded()) {
-              JsonObject resp = new JsonObject();
-              resp.put("status", "OK");
-              resp.put("data", JsonObject.mapFrom(ret.result()));
-              SendJson.send(ctx, resp, 200);
-            }
-          })
-          .onSuccess((List<JsonObject> projects) -> {
+          .onSuccess((JsonObject project) -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "OK");
-            resp.put("data", JsonObject.mapFrom(projects));
+            resp.put("data", project);
             SendJson.send(ctx, resp, 200);
           })
           .onFailure((Throwable error) -> {
@@ -179,7 +171,7 @@ public class Project extends AbstractVerticle {
           .onSuccess((List<JsonObject> projects) -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "OK")
-                .put("data", JsonObject.mapFrom(projects));
+                .put("data", JsonArray.of(projects.toArray()));
             SendJson.send(ctx, resp, 200);
           })
           .onFailure((Throwable error) -> {
@@ -187,6 +179,8 @@ public class Project extends AbstractVerticle {
             resp.put("status", "FAIL")
                 .put("msg", error.getLocalizedMessage());
             SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+            error.printStackTrace();
           });
     }
   }

@@ -1,6 +1,8 @@
 package org.metal.server.project;
 
 import io.vertx.core.Future;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
@@ -12,6 +14,8 @@ import java.util.UUID;
 import org.metal.server.exec.ExecDB;
 
 public class ProjectDB {
+  private final static Logger LOGGER = LoggerFactory.getLogger(ProjectDB.class);
+
   public final static String DB = "projects";
 
   public static Future<Void> createCollection(MongoClient mongo) {
@@ -179,6 +183,7 @@ public class ProjectDB {
             .put("createTime", true)
             .put("deployId", true)
             .put("deployArgs", true)
+            .put("spec", true)
             .put("userInfo", new JsonObject().put("$arrayElemAt", new JsonArray().add("$userInfo").add(0))));
 
     JsonObject matchUserId = new JsonObject()
@@ -196,14 +201,11 @@ public class ProjectDB {
         .add(project)
         .add(matchUserId)
         .add(projectPWD);
-    System.out.println(pipeline.toString());
+    LOGGER.debug(pipeline.toString());
     return mongo.aggregate(DB, pipeline);
   }
 
   public static ReadStream<JsonObject> getAllOfUser(MongoClient mongo, String userId) {
-    JsonObject matchUserId = new JsonObject()
-        .put("$match", new JsonObject().put("user", new JsonObject().put("$id", userId)));
-
     JsonObject lookup = new JsonObject()
         .put("$lookup", new JsonObject()
             .put("from", "user")
@@ -218,13 +220,24 @@ public class ProjectDB {
             .put("createTime", true)
             .put("deployId", true)
             .put("deployArgs", true)
-            .put("userInfo", new JsonObject().put("username", true)));
+            .put("spec", true)
+            .put("userInfo", new JsonObject().put("$arrayElemAt", new JsonArray().add("$userInfo").add(0))));
+
+    JsonObject matchUserId = new JsonObject()
+        .put("$match", new JsonObject().put("userInfo._id", userId));
+
+    JsonObject projectPWD = new JsonObject()
+        .put("$project", new JsonObject()
+            .put("userInfo", new JsonObject().put("password", false))
+        );
+
 
     JsonArray pipeline = new JsonArray()
-        .add(matchUserId)
         .add(lookup)
-        .add(project);
-
+        .add(project)
+        .add(matchUserId)
+        .add(projectPWD);
+    LOGGER.debug(pipeline.toString());
     return mongo.aggregate(DB, pipeline);
   }
 
@@ -248,7 +261,7 @@ public class ProjectDB {
     JsonArray pipeline = new JsonArray()
         .add(lookup)
         .add(project);
-
+    LOGGER.debug(pipeline.toString());
     return mongo.aggregate(DB, pipeline);
   }
 
