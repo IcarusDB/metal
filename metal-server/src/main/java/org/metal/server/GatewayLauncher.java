@@ -1,5 +1,6 @@
 package org.metal.server;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -9,23 +10,14 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
+import java.util.List;
 import org.metal.server.project.Project;
 
-public class ServerLauncher {
-  private final static Logger LOGGER = LoggerFactory.getLogger(ServerLauncher.class);
+public class GatewayLauncher {
+  private final static Logger LOGGER = LoggerFactory.getLogger(GatewayLauncher.class);
 
   public static void main(String[] args) {
-    JsonObject zkConfig = new JsonObject();
-    zkConfig.put("zookeeperHosts", "192.168.8.201")
-        .put("sessionTimeout", 20000)
-        .put("connectionTimeout", 3000)
-        .put("rootPath", "io.vertx")
-        .put("retry", new JsonObject()
-            .put("initialSleepTime", 100)
-            .put("intervalTimes", 10000)
-            .put("maxTimes", 5));
-
-    ClusterManager clusterManager = new ZookeeperClusterManager(zkConfig);
+    ClusterManager clusterManager = new ZookeeperClusterManager("zookeeper.json");
     VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
     DeploymentOptions deploymentOptions = new DeploymentOptions();
     deploymentOptions.setConfig(
@@ -37,26 +29,36 @@ public class ServerLauncher {
 
     Vertx.clusteredVertx(options).compose((Vertx vertx) -> {
       Project project = Project.create();
-      Server srv = Server.create();
+      Gateway gateway = Gateway.create();
       vertx.exceptionHandler(t -> {
         LOGGER.error(t);
       });
 
-      return vertx.deployVerticle(project, deploymentOptions)
-          .compose(
-              deployID -> {
+      Future<String> deployProject = vertx.deployVerticle(project, deploymentOptions);
+      deployProject = deployProject.compose(
+          deployID -> {
             LOGGER.info(String.format("Success to deploy %s:%s.", project.getClass(), deployID));
-            return vertx.deployVerticle(srv, deploymentOptions);
+            return Future.succeededFuture();
           }, t -> {
             LOGGER.error(String.format("Fail to deploy %s.", project.getClass()), t);
             return Future.failedFuture(t);
-          }).compose(deployID -> {
-            LOGGER.info(String.format("Success to deploy %s:%s.", srv.getClass(), deployID));
+          });
+
+      CompositeFuture prepared = CompositeFuture.all(List.of(deployProject));
+      Future<String> deployGateway = prepared.compose(
+          ret -> {
+            return vertx.deployVerticle(gateway, deploymentOptions);
+          }
+      );
+
+      deployGateway = deployGateway.compose(deployID -> {
+            LOGGER.info(String.format("Success to deploy %s:%s.", gateway.getClass(), deployID));
             return Future.succeededFuture();
           }, t -> {
-            LOGGER.error(String.format("Fail to deploy %s.", srv.getClass()), t);
+            LOGGER.error(String.format("Fail to deploy %s.", gateway.getClass()), t);
             return Future.failedFuture(t);
           });
+      return deployGateway;
     }).onSuccess(ret -> {
       LOGGER.info("Success to deploy");
     }).onFailure(t -> {

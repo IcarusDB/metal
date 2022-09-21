@@ -19,6 +19,8 @@
     <arrow-vector.version>7.0.0</arrow-vector.version>
     <vertx.version>4.3.3</vertx.version>
     <jackson.version>2.13.3</jackson.version>
+    <log4j.version>1.2.17</log4j.version>
+    <slf4j.version>1.7.32</slf4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -81,7 +83,17 @@
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 

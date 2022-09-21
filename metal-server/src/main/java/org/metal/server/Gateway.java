@@ -2,7 +2,6 @@ package org.metal.server;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.impl.logging.Logger;
@@ -12,7 +11,6 @@ import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthenticationHandler;
 import io.vertx.ext.web.handler.AuthorizationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -20,13 +18,12 @@ import io.vertx.ext.web.handler.JWTAuthHandler;
 import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
-import org.metal.server.db.Init;
 import org.metal.server.project.Project;
 import org.metal.server.repo.Repo;
 
-public class Server extends AbstractVerticle {
+public class Gateway extends AbstractVerticle {
 
-  private final static Logger LOGGER = LoggerFactory.getLogger(Server.class);
+  private final static Logger LOGGER = LoggerFactory.getLogger(Gateway.class);
 
   private HttpServer httpServer;
   private int gatewayPort = 19000;
@@ -35,10 +32,10 @@ public class Server extends AbstractVerticle {
   private Repo repo;
   private Project.RestApi project;
 
-  private Server() {}
+  private Gateway() {}
 
-  public static Server create() {
-    return new Server();
+  public static Gateway create() {
+    return new Gateway();
   }
 
   private Future<Router> createRestAPI(Router router) {
@@ -118,7 +115,7 @@ public class Server extends AbstractVerticle {
           return httpServer.listen(gatewayPort);
         })
         .onSuccess(srv -> {
-          LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Server.class,
+          LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Gateway.class,
               srv.actualPort()));
           startPromise.complete();
         })
@@ -135,7 +132,7 @@ public class Server extends AbstractVerticle {
           return mongo.close();
         }, error -> {
           LOGGER.error(
-              String.format("Fail to stop Server[%s] on port[%d].", Server.class, gatewayPort),
+              String.format("Fail to stop Server[%s] on port[%d].", Gateway.class, gatewayPort),
               error);
           return mongo.close();
         })
