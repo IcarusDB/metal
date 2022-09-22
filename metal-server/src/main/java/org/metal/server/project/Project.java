@@ -185,6 +185,25 @@ public class Project extends AbstractVerticle {
           });
     }
 
+    public void getAll(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      service.getAll()
+          .onSuccess((List<JsonObject> projects) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", JsonArray.of(projects.toArray()));
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
     public void updateName(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
@@ -222,19 +241,14 @@ public class Project extends AbstractVerticle {
           });
     }
 
-    public void updatePath(RoutingContext ctx, String prefix) {
+    public void updatePath(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      LOGGER.info("PATH:" + ctx.request().path());
       String projectName = ctx.request().params().get("projectName");
       String path = ctx.request().path();
-      String subPath = path.substring(prefix.length())
-                           .substring(projectName.length() + 1);
-      subPath = subPath.replaceFirst("/", "");
-
       JsonObject body = ctx.body().asJsonObject();
-      Object update = body.getValue("update");
-      if (update == null) {
+      JsonObject update = body.getJsonObject("update");
+      if (update == null || update.isEmpty()) {
         JsonObject resp = new JsonObject();
         resp.put("status", "FAIL");
         resp.put("msg", "update is not set.");
@@ -242,11 +256,10 @@ public class Project extends AbstractVerticle {
         return;
       }
 
-      String updatePath = subPath.replaceAll("/", ".");
       service.updateByPath(
           userId,
           projectName,
-          new JsonObject().put(updatePath, update)
+          update
       ).onSuccess((JsonObject ret) -> {
         JsonObject resp = new JsonObject();
         resp.put("status", "OK")
@@ -284,6 +297,74 @@ public class Project extends AbstractVerticle {
       }
 
       service.updateSpec(userId, projectName, spec)
+          .onSuccess((JsonObject ret) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
+    public void remove(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = ctx.request().params().get("projectName");
+      if (projectName == null || projectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", "projectName is not set.");
+        SendJson.send(ctx, resp, 404);
+        return;
+      }
+
+      service.removeOfName(userId, projectName)
+          .onSuccess((JsonObject ret) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
+    public void removeAllOfUser(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      service.removeAllOfUser(userId)
+          .onSuccess((JsonObject ret) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
+    public void removeAll(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      service.removeAll()
           .onSuccess((JsonObject ret) -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "OK")

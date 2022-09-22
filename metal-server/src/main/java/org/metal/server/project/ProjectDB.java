@@ -351,35 +351,35 @@ public class ProjectDB {
     return mongo.aggregate(DB, pipeline);
   }
 
-  public static Future<Long> removeOfId(MongoClient mongo, String userId, String projectId) {
+  public static Future<JsonObject> removeOfId(MongoClient mongo, String userId, String projectId) {
     return mongo.removeDocument(
         DB,
         new JsonObject()
             .put(FIELD_ID, projectId)
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
-  public static Future<Long> removeOfName(MongoClient mongo, String userId, String projectName) {
+  public static Future<JsonObject> removeOfName(MongoClient mongo, String userId, String projectName) {
     return mongo.removeDocument(
         DB,
         new JsonObject()
             .put(FIELD_NAME, projectName)
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
-  public static Future<Long> removeAllOfUser(MongoClient mongo, String userId) {
+  public static Future<JsonObject> removeAllOfUser(MongoClient mongo, String userId) {
     return mongo.removeDocuments(
         DB,
         new JsonObject()
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
-  public static Future<Long> removeAll(MongoClient mongo) {
+  public static Future<JsonObject> removeAll(MongoClient mongo) {
     return mongo.removeDocuments(DB, new JsonObject())
-        .compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
+        .compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
 }

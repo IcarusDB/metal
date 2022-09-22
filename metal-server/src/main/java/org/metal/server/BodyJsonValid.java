@@ -21,7 +21,7 @@ public class BodyJsonValid {
       ctx.response()
           .setStatusCode(415)
           .putHeader("content-type", ctx.getAcceptableContentType())
-          .putHeader("content-legth", String.valueOf(payload.length()))
+          .putHeader("content-length", String.valueOf(payload.length()))
           .end(payload);
       return;
     }

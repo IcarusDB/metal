@@ -62,11 +62,11 @@ public interface IProjectService {
 
   public Future<List<JsonObject>> getAll();
 
-  public Future<Long> removeOfId(String userId, String projectId);
+  public Future<JsonObject> removeOfId(String userId, String projectId);
 
-  public Future<Long> removeOfName(String userId, String projectName);
+  public Future<JsonObject> removeOfName(String userId, String projectName);
 
-  public Future<Long> removeAllOfUser(String userId);
+  public Future<JsonObject> removeAllOfUser(String userId);
 
-  public Future<Long> removeAll();
+  public Future<JsonObject> removeAll();
 }

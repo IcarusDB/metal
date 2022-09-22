@@ -138,6 +138,7 @@ public class Auth extends AbstractVerticle {
   public void createJWT(RoutingContext ctx) {
     LOGGER.info("Online User:" + ctx.user().get("username"));
     User user = ctx.user();
+
     if (user == null) {
       LOGGER.error("Fail to authenticate because no user has been authenticated.");
       JsonObject resp = new JsonObject();
@@ -152,6 +153,7 @@ public class Auth extends AbstractVerticle {
             .put("username", user.get("username"))
             .put("_id", user.get("_id"))
     );
+
     JsonObject resp = new JsonObject()
         .put("status", "OK")
         .put("jwt", jwt);

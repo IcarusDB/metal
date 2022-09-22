@@ -95,7 +95,6 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> getOfName(String userId, String projectName) {
-    System.out.println(vertx instanceof VertxInternal);
     return ReadStreamCollector.<JsonObject>toList(
         ProjectDB.getOfName(mongo, userId, projectName)
     ).compose((List<JsonObject> projects) -> {
@@ -122,22 +121,22 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<Long> removeOfId(String userId, String projectId) {
+  public Future<JsonObject> removeOfId(String userId, String projectId) {
     return ProjectDB.removeOfId(mongo, userId, projectId);
   }
 
   @Override
-  public Future<Long> removeOfName(String userId, String projectName) {
+  public Future<JsonObject> removeOfName(String userId, String projectName) {
     return ProjectDB.removeOfName(mongo, userId, projectName);
   }
 
   @Override
-  public Future<Long> removeAllOfUser(String userId) {
+  public Future<JsonObject> removeAllOfUser(String userId) {
     return ProjectDB.removeAllOfUser(mongo, userId);
   }
 
   @Override
-  public Future<Long> removeAll() {
+  public Future<JsonObject> removeAll() {
     return ProjectDB.removeAll(mongo);
   }
 }

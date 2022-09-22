@@ -83,17 +83,37 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::getAllOfUser);
 
-//    router.put("/api/v1/projects/:projectName")
-//        .produces("application/json")
-//        .handler(BodyHandler.create())
-//        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-//        .handler(project::updateName);
-
-    router.put("/api/v1/projects/:projectName/*")
+    router.get("/api/v1/all_projects")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-        .handler((ctx) -> {project.updatePath(ctx, "/api/v1/projects");});
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(project::getAll);
+
+    router.put("/api/v1/projects/:projectName")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updatePath);
+
+    router.delete("/api/v1/projects/:projectName")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::remove);
+
+    router.delete("/api/v1/projects")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::removeAllOfUser);
+
+    router.delete("/api/v1/all_projects")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(project::removeAll);
 
     return Future.succeededFuture(router);
   }
