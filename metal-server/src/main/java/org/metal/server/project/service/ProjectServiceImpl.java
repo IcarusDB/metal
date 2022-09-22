@@ -83,14 +83,14 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> getOfId(String userId, String projectId) {
-    return ProjectDB.get(mongo, userId, projectId, Optional.<String>empty());
+    return ProjectDB.getOfId(mongo, userId, projectId);
   }
 
   @Override
   public Future<JsonObject> getOfName(String userId, String projectName) {
     System.out.println(vertx instanceof VertxInternal);
     return ReadStreamCollector.<JsonObject>toList(
-        ProjectDB.get(mongo, userId, projectName)
+        ProjectDB.getOfName(mongo, userId, projectName)
     ).compose((List<JsonObject> projects) -> {
       if (projects.isEmpty()) {
         return Future.succeededFuture(new JsonObject());
