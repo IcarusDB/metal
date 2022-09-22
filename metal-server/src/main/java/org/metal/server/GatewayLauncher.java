@@ -1,5 +1,8 @@
 package org.metal.server;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -20,12 +23,6 @@ public class GatewayLauncher {
     ClusterManager clusterManager = new ZookeeperClusterManager("zookeeper.json");
     VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
     DeploymentOptions deploymentOptions = new DeploymentOptions();
-    deploymentOptions.setConfig(
-        new JsonObject()
-            .put("mongoConnection", "mongodb://metal:123456@192.168.15.10:27017/metalDB")
-            .put("projectAddress", "project.metal.org")
-            .put("gatewayPort", 19000)
-    );
 
     Vertx.clusteredVertx(options).compose((Vertx vertx) -> {
       Project project = Project.create();

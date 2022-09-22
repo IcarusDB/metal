@@ -1,5 +1,8 @@
 package org.metal.server;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -120,41 +123,44 @@ public class Gateway extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    String projectAddress = config().getString("projectAddress");
-    String mongoConnection = config().getString("mongoConnection");
-    gatewayPort = config().getInteger("gatewayPort");
+    ConfigStoreOptions fileConfigStoreOptions = new ConfigStoreOptions()
+        .setType("file")
+        .setConfig(new JsonObject().put("path", "conf/Gateway.json"))
+        .setOptional(true);
 
-    mongo = MongoClient.createShared(getVertx(), new JsonObject()
-        .put("connection_string", mongoConnection)
-    );
+    ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
+        .addStore(fileConfigStoreOptions);
+    ConfigRetriever retriever = ConfigRetriever.create(getVertx(), retrieverOptions);
 
-    httpServer = getVertx().createHttpServer();
-    repo = new Repo();
-    project = Project.createRestApi(getVertx(), projectAddress);
-
-    Auth.create(mongo)
-        .compose((Auth auth) -> {
-          this.auth = auth;
-          return Future.succeededFuture(auth);
-        })
-        .compose((Auth auth) -> {
-          Router router = Router.router(getVertx());
-          return Future.succeededFuture(router);
-        })
-        .compose(this::createRestAPI)
-        .compose((Router router) -> {
-          httpServer.requestHandler(router);
-          return httpServer.listen(gatewayPort);
-        })
-        .onSuccess(srv -> {
-          LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Gateway.class,
+    retriever.getConfig().compose((JsonObject conf) -> {
+      String projectAddress = conf.getString("projectAddress");
+      String mongoConnection = conf.getString("mongoConnection");
+      gatewayPort = conf.getInteger("gatewayPort");
+      mongo = MongoClient.createShared(getVertx(), new JsonObject()
+          .put("connection_string", mongoConnection)
+      );
+      httpServer = getVertx().createHttpServer();
+      repo = new Repo();
+      project = Project.createRestApi(getVertx(), projectAddress);
+      return Auth.create(mongo);
+    }).compose((Auth auth) -> {
+      this.auth = auth;
+      return Future.succeededFuture(auth);
+    }).compose((Auth auth) -> {
+      Router router = Router.router(getVertx());
+      return Future.succeededFuture(router);
+    }).compose(this::createRestAPI)
+      .compose((Router router) -> {
+        httpServer.requestHandler(router);
+        return httpServer.listen(gatewayPort);
+      }).onSuccess(srv -> {
+        LOGGER.info(String.format("Success to start Server[%s] on port[%d].", Gateway.class,
               srv.actualPort()));
-          startPromise.complete();
-        })
-        .onFailure(error -> {
-          LOGGER.error(error);
-          startPromise.fail(error);
-        });
+        startPromise.complete();
+      }).onFailure(error -> {
+        LOGGER.error(error);
+        startPromise.fail(error);
+      });
   }
 
   @Override

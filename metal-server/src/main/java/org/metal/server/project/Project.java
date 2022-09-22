@@ -1,5 +1,8 @@
 package org.metal.server.project;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -38,19 +41,31 @@ public class Project extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    String mongoConnection = config().getString("mongoConnection");
-    mongo = MongoClient.createShared(
-        getVertx(),
-        new JsonObject().put("connection_string", mongoConnection)
-    );
+    ConfigStoreOptions fileConfigStoreOptions = new ConfigStoreOptions()
+        .setType("file")
+        .setConfig(new JsonObject().put("path", "conf/Project.json"))
+        .setOptional(true);
 
-    provider = IProjectService.createProvider(getVertx(), mongo);
-    binder = new ServiceBinder(getVertx());
-    String address = config().getString("projectAddress");
-    binder.setAddress(address);
-    consumer = binder.register(IProjectService.class, provider);
-
-    startPromise.complete();
+    ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
+        .addStore(fileConfigStoreOptions);
+    ConfigRetriever retriever = ConfigRetriever.create(getVertx(), retrieverOptions);
+    retriever.getConfig().compose((JsonObject conf) -> {
+      String mongoConnection = conf.getString("mongoConnection");
+      String address = conf.getString("projectAddress");
+      mongo = MongoClient.createShared(
+          getVertx(),
+          new JsonObject().put("connection_string", mongoConnection)
+      );
+      provider = IProjectService.createProvider(getVertx(), mongo);
+      binder = new ServiceBinder(getVertx());
+      binder.setAddress(address);
+      consumer = binder.register(IProjectService.class, provider);
+      return Future.succeededFuture();
+    }).onSuccess(ret -> {
+      startPromise.complete();
+    }).onFailure((Throwable error) -> {
+      startPromise.fail(error);
+    });
   }
 
   public static RestApi createRestApi(Vertx vertx, String provider) {
