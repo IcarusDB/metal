@@ -8,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.IndexOptions;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import java.util.Optional;
 import java.util.UUID;
 import org.metal.server.exec.ExecDB;
@@ -133,6 +132,22 @@ public class ProjectDB {
         emptySpec());
   }
 
+  public static Future<JsonObject> updateByPath(
+      MongoClient mongo,
+      String userId,
+      String projectName,
+      JsonObject updateByPath
+  ) {
+    return mongo.updateCollection(
+        DB,
+        new JsonObject()
+            .put(FIELD_NAME, projectName)
+            .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId),
+        new JsonObject()
+            .put("$set", updateByPath)
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+  }
+
   public static Future<JsonObject> update(
       MongoClient mongo,
       String userId,
@@ -163,24 +178,26 @@ public class ProjectDB {
       update.put(FIELD_SPEC, s);
     });
 
-    return mongo.findOneAndUpdate(
+    return mongo.updateCollection(
         DB,
         new JsonObject()
             .put(FIELD_NAME, projectName)
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId),
-        update
-        );
+        new JsonObject()
+            .put("$set", update)
+        ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
   public static Future<JsonObject> updateProjectName(MongoClient mongo, String userId, String projectName, String newProjectName) {
-    return mongo.findOneAndUpdate(
-      DB,
-      new JsonObject()
-          .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-          .put(FIELD_NAME, projectName),
-      new JsonObject()
-            .put(FIELD_NAME, newProjectName)
-    );
+    return mongo.updateCollection(
+        DB,
+        new JsonObject()
+            .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
+            .put(FIELD_NAME, projectName),
+        new JsonObject()
+            .put("$set", new JsonObject()
+                .put(FIELD_NAME, newProjectName))
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
   public static Future<JsonObject> getOfId(MongoClient mongo, String userId, String projectId) {
@@ -334,25 +351,35 @@ public class ProjectDB {
     return mongo.aggregate(DB, pipeline);
   }
 
-  public static Future<MongoClientDeleteResult> remove(MongoClient mongo, String userId, String projectName) {
+  public static Future<Long> removeOfId(MongoClient mongo, String userId, String projectId) {
+    return mongo.removeDocument(
+        DB,
+        new JsonObject()
+            .put(FIELD_ID, projectId)
+            .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
+    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
+  }
+
+  public static Future<Long> removeOfName(MongoClient mongo, String userId, String projectName) {
     return mongo.removeDocument(
         DB,
         new JsonObject()
             .put(FIELD_NAME, projectName)
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-    );
+    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
   }
 
-  public static Future<MongoClientDeleteResult> removeAllOfUser(MongoClient mongo, String userId) {
+  public static Future<Long> removeAllOfUser(MongoClient mongo, String userId) {
     return mongo.removeDocuments(
         DB,
         new JsonObject()
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId)
-    );
+    ).compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
   }
 
-  public static Future<MongoClientDeleteResult> removeAll(MongoClient mongo) {
-    return mongo.removeDocuments(DB, new JsonObject());
+  public static Future<Long> removeAll(MongoClient mongo) {
+    return mongo.removeDocuments(DB, new JsonObject())
+        .compose(ret -> {return Future.<Long>succeededFuture(ret.getRemovedCount());});
   }
 
 }

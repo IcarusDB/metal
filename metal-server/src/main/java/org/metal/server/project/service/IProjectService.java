@@ -52,6 +52,8 @@ public interface IProjectService {
 
   public Future<JsonObject> updatePlatform(String userId, String projectName, String platform, JsonObject platformArgs, JsonObject backendArgs);
 
+  public Future<JsonObject> updateByPath(String userId, String projectName, JsonObject updateByPath);
+
   public Future<JsonObject> getOfId(String userId, String projectId);
 
   public Future<JsonObject> getOfName(String userId, String projectName);
@@ -60,11 +62,11 @@ public interface IProjectService {
 
   public Future<List<JsonObject>> getAll();
 
-  public Future<String> removeOfId(String userId, String projectId);
+  public Future<Long> removeOfId(String userId, String projectId);
 
-  public Future<String> removeOfName(String userId, String projectName);
+  public Future<Long> removeOfName(String userId, String projectName);
 
-  public Future<String> removeAllOfUser(String userId);
+  public Future<Long> removeAllOfUser(String userId);
 
-  public Future<String> removeAll();
+  public Future<Long> removeAll();
 }

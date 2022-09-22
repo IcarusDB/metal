@@ -54,6 +54,8 @@ public class ProjectServiceImpl implements IProjectService{
     return ProjectDB.updateProjectName(mongo, userId, projectName, newProjectName);
   }
 
+
+
   @Override
   public Future<JsonObject> updateSpec(String userId, String projectName, JsonObject spec) {
     return ProjectDB.update(
@@ -79,6 +81,11 @@ public class ProjectServiceImpl implements IProjectService{
         Optional.of(backendArgs),
         Optional.empty()
     );
+  }
+
+  @Override
+  public Future<JsonObject> updateByPath(String userId, String projectName, JsonObject updateByPath) {
+    return ProjectDB.updateByPath(mongo, userId, projectName, updateByPath);
   }
 
   @Override
@@ -109,26 +116,28 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<List<JsonObject>> getAll() {
-    return null;
+    return ReadStreamCollector.<JsonObject>toList(
+        ProjectDB.getAll(mongo)
+    );
   }
 
   @Override
-  public Future<String> removeOfId(String userId, String projectId) {
-    return null;
+  public Future<Long> removeOfId(String userId, String projectId) {
+    return ProjectDB.removeOfId(mongo, userId, projectId);
   }
 
   @Override
-  public Future<String> removeOfName(String userId, String projectName) {
-    return null;
+  public Future<Long> removeOfName(String userId, String projectName) {
+    return ProjectDB.removeOfName(mongo, userId, projectName);
   }
 
   @Override
-  public Future<String> removeAllOfUser(String userId) {
-    return null;
+  public Future<Long> removeAllOfUser(String userId) {
+    return ProjectDB.removeAllOfUser(mongo, userId);
   }
 
   @Override
-  public Future<String> removeAll() {
-    return null;
+  public Future<Long> removeAll() {
+    return ProjectDB.removeAll(mongo);
   }
 }

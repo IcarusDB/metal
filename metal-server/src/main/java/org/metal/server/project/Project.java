@@ -144,6 +144,8 @@ public class Project extends AbstractVerticle {
       String projectName = ctx.request().params().get("projectName");
       if (projectName == null || projectName.strip().isEmpty()) {
         JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", "projectName is not set.");
         SendJson.send(ctx, resp, 404);
         return;
       }
@@ -180,7 +182,120 @@ public class Project extends AbstractVerticle {
                 .put("msg", error.getLocalizedMessage());
             SendJson.send(ctx, resp, 500);
             LOGGER.error(error);
-            error.printStackTrace();
+          });
+    }
+
+    public void updateName(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = ctx.request().params().get("projectName");
+      if (projectName == null || projectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", "projectName is not set.");
+        SendJson.send(ctx, resp, 404);
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      String newProjectName = body.getString("newProjectName");
+      if (newProjectName == null || newProjectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL");
+        resp.put("msg", "newProjectName is not set.");
+        SendJson.send(ctx, resp, 400);
+        return;
+      }
+
+      service.updateName(userId, projectName, newProjectName)
+          .onSuccess((JsonObject project)-> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", project);
+            SendJson.send(ctx, resp, 200);
+          }).onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
+
+    public void updatePath(RoutingContext ctx, String prefix) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      LOGGER.info("PATH:" + ctx.request().path());
+      String projectName = ctx.request().params().get("projectName");
+      String path = ctx.request().path();
+      String subPath = path.substring(prefix.length())
+                           .substring(projectName.length() + 1);
+      subPath = subPath.replaceFirst("/", "");
+
+      JsonObject body = ctx.body().asJsonObject();
+      Object update = body.getValue("update");
+      if (update == null) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL");
+        resp.put("msg", "update is not set.");
+        SendJson.send(ctx, resp, 400);
+        return;
+      }
+
+      String updatePath = subPath.replaceAll("/", ".");
+      service.updateByPath(
+          userId,
+          projectName,
+          new JsonObject().put(updatePath, update)
+      ).onSuccess((JsonObject ret) -> {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "OK")
+            .put("data", ret);
+        SendJson.send(ctx, resp, 200);
+      }).onFailure((Throwable error) -> {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", error.getLocalizedMessage());
+        SendJson.send(ctx, resp, 500);
+        LOGGER.error(error);
+      });
+    }
+
+    public void updateSpec(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = ctx.request().params().get("projectName");
+      if (projectName == null || projectName.strip().isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL")
+            .put("msg", "projectName is not set.");
+        SendJson.send(ctx, resp, 404);
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      JsonObject spec = body.getJsonObject("spec");
+      if (spec == null || spec.isEmpty()) {
+        JsonObject resp = new JsonObject();
+        resp.put("status", "FAIL");
+        resp.put("msg", "spec is not set.");
+        SendJson.send(ctx, resp, 400);
+        return;
+      }
+
+      service.updateSpec(userId, projectName, spec)
+          .onSuccess((JsonObject ret) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
           });
     }
   }
