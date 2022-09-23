@@ -9,7 +9,7 @@ public class BackendReportImpl implements BackendReport {
   private MongoClient mongo;
 
   @Override
-  public Future<Void> reportCreate(JsonObject create) {
+  public Future<Void> reportExecCreate(JsonObject create) {
     if (!"OK".equals(create.getString("status"))) {
       return Future.failedFuture(
           String.format("The parameter create:%s is not in \'OK\' status.", create.toString())
@@ -38,12 +38,12 @@ public class BackendReportImpl implements BackendReport {
   }
 
   @Override
-  public Future<Void> reportLiveness(JsonObject liveness) {
+  public Future<Void> reportExecLiveness(JsonObject liveness) {
     return null;
   }
 
   @Override
-  public Future<Void> reportFinish(JsonObject finish) {
+  public Future<Void> reportExecFinish(JsonObject finish) {
     if (!"FINISH".equals(finish.getString("status"))) {
       return Future.failedFuture(
           String.format("The parameter create:%s is not in \'FINISH\' status.", finish.toString())
@@ -72,7 +72,7 @@ public class BackendReportImpl implements BackendReport {
   }
 
   @Override
-  public Future<Void> reportFailure(JsonObject failure) {
+  public Future<Void> reportExecFailure(JsonObject failure) {
     if (!"FINISH".equals(failure.getString("status"))) {
       return Future.failedFuture(
           String.format("The parameter create:%s is not in \'FINISH\' status.", failure.toString())
@@ -98,5 +98,20 @@ public class BackendReportImpl implements BackendReport {
     ).compose((JsonObject ret) -> {
       return Future.succeededFuture();
     });
+  }
+
+  @Override
+  public Future<Void> reportBackendUp(JsonObject up) {
+    return null;
+  }
+
+  @Override
+  public Future<Void> reportBackendDown(JsonObject down) {
+    return null;
+  }
+
+  @Override
+  public Future<Void> reportBackendFailure(JsonObject failure) {
+    return null;
   }
 }

@@ -1,8 +1,6 @@
 package org.metal.backend.api.impl;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -110,7 +108,7 @@ public class BackendServiceImpl implements BackendService {
         .put("status", "SUBMIT")
         .put("submitTime", System.currentTimeMillis());
 
-    reportor.reportCreate(create)
+    reportor.reportExecCreate(create)
         .onFailure(error -> {
           LOGGER.error("Fail to report create exec " + execId, error);
         });
@@ -124,7 +122,7 @@ public class BackendServiceImpl implements BackendService {
                 .put("address", serviceProps.backendServiceAddress())
                 .put("status", "FINISH")
                 .put("finishTime", System.currentTimeMillis());
-            reportor.reportFinish(finish)
+            reportor.reportExecFinish(finish)
                     .onFailure(error -> {
                       LOGGER.error("Fail to reprot finish exec " + execId, error);
                     });
@@ -137,7 +135,7 @@ public class BackendServiceImpl implements BackendService {
                 .put("finishTime", System.currentTimeMillis())
                 .put("msg", e.getLocalizedMessage());
 
-            reportor.reportFailure(failure)
+            reportor.reportExecFailure(failure)
                 .onFailure(error -> {
                   LOGGER.error("Fail to report failure of exec " + execId, error);
                 });

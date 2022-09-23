@@ -7,6 +7,4 @@ import org.immutables.value.Value;
 public interface IBackendRESTAPIProps {
   public String id();
   public Optional<Integer> port();
-  public Optional<String> registerUrl();
-  public Optional<String> reportUrl();
 }

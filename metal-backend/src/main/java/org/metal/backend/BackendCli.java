@@ -74,28 +74,26 @@ public class BackendCli {
             .desc("When INTERACTIVE mode is enable, Backend will start all related services. This option will lead to ignore --cmd-mode option.")
             .build();
 
-    public final static Option REST_API_ID_OPT = Option.builder()
-        .longOpt("rest-api-id")
+    public final static Option DEPLOY_ID_OPT = Option.builder()
+        .longOpt("deploy-id")
+        .desc("When INTERACTIVE mode is enable, this option is used to set backend service id part. Service id is '${deploy-id}-${deploy-epoch}'.")
+        .build();
+
+    public final static Option DEPLOY_EPOCH_OPT = Option.builder()
+        .longOpt("deploy-epoch")
+        .desc("When INTERACTIVE mode is enable, this option is used to set backend service id part. Service id is '${deploy-id}-${deploy-epoch}'.")
+        .build();
+
+    public final static Option REPORT_SERVICE_ADDRESS_OPT = Option.builder()
+        .longOpt("report-service-address")
         .hasArg()
-        .desc("When INTERACTIVE mode is enable, this option is used to set backend service rest api id.")
+        .desc("When INTERACTIVE mode is enable, this option is used to report status of backend and executed long term task.")
         .build();
 
     public final static Option REST_API_PORT_OPT = Option.builder()
         .longOpt("rest-api-port")
         .hasArg()
         .desc("When INTERACTIVE mode is enable, this option is used to set backend service rest api port.")
-        .build();
-
-    public final static Option REST_API_REGISTER_URL_OPT = Option.builder()
-        .longOpt("rest-api-register-url")
-        .hasArg()
-        .desc("When INTERACTIVE mode is enable, this option is used to register service rest api by the url.")
-        .build();
-
-    public final static Option REST_API_REPORT_URL_OPT = Option.builder()
-        .longOpt("rest-api-report-url")
-        .hasArg()
-        .desc("When INTERACTIVE mode is enable, this option is used to report executed long term task status by the url.")
         .build();
 
     public final static Option VERTX_OPTIONS_OPT = Option.builder()
@@ -133,10 +131,10 @@ public class BackendCli {
         options.addOption(SPEC_OPT);
         options.addOption(SPEC_FILE_OPT);
         options.addOption(INTERACTIVE_OPT);
-        options.addOption(REST_API_ID_OPT);
+        options.addOption(DEPLOY_ID_OPT);
+        options.addOption(DEPLOY_EPOCH_OPT);
+        options.addOption(REPORT_SERVICE_ADDRESS_OPT);
         options.addOption(REST_API_PORT_OPT);
-        options.addOption(REST_API_REGISTER_URL_OPT);
-        options.addOption(REST_API_REPORT_URL_OPT);
         options.addOption(VERTX_OPTIONS_OPT);
         options.addOption(VERTX_OPTIONS_FILE_OPT);
         options.addOption(VERTX_DEPLOY_OPT);
@@ -321,15 +319,49 @@ public class BackendCli {
         }
     }
 
-    public static Optional<String> parseRestApiId(CommandLine cli) throws IllegalArgumentException {
+    public static Optional<String> parseDeployId(CommandLine cli) throws IllegalArgumentException {
         if (!cli.hasOption(INTERACTIVE_OPT)) {
             return Optional.<String>empty();
         }
-        if (!cli.hasOption(REST_API_ID_OPT)) {
+        if (!cli.hasOption(DEPLOY_ID_OPT)) {
             return Optional.<String>empty();
         }
-        String id = cli.getOptionValue(REST_API_ID_OPT);
-        return Optional.<String>of(id);
+        String deployId = cli.getOptionValue(DEPLOY_ID_OPT);
+        try {
+            return Optional.<String>of(deployId);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<Integer> parseDeployEpoch(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<Integer>empty();
+        }
+        if (!cli.hasOption(DEPLOY_EPOCH_OPT)) {
+            return Optional.<Integer>empty();
+        }
+        String deployEpoch = cli.getOptionValue(DEPLOY_EPOCH_OPT);
+        try {
+            return Optional.<Integer>of(Integer.valueOf(deployEpoch));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static Optional<String> parseReportServiceAddress(CommandLine cli) throws IllegalArgumentException {
+        if (!cli.hasOption(INTERACTIVE_OPT)) {
+            return Optional.<String>empty();
+        }
+        if (!cli.hasOption(REPORT_SERVICE_ADDRESS_OPT)) {
+            return Optional.<String>empty();
+        }
+        String reportServiceAddress = cli.getOptionValue(REPORT_SERVICE_ADDRESS_OPT);
+        try {
+            return Optional.<String>of(reportServiceAddress);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public static Optional<Integer> parseRestApiPort(CommandLine cli) throws IllegalArgumentException {
@@ -345,28 +377,6 @@ public class BackendCli {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    public static Optional<String> parseRestApiRegisterUrl(CommandLine cli) throws IllegalArgumentException {
-        if (!cli.hasOption(INTERACTIVE_OPT)) {
-            return Optional.<String>empty();
-        }
-        if (!cli.hasOption(REST_API_REGISTER_URL_OPT)) {
-            return Optional.<String>empty();
-        }
-        String url = cli.getOptionValue(REST_API_REGISTER_URL_OPT);
-        return Optional.<String>of(url);
-    }
-
-    public static Optional<String> parseRestApiReportUrl(CommandLine cli) throws IllegalArgumentException {
-        if (!cli.hasOption(INTERACTIVE_OPT)) {
-            return Optional.<String>empty();
-        }
-        if (!cli.hasOption(REST_API_REPORT_URL_OPT)) {
-            return Optional.<String>empty();
-        }
-        String url = cli.getOptionValue(REST_API_REPORT_URL_OPT);
-        return Optional.<String>of(url);
     }
 
     public static Optional<VertxOptions> parseVertxOptions(CommandLine cli) throws IllegalArgumentException {

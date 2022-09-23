@@ -4,6 +4,6 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 public interface IBackendServiceProps {
-  public String reportAddress();
+  public String reportServiceAddress();
   public String backendServiceAddress();
 }

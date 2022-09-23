@@ -14,13 +14,18 @@ public interface BackendReport {
     return new BackendReportVertxEBProxy(vertx, address);
   }
 
-  public Future<Void> reportCreate(JsonObject create);
+  public Future<Void> reportExecCreate(JsonObject create);
   
-  public Future<Void> reportLiveness(JsonObject liveness);
+  public Future<Void> reportExecLiveness(JsonObject liveness);
   
-  public Future<Void> reportFinish(JsonObject finish);
+  public Future<Void> reportExecFinish(JsonObject finish);
   
-  public Future<Void> reportFailure(JsonObject failure);
-  
+  public Future<Void> reportExecFailure(JsonObject failure);
+
+  public Future<Void> reportBackendUp(JsonObject up);
+
+  public Future<Void> reportBackendDown(JsonObject down);
+
+  public Future<Void> reportBackendFailure(JsonObject failure);
   
 }

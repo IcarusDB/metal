@@ -52,16 +52,30 @@ public class BackendLauncher {
             return;
         }
 
-        Optional<String> id = BackendCli.parseRestApiId(cli);
-        if (id.isEmpty() || id.get().strip().length() == 0) {
-            String msg = String.format("%s is not set.", BackendCli.REST_API_ID_OPT.getLongOpt());
+        Optional<String> deployId = BackendCli.parseDeployId(cli);
+        Optional<Integer> deployEpoch = BackendCli.parseDeployEpoch(cli);
+        Optional<String> reportServiceAddress = BackendCli.parseReportServiceAddress(cli);
+
+        if (deployId.isEmpty() || deployId.get().isBlank()) {
+            String msg = String.format("%s is not set.", BackendCli.DEPLOY_ID_OPT.getLongOpt());
             LOGGER.error(msg);
             return;
         }
 
+        if (deployEpoch.isEmpty()) {
+            String msg = String.format("%s is not set.", BackendCli.DEPLOY_EPOCH_OPT.getLongOpt());
+            LOGGER.error(msg);
+            return;
+        }
+
+        if (reportServiceAddress.isEmpty() || reportServiceAddress.get().isBlank()) {
+            String msg = String.format("%s is not set.", BackendCli.REPORT_SERVICE_ADDRESS_OPT.getLongOpt());
+            LOGGER.error(msg);
+            return;
+        }
+
+        String id = deployId + "-" + deployEpoch;
         Optional<Integer> port = BackendCli.parseRestApiPort(cli);
-        Optional<String> registerUrl = BackendCli.parseRestApiRegisterUrl(cli);
-        Optional<String> reportUrl = BackendCli.parseRestApiReportUrl(cli);
         Optional<VertxOptions> vertxOptions = BackendCli.parseVertxOptions(cli);
         if (vertxOptions.isEmpty()) {
             vertxOptions = BackendCli.parseVertxOptionsFile(cli);
@@ -77,10 +91,8 @@ public class BackendLauncher {
         IBackend backend = builder.build();
 
         IBackendRESTAPIProps restAPIProps = ImmutableIBackendRESTAPIProps.builder()
-            .id(id.get())
+            .id(id)
             .port(port)
-            .registerUrl(registerUrl)
-            .reportUrl(reportUrl)
             .build();
         BackendRESTAPI restAPI = new BackendRESTAPI(restAPIProps, backend);
 
@@ -88,8 +100,8 @@ public class BackendLauncher {
         DeploymentOptions deploymentOpts = deploymentOptions.orElseGet(DeploymentOptions::new);
         Vertx vertx = Vertx.vertx(vertxOpts);
         vertx.deployVerticle(restAPI, deploymentOpts)
-            .onSuccess(deployId -> {
-                String msg = String.format("Success to deploy %s:%s.", BackendRESTAPI.class, deployId);
+            .onSuccess(deployID -> {
+                String msg = String.format("Success to deploy %s:%s.", BackendRESTAPI.class, deployID);
                 LOGGER.info(msg);
             })
             .onFailure(t -> {
