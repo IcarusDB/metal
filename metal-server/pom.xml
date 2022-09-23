@@ -75,6 +75,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.metal</groupId>
+      <artifactId>metal-backend</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
       <version>${vertx.version}</version>

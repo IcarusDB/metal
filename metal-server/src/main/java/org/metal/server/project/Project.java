@@ -56,7 +56,13 @@ public class Project extends AbstractVerticle {
           getVertx(),
           new JsonObject().put("connection_string", mongoConnection)
       );
-      provider = IProjectService.createProvider(getVertx(), mongo);
+      provider = IProjectService.createProvider(
+          getVertx(),
+          mongo,
+          new JsonObject()
+              .put("backendJar", conf.getString("backendJar"))
+      );
+
       binder = new ServiceBinder(getVertx());
       binder.setAddress(address);
       consumer = binder.register(IProjectService.class, provider);

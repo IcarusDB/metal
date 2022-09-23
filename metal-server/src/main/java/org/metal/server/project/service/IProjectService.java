@@ -15,8 +15,8 @@ import org.metal.server.project.Platform;
 @ProxyGen
 @VertxGen
 public interface IProjectService {
-  public static IProjectService createProvider(Vertx vertx, MongoClient mongo) {
-    IProjectService provider = new ProjectServiceImpl(vertx, mongo);
+  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, JsonObject conf) {
+    IProjectService provider = new ProjectServiceImpl(vertx, mongo, conf);
     return provider;
   }
 
@@ -69,4 +69,6 @@ public interface IProjectService {
   public Future<JsonObject> removeAllOfUser(String userId);
 
   public Future<JsonObject> removeAll();
+
+  public Future<JsonObject> deploy(String userId, String projectName);
 }

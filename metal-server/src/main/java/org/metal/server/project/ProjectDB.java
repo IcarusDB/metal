@@ -30,12 +30,15 @@ public class ProjectDB {
   public final static String FIELD_DEPLOY_ARGS = "deployArgs";
   public final static String FIELD_DEPLOY_ARGS_PLATFORM = "platform";
   public final static String FIELD_DEPLOY_ARGS_PLATFORM_ARGS = "platformArgs";
+  public final static String FIELD_DEPLOY_ARGS_PLATFORM_ARGS_ARGS = "args";
+  public final static String FIELD_DEPLOY_ARGS_PLATFORM_ARGS_PKGS = "pkgs";
   public final static String FIELD_DEPLOY_ARGS_BACKEND_ARGS = "backendArgs";
+  public final static String FIELD_DEPLOY_ARGS_BACKEND_ARGS_ARGS = "args";
   public final static String FIELD_BACKEND_STATUS = "backendStatus";
   public final static String FIELD_BACKEND_STATUS_STATUS = "status";
-  public final static String FIELD_BACKEND_STATUS_CREATE_TIME = "createTime";
+  public final static String FIELD_BACKEND_STATUS_EPOCH = "epoch";
   public final static String FIELD_BACKEND_STATUS_UP_TIME = "upTime";
-  public final static String FIELD_BACKEND_STATUS_REPORT_TIME = "reportTime";
+  public final static String FIELD_BACKEND_STATUS_BEAT_TIME = "beatTime";
   public final static String FIELD_BACKEND_STATUS_DOWN_TIME = "downTime";
   public final static String FIELD_SPEC = "spec";
 
@@ -73,8 +76,8 @@ public class ProjectDB {
         .put(FIELD_DEPLOY_ID, UUID.randomUUID().toString())
         .put(FIELD_DEPLOY_ARGS, deployArgs)
         .put(FIELD_BACKEND_STATUS, new JsonObject()
-            .put(FIELD_BACKEND_STATUS_STATUS, BackendState.CREATED.toString())
-            .put(FIELD_BACKEND_STATUS_CREATE_TIME , System.currentTimeMillis())
+            .put(FIELD_BACKEND_STATUS_EPOCH, -1)
+            .put(FIELD_BACKEND_STATUS_STATUS, BackendState.UN_DEPLOY.toString())
         )
         .put(FIELD_NAME, projectName)
         .put(FIELD_SPEC, spec);

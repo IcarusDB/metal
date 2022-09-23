@@ -3,23 +3,36 @@ package org.metal.server.project.service;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.metal.backend.BackendLauncher;
+import org.metal.server.project.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
 
 public class ProjectServiceImpl implements IProjectService{
+  private final static Logger LOGGER = LoggerFactory.getLogger(ProjectServiceImpl.class);
+
   private MongoClient mongo;
   private Vertx vertx;
-  public ProjectServiceImpl(MongoClient mongo) {
+  private JsonObject conf;
+
+  public ProjectServiceImpl(MongoClient mongo, JsonObject conf) {
     this.mongo = mongo;
+    this.conf = conf.copy();
   }
 
-  public ProjectServiceImpl(Vertx vertx, MongoClient mongo) {
+  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, JsonObject conf) {
     this.vertx = vertx;
     this.mongo = mongo;
+    this.conf = conf.copy();
   }
 
   @Override
@@ -138,5 +151,151 @@ public class ProjectServiceImpl implements IProjectService{
   @Override
   public Future<JsonObject> removeAll() {
     return ProjectDB.removeAll(mongo);
+  }
+
+  @Override
+  public Future<JsonObject> deploy(String userId, String projectName) {
+    getOfName(userId, projectName).compose((JsonObject project) -> {
+      String deployId = project.getString(ProjectDB.FIELD_DEPLOY_ID);
+      if (deployId == null || deployId.strip().isEmpty()) {
+        return Future.failedFuture("deployId is not set.");
+      }
+
+      JsonObject deployArgs = project.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS);
+      if (deployArgs == null || deployArgs.isEmpty()) {
+        return Future.failedFuture("deployArgs is not set.");
+      }
+
+      String platform = deployArgs.getString(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM);
+      if (platform == null) {
+        return Future.failedFuture("platform is not set.");
+      }
+      try {
+        Platform.valueOf(platform);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+
+      JsonObject platformArgs = deployArgs.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS);
+      JsonArray platformArgsArgs = platformArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS_ARGS);
+      JsonArray plataformArgsPkgs = platformArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS_PKGS, new JsonArray());
+      if (platformArgs == null || platformArgs.isEmpty()) {
+        return Future.failedFuture("platformArgs is not set.");
+      }
+      if (platformArgsArgs == null) {
+        return Future.failedFuture("platformArgs.args is not set.");
+      }
+
+      List<String> parseArgs = new ArrayList<>();
+      switch (Platform.valueOf(platform)) {
+        case SPARK: {
+          try {
+            parseArgs.addAll(parsePlatformArgs(platformArgsArgs, plataformArgsPkgs));
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
+        }; break;
+        default: {
+          return Future.failedFuture(String.format("%s is not supported.", platform));
+        }
+      }
+
+      String backendJar = conf.getString("backendJar");
+      if (backendJar == null || backendJar.strip().isEmpty()) {
+        LOGGER.error("backendJar is not configured.");
+        return Future.failedFuture("backendJar is not configured.");
+      }
+      parseArgs.add(backendJar);
+
+      JsonObject backendArgs = deployArgs.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS);
+      if (backendArgs == null || backendArgs.isEmpty()) {
+        return Future.failedFuture("backendArgs is not set.");
+      }
+
+      JsonArray backendArgsArgs = backendArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS_ARGS);
+      try {
+        parseArgs.addAll(parseBackendArgs(backendArgsArgs));
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+
+      JsonObject backendStatus = project.getJsonObject(ProjectDB.FIELD_BACKEND_STATUS);
+      if (backendStatus == null || backendStatus.isEmpty()) {
+        return Future.failedFuture("backendStatus is not set.");
+      }
+
+      String backendStatusStatus = backendStatus.getString(ProjectDB.FIELD_BACKEND_STATUS_STATUS);
+      if (backendStatusStatus == null || backendStatusStatus.isBlank()) {
+        return Future.failedFuture("backendStatus.status is not set.");
+      }
+      try {
+        BackendState.valueOf(backendStatusStatus);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+      if (!BackendState.valueOf(backendStatusStatus).equals(BackendState.UN_DEPLOY)) {
+        return Future.failedFuture(String.format("Fail to deploy backend, because backend is in %s.", backendStatusStatus));
+      }
+
+      int epoch = backendStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH, -1);
+      if (epoch != -1) {
+        String errorMsg = "The epoch of undeploy backend should be -1, now is " + epoch;
+        LOGGER.error(errorMsg);
+        return Future.failedFuture(errorMsg);
+      }
+
+      return Future.succeededFuture();
+    });
+    return null;
+  }
+
+  private List<String> parsePlatformArgs(JsonArray platformArgs, JsonArray platformPkgs) throws IllegalArgumentException{
+    List<String> args = platformArgs.stream().map(Object::toString).collect(Collectors.toList());
+    boolean classArgReady = false;
+    try {
+      for(int idx = 0; idx < args.size(); idx++) {
+        String arg = args.get(idx);
+        if ("--class".equals(arg)) {
+          String classArg = args.get(idx + 1);
+          if (BackendLauncher.class.toString().equals(classArg)) {
+            classArgReady = true;
+          } else {
+            throw new IllegalArgumentException("platformArgs.args --class is set wrong.");
+          }
+        }
+      }
+    } catch (IndexOutOfBoundsException e) {
+      throw new IllegalArgumentException(e);
+    }
+
+    if (!classArgReady) {
+      args.add("--class");
+      args.add(BackendLauncher.class.toString());
+    }
+
+    String packagesArg = platformPkgs.stream().map(Object::toString).collect(Collectors.joining(","));
+    if (!platformPkgs.isEmpty()) {
+      args.add("--packages");
+      args.add(packagesArg);
+    }
+    return args;
+  }
+
+  private List<String> parseBackendArgs(JsonArray backendArgs) throws IllegalArgumentException{
+    List<String> args = backendArgs.stream().map(Object::toString).collect(Collectors.toList());
+
+    boolean interactiveReady = false;
+    for(int idx = 0; idx < args.size(); idx++) {
+      String arg = args.get(idx);
+      if ("--interactive-mode".equals(arg)) {
+        interactiveReady = true;
+      }
+    }
+
+    if (!interactiveReady){
+      args.add("--interactive-mode");
+    }
+
+    return args;
   }
 }
