@@ -101,7 +101,7 @@ public class ProjectDB {
   }
 
   public static Future<String> recoverFrom(MongoClient mongo, String userId, String execId) {
-    return ExecDB.get(mongo, userId, execId)
+    return ExecDB.get(mongo, execId)
         .compose((JsonObject exec) -> {
           JsonObject project = new JsonObject();
           JsonObject deployArgs = exec.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS);

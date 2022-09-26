@@ -1,6 +1,7 @@
 package org.metal.backend.api.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -14,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.metal.backend.IBackend;
 import org.metal.backend.api.BackendService;
+import org.metal.server.api.BackendState;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
 import org.metal.exception.MetalAnalyseAcquireException;
@@ -25,19 +27,36 @@ import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
 import org.metal.exception.MetalStatusAcquireException;
 import org.metal.server.api.BackendReport;
+import org.metal.server.api.ExecState;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
 public class BackendServiceImpl implements BackendService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
-  private IBackendServiceProps serviceProps;
+
+  private String deployId;
+  private int epoch;
+  private String reportAddress;
+  private Vertx vertx;
   private IBackend backend;
   private WorkerExecutor workerExecutor;
   private BackendReport reportor;
 
-  private BackendServiceImpl(IBackend backend, WorkerExecutor workerExecutor) {
+  public BackendServiceImpl(
+      Vertx vertx,
+      IBackend backend,
+      WorkerExecutor workerExecutor,
+      String deployId,
+      int epoch,
+      String reportAddress
+  ) {
+    this.deployId = deployId;
+    this.epoch = epoch;
+    this.reportAddress = reportAddress;
+    this.vertx = vertx;
     this.backend = backend;
     this.workerExecutor = workerExecutor;
+    this.reportor = BackendReport.create(vertx, new JsonObject().put("address", reportAddress));
   }
 
   @Override
@@ -65,7 +84,7 @@ public class BackendServiceImpl implements BackendService {
   }
 
   @Override
-  public Future<JsonObject> schemaAPI(String metalId) {
+  public Future<JsonObject> schema(String metalId) {
     try {
       Schema schema = backend.service().schema(metalId);
       JsonObject resp = new JsonObject();
@@ -79,19 +98,24 @@ public class BackendServiceImpl implements BackendService {
   }
 
   @Override
-  public Future<JsonObject> heartAPI() {
+  public Future<JsonObject> heart() {
     JsonObject resp = new JsonObject();
     resp.put("time", LocalDateTime.now());
     return Future.succeededFuture(resp);
   }
 
   @Override
-  public Future<JsonObject> statusAPI() {
-    return Future.succeededFuture();
+  public Future<JsonObject> status() {
+    JsonObject resp = new JsonObject();
+    resp.put("deployId", deployId);
+    resp.put("epoch", epoch);
+    resp.put("status", BackendState.UP.toString());
+    resp.put("beatTime", System.currentTimeMillis());
+    return Future.succeededFuture(resp);
   }
 
   @Override
-  public Future<Void> execAPI(JsonObject exec) {
+  public Future<Void> exec(JsonObject exec) {
     String execId = exec.getString("id");
 
     if (backend.service().analysed().isEmpty()) {
@@ -102,13 +126,14 @@ public class BackendServiceImpl implements BackendService {
       return Future.failedFuture("Some unAnalysed metals exist in context.");
     }
 
-    JsonObject create = new JsonObject();
-    create.put("id", execId)
-        .put("address", serviceProps.backendServiceAddress())
-        .put("status", "SUBMIT")
+    JsonObject submit = new JsonObject();
+    submit.put("id", execId)
+        .put("deployId", deployId)
+        .put("epoch", epoch)
+        .put("status", ExecState.SUBMIT.toString())
         .put("submitTime", System.currentTimeMillis());
 
-    reportor.reportExecCreate(create)
+    reportor.reportExecSubmit(submit)
         .onFailure(error -> {
           LOGGER.error("Fail to report create exec " + execId, error);
         });
@@ -119,8 +144,9 @@ public class BackendServiceImpl implements BackendService {
             backend.service().exec();
             JsonObject finish = new JsonObject();
             finish.put("id", execId)
-                .put("address", serviceProps.backendServiceAddress())
-                .put("status", "FINISH")
+                .put("deployId", deployId)
+                .put("epoch", epoch)
+                .put("status", ExecState.FINISH.toString())
                 .put("finishTime", System.currentTimeMillis());
             reportor.reportExecFinish(finish)
                     .onFailure(error -> {
@@ -130,9 +156,10 @@ public class BackendServiceImpl implements BackendService {
           } catch (MetalExecuteException e) {
             JsonObject failure = new JsonObject();
             failure.put("id", execId)
-                .put("address", serviceProps.backendServiceAddress())
-                .put("status", "FINISH")
-                .put("finishTime", System.currentTimeMillis())
+                .put("deployId", deployId)
+                .put("epoch", epoch)
+                .put("status", ExecState.FAILURE)
+                .put("terminateTime", System.currentTimeMillis())
                 .put("msg", e.getLocalizedMessage());
 
             reportor.reportExecFailure(failure)
@@ -145,9 +172,31 @@ public class BackendServiceImpl implements BackendService {
     );
   }
 
-  public static BackendService concurrency(IBackend backend, WorkerExecutor workerExecutor) {
+  @Override
+  public Future<Void> killExec(JsonObject exec) {
+    return null;
+  }
+
+  @Override
+  public Future<Void> stop() {
+    return null;
+  }
+
+  @Override
+  public Future<Void> gracefulStop() {
+    return null;
+  }
+
+  public static BackendService concurrency(
+      Vertx vertx,
+      IBackend backend,
+      WorkerExecutor workerExecutor,
+      String deployId,
+      int epoch,
+      String reportAddress
+  ) {
     return new ConcurrencyService(
-        new BackendServiceImpl(backend, workerExecutor)
+        new BackendServiceImpl(vertx, backend, workerExecutor, deployId, epoch, reportAddress)
     );
   }
 
@@ -188,9 +237,9 @@ public class BackendServiceImpl implements BackendService {
     }
 
     @Override
-    public Future<JsonObject> schemaAPI(String metalId) {
+    public Future<JsonObject> schema(String metalId) {
       if (analyseReadLock.tryLock()) {
-        return innerService.schemaAPI(metalId).compose(
+        return innerService.schema(metalId).compose(
             ret -> {
               analyseReadLock.unlock();
               return Future.succeededFuture(ret);
@@ -205,14 +254,14 @@ public class BackendServiceImpl implements BackendService {
     }
 
     @Override
-    public Future<JsonObject> heartAPI() {
-      return innerService.heartAPI();
+    public Future<JsonObject> heart() {
+      return innerService.heart();
     }
 
     @Override
-    public Future<JsonObject> statusAPI() {
+    public Future<JsonObject> status() {
       if (analyseReadLock.tryLock()) {
-        return innerService.statusAPI().compose(
+        return innerService.status().compose(
             ret -> {
               analyseReadLock.unlock();
               return Future.succeededFuture(ret);
@@ -228,10 +277,10 @@ public class BackendServiceImpl implements BackendService {
     }
 
     @Override
-    public Future<Void> execAPI(JsonObject exec) {
+    public Future<Void> exec(JsonObject exec) {
       if (analyseReadLock.tryLock()) {
         if (execLock.tryLock()) {
-          return innerService.execAPI(exec).compose(
+          return innerService.exec(exec).compose(
               ret -> {
                 execLock.unlock();
                 analyseReadLock.unlock();
@@ -248,6 +297,21 @@ public class BackendServiceImpl implements BackendService {
         return Future.failedFuture(new MetalExecAcquireException("Now executor has been acquired by other request, wait a moment."));
       }
       return Future.failedFuture(new MetalExecAcquireException("Now analyse has been acquired by other request, wait a moment."));
+    }
+
+    @Override
+    public Future<Void> killExec(JsonObject exec) {
+      return null;
+    }
+
+    @Override
+    public Future<Void> stop() {
+      return null;
+    }
+
+    @Override
+    public Future<Void> gracefulStop() {
+      return null;
     }
   }
 }

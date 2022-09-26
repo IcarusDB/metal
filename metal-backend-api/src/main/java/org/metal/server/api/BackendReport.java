@@ -9,14 +9,15 @@ import io.vertx.core.json.JsonObject;
 @ProxyGen
 @VertxGen
 public interface BackendReport {
+
   public static BackendReport create(Vertx vertx, JsonObject config) {
     String address = config.getString("address");
     return new BackendReportVertxEBProxy(vertx, address);
   }
 
-  public Future<Void> reportExecCreate(JsonObject create);
+  public Future<Void> reportExecSubmit(JsonObject create);
   
-  public Future<Void> reportExecLiveness(JsonObject liveness);
+  public Future<Void> reportExecRunning(JsonObject running);
   
   public Future<Void> reportExecFinish(JsonObject finish);
   
@@ -27,5 +28,5 @@ public interface BackendReport {
   public Future<Void> reportBackendDown(JsonObject down);
 
   public Future<Void> reportBackendFailure(JsonObject failure);
-  
+
 }

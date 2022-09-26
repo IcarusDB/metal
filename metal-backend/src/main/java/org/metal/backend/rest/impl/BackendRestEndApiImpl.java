@@ -4,21 +4,22 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import java.time.LocalDateTime;
 import org.metal.backend.api.BackendService;
 import org.metal.backend.rest.IBackendRestEndApi;
 import org.metal.backend.rest.SendJson;
 import org.metal.exception.MetalAnalyseAcquireException;
 import org.metal.exception.MetalAnalysedException;
 import org.metal.exception.MetalDraftException;
-import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
-import org.metal.server.api.BackendReport;
 
 public class BackendRestEndApiImpl implements IBackendRestEndApi {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendRestEndApiImpl.class);
   private BackendService backendService;
+
+  public BackendRestEndApiImpl(BackendService backendService) {
+    this.backendService = backendService;
+  }
 
   @Override
   public void analyseAPI(RoutingContext ctx) {
@@ -65,7 +66,7 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
   public void schemaAPI(RoutingContext ctx) {
     String mid = ctx.pathParam("mid");
     JsonObject resp = new JsonObject();
-    backendService.schemaAPI(mid)
+    backendService.schema(mid)
         .onSuccess((JsonObject ret) -> {
           resp.put("status", "OK")
               .put("data", resp);
@@ -87,7 +88,7 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
   @Override
   public void heartAPI(RoutingContext ctx) {
     JsonObject resp = new JsonObject();
-    backendService.heartAPI()
+    backendService.heart()
         .onSuccess((JsonObject ret) -> {
           resp.put("status", "OK")
               .put("data", ret);
@@ -103,7 +104,7 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
   @Override
   public void statusAPI(RoutingContext ctx) {
     JsonObject resp = new JsonObject();
-    backendService.statusAPI()
+    backendService.status()
         .onSuccess((JsonObject ret) -> {
           resp.put("status", "OK")
               .put("data", ret);
@@ -119,7 +120,7 @@ public class BackendRestEndApiImpl implements IBackendRestEndApi {
   @Override
   public void execAPI(RoutingContext ctx) {
     String execId = ctx.pathParam("execId");
-    backendService.execAPI(new JsonObject().put("id", execId));
+    backendService.exec(new JsonObject().put("id", execId));
 
     JsonObject resp = new JsonObject();
     resp.put("id", execId)

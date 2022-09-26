@@ -5,13 +5,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.MongoClientDeleteResult;
-import java.util.Optional;
+import org.metal.server.api.ExecState;
 import org.metal.server.project.ProjectDB;
 
 public class ExecDB {
-  public static enum State {
-    CREATE, SUBMIT, RUNNING, FINISH, FAIL
-  }
 
   public final static String DB = "execs";
   public final static String FIELD_ID = "_id";
@@ -37,7 +34,7 @@ public class ExecDB {
           exec.put(FIELD_FROM_PROJECT, projectId)
               .put(FIELD_USER_ID, userId)
               .put(FIELD_CREATE_TIME, System.currentTimeMillis())
-              .put(FIELD_STATUS, State.CREATE)
+              .put(FIELD_STATUS, ExecState.CREATE)
               .put(FIELD_DEPLOY_ID, project.getString(ProjectDB.FIELD_DEPLOY_ID))
               .put(FIELD_DEPLOY_ARGS, project.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS))
               .put(FIELD_SPEC, project.getJsonObject(ProjectDB.FIELD_SPEC));
@@ -45,28 +42,56 @@ public class ExecDB {
         });
   }
 
-  public static Future<JsonObject> updateStatus(MongoClient mongo, String userId, String execId, State status) {
+  public static Future<JsonObject> updateStatus(MongoClient mongo, String execId, ExecState status) {
     JsonObject update = new JsonObject()
-        .put(FIELD_STATUS, status);
+        .put(FIELD_STATUS, status.toString());
     switch (status) {
       case CREATE: update.put(FIELD_CREATE_TIME, System.currentTimeMillis()); break;
       case SUBMIT: update.put(FIELD_SUBMIT_TIME, System.currentTimeMillis()); break;
       case RUNNING: update.put(FIELD_BEAT_TIME, System.currentTimeMillis()); break;
       case FINISH: update.put(FIELD_FINISH_TIME, System.currentTimeMillis()); break;
-      case FAIL: update.put(FIELD_TERMINATE_TIME, System.currentTimeMillis()); break;
+      case FAILURE: update.put(FIELD_TERMINATE_TIME, System.currentTimeMillis()); break;
     }
 
     return mongo.findOneAndUpdate(
         DB,
-        new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_ID , execId),
-        update
+        new JsonObject().put(FIELD_ID , execId),
+        new JsonObject().put("$set", update)
     );
   }
 
-  public static Future<JsonObject> get(MongoClient mongo, String userId, String execId) {
+  public static Future<JsonObject> updateStatus(MongoClient mongo, JsonObject execStatus) {
+    String execId = execStatus.getString("id");
+    ExecState status = ExecState.valueOf(execStatus.getString("status"));
+    JsonObject update = new JsonObject();
+    update.put(FIELD_STATUS, status.toString());
+    switch (status) {
+      case CREATE: update.put(FIELD_CREATE_TIME, execStatus.getLong("createTime")); break;
+      case SUBMIT: update.put(FIELD_SUBMIT_TIME, execStatus.getLong("submitTime")); break;
+      case RUNNING: update.put(FIELD_BEAT_TIME, execStatus.getLong("beatTime")); break;
+      case FINISH: update.put(FIELD_FINISH_TIME, execStatus.getLong("finishTime")); break;
+      case FAILURE: update.put(FIELD_TERMINATE_TIME, execStatus.getLong("terminateTime")); break;
+    }
+
+    return mongo.updateCollection(
+        DB,
+        new JsonObject().put(FIELD_ID, execId),
+        new JsonObject().put("$set", update)
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+  }
+
+  public static Future<JsonObject> updateByPath(MongoClient mongo, String execId, JsonObject updateByPath) {
+    return mongo.updateCollection(
+        DB,
+        new JsonObject().put(FIELD_ID, execId),
+        new JsonObject().put("$set", updateByPath)
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+  }
+
+  public static Future<JsonObject> get(MongoClient mongo, String execId) {
     return mongo.findOne(
         DB,
-        new JsonObject().put(FIELD_USER_ID, userId)
+        new JsonObject()
             .put(FIELD_ID , execId),
         new JsonObject()
     );

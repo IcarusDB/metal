@@ -17,11 +17,17 @@ public interface BackendService {
 
   public Future<JsonObject> analyse(JsonObject spec);
 
-  public Future<JsonObject> schemaAPI(String metalId);
+  public Future<JsonObject> schema(String metalId);
 
-  public Future<JsonObject> heartAPI();
+  public Future<JsonObject> heart();
 
-  public Future<JsonObject> statusAPI();
+  public Future<JsonObject> status();
 
-  public Future<Void> execAPI(JsonObject exec);
+  public Future<Void> exec(JsonObject exec);
+
+  public Future<Void> killExec(JsonObject exec);
+
+  public Future<Void> stop();
+
+  public Future<Void> gracefulStop();
 }
