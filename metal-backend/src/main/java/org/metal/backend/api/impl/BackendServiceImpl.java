@@ -141,6 +141,17 @@ public class BackendServiceImpl implements BackendService {
     return workerExecutor.executeBlocking(
         (promise) -> {
           try {
+            JsonObject running = new JsonObject();
+            running.put("id", execId)
+                .put("deployId", deployId)
+                .put("epoch", epoch)
+                .put("status", ExecState.RUNNING.toString())
+                .put("beatTime", System.currentTimeMillis());
+            reportor.reportExecRunning(running)
+                .onFailure(error -> {
+                  LOGGER.error("Fail to report running exec " + execId, error);
+                });
+
             backend.service().exec();
             JsonObject finish = new JsonObject();
             finish.put("id", execId)

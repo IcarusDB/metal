@@ -13,69 +13,106 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportExecSubmit(JsonObject submit) {
-    if (!ExecState.SUBMIT.toString().equals(submit.getString("status"))) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s is not in \'%s\' status.", submit.toString(), ExecState.SUBMIT.toString())
-      );
-    }
-
-    if (submit.getString("id") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost id.", submit.toString())
-      );
-    }
-
-    if (submit.getLong("submitTime") == null) {
-      return Future.failedFuture(
-        String.format("The parameter create:%s lost submitTime.", submit.toString())
-      );
-    }
-
-    if (submit.getString("deployId") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost deployId.", submit.toString())
-      );
-    }
-
-    if (submit.getInteger("epoch") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost epoch.", submit.toString())
-      );
+    String timeName = "submitTime";
+    try {
+      checkExecStatus(submit, ExecState.SUBMIT);
+      checkExecReport(submit);
+      checkTime(submit, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
     }
 
     String execId = submit.getString("id");
     String deployId = submit.getString("deployId");
     int epoch = submit.getInteger("epoch");
-    long submitTime = submit.getLong("submitTime");
+    long submitTime = submit.getLong(timeName);
 
     return execService.getStatus(execId)
         .compose((JsonObject lastStatus) -> {
           int lastEpoch = lastStatus.getInteger("epoch");
-          if (epoch != lastEpoch) {
-            String msg = String.format("epoch: %d in %s is not equal the last epoch in metal server.[%d != %d]. %s-%d maybe have been evicted.",
-                epoch,
-                submit.toString(),
-                epoch, lastEpoch,
-                deployId, epoch
-            );
-            return Future.failedFuture(msg);
-          } else {
-            return Future.succeededFuture(lastStatus);
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
           }
-        }).compose((JsonObject lastStatus) -> {
+
           ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
           if (!lastState.equals(ExecState.CREATE)) {
             String msg = String.format("The status of exec can\'t switch from %s to %s.", lastState.toString(), ExecState.SUBMIT.toString());
             return Future.failedFuture(msg);
-          } else {
-            return Future.succeededFuture(lastStatus);
           }
-        }).compose((JsonObject lastStatus) -> {
+
           JsonObject update = new JsonObject();
           update.put("status", ExecState.SUBMIT.toString())
-              .put("submitTime", submitTime);
+              .put(timeName, submitTime);
           return execService.updateStatus(execId, update);
         });
+  }
+
+  private static boolean checkExecStatus(JsonObject report, ExecState expect) throws IllegalArgumentException {
+    if (!report.containsKey("status")) {
+      throw new IllegalArgumentException(String.format("status is lost in %s.", report.toString()));
+    }
+
+    ExecState execState = ExecState.valueOf(report.getString("status"));
+    if (!expect.equals(execState)) {
+      throw new IllegalArgumentException(String.format("The parameter %s is not in '%s' status.", report.toString(), expect.toString()));
+    }
+    return true;
+  }
+
+  private static boolean checkExecReport(JsonObject report) throws IllegalArgumentException {
+    if (!report.containsKey("id")) {
+      throw new IllegalArgumentException(String.format("The parameter %s lost id.", report.toString()));
+    }
+
+    if (!report.containsKey("deployId")) {
+      throw new IllegalArgumentException(
+              String.format("The parameter %s lost deployId.", report.toString())
+      );
+    }
+
+    if (!report.containsKey("epoch")) {
+      throw new IllegalArgumentException(
+              String.format("The parameter %s lost epoch.", report.toString())
+      );
+    }
+
+    try {
+      report.getInteger("epoch");
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException(e);
+    }
+
+    return true;
+  }
+
+  private static boolean checkTime(JsonObject report, String timeName) {
+    if (!report.containsKey(timeName)) {
+      throw new IllegalArgumentException(
+              String.format("The parameter %s lost %s.", report.toString(), timeName)
+      );
+    }
+
+    try {
+      report.getLong(timeName);
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException(e);
+    }
+    return true;
+  }
+
+  private static boolean checkLegalEpoch(
+      int lastEpoch, int epoch, String deployId
+  ) throws IllegalArgumentException {
+    if (lastEpoch == epoch) {
+      return true;
+    } else {
+      String msg = String.format(
+          "Last epoch in server is %d. The epoch of report is %d and is illegal. %s-%d maybe left cluster.", lastEpoch, epoch, deployId, epoch
+      );
+      throw new IllegalArgumentException(msg);
+    }
   }
 
   @Override
@@ -85,60 +122,80 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportExecFinish(JsonObject finish) {
-    if (!"FINISH".equals(finish.getString("status"))) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s is not in \'FINISH\' status.", finish.toString())
-      );
+    String timeName = "finishTime";
+    try {
+      checkExecStatus(finish, ExecState.FINISH);
+      checkExecReport(finish);
+      checkTime(finish, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
     }
 
-    if (finish.getString("id") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost id.", finish.toString())
-      );
-    }
+    String execId = finish.getString("id");
+    String deployId = finish.getString("deployId");
+    int epoch = finish.getInteger("epoch");
+    long finishTime = finish.getLong(timeName);
 
-    if (finish.getLong("finishTime") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost finishTime.", finish.toString())
-      );
-    }
+    return execService.getStatus(execId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
 
-    return mongo.findOneAndUpdate(
-        "exec",
-        new JsonObject().put("id", finish.getString("id")),
-        finish
-    ).compose((JsonObject ret) -> {
-      return Future.succeededFuture();
-    });
+          ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put("status", ExecState.FINISH.toString())
+              .put(timeName, finishTime);
+          return execService.updateStatus(execId, update);
+        });
   }
 
   @Override
   public Future<Void> reportExecFailure(JsonObject failure) {
-    if (!"FINISH".equals(failure.getString("status"))) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s is not in \'FINISH\' status.", failure.toString())
-      );
+    String timeName = "terminateTime";
+    try {
+      checkExecStatus(failure, ExecState.FAILURE);
+      checkExecReport(failure);
+      checkTime(failure, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
     }
 
-    if (failure.getString("id") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost id.", failure.toString())
-      );
-    }
+    String execId = failure.getString("id");
+    String deployId = failure.getString("deployId");
+    int epoch = failure.getInteger("epoch");
+    long terminateTime = failure.getLong(timeName);
+    String failureMsg = failure.getString("msg");
 
-    if (failure.getLong("finishTime") == null) {
-      return Future.failedFuture(
-          String.format("The parameter create:%s lost finishTime.", failure.toString())
-      );
-    }
+    return execService.getStatus(execId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
 
-    return mongo.findOneAndUpdate(
-        "exec",
-        new JsonObject().put("id", failure.getString("id")),
-        failure
-    ).compose((JsonObject ret) -> {
-      return Future.succeededFuture();
-    });
+          ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put("status", ExecState.FAILURE.toString())
+              .put(timeName, terminateTime)
+              .put("msg", failureMsg);
+          return execService.updateStatus(execId, update);
+        });
   }
 
   @Override
