@@ -1,6 +1,7 @@
 package org.metal.server.exec.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
@@ -9,7 +10,13 @@ import org.metal.server.exec.ExecDB;
 import org.metal.server.exec.ExecService;
 
 public class ExecServiceImpl implements ExecService {
+  private Vertx vertx;
   private MongoClient mongo;
+
+  public ExecServiceImpl(Vertx vertx, MongoClient mongo, JsonObject conf) {
+    this.vertx = vertx;
+    this.mongo = mongo;
+  }
 
   @Override
   public Future<String> add(String userId, JsonObject exec) {

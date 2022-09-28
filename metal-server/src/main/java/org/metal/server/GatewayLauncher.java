@@ -11,6 +11,7 @@ import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import java.util.List;
 import org.metal.server.project.Project;
+import org.metal.server.report.BackendReportService;
 
 public class GatewayLauncher {
   private final static Logger LOGGER = LoggerFactory.getLogger(GatewayLauncher.class);
@@ -23,6 +24,7 @@ public class GatewayLauncher {
     Vertx.clusteredVertx(options).compose((Vertx vertx) -> {
       Project project = Project.create();
       Gateway gateway = Gateway.create();
+      BackendReportService backendReportService = BackendReportService.create();
       vertx.exceptionHandler(t -> {
         LOGGER.error(t);
       });

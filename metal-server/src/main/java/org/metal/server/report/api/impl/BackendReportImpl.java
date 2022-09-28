@@ -11,9 +11,14 @@ import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.IProjectService;
 
 public class BackendReportImpl implements BackendReport {
-  private MongoClient mongo;
   private ExecService execService;
   private IProjectService projectService;
+
+  public BackendReportImpl(ExecService execService,
+      IProjectService projectService) {
+    this.execService = execService;
+    this.projectService = projectService;
+  }
 
   @Override
   public Future<Void> reportExecSubmit(JsonObject submit) {
