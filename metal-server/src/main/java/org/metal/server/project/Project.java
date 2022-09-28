@@ -7,6 +7,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -33,6 +34,7 @@ public class Project extends AbstractVerticle {
   private ServiceBinder binder;
   private MessageConsumer<JsonObject> consumer;
   private IProjectService provider;
+  private WorkerExecutor workerExecutor;
 
   private Project() {}
 
@@ -77,7 +79,8 @@ public class Project extends AbstractVerticle {
             PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
       }
 
-      provider = IProjectService.createProvider(getVertx(), mongo, projectServiceConf);
+      workerExecutor = vertx.createSharedWorkerExecutor("project-worker-executor", 1);
+      provider = IProjectService.createProvider(getVertx(), mongo, workerExecutor, projectServiceConf);
       binder = new ServiceBinder(getVertx());
       binder.setAddress(address);
       consumer = binder.register(IProjectService.class, provider);

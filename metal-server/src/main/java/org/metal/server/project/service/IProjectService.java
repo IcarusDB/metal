@@ -4,6 +4,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
@@ -15,8 +16,8 @@ import org.metal.server.project.Platform;
 @ProxyGen
 @VertxGen
 public interface IProjectService {
-  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, JsonObject conf) {
-    IProjectService provider = new ProjectServiceImpl(vertx, mongo, conf);
+  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, JsonObject conf) {
+    IProjectService provider = new ProjectServiceImpl(vertx, mongo, workerExecutor, conf);
     return provider;
   }
 

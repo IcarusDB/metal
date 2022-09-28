@@ -2,6 +2,7 @@ package org.metal.server.project.service;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -11,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.metal.backend.BackendDeployManager;
 import org.metal.backend.BackendLauncher;
+import org.metal.backend.IBackendDeploy;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
@@ -21,17 +24,14 @@ public class ProjectServiceImpl implements IProjectService{
 
   private MongoClient mongo;
   private Vertx vertx;
+  private WorkerExecutor workerExecutor;
   private JsonObject conf;
 
-  public ProjectServiceImpl(MongoClient mongo, JsonObject conf) {
-    this.mongo = mongo;
-    this.conf = conf.copy();
-  }
-
-  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, JsonObject conf) {
+  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, JsonObject conf) {
     this.vertx = vertx;
     this.mongo = mongo;
     this.conf = conf.copy();
+    this.workerExecutor = workerExecutor;
   }
 
   @Override
@@ -253,7 +253,26 @@ public class ProjectServiceImpl implements IProjectService{
         return Future.failedFuture(errorMsg);
       }
 
-      return Future.succeededFuture();
+      switch (Platform.valueOf(platform)) {
+        case SPARK: {
+          String deployer = "org.metal.backend.spark.SparkBackendDeploy";
+          Optional<IBackendDeploy> backendDeploy = BackendDeployManager.getBackendDeploy(deployer);
+          if (backendDeploy.isEmpty()) {
+            return Future.failedFuture(String.format("Fail to create IBackendDeploy[%s] instance.", deployer));
+          }
+          return workerExecutor.executeBlocking((promise)->{
+            try {
+              backendDeploy.get().deploy(parseArgs.<String>toArray(String[]::new));
+              promise.complete();
+            } catch (Exception e) {
+              promise.fail(e);
+            }
+          }, true);
+        }
+        default: {
+          return Future.failedFuture(String.format("%s is not supported.", platform));
+        }
+      }
     });
     return null;
   }
