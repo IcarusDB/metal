@@ -2,7 +2,6 @@ package org.metal.server.project.service;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.metal.backend.BackendLauncher;
-import org.metal.server.project.BackendState;
+import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
 
@@ -102,6 +101,11 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> updateStatus(String deployId, JsonObject updateStatus) {
+    return ProjectDB.updateBackendStatus(mongo, deployId, updateStatus);
+  }
+
+  @Override
   public Future<JsonObject> getOfId(String userId, String projectId) {
     return ProjectDB.getOfId(mongo, userId, projectId);
   }
@@ -117,6 +121,11 @@ public class ProjectServiceImpl implements IProjectService{
         return Future.succeededFuture(projects.get(0));
       }
     });
+  }
+
+  @Override
+  public Future<JsonObject> getBackendStatusOfDeployId(String deployId) {
+    return ProjectDB.getBackendStatusOfDeployId(mongo, deployId);
   }
 
   @Override

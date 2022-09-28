@@ -4,12 +4,16 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import org.metal.server.api.BackendReport;
+import org.metal.server.api.BackendState;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecService;
+import org.metal.server.project.ProjectDB;
+import org.metal.server.project.service.IProjectService;
 
 public class BackendReportImpl implements BackendReport {
   private MongoClient mongo;
   private ExecService execService;
+  private IProjectService projectService;
 
   @Override
   public Future<Void> reportExecSubmit(JsonObject submit) {
@@ -47,6 +51,40 @@ public class BackendReportImpl implements BackendReport {
               .put(timeName, submitTime);
           return execService.updateStatus(execId, update);
         });
+  }
+
+  private static boolean checkBackendStatus(JsonObject report, BackendState expect) throws IllegalArgumentException {
+    if (!report.containsKey("status")) {
+      throw new IllegalArgumentException(String.format("status is lost in %s.", report.toString()));
+    }
+
+    BackendState backendState = BackendState.valueOf(report.getString("status"));
+    if (!expect.equals(backendState)) {
+      throw new IllegalArgumentException(String.format("The parameter %s is not in '%s' status.", report.toString(), expect.toString()));
+    }
+    return true;
+  }
+
+  private static boolean checkBackendReport(JsonObject report) throws IllegalArgumentException {
+    if (!report.containsKey("deployId")) {
+      throw new IllegalArgumentException(
+          String.format("The parameter %s lost deployId.", report.toString())
+      );
+    }
+
+    if (!report.containsKey("epoch")) {
+      throw new IllegalArgumentException(
+          String.format("The parameter %s lost epoch.", report.toString())
+      );
+    }
+
+    try {
+      report.getInteger("epoch");
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException(e);
+    }
+
+    return true;
   }
 
   private static boolean checkExecStatus(JsonObject report, ExecState expect) throws IllegalArgumentException {
@@ -117,7 +155,40 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportExecRunning(JsonObject running) {
-    return null;
+    String timeName = "beatTime";
+    try {
+      checkExecStatus(running, ExecState.RUNNING);
+      checkExecReport(running);
+      checkTime(running, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
+    }
+
+    String execId = running.getString("id");
+    String deployId = running.getString("deployId");
+    int epoch = running.getInteger("epoch");
+    long beatTime = running.getLong(timeName);
+
+    return execService.getStatus(execId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
+
+          ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put("status", ExecState.RUNNING.toString())
+              .put(timeName, beatTime);
+          return execService.updateStatus(execId, update);
+        });
   }
 
   @Override
@@ -200,16 +271,123 @@ public class BackendReportImpl implements BackendReport {
 
   @Override
   public Future<Void> reportBackendUp(JsonObject up) {
-    return null;
+    String timeName = "upTime";
+    try {
+      checkBackendStatus(up, BackendState.UP);
+      checkBackendReport(up);
+      checkTime(up, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
+    }
+
+    String deployId = up.getString("deployId");
+    int epoch = up.getInteger("epoch");
+    long upTime = up.getLong(timeName);
+
+    return projectService.getBackendStatusOfDeployId(deployId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
+
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(BackendState.DOWN)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put("status", BackendState.UP.toString())
+              .put(timeName, upTime);
+
+          return projectService.updateStatus(deployId, update)
+              .compose(ret -> {return Future.succeededFuture();});
+        });
   }
 
   @Override
   public Future<Void> reportBackendDown(JsonObject down) {
-    return null;
+    String timeName = "downTime";
+    try {
+      checkBackendStatus(down, BackendState.DOWN);
+      checkBackendReport(down);
+      checkTime(down, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
+    }
+
+    String deployId = down.getString("deployId");
+    int epoch = down.getInteger("epoch");
+    long downTime = down.getLong(timeName);
+
+    return projectService.getBackendStatusOfDeployId(deployId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
+
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(BackendState.DOWN)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put("status", BackendState.DOWN.toString())
+              .put(timeName, downTime);
+
+          return projectService.updateStatus(deployId, update)
+              .compose(ret -> {return Future.succeededFuture();});
+        });
   }
 
   @Override
   public Future<Void> reportBackendFailure(JsonObject failure) {
-    return null;
+    String timeName = "failureTime";
+    try {
+      checkBackendStatus(failure, BackendState.FAILURE);
+      checkBackendReport(failure);
+      checkTime(failure, timeName);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
+    }
+
+    String deployId = failure.getString("deployId");
+    int epoch = failure.getInteger("epoch");
+    long failureTime = failure.getLong(timeName);
+    String failureMsg = failure.getString("msg");
+
+    return projectService.getBackendStatusOfDeployId(deployId)
+        .compose((JsonObject lastStatus) -> {
+          int lastEpoch = lastStatus.getInteger("epoch");
+          try {
+            checkLegalEpoch(lastEpoch, epoch, deployId);
+          } catch (IllegalArgumentException e) {
+            return Future.failedFuture(e);
+          }
+
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          if (lastState.equals(BackendState.DOWN)) {
+            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            return Future.failedFuture(msg);
+          }
+
+          JsonObject update = new JsonObject();
+          update.put(ProjectDB.FIELD_BACKEND_STATUS_STATUS, BackendState.FAILURE.toString())
+              .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG,
+                  new JsonObject()
+                      .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG_TIME, failureTime)
+                      .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG_MSG, failureMsg)
+              );
+
+          return projectService.updateStatus(deployId, update)
+              .compose(ret -> {return Future.succeededFuture();});
+        });
   }
 }

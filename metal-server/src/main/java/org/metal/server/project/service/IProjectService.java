@@ -54,9 +54,13 @@ public interface IProjectService {
 
   public Future<JsonObject> updateByPath(String userId, String projectName, JsonObject updateByPath);
 
+  public Future<JsonObject> updateStatus(String deployId, JsonObject updateStatus);
+
   public Future<JsonObject> getOfId(String userId, String projectId);
 
   public Future<JsonObject> getOfName(String userId, String projectName);
+
+  public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);
 

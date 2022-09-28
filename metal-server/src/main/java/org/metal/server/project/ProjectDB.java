@@ -10,6 +10,7 @@ import io.vertx.ext.mongo.IndexOptions;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.Optional;
 import java.util.UUID;
+import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecDB;
 import org.metal.server.user.UserDB;
 
@@ -36,6 +37,9 @@ public class ProjectDB {
   public final static String FIELD_DEPLOY_ARGS_BACKEND_ARGS_ARGS = "args";
   public final static String FIELD_BACKEND_STATUS = "backendStatus";
   public final static String FIELD_BACKEND_STATUS_STATUS = "status";
+  public final static String FIELD_BACKEND_STATUS_FAILURE_MSG = "failureMsg";
+  public final static String FIELD_BACKEND_STATUS_FAILURE_MSG_TIME = "time";
+  public final static String FIELD_BACKEND_STATUS_FAILURE_MSG_MSG = "msg";
   public final static String FIELD_BACKEND_STATUS_EPOCH = "epoch";
   public final static String FIELD_BACKEND_STATUS_UP_TIME = "upTime";
   public final static String FIELD_BACKEND_STATUS_BEAT_TIME = "beatTime";
@@ -151,6 +155,20 @@ public class ProjectDB {
     ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
+  public static Future<JsonObject> updateBackendStatus(
+      MongoClient mongo,
+      String deployId,
+      JsonObject updateStatus
+      ) {
+    return mongo.updateCollection(
+        DB,
+        new JsonObject()
+            .put(FIELD_DEPLOY_ID, deployId),
+        new JsonObject()
+            .put("$set", new JsonObject().put(FIELD_BACKEND_STATUS, updateStatus))
+    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+  }
+
   public static Future<JsonObject> update(
       MongoClient mongo,
       String userId,
@@ -210,6 +228,22 @@ public class ProjectDB {
             .put(FIELD_ID, projectId)
             .put(FIELD_USER_REF + "." + FIELD_USER_REF_ID, userId),
         new JsonObject()
+    );
+  }
+
+  public static Future<JsonObject> getBackendStatusOfDeployId(MongoClient mongo, String deployId) {
+    return mongo.findOne(
+        DB,
+        new JsonObject()
+            .put(FIELD_DEPLOY_ID, deployId),
+        new JsonObject()
+            .put(FIELD_DEPLOY_ID, true)
+            .put(FIELD_BACKEND_STATUS_STATUS, true)
+            .put(FIELD_BACKEND_STATUS_EPOCH, true)
+            .put(FIELD_BACKEND_STATUS_FAILURE_MSG, true)
+            .put(FIELD_BACKEND_STATUS_UP_TIME, true)
+            .put(FIELD_BACKEND_STATUS_BEAT_TIME, true)
+            .put(FIELD_BACKEND_STATUS_DOWN_TIME, true)
     );
   }
 
