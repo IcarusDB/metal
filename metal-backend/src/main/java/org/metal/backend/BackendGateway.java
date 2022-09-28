@@ -11,10 +11,10 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.metal.backend.api.BackendService;
+import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.backend.api.impl.BackendServiceImpl;
 import org.metal.backend.rest.IBackendRestEndApi;
-import org.metal.server.api.BackendReport;
 
 public class BackendGateway extends AbstractVerticle {
 
@@ -24,7 +24,7 @@ public class BackendGateway extends AbstractVerticle {
   private IBackendRestEndApi api;
   private BackendService backendService;
   private MessageConsumer<JsonObject> consumer;
-  private BackendReport backendReport;
+  private BackendReportService backendReportService;
   private String deployId;
   private int epoch;
   private int port;
@@ -55,7 +55,7 @@ public class BackendGateway extends AbstractVerticle {
     api = IBackendRestEndApi.create(backendService);
 
 
-    backendReport = BackendReport.create(
+    backendReportService = BackendReportService.create(
         getVertx(),
         new JsonObject().put("address", reportAddress));
 
@@ -83,7 +83,7 @@ public class BackendGateway extends AbstractVerticle {
               .put("epoch", epoch)
               .put("deployId", deployId)
               .put("upTime", System.currentTimeMillis());
-          return backendReport.reportBackendUp(up);
+          return backendReportService.reportBackendUp(up);
         }).onSuccess(ret -> {
           startPromise.complete();
         }).onFailure(error -> {
@@ -99,7 +99,7 @@ public class BackendGateway extends AbstractVerticle {
         .put("epoch", epoch)
         .put("deployId", deployId)
         .put("downTime", System.currentTimeMillis());
-    backendReport.reportBackendDown(down).compose(ret -> {
+    backendReportService.reportBackendDown(down).compose(ret -> {
       return httpServer.close();
     }).compose(ret -> {
       return consumer.unregister();

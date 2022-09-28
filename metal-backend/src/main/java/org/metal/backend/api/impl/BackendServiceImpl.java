@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.metal.backend.IBackend;
 import org.metal.backend.api.BackendService;
+import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
@@ -26,7 +27,6 @@ import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
 import org.metal.exception.MetalStatusAcquireException;
-import org.metal.server.api.BackendReport;
 import org.metal.server.api.ExecState;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
@@ -40,7 +40,7 @@ public class BackendServiceImpl implements BackendService {
   private Vertx vertx;
   private IBackend backend;
   private WorkerExecutor workerExecutor;
-  private BackendReport reportor;
+  private BackendReportService reportor;
 
   public BackendServiceImpl(
       Vertx vertx,
@@ -56,7 +56,7 @@ public class BackendServiceImpl implements BackendService {
     this.vertx = vertx;
     this.backend = backend;
     this.workerExecutor = workerExecutor;
-    this.reportor = BackendReport.create(vertx, new JsonObject().put("address", reportAddress));
+    this.reportor = BackendReportService.create(vertx, new JsonObject().put("address", reportAddress));
   }
 
   @Override

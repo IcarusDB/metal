@@ -27,6 +27,15 @@ import org.metal.server.repo.Repo;
 public class Gateway extends AbstractVerticle {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(Gateway.class);
+  public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
+  public static final String MONGO_CONF = "mongoConf";
+  public static final String GATEWAY_CONF = "gateway";
+  public static final String PROJECT_CONF = "project";
+  public static final String PROJECT_SERVICE_CONF = "projectService";
+  public static final String PROJECT_SERVICE_ADDRESS_CONF = "address";
+  public static final String GATEWAY_PORT_CONF = "port";
+  public static final String EXEC_SERVICE_CONF = "execService";
+  public static final String BACKEND_REPORT_SERVICE_CONF = "backendReportService";
 
   private HttpServer httpServer;
   private int gatewayPort = 19000;
@@ -125,23 +134,46 @@ public class Gateway extends AbstractVerticle {
   public void start(Promise<Void> startPromise) throws Exception {
     ConfigStoreOptions fileConfigStoreOptions = new ConfigStoreOptions()
         .setType("file")
-        .setConfig(new JsonObject().put("path", "conf/Gateway.json"))
+        .setConfig(new JsonObject().put("path", CONF_METAL_SERVER_PATH))
         .setOptional(true);
 
     ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
         .addStore(fileConfigStoreOptions);
     ConfigRetriever retriever = ConfigRetriever.create(getVertx(), retrieverOptions);
-
     retriever.getConfig().compose((JsonObject conf) -> {
-      String projectAddress = conf.getString("projectAddress");
-      String mongoConnection = conf.getString("mongoConnection");
-      gatewayPort = conf.getInteger("gatewayPort");
-      mongo = MongoClient.createShared(getVertx(), new JsonObject()
-          .put("connection_string", mongoConnection)
-      );
+      JsonObject gatewayConf = conf.getJsonObject(GATEWAY_CONF);
+      JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
+      JsonObject projectService = gatewayConf.getJsonObject(PROJECT_SERVICE_CONF);
+      JsonObject execService = gatewayConf.getJsonObject(EXEC_SERVICE_CONF);
+      JsonObject backendReportService = gatewayConf.getJsonObject(BACKEND_REPORT_SERVICE_CONF);
+
+      String projectServiceAddress = projectService.getString(PROJECT_SERVICE_ADDRESS_CONF);
+      if (gatewayConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", GATEWAY_CONF, CONF_METAL_SERVER_PATH));
+      }
+      if (mongoConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+      }
+      if (projectService == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
+      }
+      if (projectServiceAddress == null || projectServiceAddress.isBlank()) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF));
+      }
+      try {
+        if (gatewayConf.getInteger(GATEWAY_PORT_CONF) == null) {
+          return Future.failedFuture(String.format("%s is not configured in %s.", GATEWAY_PORT_CONF, CONF_METAL_SERVER_PATH + "." + GATEWAY_CONF));
+        }
+      } catch (ClassCastException e) {
+        return Future.failedFuture(e);
+      }
+
+      gatewayPort = gatewayConf.getInteger(GATEWAY_PORT_CONF);
+      mongo = MongoClient.createShared(getVertx(), mongoConf);
+
       httpServer = getVertx().createHttpServer();
       repo = new Repo();
-      project = Project.createRestApi(getVertx(), projectAddress);
+      project = Project.createRestApi(getVertx(), projectServiceAddress);
       return Auth.create(mongo);
     }).compose((Auth auth) -> {
       this.auth = auth;

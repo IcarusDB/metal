@@ -2,19 +2,18 @@ package org.metal.server.report.api.impl;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
-import org.metal.server.api.BackendReport;
+import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecService;
 import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.IProjectService;
 
-public class BackendReportImpl implements BackendReport {
+public class BackendReportServiceImpl implements BackendReportService {
   private ExecService execService;
   private IProjectService projectService;
 
-  public BackendReportImpl(ExecService execService,
+  public BackendReportServiceImpl(ExecService execService,
       IProjectService projectService) {
     this.execService = execService;
     this.projectService = projectService;

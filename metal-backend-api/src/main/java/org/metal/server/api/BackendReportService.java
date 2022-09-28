@@ -8,11 +8,11 @@ import io.vertx.core.json.JsonObject;
 
 @ProxyGen
 @VertxGen
-public interface BackendReport {
+public interface BackendReportService {
 
-  public static BackendReport create(Vertx vertx, JsonObject config) {
+  public static BackendReportService create(Vertx vertx, JsonObject config) {
     String address = config.getString("address");
-    return new BackendReportVertxEBProxy(vertx, address);
+    return new BackendReportServiceVertxEBProxy(vertx, address);
   }
 
   public Future<Void> reportExecSubmit(JsonObject create);

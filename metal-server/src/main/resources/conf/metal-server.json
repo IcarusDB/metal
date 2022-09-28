@@ -1,0 +1,39 @@
+{
+  "mongoConf": {
+    "connection_string": "mongodb://metal:123456@192.168.15.10:27017/metalDB"
+  },
+  "gateway": {
+    "port": 19000,
+    "backendReportService": {
+      "address": "report.metal.org"
+    },
+    "projectService": {
+      "address": "project.metal.org"
+    },
+    "execService": {
+      "address": "exec.metal.org"
+    }
+  },
+  "project": {
+    "projectService": {
+      "address": "project.metal.org",
+      "backendJar": "../libs/metal-backend-1.0-SNAPSHOT.jar"
+    }
+  },
+  "exec": {
+    "execService": {
+      "address": "exec.metal.org"
+    }
+  },
+  "backendReport": {
+    "backendReportService": {
+      "address": "report.metal.org"
+    },
+    "projectService": {
+      "address": "project.metal.org"
+    },
+    "execService": {
+      "address": "exec.metal.org"
+    }
+  }
+}

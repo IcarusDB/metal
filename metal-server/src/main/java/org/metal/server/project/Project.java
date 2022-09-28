@@ -4,29 +4,30 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.impl.MappingStream;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.List;
-import java.util.UUID;
 import org.metal.server.SendJson;
 import org.metal.server.project.service.IProjectService;
 
 public class Project extends AbstractVerticle {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(Project.class);
+  public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
+  public static final String MONGO_CONF = "mongoConf";
+  public static final String PROJECT_CONF = "project";
+  public static final String PROJECT_SERVICE_CONF = "projectService";
+  public static final String PROJECT_SERVICE_ADDRESS_CONF = "address";
 
   private MongoClient mongo;
   private ServiceBinder binder;
@@ -43,26 +44,40 @@ public class Project extends AbstractVerticle {
   public void start(Promise<Void> startPromise) throws Exception {
     ConfigStoreOptions fileConfigStoreOptions = new ConfigStoreOptions()
         .setType("file")
-        .setConfig(new JsonObject().put("path", "conf/Project.json"))
+        .setConfig(new JsonObject().put("path", CONF_METAL_SERVER_PATH))
         .setOptional(true);
 
     ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions()
         .addStore(fileConfigStoreOptions);
     ConfigRetriever retriever = ConfigRetriever.create(getVertx(), retrieverOptions);
     retriever.getConfig().compose((JsonObject conf) -> {
-      String mongoConnection = conf.getString("mongoConnection");
-      String address = conf.getString("projectAddress");
+      JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
+      if (mongoConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+      }
+
       mongo = MongoClient.createShared(
           getVertx(),
-          new JsonObject().put("connection_string", mongoConnection)
-      );
-      provider = IProjectService.createProvider(
-          getVertx(),
-          mongo,
-          new JsonObject()
-              .put("backendJar", conf.getString("backendJar"))
+          mongoConf
       );
 
+      JsonObject projectConf = conf.getJsonObject(PROJECT_CONF);
+      if (projectConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
+      }
+
+      JsonObject projectServiceConf = projectConf.getJsonObject(PROJECT_SERVICE_CONF);
+      if (projectServiceConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF));
+      }
+
+      String address = projectServiceConf.getString(PROJECT_SERVICE_ADDRESS_CONF);
+      if (address == null || address.isBlank()) {
+        return Future.failedFuture(String.format("%s is not configured in %s.",
+            PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
+      }
+
+      provider = IProjectService.createProvider(getVertx(), mongo, projectServiceConf);
       binder = new ServiceBinder(getVertx());
       binder.setAddress(address);
       consumer = binder.register(IProjectService.class, provider);
