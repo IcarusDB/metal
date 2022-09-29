@@ -37,7 +37,7 @@ public class AsVector implements UDF1<Seq<Double>, Vector>, ISetup<SparkSession>
     public Vector call(Seq<Double> field) throws Exception {
         double[] fieldInJava = new double[field.size()];
         int idx = 0;
-        for (double v : JavaConverters.asJava(field)) {
+        for (double v : JavaConverters.asJavaCollection(field)) {
             fieldInJava[idx++] = v;
         }
         return new DenseVector(fieldInJava);
