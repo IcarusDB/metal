@@ -5,7 +5,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import org.apache.commons.cli.*;
+import org.metal.backend.api.BackendService;
+import org.metal.backend.api.impl.BackendServiceImpl;
 import org.metal.draft.DraftMaster;
 import org.metal.service.BaseMetalService;
 import org.metal.specs.Spec;
@@ -55,6 +60,7 @@ public class BackendLauncher {
         Optional<String> deployId = BackendCli.parseDeployId(cli);
         Optional<Integer> deployEpoch = BackendCli.parseDeployEpoch(cli);
         Optional<String> reportServiceAddress = BackendCli.parseReportServiceAddress(cli);
+        Optional<Integer> restApiPort = BackendCli.parseRestApiPort(cli);
 
         if (deployId.isEmpty() || deployId.get().isBlank()) {
             String msg = String.format("%s is not set.", BackendCli.DEPLOY_ID_OPT.getLongOpt());
@@ -74,8 +80,12 @@ public class BackendLauncher {
             return;
         }
 
-        String id = deployId + "-" + deployEpoch;
-        Optional<Integer> port = BackendCli.parseRestApiPort(cli);
+        if (restApiPort.isEmpty()) {
+            String msg = String.format("%s is not set.", BackendCli.REST_API_PORT_OPT.getLongOpt());
+            LOGGER.error(msg);
+            return;
+        }
+
         Optional<VertxOptions> vertxOptions = BackendCli.parseVertxOptions(cli);
         if (vertxOptions.isEmpty()) {
             vertxOptions = BackendCli.parseVertxOptionsFile(cli);
@@ -90,22 +100,26 @@ public class BackendLauncher {
         builder.deployOptions(deployOptions);
         IBackend backend = builder.build();
 
-        IBackendRESTAPIProps restAPIProps = ImmutableIBackendRESTAPIProps.builder()
-            .id(id)
-            .port(port)
-            .build();
-        BackendRESTAPI restAPI = new BackendRESTAPI(restAPIProps, backend);
+        BackendGateway gateway = new BackendGateway(backend);
 
         VertxOptions vertxOpts = vertxOptions.orElseGet(VertxOptions::new);
         DeploymentOptions deploymentOpts = deploymentOptions.orElseGet(DeploymentOptions::new);
-        Vertx vertx = Vertx.vertx(vertxOpts);
-        vertx.deployVerticle(restAPI, deploymentOpts)
-            .onSuccess(deployID -> {
-                String msg = String.format("Success to deploy %s:%s.", BackendRESTAPI.class, deployID);
+        deploymentOpts.setConfig(new JsonObject());
+        deploymentOpts.getConfig().put("epoch", deployEpoch.get())
+            .put("deployId", deployId.get())
+            .put("reportServiceAddress", reportServiceAddress.get())
+            .put("restApiPort", restApiPort.get());
+
+        ClusterManager clusterManager = new ZookeeperClusterManager("zookeeper.json");
+        vertxOpts.setClusterManager(clusterManager);
+        Vertx.clusteredVertx(vertxOpts).compose((Vertx vertx) -> {
+            return vertx.deployVerticle(gateway, deploymentOpts);
+        }).onSuccess(deployID -> {
+                String msg = String.format("Success to deploy %s:%s.", BackendGateway.class, deployID);
                 LOGGER.info(msg);
             })
             .onFailure(t -> {
-                String msg = String.format("Fail to deploy %s.", BackendRESTAPI.class);
+                String msg = String.format("Fail to deploy %s.", BackendGateway.class);
                 LOGGER.error(msg, t);
             });
     }

@@ -164,7 +164,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> deploy(String userId, String projectName) {
-    getOfName(userId, projectName).compose((JsonObject project) -> {
+    return getOfName(userId, projectName).compose((JsonObject project) -> {
       String deployId = project.getString(ProjectDB.FIELD_DEPLOY_ID);
       if (deployId == null || deployId.strip().isEmpty()) {
         return Future.failedFuture("deployId is not set.");
@@ -252,7 +252,19 @@ public class ProjectServiceImpl implements IProjectService{
         LOGGER.error(errorMsg);
         return Future.failedFuture(errorMsg);
       }
+      parseArgs.add("--interactive-mode ");
+      parseArgs.add("--deploy-id");
+      parseArgs.add(deployId);
+      parseArgs.add("--deploy-epoch");
+      parseArgs.add(String.valueOf(epoch));
 
+      String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
+      parseArgs.add("--report-service-address");
+      parseArgs.add(reportServiceAddress);
+      parseArgs.add("--rest-api-port");
+      parseArgs.add("18989");
+
+      System.out.println(parseArgs);
       switch (Platform.valueOf(platform)) {
         case SPARK: {
           String deployer = "org.metal.backend.spark.SparkBackendDeploy";
@@ -274,7 +286,6 @@ public class ProjectServiceImpl implements IProjectService{
         }
       }
     });
-    return null;
   }
 
   private List<String> parsePlatformArgs(JsonArray platformArgs, JsonArray platformPkgs) throws IllegalArgumentException{

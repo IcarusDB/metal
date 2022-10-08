@@ -418,6 +418,26 @@ public class Project extends AbstractVerticle {
             LOGGER.error(error);
           });
     }
+
+    public void deploy(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectName = ctx.request().params().get("projectName");
+
+      service.deploy(userId, projectName)
+          .onSuccess((JsonObject ret) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          }).onFailure((Throwable error) -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+            LOGGER.error(error);
+          });
+    }
   }
 
 }

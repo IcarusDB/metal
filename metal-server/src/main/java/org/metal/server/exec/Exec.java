@@ -16,6 +16,7 @@ public class Exec extends AbstractVerticle {
   public static final String MONGO_CONF = "mongoConf";
   public static final String EXEC_SERVICE_CONF = "execService";
   public static final String EXEC_SERVICE_ADDRESS_CONF = "address";
+  public static final String EXEC_CONF = "exec";
   private MongoClient mongo;
   private ExecService execService;
   private MessageConsumer<JsonObject> consumer;
@@ -37,7 +38,8 @@ public class Exec extends AbstractVerticle {
     ConfigRetriever retriever = ConfigRetriever.create(getVertx(), retrieverOptions);
     retriever.getConfig().compose((JsonObject conf) -> {
       JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
-      JsonObject execServiceConf = conf.getJsonObject(EXEC_SERVICE_CONF);
+      JsonObject execConf = conf.getJsonObject(EXEC_CONF);
+      JsonObject execServiceConf = execConf.getJsonObject(EXEC_SERVICE_CONF);
       String execServiceAddress = execServiceConf.getString(EXEC_SERVICE_ADDRESS_CONF);
       if (mongoConf == null) {
         return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));

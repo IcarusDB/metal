@@ -1,6 +1,7 @@
 package org.metal.backend;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -29,6 +30,10 @@ public class BackendGateway extends AbstractVerticle {
   private int epoch;
   private int port;
   private String reportAddress;
+
+  public BackendGateway(IBackend backend) {
+    this.backend = backend;
+  }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -77,6 +82,13 @@ public class BackendGateway extends AbstractVerticle {
     httpServer.requestHandler(router);
     httpServer.listen(port)
         .compose(ret -> {
+          try {
+            backend.start();
+            return Future.succeededFuture();
+          } catch (Exception e) {
+            return Future.failedFuture(e);
+          }
+        }).compose(ret -> {
           state.set(BackendState.UP.ordinal());
           JsonObject up = new JsonObject();
           up.put("status", BackendState.UP.toString())
@@ -84,6 +96,15 @@ public class BackendGateway extends AbstractVerticle {
               .put("deployId", deployId)
               .put("upTime", System.currentTimeMillis());
           return backendReportService.reportBackendUp(up);
+        }, error -> {
+          state.set(BackendState.FAILURE.ordinal());
+          JsonObject fail = new JsonObject();
+          fail.put("status", BackendState.FAILURE.toString())
+              .put("epoch", epoch)
+              .put("deployId", deployId)
+              .put("failureTime", System.currentTimeMillis())
+              .put("msg", error.getLocalizedMessage());
+          return backendReportService.reportBackendFailure(fail);
         }).onSuccess(ret -> {
           startPromise.complete();
         }).onFailure(error -> {
@@ -103,6 +124,13 @@ public class BackendGateway extends AbstractVerticle {
       return httpServer.close();
     }).compose(ret -> {
       return consumer.unregister();
+    }).compose(ret -> {
+      try {
+        backend.stop();
+        return Future.succeededFuture();
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
     }).onSuccess(ret -> {
       stopPromise.complete();
     }).onFailure(error -> {

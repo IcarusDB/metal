@@ -17,7 +17,10 @@
   "project": {
     "projectService": {
       "address": "project.metal.org",
-      "backendJar": "../libs/metal-backend-1.0-SNAPSHOT.jar"
+      "backendJar": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+      "backendReportService": {
+        "address": "report.metal.org"
+      }
     }
   },
   "exec": {

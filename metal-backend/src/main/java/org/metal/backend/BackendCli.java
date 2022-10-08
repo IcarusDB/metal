@@ -76,11 +76,13 @@ public class BackendCli {
 
     public final static Option DEPLOY_ID_OPT = Option.builder()
         .longOpt("deploy-id")
+        .hasArg()
         .desc("When INTERACTIVE mode is enable, this option is used to set backend service id part. Service id is '${deploy-id}-${deploy-epoch}'.")
         .build();
 
     public final static Option DEPLOY_EPOCH_OPT = Option.builder()
         .longOpt("deploy-epoch")
+        .hasArg()
         .desc("When INTERACTIVE mode is enable, this option is used to set backend service id part. Service id is '${deploy-id}-${deploy-epoch}'.")
         .build();
 
