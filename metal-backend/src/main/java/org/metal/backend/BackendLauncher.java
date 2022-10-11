@@ -99,7 +99,10 @@ public class BackendLauncher {
         IBackend.IBuilder builder = BackendManager.getBackendBuilder().get();
         builder.deployOptions(deployOptions);
         IBackend backend = builder.build();
-
+        /**
+         * Backend start here.
+         */
+        backend.start();
         BackendGateway gateway = new BackendGateway(backend);
 
         VertxOptions vertxOpts = vertxOptions.orElseGet(VertxOptions::new);

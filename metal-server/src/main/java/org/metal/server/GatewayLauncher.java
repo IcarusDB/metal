@@ -41,6 +41,15 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
+      Future<String> deployBackendReport = vertx.deployVerticle(backendReport, deploymentOptions)
+          .compose(deployID -> {
+            LOGGER.info(String.format("Success to deploy %s:%s.", backendReport.getClass(), deployID));
+            return Future.succeededFuture();
+          }, t -> {
+            LOGGER.error(String.format("Fail to deploy %s.", backendReport.getClass()), t);
+            return Future.failedFuture(t);
+          });
+
       Future<String> deployExec = vertx.deployVerticle(exec, deploymentOptions)
           .compose(deployID -> {
             LOGGER.info(String.format("Success to deploy %s:%s.", exec.getClass(), deployID));
@@ -50,7 +59,7 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
-      CompositeFuture prepared = CompositeFuture.all(List.of(deployProject, deployExec));
+      CompositeFuture prepared = CompositeFuture.all(List.of(deployProject, deployBackendReport, deployExec));
       Future<String> deployGateway = prepared.compose(
           ret -> {
             return vertx.deployVerticle(gateway, deploymentOptions);

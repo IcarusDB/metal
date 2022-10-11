@@ -1,6 +1,8 @@
 package org.metal.server.report.api.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
@@ -10,6 +12,8 @@ import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.IProjectService;
 
 public class BackendReportServiceImpl implements BackendReportService {
+  private final static Logger LOGGER = LoggerFactory.getLogger(BackendReportServiceImpl.class);
+
   private ExecService execService;
   private IProjectService projectService;
 
@@ -290,7 +294,13 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return projectService.getBackendStatusOfDeployId(deployId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
+          int lastEpoch = -1;
+          try {
+            lastEpoch = lastStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH);
+          } catch (Exception e) {
+            return Future.failedFuture(e);
+          }
+
           try {
             checkLegalEpoch(lastEpoch, epoch, deployId);
           } catch (IllegalArgumentException e) {
@@ -309,6 +319,9 @@ public class BackendReportServiceImpl implements BackendReportService {
 
           return projectService.updateStatus(deployId, update)
               .compose(ret -> {return Future.succeededFuture();});
+        }, error -> {
+          LOGGER.error(error);
+          return Future.failedFuture(error);
         });
   }
 

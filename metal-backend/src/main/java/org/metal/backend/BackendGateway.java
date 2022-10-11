@@ -64,52 +64,68 @@ public class BackendGateway extends AbstractVerticle {
         getVertx(),
         new JsonObject().put("address", reportAddress));
 
-    port = config().getInteger("restApiPort");
-    httpServer = getVertx().createHttpServer();
-    Router router = Router.router(getVertx());
-    router.post("/api/v1/spec")
-        .produces("application/json")
-        .handler(BodyHandler.create())
-        .handler(api::analyseAPI);
+//    port = config().getInteger("restApiPort");
+//    httpServer = getVertx().createHttpServer();
+//    Router router = Router.router(getVertx());
+//    router.post("/api/v1/spec")
+//        .produces("application/json")
+//        .handler(BodyHandler.create())
+//        .handler(api::analyseAPI);
+//
+//    router.post("/api/v1/exec")
+//        .produces("application/json")
+//        .handler(api::execAPI);
+//
+//    router.get("/api/v1/schemas/:mid")
+//        .produces("application/json")
+//        .handler(api::schemaAPI);
+//    httpServer.requestHandler(router);
+//    httpServer.listen(port)
+//        .compose(ret -> {
+//          try {
+//            /**
+//             * Cancel backend start in here.
+//             */
+////            backend.start();
+//            return Future.succeededFuture();
+//          } catch (Exception e) {
+//            return Future.failedFuture(e);
+//          }
+//        }).compose(ret -> {
+//          state.set(BackendState.UP.ordinal());
+//          JsonObject up = new JsonObject();
+//          up.put("status", BackendState.UP.toString())
+//              .put("epoch", epoch)
+//              .put("deployId", deployId)
+//              .put("upTime", System.currentTimeMillis());
+//          return backendReportService.reportBackendUp(up);
+//        }, error -> {
+//          state.set(BackendState.FAILURE.ordinal());
+//          JsonObject fail = new JsonObject();
+//          fail.put("status", BackendState.FAILURE.toString())
+//              .put("epoch", epoch)
+//              .put("deployId", deployId)
+//              .put("failureTime", System.currentTimeMillis())
+//              .put("msg", error.getLocalizedMessage());
+//          return backendReportService.reportBackendFailure(fail);
+//        }).onSuccess(ret -> {
+//          startPromise.complete();
+//        }).onFailure(error -> {
+//          startPromise.fail(error);
+//        });
+    state.set(BackendState.UP.ordinal());
+    JsonObject up = new JsonObject();
+    up.put("status", BackendState.UP.toString())
+        .put("epoch", epoch)
+        .put("deployId", deployId)
+        .put("upTime", System.currentTimeMillis());
+    backendReportService.reportBackendUp(up).onSuccess(ret -> {
+    startPromise.complete();
+    }).onFailure(error -> {
+      error.printStackTrace();
+      startPromise.fail(error);
+    });
 
-    router.post("/api/v1/exec")
-        .produces("application/json")
-        .handler(api::execAPI);
-
-    router.get("/api/v1/schemas/:mid")
-        .produces("application/json")
-        .handler(api::schemaAPI);
-    httpServer.requestHandler(router);
-    httpServer.listen(port)
-        .compose(ret -> {
-          try {
-            backend.start();
-            return Future.succeededFuture();
-          } catch (Exception e) {
-            return Future.failedFuture(e);
-          }
-        }).compose(ret -> {
-          state.set(BackendState.UP.ordinal());
-          JsonObject up = new JsonObject();
-          up.put("status", BackendState.UP.toString())
-              .put("epoch", epoch)
-              .put("deployId", deployId)
-              .put("upTime", System.currentTimeMillis());
-          return backendReportService.reportBackendUp(up);
-        }, error -> {
-          state.set(BackendState.FAILURE.ordinal());
-          JsonObject fail = new JsonObject();
-          fail.put("status", BackendState.FAILURE.toString())
-              .put("epoch", epoch)
-              .put("deployId", deployId)
-              .put("failureTime", System.currentTimeMillis())
-              .put("msg", error.getLocalizedMessage());
-          return backendReportService.reportBackendFailure(fail);
-        }).onSuccess(ret -> {
-          startPromise.complete();
-        }).onFailure(error -> {
-          startPromise.fail(error);
-        });
   }
 
   @Override

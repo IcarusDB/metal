@@ -238,13 +238,25 @@ public class ProjectDB {
             .put(FIELD_DEPLOY_ID, deployId),
         new JsonObject()
             .put(FIELD_DEPLOY_ID, true)
-            .put(FIELD_BACKEND_STATUS_STATUS, true)
-            .put(FIELD_BACKEND_STATUS_EPOCH, true)
-            .put(FIELD_BACKEND_STATUS_FAILURE_MSG, true)
-            .put(FIELD_BACKEND_STATUS_UP_TIME, true)
-            .put(FIELD_BACKEND_STATUS_BEAT_TIME, true)
-            .put(FIELD_BACKEND_STATUS_DOWN_TIME, true)
-    );
+            .put(FIELD_BACKEND_STATUS,
+                new JsonObject()
+                    .put(FIELD_BACKEND_STATUS_STATUS, true)
+                    .put(FIELD_BACKEND_STATUS_EPOCH, true)
+                    .put(FIELD_BACKEND_STATUS_FAILURE_MSG, true)
+                    .put(FIELD_BACKEND_STATUS_UP_TIME, true)
+                    .put(FIELD_BACKEND_STATUS_BEAT_TIME, true)
+                    .put(FIELD_BACKEND_STATUS_DOWN_TIME, true))
+
+    ).compose((JsonObject ret) -> {
+      try {
+        JsonObject flatten = ret.getJsonObject(FIELD_BACKEND_STATUS)
+            .copy()
+            .put(FIELD_DEPLOY_ID, ret.getString(FIELD_DEPLOY_ID));
+        return Future.succeededFuture(flatten);
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
   }
 
   public static ReadStream<JsonObject> getOfName(MongoClient mongo, String userId, String projectName) {
