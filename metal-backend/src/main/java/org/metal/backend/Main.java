@@ -29,7 +29,7 @@ public class Main {
 //        "--conf", "appName=Test",
 //        "--interactive-mode",
 //        "--deploy-id", "9422e1a4-73e1-4e99-afdf-19b04f25e9d3",
-//        "--deploy-epoch", "-1",
+//        "--deploy-epoch", "0",
 //        "--report-service-address", "report.metal.org",
 //        "--rest-api-port", "18989"
 //    };

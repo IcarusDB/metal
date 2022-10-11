@@ -15,6 +15,7 @@ import org.metal.server.exec.ExecDB;
 import org.metal.server.user.UserDB;
 
 public class ProjectDB {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(ProjectDB.class);
 
   public final static String DB = "projects";
@@ -45,6 +46,7 @@ public class ProjectDB {
   public final static String FIELD_BACKEND_STATUS_BEAT_TIME = "beatTime";
   public final static String FIELD_BACKEND_STATUS_DOWN_TIME = "downTime";
   public final static String FIELD_SPEC = "spec";
+  public static final int DEFAULT_EPOCH = 0;
 
   public static Future<Void> createCollection(MongoClient mongo) {
     return mongo.createCollection(DB)
@@ -80,7 +82,7 @@ public class ProjectDB {
         .put(FIELD_DEPLOY_ID, UUID.randomUUID().toString())
         .put(FIELD_DEPLOY_ARGS, deployArgs)
         .put(FIELD_BACKEND_STATUS, new JsonObject()
-            .put(FIELD_BACKEND_STATUS_EPOCH, -1)
+            .put(FIELD_BACKEND_STATUS_EPOCH, DEFAULT_EPOCH)
             .put(FIELD_BACKEND_STATUS_STATUS, BackendState.UN_DEPLOY.toString())
         )
         .put(FIELD_NAME, projectName)
@@ -160,12 +162,16 @@ public class ProjectDB {
       String deployId,
       JsonObject updateStatus
       ) {
+    JsonObject update = new JsonObject();
+    updateStatus.forEach(entry -> {
+      update.put(FIELD_BACKEND_STATUS + "." + entry.getKey(), entry.getValue());
+    });
     return mongo.updateCollection(
         DB,
         new JsonObject()
             .put(FIELD_DEPLOY_ID, deployId),
         new JsonObject()
-            .put("$set", new JsonObject().put(FIELD_BACKEND_STATUS, updateStatus))
+            .put("$set", update)
     ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 

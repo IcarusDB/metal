@@ -246,7 +246,7 @@ public class ProjectServiceImpl implements IProjectService{
         return Future.failedFuture(String.format("Fail to deploy backend, because backend is in %s.", backendStatusStatus));
       }
 
-      int epoch = backendStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH, -1);
+      int epoch = backendStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH, ProjectDB.DEFAULT_EPOCH);
       if (epoch != -1) {
         String errorMsg = "The epoch of undeploy backend should be -1, now is " + epoch;
         LOGGER.error(errorMsg);
