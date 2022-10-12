@@ -34,9 +34,11 @@
     <reflections.version>0.10.2</reflections.version>
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-shade-plugin.version>3.4.0</maven-shade-plugin.version>
+    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
     <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <maven-project.version>3.0-alpha-2</maven-project.version>
+    <metal.libs.dir>../libs</metal.libs.dir>
   </properties>
 
   <dependencyManagement>
@@ -249,6 +251,28 @@
           <groupId>org.metal</groupId>
           <artifactId>metal-maven-plugin</artifactId>
           <version>${project.version}</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>copy-jar</id>
+              <phase>package</phase>
+              <configuration>
+                <target>
+                  <copy todir="${metal.libs.dir}">
+                    <fileset dir="${project.build.directory}/">
+                      <include name="${project.artifactId}-${project.version}.jar"></include>
+                    </fileset>
+                  </copy>
+                </target>
+              </configuration>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
