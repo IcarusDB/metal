@@ -12,79 +12,38 @@
   </parent>
 
   <artifactId>metal-core</artifactId>
-  <version>${project.parent.version}</version>
-
   <name>metal-core</name>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <guava.version>31.1-jre</guava.version>
-    <jackson.version>2.13.3</jackson.version>
-    <commons-lang3.version>3.12.0</commons-lang3.version>
-    <immutables.version>2.9.0</immutables.version>
-    <arrow-vector.version>7.0.0</arrow-vector.version>
-  </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>${commons-lang3.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jsonSchema</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
-      <version>${immutables.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.arrow</groupId>
       <artifactId>arrow-vector</artifactId>
-      <version>${arrow-vector.version}</version>
     </dependency>
   </dependencies>
   <build>
     <plugins>
-<!--      <plugin>-->
-<!--        <groupId>org.apache.maven.plugins</groupId>-->
-<!--        <artifactId>maven-dependency-plugin</artifactId>-->
-<!--        <version>3.0.1</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>copy-dependencies</id>-->
-<!--            <phase>package</phase>-->
-<!--            <goals>-->
-<!--              <goal>copy-dependencies</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <outputDirectory>../libs</outputDirectory>-->
-<!--              <excludeScope>provided</excludeScope>-->
-<!--              <overWriteSnapshots>true</overWriteSnapshots>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.4.0</version>
         <configuration>
           <relocations>
             <relocation>

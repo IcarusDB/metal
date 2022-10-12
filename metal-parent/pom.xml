@@ -1,11 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.metal</groupId>
-  <artifactId>metal</artifactId>
+  <artifactId>metal-parent</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <version>1.0.0-SNAPSHOT</version>
-  <name>metal</name>
+
   <repositories>
     <repository>
       <id>oss-releases</id>
@@ -57,15 +60,6 @@
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <maven-project.version>3.0-alpha-2</maven-project.version>
   </properties>
-  <modules>
-    <module>metal-core</module>
-    <module>metal-maven-plugin</module>
-    <module>metal-on-spark</module>
-    <module>metal-on-spark-extensions</module>
-    <module>metal-backend-api</module>
-    <module>metal-backend</module>
-    <module>metal-server</module>
-  </modules>
 
   <dependencyManagement>
     <dependencies>

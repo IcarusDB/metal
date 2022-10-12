@@ -9,109 +9,72 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>metal-server</artifactId>
-  <version>${project.parent.version}</version>
   <name>metal-server</name>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <immutables.version>2.9.0</immutables.version>
-    <arrow-vector.version>7.0.0</arrow-vector.version>
-    <vertx.version>4.3.3</vertx.version>
-    <jackson.version>2.13.3</jackson.version>
-    <log4j.version>1.2.17</log4j.version>
-    <slf4j.version>1.7.32</slf4j.version>
-    <scala.version>2.12</scala.version>
-    <spark.version>3.3.0</spark.version>
-  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-mongo-client</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-auth-mongo</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-auth-jwt</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-proxy</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-config</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>org.immutables</groupId>
       <artifactId>value</artifactId>
-      <version>${immutables.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.metal</groupId>
       <artifactId>metal-backend-api</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.metal</groupId>
       <artifactId>metal-backend</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-zookeeper</artifactId>
-      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-codegen</artifactId>
-      <version>${vertx.version}</version>
-<!--      <scope>provided</scope>-->
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
-      <version>${log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -157,26 +120,5 @@
         </plugin>
       </plugins>
     </pluginManagement>
-<!--    <plugins>-->
-<!--      <plugin>-->
-<!--        <groupId>org.apache.maven.plugins</groupId>-->
-<!--        <artifactId>maven-dependency-plugin</artifactId>-->
-<!--        <version>3.0.1</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>copy-dependencies</id>-->
-<!--            <phase>package</phase>-->
-<!--            <goals>-->
-<!--              <goal>copy-dependencies</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <outputDirectory>../libs</outputDirectory>-->
-<!--              <excludeScope>provided</excludeScope>-->
-<!--              <overWriteSnapshots>true</overWriteSnapshots>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
-<!--    </plugins>-->
   </build>
 </project>

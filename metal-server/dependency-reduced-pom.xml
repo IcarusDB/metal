@@ -8,7 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>metal-server</artifactId>
   <name>metal-server</name>
-  <version>${project.parent.version}</version>
   <build>
     <pluginManagement>
       <plugins>
@@ -57,6 +56,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codegen</artifactId>
+      <version>4.3.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.12</artifactId>
       <version>3.3.0</version>
@@ -75,17 +80,4 @@
       </exclusions>
     </dependency>
   </dependencies>
-  <properties>
-    <maven.compiler.target>11</maven.compiler.target>
-    <spark.version>3.3.0</spark.version>
-    <slf4j.version>1.7.32</slf4j.version>
-    <maven.compiler.source>11</maven.compiler.source>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <vertx.version>4.3.3</vertx.version>
-    <log4j.version>1.2.17</log4j.version>
-    <immutables.version>2.9.0</immutables.version>
-    <jackson.version>2.13.3</jackson.version>
-    <scala.version>2.12</scala.version>
-    <arrow-vector.version>7.0.0</arrow-vector.version>
-  </properties>
 </project>

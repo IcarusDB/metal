@@ -7,57 +7,23 @@
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
+
   <artifactId>metal-on-spark</artifactId>
   <packaging>jar</packaging>
-  <version>${project.parent.version}</version>
   <name>metal-on-spark</name>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <scala.version>2.12</scala.version>
-    <spark.version>3.3.0</spark.version>
-  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.metal</groupId>
       <artifactId>metal-core</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_${scala.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
-<!--  <build>-->
-<!--    <plugins>-->
-<!--      <plugin>-->
-<!--        <groupId>org.apache.maven.plugins</groupId>-->
-<!--        <artifactId>maven-dependency-plugin</artifactId>-->
-<!--        <version>3.0.1</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>copy-dependencies</id>-->
-<!--            <phase>package</phase>-->
-<!--            <goals>-->
-<!--              <goal>copy-dependencies</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <outputDirectory>../libs</outputDirectory>-->
-<!--              <excludeScope>provided</excludeScope>-->
-<!--              <overWriteSnapshots>true</overWriteSnapshots>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
-<!--    </plugins>-->
-<!--  </build>-->
 </project>
