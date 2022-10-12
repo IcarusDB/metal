@@ -6,13 +6,13 @@
 
   <parent>
     <groupId>org.metal</groupId>
-    <artifactId>metal</artifactId>
+    <artifactId>metal-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../metal-parent</relativePath>
   </parent>
 
   <artifactId>metal-core</artifactId>
-  <name>metal-core</name>
+  <name>Metal Core</name>
 
   <dependencies>
     <dependency>

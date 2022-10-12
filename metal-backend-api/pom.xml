@@ -4,12 +4,13 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.metal</groupId>
-    <artifactId>metal</artifactId>
+    <artifactId>metal-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../metal-parent</relativePath>
   </parent>
 
   <artifactId>metal-backend-api</artifactId>
-  <name>metal-backend-api</name>
+  <name>Metal Backend Api</name>
 
   <dependencies>
     <dependency>
