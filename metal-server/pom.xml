@@ -54,10 +54,6 @@
       <artifactId>metal-backend-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.metal</groupId>
-      <artifactId>metal-backend</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-zookeeper</artifactId>
     </dependency>
@@ -82,23 +78,33 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-shade-plugin</artifactId>
+        <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <relocations>
-            <relocation>
-              <pattern>org.apache.curator</pattern>
-              <shadedPattern>metal.shade.curator</shadedPattern>
-            </relocation>
-          </relocations>
+          <source>11</source>
+          <target>11</target>
+          <annotationProcessors>
+            <annotationProcessor>org.immutables.value.internal.$processor$.$Processor</annotationProcessor>
+            <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+          </annotationProcessors>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <phase>
-              package
-            </phase>
+            <id>curator-shade</id>
+            <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.curator</pattern>
+                  <shadedPattern>metal.shade.curator</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -106,20 +112,5 @@
         <artifactId>maven-antrun-plugin</artifactId>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>11</source>
-            <target>11</target>
-            <annotationProcessors>
-              <annotationProcessor>org.immutables.value.internal.$processor$.$Processor</annotationProcessor>
-              <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
-            </annotationProcessors>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 </project>

@@ -43,28 +43,34 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-shade-plugin</artifactId>
+        <artifactId>maven-clean-plugin</artifactId>
         <configuration>
-          <relocations>
-            <relocation>
-              <pattern>com.google.common</pattern>
-              <shadedPattern>metal.shade.guava</shadedPattern>
-            </relocation>
-          </relocations>
+          <filesets>
+            <fileset>
+              <directory>${metal.libs.dir}</directory>
+            </fileset>
+          </filesets>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <phase>
-              package
-            </phase>
+            <id>guava-shade</id>
+            <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>metal.shade.guava</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

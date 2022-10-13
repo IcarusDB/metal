@@ -37,9 +37,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.metal</groupId>
         <artifactId>metal-maven-plugin</artifactId>
       </plugin>

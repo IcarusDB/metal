@@ -76,22 +76,21 @@
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <configuration>
-          <relocations>
-            <relocation>
-              <pattern>org.apache.curator</pattern>
-              <shadedPattern>metal.shade.curator</shadedPattern>
-            </relocation>
-          </relocations>
-        </configuration>
         <executions>
           <execution>
-            <phase>
-              package
-            </phase>
+            <id>curator-shade</id>
+            <phase>package</phase>
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.curator</pattern>
+                  <shadedPattern>metal.shade.curator</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
           </execution>
         </executions>
       </plugin>

@@ -34,24 +34,18 @@
       <artifactId>vertx-zookeeper</artifactId>
     </dependency>
   </dependencies>
+
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>11</source>
-            <target>11</target>
-            <annotationProcessors>
-              <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
-            </annotationProcessors>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+          <annotationProcessors>
+            <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+          </annotationProcessors>
+        </configuration>
       </plugin>
     </plugins>
   </build>

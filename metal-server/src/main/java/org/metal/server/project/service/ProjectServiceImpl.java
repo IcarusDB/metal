@@ -12,9 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.metal.backend.BackendDeployManager;
-import org.metal.backend.BackendLauncher;
-import org.metal.backend.IBackendDeploy;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
@@ -267,19 +264,19 @@ public class ProjectServiceImpl implements IProjectService{
       System.out.println(parseArgs);
       switch (Platform.valueOf(platform)) {
         case SPARK: {
-          String deployer = "org.metal.backend.spark.SparkBackendDeploy";
-          Optional<IBackendDeploy> backendDeploy = BackendDeployManager.getBackendDeploy(deployer);
-          if (backendDeploy.isEmpty()) {
-            return Future.failedFuture(String.format("Fail to create IBackendDeploy[%s] instance.", deployer));
-          }
-          return workerExecutor.executeBlocking((promise)->{
-            try {
-              backendDeploy.get().deploy(parseArgs.<String>toArray(String[]::new));
-              promise.complete();
-            } catch (Exception e) {
-              promise.fail(e);
-            }
-          }, true);
+//          String deployer = "org.metal.backend.spark.SparkBackendDeploy";
+//          Optional<IBackendDeploy> backendDeploy = BackendDeployManager.getBackendDeploy(deployer);
+//          if (backendDeploy.isEmpty()) {
+//            return Future.failedFuture(String.format("Fail to create IBackendDeploy[%s] instance.", deployer));
+//          }
+//          return workerExecutor.executeBlocking((promise)->{
+//            try {
+//              backendDeploy.get().deploy(parseArgs.<String>toArray(String[]::new));
+//              promise.complete();
+//            } catch (Exception e) {
+//              promise.fail(e);
+//            }
+//          }, true);
         }
         default: {
           return Future.failedFuture(String.format("%s is not supported.", platform));
@@ -296,21 +293,21 @@ public class ProjectServiceImpl implements IProjectService{
         String arg = args.get(idx);
         if ("--class".equals(arg)) {
           String classArg = args.get(idx + 1);
-          if (BackendLauncher.class.toString().equals(classArg)) {
-            classArgReady = true;
-          } else {
-            throw new IllegalArgumentException("platformArgs.args --class is set wrong.");
-          }
+//          if (BackendLauncher.class.toString().equals(classArg)) {
+//            classArgReady = true;
+//          } else {
+//            throw new IllegalArgumentException("platformArgs.args --class is set wrong.");
+//          }
         }
       }
     } catch (IndexOutOfBoundsException e) {
       throw new IllegalArgumentException(e);
     }
 
-    if (!classArgReady) {
-      args.add("--class");
-      args.add(BackendLauncher.class.toString());
-    }
+//    if (!classArgReady) {
+//      args.add("--class");
+//      args.add(BackendLauncher.class.toString());
+//    }
 
     String packagesArg = platformPkgs.stream().map(Object::toString).collect(Collectors.joining(","));
     if (!platformPkgs.isEmpty()) {
