@@ -12,6 +12,7 @@ import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import java.util.List;
 import org.metal.server.exec.Exec;
 import org.metal.server.project.Project;
+import org.metal.server.repo.MetalRepo;
 import org.metal.server.report.BackendReport;
 
 public class GatewayLauncher {
@@ -23,6 +24,7 @@ public class GatewayLauncher {
     DeploymentOptions deploymentOptions = new DeploymentOptions();
 
     Vertx.clusteredVertx(options).compose((Vertx vertx) -> {
+      MetalRepo metalRepo = MetalRepo.create();
       Exec exec = Exec.create();
       Project project = Project.create();
       BackendReport backendReport = BackendReport.create();
@@ -31,6 +33,16 @@ public class GatewayLauncher {
       vertx.exceptionHandler(t -> {
         LOGGER.error(t);
       });
+
+      Future<String> deployMetalRepo = vertx.deployVerticle(metalRepo, deploymentOptions)
+          .compose(deployID -> {
+            LOGGER.info(String.format("Success to deploy %s:%s.", metalRepo.getClass(), deployID));
+            return Future.succeededFuture();
+          }, t -> {
+            LOGGER.error(String.format("Fail to deploy %s.", metalRepo.getClass()), t);
+            return Future.failedFuture(t);
+          });
+
 
       Future<String> deployProject = vertx.deployVerticle(project, deploymentOptions)
           .compose(deployID -> {
@@ -59,7 +71,7 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
-      CompositeFuture prepared = CompositeFuture.all(List.of(deployProject, deployBackendReport, deployExec));
+      CompositeFuture prepared = CompositeFuture.all(List.of(deployMetalRepo, deployProject, deployBackendReport, deployExec));
       Future<String> deployGateway = prepared.compose(
           ret -> {
             return vertx.deployVerticle(gateway, deploymentOptions);

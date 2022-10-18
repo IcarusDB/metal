@@ -14,6 +14,11 @@
       "address": "exec.metal.org"
     }
   },
+  "metalRepo": {
+    "metalRepoService": {
+      "address": "repo.metal.org"
+    }
+  },
   "project": {
     "projectService": {
       "address": "project.metal.org",

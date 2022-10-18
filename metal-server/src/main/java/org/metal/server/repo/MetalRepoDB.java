@@ -137,10 +137,10 @@ public class MetalRepoDB {
     );
   }
 
-  public static ReadStream<JsonObject> getAllOfUserPrivate(MongoClient mongo, String userId) {
+  public static ReadStream<JsonObject> getAllOfUserScope(MongoClient mongo, String userId, MetalScope scope) {
     return mongo.findBatch(
         DB,
-        new JsonObject().put("userId", userId).put("scope", MetalScope.PRIVATE.toString())
+        new JsonObject().put("userId", userId).put("scope", scope.toString())
     );
   }
 
@@ -150,6 +150,8 @@ public class MetalRepoDB {
         new JsonObject().put("scope", MetalScope.PUBLIC.toString())
     );
   }
+
+
 
 
 

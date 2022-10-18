@@ -99,7 +99,11 @@ public class Project extends AbstractVerticle {
   @Override
   public void stop(Promise<Void> stopPromise) throws Exception {
     binder.unregister(consumer);
-    mongo.close();
+    mongo.close().onSuccess(ret -> {
+      stopPromise.complete();
+    }).onFailure(error -> {
+      stopPromise.fail(error);
+    });
   }
 
   public static class RestApi {

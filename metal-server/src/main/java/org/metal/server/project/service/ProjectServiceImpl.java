@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
+import org.metal.server.util.ReadStreamCollector;
 
 public class ProjectServiceImpl implements IProjectService{
   private final static Logger LOGGER = LoggerFactory.getLogger(ProjectServiceImpl.class);
