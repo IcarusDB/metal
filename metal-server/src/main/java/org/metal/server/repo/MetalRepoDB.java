@@ -72,12 +72,11 @@ public class MetalRepoDB {
     return mongo.insert(DB, metal);
   }
 
-  private static BulkOperation wrapBulkOperation(JsonObject metalRaw, String userId, MetalType type) {
-    MetalScope scope = MetalScope.valueOf(metalRaw.getString("scope", "PUBLIC"));
+  private static BulkOperation wrapBulkOperation(JsonObject metalRaw, String userId, MetalType type, MetalScope scope) {
     JsonObject metal = metalOf(
         userId, type, scope,
         metalRaw.getString("pkg"),
-        metalRaw.getString("clazz"),
+        metalRaw.getString("class"),
         metalRaw.getJsonObject("formSchema"),
         Optional.ofNullable(metalRaw.getJsonObject("uiSchema"))
     );
@@ -87,37 +86,38 @@ public class MetalRepoDB {
   public static Future<MongoClientBulkWriteResult> addFromManifest(
       MongoClient mongo,
       String userId,
+      MetalScope scope,
       JsonObject manifest
   ) {
     List<BulkOperation> operations = new ArrayList<>();
     JsonArray sources = manifest.getJsonArray("sources");
     sources.stream().map(obj -> (JsonObject)obj)
         .map((JsonObject metalRaw) -> {
-          return wrapBulkOperation(metalRaw, userId, MetalType.SOURCE);
+          return wrapBulkOperation(metalRaw, userId, MetalType.SOURCE, scope);
         }).forEach(operations::add);
 
     JsonArray mappers = manifest.getJsonArray("mappers");
     mappers.stream().map(obj -> (JsonObject)obj)
         .map((JsonObject metalRaw) -> {
-          return wrapBulkOperation(metalRaw, userId, MetalType.MAPPER);
+          return wrapBulkOperation(metalRaw, userId, MetalType.MAPPER, scope);
         }).forEach(operations::add);
 
     JsonArray fusions = manifest.getJsonArray("fusions");
     fusions.stream().map(obj -> (JsonObject)obj)
         .map((JsonObject metalRaw) -> {
-          return wrapBulkOperation(metalRaw, userId, MetalType.FUSION);
+          return wrapBulkOperation(metalRaw, userId, MetalType.FUSION, scope);
         }).forEach(operations::add);
 
     JsonArray sinks = manifest.getJsonArray("sinks");
     sinks.stream().map(obj -> (JsonObject)obj)
         .map((JsonObject metalRaw) -> {
-          return wrapBulkOperation(metalRaw, userId, MetalType.SINK);
+          return wrapBulkOperation(metalRaw, userId, MetalType.SINK, scope);
         }).forEach(operations::add);
 
     JsonArray setups = manifest.getJsonArray("setups");
     setups.stream().map(obj -> (JsonObject)obj)
         .map((JsonObject metalRaw) -> {
-          return wrapBulkOperation(metalRaw, userId, MetalType.SETUP);
+          return wrapBulkOperation(metalRaw, userId, MetalType.SETUP, scope);
         }).forEach(operations::add);
 
     return mongo.bulkWrite(DB, operations);
@@ -171,6 +171,13 @@ public class MetalRepoDB {
         new JsonObject()
             .put("scope", MetalScope.PRIVATE.toString())
             .put("userId", userId)
+    );
+  }
+
+  public static Future<MongoClientDeleteResult> removeAll(MongoClient mongo) {
+    return mongo.removeDocuments(
+        DB,
+        new JsonObject()
     );
   }
 }

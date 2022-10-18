@@ -199,6 +199,154 @@ public class MetalRepo extends AbstractVerticle {
       });
     }
 
+    public void getAllOfUserScope(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String scope = ctx.request().params().get("scope");
+
+      if (tryOnFail(ctx,
+          ()-> {return scope == null || scope.isBlank();},
+          "Fail to found scope field in request.",
+          400
+          )){
+        return;
+      }
+
+      metalRepoService.getAllOfUserScope(userId, scope)
+          .onSuccess(metals -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", metals);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          });
+    }
+
+    public void getAllOfPublic(RoutingContext ctx) {
+      metalRepoService.getAllOfPublic()
+          .onSuccess(metals -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", metals);
+            SendJson.send(ctx, resp, 200);
+          })
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("mgs", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          });
+    }
+
+    public void addFromManifest(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String scope = ctx.request().params().get("scope");
+      JsonObject manifest = body.getJsonObject("manifest");
+
+      if (tryOnFail(ctx,
+          ()-> {return scope == null || scope.isBlank();},
+          "Fail to found scope field in request.",
+          400
+      )){
+        return;
+      }
+
+      if (tryOnFail(ctx,
+          ()-> {return manifest == null || manifest.isEmpty();},
+          "Fail to found manifest field in request.",
+          400
+      )) {
+        return;
+      }
+
+      metalRepoService.addFromManifest(userId, scope, manifest)
+          .onSuccess(ret -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", ret);
+            SendJson.send(ctx, resp, 201);
+          })
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          });
+    }
+
+    public void removePrivate(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String metalId = ctx.request().params().get("metalId");
+
+      if (tryOnFail(ctx,
+          ()-> {return metalId == null || metalId.isBlank();},
+          "Fail to found metalId field in request.",
+          400
+      )){
+        return;
+      }
+
+      metalRepoService.removePrivate(userId, metalId)
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(ret -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          });
+    }
+
+    public void removeAllPrivateOfUser(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      metalRepoService.removeAllPrivateOfUser(userId)
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(ret -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          });
+    }
+
+    public void removeAll(RoutingContext ctx) {
+      metalRepoService.removeAll()
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL");
+            resp.put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(ret -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK");
+            resp.put("data", ret);
+            SendJson.send(ctx, resp, 200);
+          });
+    }
+
 
   }
 }

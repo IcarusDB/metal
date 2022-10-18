@@ -29,4 +29,12 @@ public interface IMetalRepoService {
   public Future<List<JsonObject>> getAllOfUserScope(String userId, String scope);
 
   public Future<List<JsonObject>> getAllOfPublic();
+
+  public Future<JsonObject> addFromManifest(String userId, String scope, JsonObject manifest);
+
+  public Future<JsonObject> removePrivate(String userId, String metalId);
+
+  public Future<JsonObject> removeAllPrivateOfUser(String userId);
+
+  public Future<JsonObject> removeAll();
 }

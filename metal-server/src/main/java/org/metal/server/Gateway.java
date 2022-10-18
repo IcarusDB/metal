@@ -94,6 +94,43 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(metalRepo::getAllOfUser);
 
+    router.get("/api/v1/metalRepo/scope/:scope")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::getAllOfUserScope);
+
+    router.get("/api/v1/metalRepo/all/PUBLIC")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::getAllOfPublic);
+
+    router.post("/api/v1/metalRepo/scope/:scope")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::addFromManifest);
+
+    router.delete("/api/v1/metalRepo/metalId/:metalId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::removePrivate);
+
+    router.delete("/api/v1/metalRepo")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::removeAllPrivateOfUser);
+
+    router.delete("/api/v1/metalRepo/all")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(this.auth.adminAuthor()))
+        .handler(metalRepo::removeAll);
+
     router.post("/api/v1/projects")
         .produces("application/json")
         .handler(BodyHandler.create())
