@@ -22,6 +22,7 @@ import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
 import org.metal.server.project.Project;
+import org.metal.server.repo.MetalRepo;
 import org.metal.server.repo.Repo;
 
 public class Gateway extends AbstractVerticle {
@@ -36,12 +37,16 @@ public class Gateway extends AbstractVerticle {
   public static final String GATEWAY_PORT_CONF = "port";
   public static final String EXEC_SERVICE_CONF = "execService";
   public static final String BACKEND_REPORT_SERVICE_CONF = "backendReportService";
+  public static final String METAL_REPO_SERVICE_CONF = "metalRepoService";
+  public static final String METAL_REPO_SERVICE_ADDRESS_CONF = "address";
 
   private HttpServer httpServer;
   private int gatewayPort = 19000;
   private MongoClient mongo;
   private Auth auth;
   private Repo repo;
+
+  private MetalRepo.RestApi metalRepo;
   private Project.RestApi project;
 
   private Gateway() {}
@@ -76,6 +81,18 @@ public class Gateway extends AbstractVerticle {
     repo.createRepoProxy(router, getVertx());
     router.post("/api/v1/repo/package")
         .handler(repo::deploy);
+
+    router.post("/api/v1/metalRepo")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::add);
+
+    router.get("/api/v1/metalRepo/all")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::getAllOfUser);
 
     router.post("/api/v1/projects")
         .produces("application/json")
@@ -150,9 +167,11 @@ public class Gateway extends AbstractVerticle {
       JsonObject gatewayConf = conf.getJsonObject(GATEWAY_CONF);
       JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
       JsonObject projectService = gatewayConf.getJsonObject(PROJECT_SERVICE_CONF);
+      JsonObject metalRepoService = gatewayConf.getJsonObject(METAL_REPO_SERVICE_CONF);
       JsonObject execService = gatewayConf.getJsonObject(EXEC_SERVICE_CONF);
       JsonObject backendReportService = gatewayConf.getJsonObject(BACKEND_REPORT_SERVICE_CONF);
 
+      String metalRepoServiceAddress = metalRepoService.getString(METAL_REPO_SERVICE_ADDRESS_CONF);
       String projectServiceAddress = projectService.getString(PROJECT_SERVICE_ADDRESS_CONF);
       if (gatewayConf == null) {
         return Future.failedFuture(String.format("%s is not configured in %s.", GATEWAY_CONF, CONF_METAL_SERVER_PATH));
@@ -164,7 +183,13 @@ public class Gateway extends AbstractVerticle {
         return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
       }
       if (projectServiceAddress == null || projectServiceAddress.isBlank()) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF));
+        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
+      }
+      if (metalRepoService == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+      }
+      if (metalRepoServiceAddress == null || metalRepoServiceAddress.isBlank()) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + METAL_REPO_SERVICE_CONF));
       }
       try {
         if (gatewayConf.getInteger(GATEWAY_PORT_CONF) == null) {
@@ -180,6 +205,7 @@ public class Gateway extends AbstractVerticle {
       httpServer = getVertx().createHttpServer();
       repo = new Repo();
       project = Project.createRestApi(getVertx(), projectServiceAddress);
+      metalRepo = MetalRepo.createRestApi(getVertx(), metalRepoServiceAddress);
       return Auth.create(mongo);
     }).compose((Auth auth) -> {
       this.auth = auth;
