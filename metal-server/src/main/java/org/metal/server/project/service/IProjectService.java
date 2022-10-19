@@ -28,17 +28,20 @@ public interface IProjectService {
 
   public Future<String> createEmptyProject(
       String userId,
-      String projectName);
+      String name);
 
   public Future<String> createProject(
       String userId,
-      String projectName,
-      String platform, JsonObject platformArgs, JsonObject backendArgs,
+      String name,
+      List<String> pkgs,
+      JsonObject platform,
+      List<String> backendArgs,
       JsonObject spec
   );
 
+
   public Future<String> createProjectFrom(
-      String userId, String projectName
+      String userId, String name
   );
 
   public Future<String> createProjectFromExec(
@@ -46,20 +49,20 @@ public interface IProjectService {
   );
 
   public Future<JsonObject> updateName(
-      String userId, String projectName, String newProjectName
+      String userId, String name, String newName
   );
 
-  public Future<JsonObject> updateSpec(String userId, String projectName, JsonObject spec);
+  public Future<JsonObject> updateSpec(String userId, String name, JsonObject spec);
 
-  public Future<JsonObject> updatePlatform(String userId, String projectName, String platform, JsonObject platformArgs, JsonObject backendArgs);
+  public Future<JsonObject> updatePlatform(String userId, String name, String platform, JsonObject platformArgs, JsonObject backendArgs);
 
-  public Future<JsonObject> updateByPath(String userId, String projectName, JsonObject updateByPath);
+  public Future<JsonObject> updateByPath(String userId, String name, JsonObject updateByPath);
 
   public Future<JsonObject> updateStatus(String deployId, JsonObject updateStatus);
 
   public Future<JsonObject> getOfId(String userId, String projectId);
 
-  public Future<JsonObject> getOfName(String userId, String projectName);
+  public Future<JsonObject> getOfName(String userId, String name);
 
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
 
@@ -69,11 +72,11 @@ public interface IProjectService {
 
   public Future<JsonObject> removeOfId(String userId, String projectId);
 
-  public Future<JsonObject> removeOfName(String userId, String projectName);
+  public Future<JsonObject> removeOfName(String userId, String name);
 
   public Future<JsonObject> removeAllOfUser(String userId);
 
   public Future<JsonObject> removeAll();
 
-  public Future<JsonObject> deploy(String userId, String projectName);
+  public Future<JsonObject> deploy(String userId, String name);
 }

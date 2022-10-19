@@ -33,25 +33,59 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<String> createEmptyProject(String userId, String projectName) {
-    return ProjectDB.add(mongo, userId, projectName);
+  public Future<String> createEmptyProject(String userId, String name) {
+    return createProject(userId, name, null, null, null, null);
+  }
+
+  private static JsonObject emptySpec() {
+    return new JsonObject()
+        .put("version", "1.0")
+        .put("metals", new JsonArray())
+        .put("edges", new JsonArray());
   }
 
   @Override
-  public Future<String> createProject(String userId, String projectName, String platform,
-      JsonObject platformArgs, JsonObject backendArgs, JsonObject spec) {
-    return ProjectDB.add(
+  public Future<String> createProject(
+      String userId,
+      String name,
+      List<String> pkgs,
+      JsonObject platform,
+      List<String> backendArgs,
+      JsonObject spec) {
+    if (pkgs == null) {
+      pkgs = new ArrayList<>();
+    }
+    if (backendArgs == null) {
+      backendArgs = new ArrayList<>();
+    }
+    if (spec == null || spec.isEmpty()) {
+      spec = emptySpec();
+    }
+    if (platform == null || platform.isEmpty()) {
+      LOGGER.info("Platform is not set and will be replaced with the default platform.");
+      JsonObject defaultPlatform = conf.getJsonObject("platform");
+      if (defaultPlatform == null || defaultPlatform.isEmpty()) {
+        LOGGER.error("Fail to load default platform.");
+        return Future.failedFuture("Fail to load default platform.");
+      } else {
+        platform = defaultPlatform;
+      }
+    }
+
+    return ProjectDBEx.add(
         mongo,
         userId,
-        projectName,
-        Platform.valueOf(platform),
-        platformArgs, backendArgs, spec
+        name,
+        pkgs,
+        platform,
+        backendArgs,
+        spec
     );
   }
 
   @Override
-  public Future<String> createProjectFrom(String userId, String projectName) {
-    return ProjectDB.copyFrom(mongo, userId, projectName);
+  public Future<String> createProjectFrom(String userId, String name) {
+    return ProjectDB.copyFrom(mongo, userId, name);
   }
 
   @Override
@@ -60,8 +94,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateName(String userId, String projectName, String newProjectName) {
-    return ProjectDB.updateProjectName(mongo, userId, projectName, newProjectName);
+  public Future<JsonObject> updateName(String userId, String name, String newName) {
+    return ProjectDB.updateProjectName(mongo, userId, name, newName);
   }
 
 
@@ -105,20 +139,12 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> getOfId(String userId, String projectId) {
-    return ProjectDB.getOfId(mongo, userId, projectId);
+    return ProjectDBEx.getOfId(mongo, userId, projectId);
   }
 
   @Override
   public Future<JsonObject> getOfName(String userId, String projectName) {
-    return ReadStreamCollector.<JsonObject>toList(
-        ProjectDB.getOfName(mongo, userId, projectName)
-    ).compose((List<JsonObject> projects) -> {
-      if (projects.isEmpty()) {
-        return Future.succeededFuture(new JsonObject());
-      } else {
-        return Future.succeededFuture(projects.get(0));
-      }
-    });
+    return ProjectDBEx.getOfName(mongo, userId, projectName);
   }
 
   @Override
@@ -146,8 +172,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> removeOfName(String userId, String projectName) {
-    return ProjectDB.removeOfName(mongo, userId, projectName);
+  public Future<JsonObject> removeOfName(String userId, String name) {
+    return ProjectDB.removeOfName(mongo, userId, name);
   }
 
   @Override
@@ -161,8 +187,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> deploy(String userId, String projectName) {
-    return getOfName(userId, projectName).compose((JsonObject project) -> {
+  public Future<JsonObject> deploy(String userId, String name) {
+    return getOfName(userId, name).compose((JsonObject project) -> {
       String deployId = project.getString(ProjectDB.FIELD_DEPLOY_ID);
       if (deployId == null || deployId.strip().isEmpty()) {
         return Future.failedFuture("deployId is not set.");

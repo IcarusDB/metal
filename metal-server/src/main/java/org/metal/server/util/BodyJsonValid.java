@@ -1,4 +1,4 @@
-package org.metal.server;
+package org.metal.server.util;
 
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;

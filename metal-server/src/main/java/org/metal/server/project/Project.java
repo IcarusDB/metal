@@ -17,8 +17,10 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
+import java.util.ArrayList;
 import java.util.List;
-import org.metal.server.SendJson;
+import org.metal.server.util.OnFailure;
+import org.metal.server.util.SendJson;
 import org.metal.server.project.service.IProjectService;
 
 public class Project extends AbstractVerticle {
@@ -114,86 +116,69 @@ public class Project extends AbstractVerticle {
       service = IProjectService.create(vertx, new JsonObject().put("address", provider));
     }
 
+    private List<String> jsonArrayToList(JsonArray array) {
+      List<String> ret = new ArrayList<>();
+      if (array == null) {
+        return ret;
+      }
+
+      if (array != null ) {
+        for (int idx = 0; idx < array.size(); idx++) {
+          String e = array.getString(idx);
+          if (e != null && !e.isBlank()) {
+            ret.add(e);
+          }
+        }
+      }
+      return ret;
+    }
+
     public void add(RoutingContext ctx) {
       JsonObject body = ctx.body().asJsonObject();
       User user = ctx.user();
       String userId = user.get("_id");
-      String projectName = body.getString("projectName");
-      String platform = body.getString("platform");
+      String name = body.getString("name");
 
-      if (projectName == null || projectName.strip().isEmpty()) {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL");
-        resp.put("msg", "Fail to found projectName in request.");
-        SendJson.send(ctx, resp, 400);
-        return ;
-      }
+      JsonArray pkgs = body.getJsonArray("pkgs");
+      JsonObject platform = body.getJsonObject("platform");
+      JsonArray backendArgs = body.getJsonArray("backendArgs");
+      JsonObject spec = body.getJsonObject("spec");
 
-      if (platform == null) {
-        service.createEmptyProject(userId, projectName)
-            .onSuccess((String projectId) -> {
-              JsonObject resp = new JsonObject();
-              resp.put("status", "OK");
-              resp.put("data", new JsonObject().put("id", projectId));
-              SendJson.send(ctx, resp, 201);
-            })
-            .onFailure((Throwable error) -> {
-              JsonObject resp = new JsonObject();
-              resp.put("status", "FAIL");
-              resp.put("msg", error.getLocalizedMessage());
-              SendJson.send(ctx, resp, 500);
-              LOGGER.error(error);
-            });
+      if (
+          OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)
+      ) {
         return;
       }
 
-      try {
-        Platform.valueOf(platform);
-      } catch (IllegalArgumentException e) {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL");
-        resp.put("msg", e.getLocalizedMessage());
-        SendJson.send(ctx, resp, 400);
-        return;
-      }
+      List<String> pkgList = jsonArrayToList(pkgs);
+      List<String> backendArgList = jsonArrayToList(backendArgs);
 
-      JsonObject platformArgs = body.getJsonObject("platformArgs", new JsonObject());
-      JsonObject backendArgs = body.getJsonObject("backendArgs", new JsonObject());
-      JsonObject spec = body.getJsonObject("spec", new JsonObject());
-
-      service.createProject(
-          userId,
-          projectName,
-          platform,
-          platformArgs,
-          backendArgs,
-          spec
-      ).onSuccess((String projectId) -> {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "OK")
-            .put("data", new JsonObject().put("id", projectId));
-        SendJson.send(ctx, resp, 201);
-      }).onFailure((Throwable error) -> {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL")
-            .put("msg", error.getLocalizedMessage());
-        SendJson.send(ctx, resp, 400);
-      });
+      service.createProject(userId, name, pkgList, platform, backendArgList, spec)
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(id -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", new JsonObject().put("id", id));
+            SendJson.send(ctx, resp, 201);
+          });
     }
 
     public void get(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      String projectName = ctx.request().params().get("projectName");
-      if (projectName == null || projectName.strip().isEmpty()) {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL")
-            .put("msg", "projectName is not set.");
-        SendJson.send(ctx, resp, 404);
+      String name = ctx.request().params().get("name");
+      if (
+        OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)
+      ) {
         return;
       }
 
-      service.getOfName(userId, projectName)
+      service.getOfName(userId, name)
           .onSuccess((JsonObject project) -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "OK");

@@ -24,6 +24,7 @@ import org.metal.server.auth.Roles;
 import org.metal.server.project.Project;
 import org.metal.server.repo.MetalRepo;
 import org.metal.server.repo.Repo;
+import org.metal.server.util.BodyJsonValid;
 
 public class Gateway extends AbstractVerticle {
 
@@ -149,7 +150,7 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::add);
 
-    router.get("/api/v1/projects/:projectName")
+    router.get("/api/v1/projects/:name")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
