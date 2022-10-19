@@ -124,13 +124,44 @@ public class MetalRepoDB {
   }
 
   public static Future<JsonObject> get(MongoClient mongo, String userId, String metalId) {
+    JsonObject userPrivate = new JsonObject().put("userId", userId);
+    JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
+    JsonObject query = new JsonObject()
+        .put("_id", metalId)
+        .put("$or", new JsonArray().add(userPrivate).add(publicAccess));
     return mongo.findOne(
         DB,
-        new JsonObject().put("_id", metalId).put("userId", userId),
+        query,
         new JsonObject());
   }
 
-  public static ReadStream<JsonObject> getAllOfUser(MongoClient mongo, String userId) {
+  public static Future<List<JsonObject>> getAllOfPkg(MongoClient mongo, String userId,
+      String groupId, Optional<String> artifactId, Optional<String> version) {
+    JsonObject userPrivate = new JsonObject().put("userId", userId);
+    JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
+    JsonObject query = new JsonObject()
+        .put("$or", new JsonArray().add(userPrivate).add(publicAccess));
+    query.put("groupId", groupId);
+    if (artifactId.isPresent() && !artifactId.get().isBlank()) {
+      query.put("artifactId", artifactId.get());
+      if (version.isPresent() && !version.get().isBlank()) {
+        query.put("version", version.get());
+      }
+    }
+
+    return mongo.find(DB, query);
+  }
+
+  public static Future<List<JsonObject>> getAllOfType(MongoClient mongo, String userId, MetalType type) {
+    JsonObject userPrivate = new JsonObject().put("userId", userId);
+    JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
+    JsonObject query = new JsonObject()
+        .put("$or", new JsonArray().add(userPrivate).add(publicAccess));
+    query.put("type", type.toString());
+    return mongo.find(DB, query);
+  }
+
+  public static ReadStream<JsonObject> getAllPrivateOfUser(MongoClient mongo, String userId) {
     return mongo.findBatch(
         DB,
         new JsonObject().put("userId", userId)

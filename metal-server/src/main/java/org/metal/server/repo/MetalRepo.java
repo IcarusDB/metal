@@ -15,10 +15,8 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 import org.metal.server.SendJson;
 import org.metal.server.repo.service.IMetalRepoService;
 
@@ -241,6 +239,63 @@ public class MetalRepo extends AbstractVerticle {
             resp.put("status", "FAIL");
             resp.put("mgs", error.getLocalizedMessage());
             SendJson.send(ctx, resp, 500);
+          });
+    }
+
+    public void getAllOfPkg(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String groupId = ctx.request().params().get("groupId");
+      String artifactId = ctx.request().params().get("artifactId");
+      String version = ctx.request().params().get("version");
+
+      if (
+          tryOnFail(ctx, ()->{return groupId == null || groupId.isBlank();}, "Fail to found groupId in request.", 400)
+      ) {
+        return;
+      }
+
+      metalRepoService.getAllOfPkg(
+          userId,
+          groupId, artifactId, version)
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(metals -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", metals);
+            SendJson.send(ctx, resp, 200);
+          });
+    }
+
+    public void getAllOfType(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String metalType = ctx.request().params().get("metalType");
+      if (
+          tryOnFail(ctx, ()->{return metalType == null || metalType.isBlank();}, "Fail to found metalType in request.", 400)
+      ) {
+        return;
+      }
+
+      metalRepoService.getAllOfType(userId, metalType)
+          .onFailure(error -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "FAIL")
+                .put("msg", error.getLocalizedMessage());
+            SendJson.send(ctx, resp, 500);
+          })
+          .onSuccess(metals -> {
+            JsonObject resp = new JsonObject();
+            resp.put("status", "OK")
+                .put("data", metals);
+            SendJson.send(ctx, resp, 200);
           });
     }
 

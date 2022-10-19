@@ -106,6 +106,18 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(metalRepo::getAllOfPublic);
 
+    router.get("/api/v1/metalRepo/pkg/:groupId/:artifactId/:version")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::getAllOfPkg);
+
+    router.get("/api/v1/metalRepo/type/:metalType")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(metalRepo::getAllOfType);
+
     router.post("/api/v1/metalRepo/scope/:scope")
         .produces("application/json")
         .handler(BodyHandler.create())

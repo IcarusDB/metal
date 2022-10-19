@@ -1,7 +1,5 @@
 package org.metal.server.repo.service;
 
-import io.vertx.codegen.annotations.ProxyGen;
-import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -117,7 +115,7 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
 
   public Future<List<JsonObject>> getAllOfUser(String userId) {
     return ReadStreamCollector.<JsonObject>toList(
-        MetalRepoDB.getAllOfUser(mongo, userId)
+        MetalRepoDB.getAllPrivateOfUser(mongo, userId)
     );
   }
 
@@ -138,6 +136,29 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
     return ReadStreamCollector.<JsonObject>toList(
         MetalRepoDB.getAllOfPublic(mongo)
     );
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllOfPkg(String userId, String groupId,
+      String artifactId, String version) {
+    return MetalRepoDB.getAllOfPkg(mongo,
+        userId,
+        groupId,
+        Optional.ofNullable(artifactId),
+        Optional.ofNullable(version)
+    );
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllOfType(String userId, String type) {
+    try {
+      checkMetalType(type);
+    } catch (IllegalArgumentException e) {
+      return Future.failedFuture(e);
+    }
+
+    MetalType metalType = MetalType.valueOf(type);
+    return MetalRepoDB.getAllOfType(mongo, userId, metalType);
   }
 
   public Future<JsonObject> addFromManifest(String userId, String scope, JsonObject manifest) {
