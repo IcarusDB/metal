@@ -6,8 +6,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class FutureEnd {
-  public static void end(RoutingContext ctx, Future<JsonObject> result, Logger logger) {
-    result.onSuccess((JsonObject ret) -> {
+  public static <T> void end(RoutingContext ctx, Future<T> result, Logger logger) {
+    result.onSuccess((T ret) -> {
       JsonObject resp = new JsonObject();
       resp.put("status", "OK")
           .put("data", ret);

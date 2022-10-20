@@ -50,11 +50,13 @@ public interface IProjectService {
 
   public Future<JsonObject> updateSpec(String userId, String name, JsonObject spec);
 
-  public Future<JsonObject> updatePlatform(String userId, String name, JsonObject platform);
+  public Future<JsonObject> updatePlatform(String deployId, JsonObject platform);
 
-  public Future<JsonObject> updateBackendArgs(String userId, String name, List<String> backendArgs);
+  public Future<JsonObject> updateBackendArgs(String deployId, List<String> backendArgs);
 
-  public Future<JsonObject> updateByPath(String userId, String name, JsonObject updateByPath);
+  public Future<JsonObject> updatePkgs(String deployId, List<String> pkgs);
+
+  public Future<JsonObject> updateDeployConfsByPath(String deployId, JsonObject updateConfs);
 
   public Future<JsonObject> updateBackendStatus(String deployId, JsonObject updateStatus);
 

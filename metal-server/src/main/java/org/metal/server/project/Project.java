@@ -180,58 +180,20 @@ public class Project extends AbstractVerticle {
         return;
       }
 
-      service.getOfName(userId, name)
-          .onSuccess((JsonObject project) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK");
-            resp.put("data", project);
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<JsonObject> result = service.getOfName(userId, name);
+      FutureEnd.end(ctx, result, LOGGER);
     }
 
     public void getAllOfUser(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      service.getAllOfUser(userId)
-          .onSuccess((List<JsonObject> projects) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", JsonArray.of(projects.toArray()));
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<List<JsonObject>> result = service.getAllOfUser(userId);
+      FutureEnd.end(ctx, result, LOGGER);
     }
 
     public void getAll(RoutingContext ctx) {
-      User user = ctx.user();
-      String userId = user.get("_id");
-      service.getAll()
-          .onSuccess((List<JsonObject> projects) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", JsonArray.of(projects.toArray()));
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<List<JsonObject>> result = service.getAll();
+      FutureEnd.<List<JsonObject>>end(ctx, result, LOGGER);
     }
 
     public void updateName(RoutingContext ctx) {
@@ -264,37 +226,19 @@ public class Project extends AbstractVerticle {
           });
     }
 
-    public void updatePath(RoutingContext ctx) {
+    public void updateDeployConfs(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      String projectName = ctx.request().params().get("projectName");
+      String deployId = ctx.request().params().get("deployId");
       String path = ctx.request().path();
       JsonObject body = ctx.body().asJsonObject();
-      JsonObject update = body.getJsonObject("update");
-      if (update == null || update.isEmpty()) {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL");
-        resp.put("msg", "update is not set.");
-        SendJson.send(ctx, resp, 400);
+      JsonObject updateConfs = body.getJsonObject("updateConfs");
+      if (OnFailure.doTry(ctx, ()->{return updateConfs == null || updateConfs.isEmpty();}, "Fail to found legal updateConfs in request.", 400)) {
         return;
       }
 
-      service.updateByPath(
-          userId,
-          projectName,
-          update
-      ).onSuccess((JsonObject ret) -> {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "OK")
-            .put("data", ret);
-        SendJson.send(ctx, resp, 200);
-      }).onFailure((Throwable error) -> {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL")
-            .put("msg", error.getLocalizedMessage());
-        SendJson.send(ctx, resp, 500);
-        LOGGER.error(error);
-      });
+      Future<JsonObject> result = service.updateDeployConfsByPath(deployId, updateConfs);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateSpec(RoutingContext ctx) {
@@ -338,9 +282,9 @@ public class Project extends AbstractVerticle {
     public void updatePlatform(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      String name = ctx.request().params().get("name");
+      String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
@@ -350,28 +294,14 @@ public class Project extends AbstractVerticle {
         return;
       }
 
-      service.updatePlatform(userId, name, platform)
-          .onSuccess((JsonObject ret) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", ret);
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<JsonObject> result = service.updatePlatform(deployId, platform);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateBackendArgs(RoutingContext ctx) {
-      User user = ctx.user();
-      String userId = user.get("_id");
-      String name = ctx.request().params().get("name");
+      String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
@@ -382,8 +312,8 @@ public class Project extends AbstractVerticle {
         return;
       }
       List<String> backendArgList = jsonArrayToList(backendArgs);
-      Future<JsonObject> result = service.updateBackendArgs(userId, name, backendArgList);
-      FutureEnd.end(ctx, result, LOGGER);
+      Future<JsonObject> result = service.updateBackendArgs(deployId, backendArgList);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateBackendStatus(RoutingContext ctx) {
@@ -401,75 +331,34 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.updateBackendStatus(deployId, status);
-      FutureEnd.end(ctx, result, LOGGER);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void remove(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      String projectName = ctx.request().params().get("projectName");
-      if (projectName == null || projectName.strip().isEmpty()) {
-        JsonObject resp = new JsonObject();
-        resp.put("status", "FAIL")
-            .put("msg", "projectName is not set.");
-        SendJson.send(ctx, resp, 404);
+      String name = ctx.request().params().get("name");
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
         return;
       }
 
-      service.removeOfName(userId, projectName)
-          .onSuccess((JsonObject ret) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", ret);
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<JsonObject> result = service.removeOfName(userId, name);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void removeAllOfUser(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-
-      service.removeAllOfUser(userId)
-          .onSuccess((JsonObject ret) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", ret);
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<JsonObject> result = service.removeAllOfUser(userId);
+      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void removeAll(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
 
-      service.removeAll()
-          .onSuccess((JsonObject ret) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", ret);
-            SendJson.send(ctx, resp, 200);
-          })
-          .onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      Future<JsonObject> result = service.removeAll();
+      FutureEnd.end(ctx, result, LOGGER);
     }
 
     public void deploy(RoutingContext ctx) {

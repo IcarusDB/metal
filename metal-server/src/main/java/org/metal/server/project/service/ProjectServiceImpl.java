@@ -98,18 +98,23 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updatePlatform(String userId, String projectName, JsonObject platform) {
-    return ProjectDBEx.updatePlatform(mongo, userId, projectName, platform);
+  public Future<JsonObject> updatePlatform(String deployId, JsonObject platform) {
+    return ProjectDBEx.updatePlatform(mongo, deployId, platform);
   }
 
   @Override
-  public Future<JsonObject> updateBackendArgs(String userId, String name, List<String> backendArgs) {
-    return ProjectDBEx.updateBackendArgs(mongo, userId, name, backendArgs);
+  public Future<JsonObject> updateBackendArgs(String deployId, List<String> backendArgs) {
+    return ProjectDBEx.updateBackendArgs(mongo, deployId, backendArgs);
   }
 
   @Override
-  public Future<JsonObject> updateByPath(String userId, String projectName, JsonObject updateByPath) {
-    return ProjectDB.updateByPath(mongo, userId, projectName, updateByPath);
+  public Future<JsonObject> updatePkgs(String deployId, List<String> pkgs) {
+    return ProjectDBEx.updatePkgs(mongo, deployId, pkgs);
+  }
+
+  @Override
+  public Future<JsonObject> updateDeployConfsByPath(String deployId, JsonObject updateConfs) {
+    return ProjectDBEx.updateDeployConfs(mongo, deployId, updateConfs);
   }
 
   @Override
@@ -129,7 +134,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId) {
-    return ProjectDB.getBackendStatusOfDeployId(mongo, deployId);
+    return ProjectDBEx.getBackendStatus(mongo, deployId);
   }
 
   @Override
@@ -143,23 +148,23 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> removeOfId(String userId, String projectId) {
-    return ProjectDB.removeOfId(mongo, userId, projectId);
+  public Future<JsonObject> removeOfId(String userId, String id) {
+    return ProjectDBEx.removeOfId(mongo, userId, id);
   }
 
   @Override
   public Future<JsonObject> removeOfName(String userId, String name) {
-    return ProjectDB.removeOfName(mongo, userId, name);
+    return ProjectDBEx.removeOfName(mongo, userId, name);
   }
 
   @Override
   public Future<JsonObject> removeAllOfUser(String userId) {
-    return ProjectDB.removeAllOfUser(mongo, userId);
+    return ProjectDBEx.removeAllOfUser(mongo, userId);
   }
 
   @Override
   public Future<JsonObject> removeAll() {
-    return ProjectDB.removeAll(mongo);
+    return ProjectDBEx.removeAll(mongo);
   }
 
   @Override

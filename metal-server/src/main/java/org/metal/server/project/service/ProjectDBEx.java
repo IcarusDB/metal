@@ -158,6 +158,19 @@ public class ProjectDBEx {
     return getAllOfMatcher(mongo, new JsonObject());
   }
 
+  public static Future<JsonObject> getBackendStatus(MongoClient mongo, String deployId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    return mongo.findOne(DB, matcher, new JsonObject())
+        .compose(proj -> {
+          JsonObject deploy = proj.getJsonObject(DEPLOY);
+          JsonObject status = deploy.getJsonObject(DEPLOY_BACKEND).getJsonObject(DEPLOY_BACKEND_STATUS);
+          status.put("deployId", deploy.getValue(DEPLOY_ID));
+          status.put("epoch", deploy.getValue(DEPLOY_EPOCH));
+          return Future.succeededFuture(status);
+        });
+  }
+
   public static Future<JsonObject> update(MongoClient mongo, JsonObject matcher, JsonObject updater) {
     return mongo.updateCollection(DB, matcher, updater)
         .compose(result -> {
@@ -190,16 +203,40 @@ public class ProjectDBEx {
     return update(mongo, userId, name, updater);
   }
 
+  public static Future<JsonObject> updatePlatform(MongoClient mongo, String deployId, JsonObject platform) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    JsonObject updater = new JsonObject();
+    updater.put("$set", new JsonObject().put(platformPath(), platform));
+    return update(mongo, matcher, updater);
+  }
+
   public static Future<JsonObject> updatePkgs(MongoClient mongo, String userId, String name, List<String> pkgs) {
     JsonObject updater = new JsonObject();
     updater.put("$set", new JsonObject().put(pkgsPath(), pkgs));
     return update(mongo, userId, name, updater);
   }
 
+  public static Future<JsonObject> updatePkgs(MongoClient mongo, String deployId, List<String> pkgs) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    JsonObject updater = new JsonObject();
+    updater.put("$set", new JsonObject().put(pkgsPath(), pkgs));
+    return update(mongo, matcher, updater);
+  }
+
   public static Future<JsonObject> updateBackendArgs(MongoClient mongo, String userId, String name, List<String> backendArgs) {
     JsonObject updater = new JsonObject();
     updater.put("$set", new JsonObject().put(backendArgsPath(), backendArgs));
     return update(mongo, userId, name, updater);
+  }
+
+  public static Future<JsonObject> updateBackendArgs(MongoClient mongo, String deployId, List<String> backendArgs) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    JsonObject updater = new JsonObject();
+    updater.put("$set", new JsonObject().put(backendArgsPath(), backendArgs));
+    return update(mongo, matcher, updater);
   }
 
   public static Future<JsonObject> updateBackendStatus(MongoClient mongo, String deployId, JsonObject status) {
@@ -210,6 +247,59 @@ public class ProjectDBEx {
     return update(mongo, matcher, updater);
   }
 
+  public static Future<JsonObject> updateDeployConfs(MongoClient mongo, String userId, String name, JsonObject confs) {
+    JsonObject updater = new JsonObject();
+    JsonObject confsWithPath = deployConfsWithPath(confs);
+    updater.put("$set", confsWithPath);
+    return update(mongo, userId, name, updater);
+  }
+
+  public static Future<JsonObject> updateDeployConfs(MongoClient mongo, String deployId, JsonObject confs) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    JsonObject updater = new JsonObject();
+    JsonObject confsWithPath = deployConfsWithPath(confs);
+    updater.put("$set", confsWithPath);
+    return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> removeOfId(MongoClient mongo, String userId, String id) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(userIdPath(), userId)
+        .put(ID, id);
+    return remove(mongo, matcher);
+  }
+  public static Future<JsonObject> removeOfName(MongoClient mongo, String userId, String name) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(userIdPath(), userId)
+        .put(NAME, name);
+    return remove(mongo, matcher);
+  }
+
+  public static Future<JsonObject> removeAllOfUser(MongoClient mongo, String userId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(userIdPath(), userId);
+    return remove(mongo, matcher);
+  }
+
+  public static Future<JsonObject> removeAll(MongoClient mongo) {
+    JsonObject matcher = new JsonObject();
+    return remove(mongo, matcher);
+  }
+
+  public static Future<JsonObject> remove(MongoClient mongo, JsonObject matcher) {
+    return mongo.removeDocuments(DB, matcher).compose(result -> {
+      return Future.succeededFuture(result.toJson());
+    });
+  }
+
+  private static JsonObject deployConfsWithPath(JsonObject confs) {
+    JsonObject confsWithPath = new JsonObject();
+    for (String field: confs.fieldNames()) {
+      confsWithPath.put(DEPLOY + "." + field, confs.getValue(field));
+    }
+    return confsWithPath;
+  }
 
 
   private static String userIdPath() {

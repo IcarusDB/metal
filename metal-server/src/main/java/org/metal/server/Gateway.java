@@ -181,13 +181,13 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateSpec);
 
-    router.put("/api/v1/projects/name/:name/deploy/platform")
+    router.put("/api/v1/projects/deploy/:deployId/platform")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updatePlatform);
 
-    router.put("/api/v1/projects/name/:name/deploy/backend/args")
+    router.put("/api/v1/projects/deploy/:deployId/backend/args")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
@@ -199,13 +199,19 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateBackendStatus);
 
+    router.put("/api/v1/projects/deploy/:deployId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updateDeployConfs);
+
     router.post("/api/v1/projects/:projectName")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::deploy);
 
-    router.delete("/api/v1/projects/:projectName")
+    router.delete("/api/v1/projects/name/:name")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
@@ -217,7 +223,7 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::removeAllOfUser);
 
-    router.delete("/api/v1/all_projects")
+    router.delete("/api/v1/projects/all")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
