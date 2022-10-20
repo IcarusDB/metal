@@ -317,7 +317,7 @@ public class BackendReportServiceImpl implements BackendReportService {
           update.put("status", BackendState.UP.toString())
               .put(timeName, upTime);
 
-          return projectService.updateStatus(deployId, update)
+          return projectService.updateBackendStatus(deployId, update)
               .compose(ret -> {return Future.succeededFuture();});
         }, error -> {
           LOGGER.error(error);
@@ -359,7 +359,7 @@ public class BackendReportServiceImpl implements BackendReportService {
           update.put("status", BackendState.DOWN.toString())
               .put(timeName, downTime);
 
-          return projectService.updateStatus(deployId, update)
+          return projectService.updateBackendStatus(deployId, update)
               .compose(ret -> {return Future.succeededFuture();});
         });
   }
@@ -403,7 +403,7 @@ public class BackendReportServiceImpl implements BackendReportService {
                       .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG_MSG, failureMsg)
               );
 
-          return projectService.updateStatus(deployId, update)
+          return projectService.updateBackendStatus(deployId, update)
               .compose(ret -> {return Future.succeededFuture();});
         });
   }

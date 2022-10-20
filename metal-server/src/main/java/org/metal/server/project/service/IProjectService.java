@@ -5,13 +5,9 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
-import java.util.Optional;
-import org.metal.server.project.Platform;
 
 @ProxyGen
 @VertxGen
@@ -54,11 +50,13 @@ public interface IProjectService {
 
   public Future<JsonObject> updateSpec(String userId, String name, JsonObject spec);
 
-  public Future<JsonObject> updatePlatform(String userId, String name, String platform, JsonObject platformArgs, JsonObject backendArgs);
+  public Future<JsonObject> updatePlatform(String userId, String name, JsonObject platform);
+
+  public Future<JsonObject> updateBackendArgs(String userId, String name, List<String> backendArgs);
 
   public Future<JsonObject> updateByPath(String userId, String name, JsonObject updateByPath);
 
-  public Future<JsonObject> updateStatus(String deployId, JsonObject updateStatus);
+  public Future<JsonObject> updateBackendStatus(String deployId, JsonObject updateStatus);
 
   public Future<JsonObject> getOfId(String userId, String projectId);
 

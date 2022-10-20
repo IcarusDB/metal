@@ -150,11 +150,11 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::add);
 
-    router.get("/api/v1/projects/:name")
+    router.get("/api/v1/projects/name/:name")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-        .handler(project::get);
+        .handler(project::getOfName);
 
     router.get("/api/v1/projects")
         .produces("application/json")
@@ -162,18 +162,42 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::getAllOfUser);
 
-    router.get("/api/v1/all_projects")
+    router.get("/api/v1/projects/all")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(AuthorizationHandler.create(Auth.adminAuthor()))
         .handler(project::getAll);
 
-    router.put("/api/v1/projects/:projectName")
+    router.put("/api/v1/projects/name/:name")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-        .handler(project::updatePath);
+        .handler(project::updateName);
+
+    router.put("/api/v1/projects/name/:name/spec")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updateSpec);
+
+    router.put("/api/v1/projects/name/:name/deploy/platform")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updatePlatform);
+
+    router.put("/api/v1/projects/name/:name/deploy/backend/args")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updateBackendArgs);
+
+    router.put("/api/v1/projects/deploy/:deployId/backend/status")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::updateBackendStatus);
 
     router.post("/api/v1/projects/:projectName")
         .produces("application/json")

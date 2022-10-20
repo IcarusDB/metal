@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
-import org.metal.server.util.ReadStreamCollector;
+import org.metal.server.util.SpecJson;
 
 public class ProjectServiceImpl implements IProjectService{
   private final static Logger LOGGER = LoggerFactory.getLogger(ProjectServiceImpl.class);
@@ -37,13 +37,6 @@ public class ProjectServiceImpl implements IProjectService{
     return createProject(userId, name, null, null, null, null);
   }
 
-  private static JsonObject emptySpec() {
-    return new JsonObject()
-        .put("version", "1.0")
-        .put("metals", new JsonArray())
-        .put("edges", new JsonArray());
-  }
-
   @Override
   public Future<String> createProject(
       String userId,
@@ -59,7 +52,7 @@ public class ProjectServiceImpl implements IProjectService{
       backendArgs = new ArrayList<>();
     }
     if (spec == null || spec.isEmpty()) {
-      spec = emptySpec();
+      spec = SpecJson.empty();
     }
     if (platform == null || platform.isEmpty()) {
       LOGGER.info("Platform is not set and will be replaced with the default platform.");
@@ -95,36 +88,23 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> updateName(String userId, String name, String newName) {
-    return ProjectDB.updateProjectName(mongo, userId, name, newName);
+    return ProjectDBEx.updateName(mongo, userId, name, newName);
   }
-
 
 
   @Override
   public Future<JsonObject> updateSpec(String userId, String projectName, JsonObject spec) {
-    return ProjectDB.update(
-        mongo,
-        userId,
-        projectName,
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty(),
-        Optional.of(spec)
-    );
+    return ProjectDBEx.updateSpec(mongo, userId, projectName, spec);
   }
 
   @Override
-  public Future<JsonObject> updatePlatform(String userId, String projectName, String platform,
-      JsonObject platformArgs, JsonObject backendArgs) {
-    return ProjectDB.update(
-        mongo,
-        userId,
-        projectName,
-        Optional.of(Platform.valueOf(platform)),
-        Optional.of(platformArgs),
-        Optional.of(backendArgs),
-        Optional.empty()
-    );
+  public Future<JsonObject> updatePlatform(String userId, String projectName, JsonObject platform) {
+    return ProjectDBEx.updatePlatform(mongo, userId, projectName, platform);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendArgs(String userId, String name, List<String> backendArgs) {
+    return ProjectDBEx.updateBackendArgs(mongo, userId, name, backendArgs);
   }
 
   @Override
@@ -133,8 +113,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateStatus(String deployId, JsonObject updateStatus) {
-    return ProjectDB.updateBackendStatus(mongo, deployId, updateStatus);
+  public Future<JsonObject> updateBackendStatus(String deployId, JsonObject updateStatus) {
+    return ProjectDBEx.updateBackendStatus(mongo, deployId, updateStatus);
   }
 
   @Override
@@ -154,16 +134,12 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<List<JsonObject>> getAllOfUser(String userId) {
-    return ReadStreamCollector.<JsonObject>toList(
-        ProjectDB.getAllOfUser(mongo, userId)
-    );
+    return ProjectDBEx.getAllOfUser(mongo, userId);
   }
 
   @Override
   public Future<List<JsonObject>> getAll() {
-    return ReadStreamCollector.<JsonObject>toList(
-        ProjectDB.getAll(mongo)
-    );
+    return ProjectDBEx.getAll(mongo);
   }
 
   @Override
