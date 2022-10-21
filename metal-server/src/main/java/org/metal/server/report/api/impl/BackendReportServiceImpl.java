@@ -307,7 +307,7 @@ public class BackendReportServiceImpl implements BackendReportService {
             return Future.failedFuture(e);
           }
 
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
           if (lastState.equals(BackendState.DOWN)) {
             String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
             return Future.failedFuture(msg);

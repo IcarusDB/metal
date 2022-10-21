@@ -64,6 +64,14 @@ public interface IProjectService {
 
   public Future<JsonObject> updateBackendStatus(String deployId, JsonObject updateStatus);
 
+  public Future<JsonObject> updateBackendStatusOnUndeploy(String deployId);
+
+  public Future<JsonObject> updateBackendStatusOnUp(String deployId);
+
+  public Future<JsonObject> updateBackendStatusOnDown(String deployId);
+
+  public Future<JsonObject> updateBackendStatusOnFailure(String deployId, String failureMsg);
+
   public Future<JsonObject> getOfId(String userId, String projectId);
 
   public Future<JsonObject> getOfName(String userId, String name);

@@ -135,6 +135,26 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> updateBackendStatusOnUndeploy(String deployId) {
+    return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnUp(String deployId) {
+    return ProjectDBEx.updateBackendStatusOnUp(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnDown(String deployId) {
+    return ProjectDBEx.updateBackendStatusOnDown(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnFailure(String deployId, String failureMsg) {
+    return ProjectDBEx.updateBackendStatusOnFailure(mongo, deployId, failureMsg);
+  }
+
+  @Override
   public Future<JsonObject> getOfId(String userId, String projectId) {
     return ProjectDBEx.getOfId(mongo, userId, projectId);
   }
@@ -201,7 +221,8 @@ public class ProjectServiceImpl implements IProjectService{
           "--interactive-mode",
           "--deploy-id", deployId,
           "--deploy-epoch", String.valueOf(epoch),
-          "--report-service-address", reportServiceAddress
+          "--report-service-address", reportServiceAddress,
+          "--rest-api-port", String.valueOf(18000)
       );
 
       List<String> appArgs = new ArrayList<>();
