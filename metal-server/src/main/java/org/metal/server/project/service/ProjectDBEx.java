@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
 import java.util.UUID;
+import org.metal.server.api.BackendState;
 import org.metal.server.user.UserDB;
 import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
@@ -30,6 +31,11 @@ public class ProjectDBEx {
   public static final String USER_REF_ID = "$id";
   public static final String ID = "_id";
   public static final String USER = "user";
+  public static final String DEPLOY_BACKEND_STATUS_UP_TIME = "upTime";
+  private static final String DEPLOY_BACKEND_STATUS_DOWN_TIME = "downTime";
+  private static final String DEPLOY_BACKEND_STATUS_FAILURE_TIME = "failureTime";
+  public static final String DEPLOY_BACKEND_STATUS_FAILURE_MSG = "failureMsg";
+  private static final String DEPLOY_BACKEND_STATUS_TRACER = "tracer";
 
   public static Future<String> add(
       MongoClient mongo,
@@ -146,8 +152,8 @@ public class ProjectDBEx {
         .add(lookup)
         .add(project)
         .add(privateProtect);
-    return ReadStreamCollector.<JsonObject>toList(
-        mongo.aggregate(DB, pipeline).handler(ProjectDBEx::compatJsonOnPlatform)
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.aggregate(DB, pipeline), ProjectDBEx::compatJsonOnPlatform
     );
   }
 
@@ -284,9 +290,43 @@ public class ProjectDBEx {
   public static Future<JsonObject> updateBackendStatus(MongoClient mongo, String deployId, JsonObject status) {
     JsonObject matcher = new JsonObject();
     matcher.put(deployIdPath(), deployId);
-    JsonObject updater = new JsonObject();
-    updater.put("$set", new JsonObject().put(backendStatusPath(), status));
+    JsonObject updater = new JsonObject()
+        .put("$set", confWithStatusPath(status));
     return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnUndeploy(MongoClient mongo, String deployId) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.UN_DEPLOY.toString());
+    return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnUp(MongoClient mongo, String deployId) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.UP.toString())
+        .put(DEPLOY_BACKEND_STATUS_UP_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnDown(MongoClient mongo, String deployId) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString())
+        .put(DEPLOY_BACKEND_STATUS_DOWN_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnFailure(MongoClient mongo, String deployId, String failureMsg) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.FAILURE.toString())
+        .put(DEPLOY_BACKEND_STATUS_FAILURE_TIME, getTime())
+        .put(DEPLOY_BACKEND_STATUS_FAILURE_MSG, failureMsg);
+    return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusTracer(MongoClient mongo, String deployId, JsonObject tracer) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_TRACER, tracer);
+    return updateBackendStatus(mongo, deployId, undeploy);
   }
 
   public static Future<JsonObject> updateDeployConfs(MongoClient mongo, String userId, String name, JsonObject confs) {
@@ -343,6 +383,14 @@ public class ProjectDBEx {
     return confsWithPath;
   }
 
+  private static JsonObject confWithStatusPath(JsonObject confs) {
+    JsonObject confsWithPath = new JsonObject();
+    for (String field: confs.fieldNames()) {
+      confsWithPath.put(backendStatusPath() + "." + field, confs.getValue(field));
+    }
+    return confsWithPath;
+  }
+
 
   private static JsonObject deployIsUnlock() {
     return new JsonObject().put(
@@ -354,27 +402,27 @@ public class ProjectDBEx {
     return System.currentTimeMillis();
   }
 
-  private static String userIdPath() {
+  public static String userIdPath() {
     return USER_REF + "." + USER_REF_ID;
   }
 
-  private static String deployIdPath() {
+  public static String deployIdPath() {
     return DEPLOY + "." + DEPLOY_ID;
   }
 
-  private static String platformPath() {
+  public static String platformPath() {
     return DEPLOY + "." + DEPLOY_PLATFORM;
   }
 
-  private static String backendArgsPath() {
+  public static String backendArgsPath() {
     return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_ARGS;
   }
 
-  private static String backendStatusPath() {
+  public static String backendStatusPath() {
     return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS;
   }
 
-  private static String pkgsPath() {
+  public static String pkgsPath() {
     return DEPLOY + "." + DEPLOY_PLATFORM;
   }
 

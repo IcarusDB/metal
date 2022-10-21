@@ -3,18 +3,25 @@ package org.metal.server.project.service;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.uritemplate.UriTemplate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
+import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.SpecJson;
 
 public class ProjectServiceImpl implements IProjectService{
@@ -174,6 +181,96 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> deploy(String userId, String name) {
+    return getOfName(userId, name).compose((JsonObject project) -> {
+      JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
+      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+      if (backendStatus != null && !backendStatus.isEmpty()) {
+        return Future.failedFuture("One backend has been deployed. User can\'t deploy the other new backend before that the deployed backend is cleaned.");
+      }
+
+      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+      int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+      List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDBEx.DEPLOY_PKGS));
+      JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+      List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDBEx.DEPLOY_BACKEND_ARGS));
+
+      backendArgs = antiInject(backendArgs);
+      String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
+      List<String> defaultBackendArgs = List.of(
+          "--interactive-mode",
+          "--deploy-id", deployId,
+          "--deploy-epoch", String.valueOf(epoch),
+          "--report-service-address", reportServiceAddress
+      );
+
+      List<String> appArgs = new ArrayList<>();
+      appArgs.addAll(defaultBackendArgs);
+      appArgs.addAll(backendArgs);
+
+      if (platform.fieldNames().contains("spark.standalone")) {
+        JsonObject sparkStandalone = platform.getJsonObject("spark.standalone");
+        JsonObject restApi = sparkStandalone.getJsonObject("rest.api");
+        JsonObject conf = sparkStandalone.getJsonObject("conf");
+        conf.put("appArgs", appArgs);
+
+        WebClientOptions options = new WebClientOptions();
+        String restApiHost = restApi.getString("host");
+        int restApiPort = restApi.getInteger("port");
+        WebClient webClient = WebClient.create(vertx);
+        UriTemplate createURI = UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
+
+        return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId).compose(ret -> {
+          return webClient.post(restApiPort, restApiHost, createURI)
+              .sendJsonObject(conf);
+        }).compose((HttpResponse<Buffer> response) -> {
+          JsonObject resp = response.bodyAsJsonObject();
+          boolean isSuccess = resp.getBoolean("success");
+          if (isSuccess) {
+            String driverId = resp.getString("submissionId");
+            JsonObject tracer = new JsonObject()
+                .put("driverId", driverId);
+            return ProjectDBEx.updateBackendStatusTracer(mongo, deployId, tracer);
+          }
+          return Future.failedFuture(resp.toString());
+        });
+      }
+
+      return Future.failedFuture("Fail to found any legal platform configuration.");
+    });
+  }
+
+
+  private static List<String> antiInject(List<String> backendArgs) {
+    List<String> ret = new ArrayList<>();
+    for(int idx = 0; idx < backendArgs.size(); idx++) {
+      String arg = backendArgs.get(idx).strip();
+      if (arg.equals("--interactive-mode") || arg.equals("--cmd-mode")) {
+        continue;
+      }
+
+      if (arg.equals("--deploy-id")) {
+        idx++;
+        continue;
+      }
+
+      if (arg.equals("--deploy-epoch")) {
+        idx++;
+        continue;
+      }
+
+      if (arg.equals("--report-service-address")) {
+        idx++;
+        continue;
+      }
+
+      ret.add(arg);
+    }
+
+   return Collections.unmodifiableList(ret);
+  }
+
+  public Future<JsonObject> deployed(String userId, String name) {
     return getOfName(userId, name).compose((JsonObject project) -> {
       String deployId = project.getString(ProjectDB.FIELD_DEPLOY_ID);
       if (deployId == null || deployId.strip().isEmpty()) {

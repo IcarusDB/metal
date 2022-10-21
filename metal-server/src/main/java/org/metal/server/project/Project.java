@@ -17,8 +17,8 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
-import java.util.ArrayList;
 import java.util.List;
+import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.OnFailure;
 import org.metal.server.util.SendJson;
@@ -118,23 +118,6 @@ public class Project extends AbstractVerticle {
       service = IProjectService.create(vertx, new JsonObject().put("address", provider));
     }
 
-    private List<String> jsonArrayToList(JsonArray array) {
-      List<String> ret = new ArrayList<>();
-      if (array == null) {
-        return ret;
-      }
-
-      if (array != null ) {
-        for (int idx = 0; idx < array.size(); idx++) {
-          String e = array.getString(idx);
-          if (e != null && !e.isBlank()) {
-            ret.add(e);
-          }
-        }
-      }
-      return ret;
-    }
-
     public void add(RoutingContext ctx) {
       JsonObject body = ctx.body().asJsonObject();
       User user = ctx.user();
@@ -150,8 +133,8 @@ public class Project extends AbstractVerticle {
         return;
       }
 
-      List<String> pkgList = jsonArrayToList(pkgs);
-      List<String> backendArgList = jsonArrayToList(backendArgs);
+      List<String> pkgList = JsonConvertor.jsonArrayToList(pkgs);
+      List<String> backendArgList = JsonConvertor.jsonArrayToList(backendArgs);
 
       Future<String> result = service.createProject(userId, name, pkgList, platform, backendArgList, spec);
       RestServiceEnd.end(ctx, result, LOGGER);
@@ -317,7 +300,7 @@ public class Project extends AbstractVerticle {
       if (OnFailure.doTry(ctx, ()->{return backendArgs == null;}, "Fail to found legal backend arguments in request.", 400)) {
         return;
       }
-      List<String> backendArgList = jsonArrayToList(backendArgs);
+      List<String> backendArgList = JsonConvertor.jsonArrayToList(backendArgs);
       Future<JsonObject> result = service.updateBackendArgs(deployId, backendArgList);
       RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
@@ -370,21 +353,14 @@ public class Project extends AbstractVerticle {
     public void deploy(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
-      String projectName = ctx.request().params().get("projectName");
+      String name = ctx.request().params().get("name");
 
-      service.deploy(userId, projectName)
-          .onSuccess((JsonObject ret) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", ret);
-            SendJson.send(ctx, resp, 200);
-          }).onFailure((Throwable error) -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-            LOGGER.error(error);
-          });
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.deploy(userId, name);
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
 

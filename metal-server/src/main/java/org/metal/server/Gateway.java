@@ -211,7 +211,7 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateDeployConfs);
 
-    router.post("/api/v1/projects/:projectName")
+    router.post("/api/v1/projects/deploy/name/:name")
         .produces("application/json")
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))

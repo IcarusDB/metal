@@ -31,24 +31,35 @@
       },
       "platform": {
         "spark.standalone": {
-          "appResource": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
-          "sparkProperties": {
-            "spark.executor.userClassPathFirst": "true",
-            "spark.driver.userClassPathFirst": "true",
-            "spark.master": "spark://master-0.spark.metal.org:7077",
-            "spark.app.name": "Spark REST API - Metal-Backend",
-            "spark.submit.deployMode": "cluster",
-            "spark.eventLog.enabled": "true",
-            "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
-            "spark.jars": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar"
+          "rest.api": {
+            "host": "master-0.spark.metal.org",
+            "port": 6066,
+            "requestURI": {
+              "create": "/v1/submissions/create",
+              "status": "/v1/submissions/status/{driverId}",
+              "kill": "/v1/submissions/kill/{driverId}"
+            }
           },
-          "clientSparkVersion": "3.3.0",
-          "mainClass": "org.metal.backend.BackendLauncher",
-          "environmentVariables": {
-            "SPARK_ENV_LOADED": "1"
-          },
-          "action": "CreateSubmissionRequest",
-          "appArgs": []
+          "conf": {
+            "appResource": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+            "sparkProperties": {
+              "spark.executor.userClassPathFirst": "true",
+              "spark.driver.userClassPathFirst": "true",
+              "spark.master": "spark://master-0.spark.metal.org:7077",
+              "spark.app.name": "Spark REST API - Metal-Backend",
+              "spark.submit.deployMode": "cluster",
+              "spark.eventLog.enabled": "true",
+              "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
+              "spark.jars": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar"
+            },
+            "clientSparkVersion": "3.3.0",
+            "mainClass": "org.metal.backend.BackendLauncher",
+            "environmentVariables": {
+              "SPARK_ENV_LOADED": "1"
+            },
+            "action": "CreateSubmissionRequest",
+            "appArgs": []
+          }
         }
       }
     }
