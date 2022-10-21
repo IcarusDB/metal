@@ -40,6 +40,10 @@ public interface IProjectService {
       String userId, String name
   );
 
+  public Future<String> createProjectFromWithCopyName(
+      String userId, String name, String copyName
+  );
+
   public Future<String> createProjectFromExec(
       String userId, String execId
   );

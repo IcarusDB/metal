@@ -78,7 +78,12 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<String> createProjectFrom(String userId, String name) {
-    return ProjectDB.copyFrom(mongo, userId, name);
+    return ProjectDBEx.copyFromProject(mongo, userId, name);
+  }
+
+  @Override
+  public Future<String> createProjectFromWithCopyName(String userId, String name, String copyName) {
+    return ProjectDBEx.copyFromProject(mongo, userId, name, copyName);
   }
 
   @Override

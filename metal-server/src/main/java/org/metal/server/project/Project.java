@@ -19,7 +19,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.ArrayList;
 import java.util.List;
-import org.metal.server.util.FutureEnd;
+import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.OnFailure;
 import org.metal.server.util.SendJson;
 import org.metal.server.project.service.IProjectService;
@@ -146,28 +146,34 @@ public class Project extends AbstractVerticle {
       JsonArray backendArgs = body.getJsonArray("backendArgs");
       JsonObject spec = body.getJsonObject("spec");
 
-      if (
-          OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)
-      ) {
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)) {
         return;
       }
 
       List<String> pkgList = jsonArrayToList(pkgs);
       List<String> backendArgList = jsonArrayToList(backendArgs);
 
-      service.createProject(userId, name, pkgList, platform, backendArgList, spec)
-          .onFailure(error -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "FAIL")
-                .put("msg", error.getLocalizedMessage());
-            SendJson.send(ctx, resp, 500);
-          })
-          .onSuccess(id -> {
-            JsonObject resp = new JsonObject();
-            resp.put("status", "OK")
-                .put("data", new JsonObject().put("id", id));
-            SendJson.send(ctx, resp, 201);
-          });
+      Future<String> result = service.createProject(userId, name, pkgList, platform, backendArgList, spec);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void copy(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = body.getString("name");
+      String copyName = body.getString("copyName");
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)) {
+        return;
+      }
+
+      Future<String> result;
+      if (copyName == null || copyName.isBlank()) {
+        result = service.createProjectFrom(userId, name);
+      } else {
+        result = service.createProjectFromWithCopyName(userId, name, copyName);
+      }
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
     public void getOfName(RoutingContext ctx) {
@@ -181,19 +187,19 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.getOfName(userId, name);
-      FutureEnd.end(ctx, result, LOGGER);
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
     public void getAllOfUser(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
       Future<List<JsonObject>> result = service.getAllOfUser(userId);
-      FutureEnd.end(ctx, result, LOGGER);
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
     public void getAll(RoutingContext ctx) {
       Future<List<JsonObject>> result = service.getAll();
-      FutureEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
     }
 
     public void updateName(RoutingContext ctx) {
@@ -238,7 +244,7 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.updateDeployConfsByPath(deployId, updateConfs);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateSpec(RoutingContext ctx) {
@@ -295,7 +301,7 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.updatePlatform(deployId, platform);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateBackendArgs(RoutingContext ctx) {
@@ -313,7 +319,7 @@ public class Project extends AbstractVerticle {
       }
       List<String> backendArgList = jsonArrayToList(backendArgs);
       Future<JsonObject> result = service.updateBackendArgs(deployId, backendArgList);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void updateBackendStatus(RoutingContext ctx) {
@@ -331,7 +337,7 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.updateBackendStatus(deployId, status);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void remove(RoutingContext ctx) {
@@ -343,14 +349,14 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.removeOfName(userId, name);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void removeAllOfUser(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
       Future<JsonObject> result = service.removeAllOfUser(userId);
-      FutureEnd.<JsonObject>end(ctx, result, LOGGER);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
     public void removeAll(RoutingContext ctx) {
@@ -358,7 +364,7 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
 
       Future<JsonObject> result = service.removeAll();
-      FutureEnd.end(ctx, result, LOGGER);
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
     public void deploy(RoutingContext ctx) {

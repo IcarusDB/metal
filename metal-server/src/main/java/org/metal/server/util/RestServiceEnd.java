@@ -5,7 +5,7 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-public class FutureEnd {
+public class RestServiceEnd {
   public static <T> void end(RoutingContext ctx, Future<T> result, Logger logger) {
     result.onSuccess((T ret) -> {
       JsonObject resp = new JsonObject();
