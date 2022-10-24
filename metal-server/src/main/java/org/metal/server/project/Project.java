@@ -383,6 +383,45 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void reDeploy(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = ctx.request().params().get("name");
+
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.reDeploy(userId, name);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void analysis(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = ctx.request().params().get("name");
+
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      JsonObject spec = body.getJsonObject("spec");
+      if (OnFailure.doTry(ctx, ()->{return spec == null || spec.isEmpty();}, "Fail to found legal spec in request.", 400)) {
+        return;
+      }
+
+      try {
+        SpecJson.check(spec);
+      } catch (IllegalArgumentException e) {
+        OnFailure.doTry(ctx, ()->{return true;}, e.getLocalizedMessage(), 400);
+        return;
+      }
+
+      Future<JsonObject> result = service.analysis(userId, name, spec);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
 
 
   }

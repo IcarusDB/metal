@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.metal.backend.api.BackendService;
 import org.metal.server.api.BackendState;
 import org.metal.server.project.Platform;
 import org.metal.server.project.ProjectDB;
@@ -245,6 +246,36 @@ public class ProjectServiceImpl implements IProjectService{
     });
   }
 
+  @Override
+  public Future<JsonObject> reDeploy(String userId, String name) {
+    return getOfName(userId, name).compose((JsonObject project) -> {
+      try {
+        JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
+        if (deploy == null || deploy.isEmpty()) {
+          String msg = "Fail to reDeploy, no deploy found.";
+          LOGGER.error(msg);
+          return Future.failedFuture(msg);
+        }
+
+        String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+        if (deployId == null || deployId.isBlank()) {
+          String msg = "Fail to reDeploy, no deploy id found.";
+          LOGGER.error(msg);
+          return Future.failedFuture(msg);
+        }
+
+        return forceKillBackend(deployId).compose((JsonObject ret) -> {
+          return ProjectDBEx.increaseDeployEpoch(mongo, deployId);
+        }).compose((JsonObject ret) -> {
+          return deploy(userId, name);
+        });
+      } catch (Exception e) {
+        LOGGER.error(e);
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
   private Future<JsonObject> sparkStandaloneDeploy(String deployId, int epoch, List<String> appArgs,
       JsonObject sparkStandalone) {
     JsonObject restApi = sparkStandalone.getJsonObject("rest.api");
@@ -325,6 +356,57 @@ public class ProjectServiceImpl implements IProjectService{
     });
   }
 
+  private boolean checkBackendUp(JsonObject deploy) throws IllegalArgumentException {
+    try {
+      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+      if (backendStatus == null || backendStatus.isEmpty()) {
+        throw new IllegalArgumentException("Fail to analysis spec in request, the backend is not UP.");
+      }
+      BackendState current = BackendState.valueOf(backendStatus.getString(ProjectDBEx.DEPLOY_BACKEND_STATUS_CURRENT));
+      if (!current.equals(BackendState.UP)) {
+        throw new IllegalArgumentException("Fail to analysis spec in request, the backend is not UP.");
+      }
+      return true;
+    } catch (Exception e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  private JsonObject backendAddress(JsonObject deploy) {
+    try {
+      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+      Integer epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+      if (epoch == null) {
+        throw new IllegalArgumentException("Fail to get address, the epoch of backend is not existed.");
+      }
+      if (deployId == null || deployId.isBlank()) {
+        throw new IllegalArgumentException("Fail to get address, the deploy id of backend is not existed.");
+      }
+      return new JsonObject().put("address", deployId + "-" + epoch);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  @Override
+  public Future<JsonObject> analysis(String userId, String name, JsonObject spec) {
+    return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
+      try {
+        JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+        checkBackendUp(deploy);
+        JsonObject address = backendAddress(deploy);
+        return ProjectDBEx.updateSpec(mongo, userId, name, spec).compose((JsonObject ret) -> {
+          BackendService backendService = BackendService.create(vertx, address);
+          return backendService.analyse(spec);
+        });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
   private Future<JsonObject> sparkStandaloneForceKill(JsonObject tracer, JsonObject restApi) {
     if (tracer == null || !tracer.containsKey("driverId")) {
       return Future.failedFuture("Fail to force kill spark in standalone, none driverId found in tracer.");
@@ -385,130 +467,6 @@ public class ProjectServiceImpl implements IProjectService{
    return Collections.unmodifiableList(ret);
   }
 
-  public Future<JsonObject> deployed(String userId, String name) {
-    return getOfName(userId, name).compose((JsonObject project) -> {
-      String deployId = project.getString(ProjectDB.FIELD_DEPLOY_ID);
-      if (deployId == null || deployId.strip().isEmpty()) {
-        return Future.failedFuture("deployId is not set.");
-      }
-
-      JsonObject deployArgs = project.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS);
-      if (deployArgs == null || deployArgs.isEmpty()) {
-        return Future.failedFuture("deployArgs is not set.");
-      }
-
-      String platform = deployArgs.getString(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM);
-      if (platform == null) {
-        return Future.failedFuture("platform is not set.");
-      }
-      try {
-        Platform.valueOf(platform);
-      } catch (IllegalArgumentException e) {
-        return Future.failedFuture(e);
-      }
-
-      JsonObject platformArgs = deployArgs.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS);
-      JsonArray platformArgsArgs = platformArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS_ARGS);
-      JsonArray plataformArgsPkgs = platformArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS_PKGS, new JsonArray());
-      if (platformArgs == null || platformArgs.isEmpty()) {
-        return Future.failedFuture("platformArgs is not set.");
-      }
-      if (platformArgsArgs == null) {
-        return Future.failedFuture("platformArgs.args is not set.");
-      }
-
-      List<String> parseArgs = new ArrayList<>();
-      switch (Platform.valueOf(platform)) {
-        case SPARK: {
-          try {
-            parseArgs.addAll(parsePlatformArgs(platformArgsArgs, plataformArgsPkgs));
-          } catch (IllegalArgumentException e) {
-            return Future.failedFuture(e);
-          }
-        }; break;
-        default: {
-          return Future.failedFuture(String.format("%s is not supported.", platform));
-        }
-      }
-
-      String backendJar = conf.getString("backendJar");
-      if (backendJar == null || backendJar.strip().isEmpty()) {
-        LOGGER.error("backendJar is not configured.");
-        return Future.failedFuture("backendJar is not configured.");
-      }
-      parseArgs.add(backendJar);
-
-      JsonObject backendArgs = deployArgs.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS);
-      if (backendArgs == null || backendArgs.isEmpty()) {
-        return Future.failedFuture("backendArgs is not set.");
-      }
-
-      JsonArray backendArgsArgs = backendArgs.getJsonArray(ProjectDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS_ARGS);
-      try {
-        parseArgs.addAll(parseBackendArgs(backendArgsArgs));
-      } catch (IllegalArgumentException e) {
-        return Future.failedFuture(e);
-      }
-
-      JsonObject backendStatus = project.getJsonObject(ProjectDB.FIELD_BACKEND_STATUS);
-      if (backendStatus == null || backendStatus.isEmpty()) {
-        return Future.failedFuture("backendStatus is not set.");
-      }
-
-      String backendStatusStatus = backendStatus.getString(ProjectDB.FIELD_BACKEND_STATUS_STATUS);
-      if (backendStatusStatus == null || backendStatusStatus.isBlank()) {
-        return Future.failedFuture("backendStatus.status is not set.");
-      }
-      try {
-        BackendState.valueOf(backendStatusStatus);
-      } catch (IllegalArgumentException e) {
-        return Future.failedFuture(e);
-      }
-      if (!BackendState.valueOf(backendStatusStatus).equals(BackendState.UN_DEPLOY)) {
-        return Future.failedFuture(String.format("Fail to deploy backend, because backend is in %s.", backendStatusStatus));
-      }
-
-      int epoch = backendStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH, ProjectDB.DEFAULT_EPOCH);
-      if (epoch != -1) {
-        String errorMsg = "The epoch of undeploy backend should be -1, now is " + epoch;
-        LOGGER.error(errorMsg);
-        return Future.failedFuture(errorMsg);
-      }
-      parseArgs.add("--interactive-mode ");
-      parseArgs.add("--deploy-id");
-      parseArgs.add(deployId);
-      parseArgs.add("--deploy-epoch");
-      parseArgs.add(String.valueOf(epoch));
-
-      String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
-      parseArgs.add("--report-service-address");
-      parseArgs.add(reportServiceAddress);
-      parseArgs.add("--rest-api-port");
-      parseArgs.add("18989");
-
-      System.out.println(parseArgs);
-      switch (Platform.valueOf(platform)) {
-        case SPARK: {
-//          String deployer = "org.metal.backend.spark.SparkBackendDeploy";
-//          Optional<IBackendDeploy> backendDeploy = BackendDeployManager.getBackendDeploy(deployer);
-//          if (backendDeploy.isEmpty()) {
-//            return Future.failedFuture(String.format("Fail to create IBackendDeploy[%s] instance.", deployer));
-//          }
-//          return workerExecutor.executeBlocking((promise)->{
-//            try {
-//              backendDeploy.get().deploy(parseArgs.<String>toArray(String[]::new));
-//              promise.complete();
-//            } catch (Exception e) {
-//              promise.fail(e);
-//            }
-//          }, true);
-        }
-        default: {
-          return Future.failedFuture(String.format("%s is not supported.", platform));
-        }
-      }
-    });
-  }
 
   private List<String> parsePlatformArgs(JsonArray platformArgs, JsonArray platformPkgs) throws IllegalArgumentException{
     List<String> args = platformArgs.stream().map(Object::toString).collect(Collectors.toList());

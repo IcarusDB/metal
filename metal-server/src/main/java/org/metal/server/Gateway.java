@@ -181,11 +181,11 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateName);
 
-    router.put("/api/v1/projects/name/:name/spec")
-        .produces("application/json")
-        .handler(BodyHandler.create())
-        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-        .handler(project::updateSpec);
+//    router.put("/api/v1/projects/name/:name/spec")
+//        .produces("application/json")
+//        .handler(BodyHandler.create())
+//        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+//        .handler(project::updateSpec);
 
     router.put("/api/v1/projects/deploy/:deployId/platform")
         .produces("application/json")
@@ -222,6 +222,18 @@ public class Gateway extends AbstractVerticle {
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::deploy);
+
+    router.put("/api/v1/projects/deploy/name/:name/epoch")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::reDeploy);
+
+    router.post("/api/v1/projects/name/:name/spec")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::analysis);
 
     router.delete("/api/v1/projects/deploy/:deployId/force")
         .produces("application/json")

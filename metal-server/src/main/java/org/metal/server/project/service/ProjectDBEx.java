@@ -233,6 +233,32 @@ public class ProjectDBEx {
         });
   }
 
+  public static Future<JsonObject> getDeployAddress(MongoClient mongo, String deployId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId);
+    return getOfMatcher(mongo, matcher)
+        .compose(proj -> {
+          JsonObject deploy = proj.getJsonObject(DEPLOY);
+          int epoch = deploy.getInteger(DEPLOY_EPOCH);
+          String address = deployId + "-" + epoch;
+          return Future.succeededFuture(new JsonObject().put("address", address));
+        });
+  }
+
+  public static Future<JsonObject> getDeployAddressOfName(MongoClient mongo, String userId, String name) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(userIdPath(), userId)
+        .put(NAME, name);
+    return getOfMatcher(mongo, matcher)
+        .compose(proj -> {
+          JsonObject deploy = proj.getJsonObject(DEPLOY);
+          int epoch = deploy.getInteger(DEPLOY_EPOCH);
+          String deployId = deploy.getString(DEPLOY_ID);
+          String address = deployId + "-" + epoch;
+          return Future.succeededFuture(new JsonObject().put("address", address));
+        });
+  }
+
   public static Future<JsonObject> update(MongoClient mongo, JsonObject matcher, JsonObject updater) {
     return mongo.updateCollection(DB, matcher, updater)
         .compose(result -> {
@@ -364,6 +390,25 @@ public class ProjectDBEx {
     JsonObject updater = new JsonObject();
     JsonObject confsWithPath = deployConfsWithPath(confs);
     updater.put("$set", confsWithPath);
+    return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> increaseDeployEpoch(MongoClient mongo, String userId, String name) {
+    JsonObject matcher = deployIsUnlock();
+    matcher.put(userIdPath(), userId)
+        .put(NAME, name);
+    JsonObject updater = new JsonObject();
+    JsonObject confsWithPath = deployConfsWithPath(new JsonObject().put(DEPLOY_EPOCH, 1));
+    updater.put("$inc", confsWithPath);
+    return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> increaseDeployEpoch(MongoClient mongo, String deployId) {
+    JsonObject matcher = deployIsUnlock();
+    matcher.put(deployIdPath(), deployId);
+    JsonObject updater = new JsonObject();
+    JsonObject confsWithPath = deployConfsWithPath(new JsonObject().put(DEPLOY_EPOCH, 1));
+    updater.put("$inc", confsWithPath);
     return update(mongo, matcher, updater);
   }
 

@@ -93,4 +93,8 @@ public interface IProjectService {
   public Future<JsonObject> deploy(String userId, String name);
 
   public Future<JsonObject> forceKillBackend(String deployId);
+
+  public Future<JsonObject> reDeploy(String userId, String name);
+
+  public Future<JsonObject> analysis(String userId, String name, JsonObject spec);
 }
