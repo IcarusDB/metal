@@ -91,4 +91,6 @@ public interface IProjectService {
   public Future<JsonObject> removeAll();
 
   public Future<JsonObject> deploy(String userId, String name);
+
+  public Future<JsonObject> forceKillBackend(String deployId);
 }

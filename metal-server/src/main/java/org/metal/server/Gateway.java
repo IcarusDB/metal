@@ -205,6 +205,12 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateBackendStatus);
 
+    router.get("/api/v1/projects/deploy/:deployId/backend/status")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::getBackendStatus);
+
     router.put("/api/v1/projects/deploy/:deployId")
         .produces("application/json")
         .handler(BodyHandler.create())
@@ -216,6 +222,12 @@ public class Gateway extends AbstractVerticle {
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::deploy);
+
+    router.delete("/api/v1/projects/deploy/:deployId/force")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::forceKillBackend);
 
     router.delete("/api/v1/projects/name/:name")
         .produces("application/json")

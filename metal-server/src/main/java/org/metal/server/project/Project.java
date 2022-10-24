@@ -287,6 +287,15 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 
+    public void forceKillBackend(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+        return;
+      }
+      Future<JsonObject> result = service.forceKillBackend(deployId);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
+    }
+
     public void updateBackendArgs(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
 
@@ -320,6 +329,17 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.updateBackendStatus(deployId, status);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
+    }
+
+    public void getBackendStatus(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getBackendStatusOfDeployId(deployId);
       RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
     }
 

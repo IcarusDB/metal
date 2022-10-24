@@ -10,6 +10,7 @@ import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecService;
 import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.IProjectService;
+import org.metal.server.project.service.ProjectDBEx;
 
 public class BackendReportServiceImpl implements BackendReportService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendReportServiceImpl.class);
@@ -314,11 +315,14 @@ public class BackendReportServiceImpl implements BackendReportService {
           }
 
           JsonObject update = new JsonObject();
-          update.put("status", BackendState.UP.toString())
+          update.put("current", BackendState.UP.toString())
               .put(timeName, upTime);
 
           return projectService.updateBackendStatus(deployId, update)
-              .compose(ret -> {return Future.succeededFuture();});
+              .compose(ret -> {
+                LOGGER.info(String.format("Backend[%s-%d] has up. %s.", deployId, epoch, update.toString()));
+                return Future.succeededFuture();
+              });
         }, error -> {
           LOGGER.error(error);
           return Future.failedFuture(error);
@@ -349,14 +353,14 @@ public class BackendReportServiceImpl implements BackendReportService {
             return Future.failedFuture(e);
           }
 
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
           if (lastState.equals(BackendState.DOWN)) {
             String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
             return Future.failedFuture(msg);
           }
 
           JsonObject update = new JsonObject();
-          update.put("status", BackendState.DOWN.toString())
+          update.put("current", BackendState.DOWN.toString())
               .put(timeName, downTime);
 
           return projectService.updateBackendStatus(deployId, update)
@@ -389,19 +393,16 @@ public class BackendReportServiceImpl implements BackendReportService {
             return Future.failedFuture(e);
           }
 
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("status"));
+          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
           if (lastState.equals(BackendState.DOWN)) {
             String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
             return Future.failedFuture(msg);
           }
 
           JsonObject update = new JsonObject();
-          update.put(ProjectDB.FIELD_BACKEND_STATUS_STATUS, BackendState.FAILURE.toString())
-              .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG,
-                  new JsonObject()
-                      .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG_TIME, failureTime)
-                      .put(ProjectDB.FIELD_BACKEND_STATUS_FAILURE_MSG_MSG, failureMsg)
-              );
+          update.put("current", BackendState.FAILURE.toString())
+              .put(ProjectDBEx.DEPLOY_BACKEND_STATUS_FAILURE_MSG, failureMsg)
+              .put(ProjectDBEx.DEPLOY_BACKEND_STATUS_FAILURE_TIME, failureTime);
 
           return projectService.updateBackendStatus(deployId, update)
               .compose(ret -> {return Future.succeededFuture();});

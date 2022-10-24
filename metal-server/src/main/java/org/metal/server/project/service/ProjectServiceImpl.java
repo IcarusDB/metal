@@ -230,37 +230,131 @@ public class ProjectServiceImpl implements IProjectService{
       appArgs.addAll(backendArgs);
 
       if (platform.fieldNames().contains("spark.standalone")) {
-        JsonObject sparkStandalone = platform.getJsonObject("spark.standalone");
-        JsonObject restApi = sparkStandalone.getJsonObject("rest.api");
-        JsonObject conf = sparkStandalone.getJsonObject("conf");
-        conf.put("appArgs", appArgs);
-
-        WebClientOptions options = new WebClientOptions();
-        String restApiHost = restApi.getString("host");
-        int restApiPort = restApi.getInteger("port");
-        WebClient webClient = WebClient.create(vertx);
-        UriTemplate createURI = UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
-
-        return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId).compose(ret -> {
-          return webClient.post(restApiPort, restApiHost, createURI)
-              .sendJsonObject(conf);
-        }).compose((HttpResponse<Buffer> response) -> {
-          JsonObject resp = response.bodyAsJsonObject();
-          boolean isSuccess = resp.getBoolean("success");
-          if (isSuccess) {
-            String driverId = resp.getString("submissionId");
-            JsonObject tracer = new JsonObject()
-                .put("driverId", driverId);
-            return ProjectDBEx.updateBackendStatusTracer(mongo, deployId, tracer);
+        try {
+          JsonObject sparkStandalone = platform.getJsonObject("spark.standalone");
+          if (sparkStandalone == null || sparkStandalone.isEmpty()) {
+            return Future.failedFuture(String.format("Fail deploy [%s-%d]. No spark.standalone configurations found.", deployId, epoch));
           }
-          return Future.failedFuture(resp.toString());
-        });
+          return sparkStandaloneDeploy(deployId, epoch, appArgs, sparkStandalone);
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
       }
 
       return Future.failedFuture("Fail to found any legal platform configuration.");
     });
   }
 
+  private Future<JsonObject> sparkStandaloneDeploy(String deployId, int epoch, List<String> appArgs,
+      JsonObject sparkStandalone) {
+    JsonObject restApi = sparkStandalone.getJsonObject("rest.api");
+    JsonObject conf = sparkStandalone.getJsonObject("conf");
+    conf.put("appArgs", appArgs);
+
+    WebClientOptions options = new WebClientOptions();
+    String restApiHost = restApi.getString("host");
+    int restApiPort = restApi.getInteger("port");
+    WebClient webClient = WebClient.create(vertx);
+    UriTemplate createURI = UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
+
+    return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId).compose(ret -> {
+      return webClient.post(restApiPort, restApiHost, createURI)
+          .sendJsonObject(conf);
+    }).compose((HttpResponse<Buffer> response) -> {
+      try {
+        JsonObject resp = response.bodyAsJsonObject();
+        Boolean isSuccess = resp.getBoolean("success");
+        if (isSuccess == null || isSuccess == false) {
+          return Future.failedFuture(
+              String.format("Fail to deploy[%s-%d]. %s.", deployId, epoch, resp.toString()));
+        }
+        String driverId = resp.getString("submissionId");
+        JsonObject tracer = new JsonObject()
+            .put("driverId", driverId);
+        return ProjectDBEx.updateBackendStatusTracer(mongo, deployId, tracer)
+            .compose(ret -> {
+              return Future.succeededFuture(resp);
+            });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
+  public Future<JsonObject> forceKillBackend(String deployId) {
+    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+      JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+      if (backend == null || backend.isEmpty()) {
+        return Future.failedFuture("Fail to froce kill, no backend configuration found.");
+      }
+
+      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+      if (backendStatus == null || backendStatus.isEmpty()) {
+        return Future.failedFuture("Fail to force kill, no status found.");
+      }
+
+      JsonObject tracer = backendStatus.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS_TRACER);
+      if (tracer == null || tracer.isEmpty()) {
+        return Future.failedFuture("Fail to force kill, no tracer found.");
+      }
+
+      if (platform == null || platform.isEmpty()) {
+        return Future.failedFuture("Fail to force kill, no platform configuration found.");
+      }
+
+      if (platform.containsKey("spark.standalone")) {
+        try {
+          JsonObject restApi = platform.getJsonObject("spark.standalone").getJsonObject("rest.api");
+          if (restApi == null || restApi.isEmpty()) {
+            return Future.failedFuture("Fail to force kill, no rest api found.");
+          }
+          return sparkStandaloneForceKill(tracer, restApi).compose((JsonObject resp) -> {
+            return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId)
+                .compose(ret -> {
+                  return Future.succeededFuture(resp);
+                });
+          });
+        } catch (ClassCastException e) {
+          return Future.failedFuture(e);
+        }
+      }
+
+      return Future.failedFuture("Fail to force kill, no support platform.");
+    });
+  }
+
+  private Future<JsonObject> sparkStandaloneForceKill(JsonObject tracer, JsonObject restApi) {
+    if (tracer == null || !tracer.containsKey("driverId")) {
+      return Future.failedFuture("Fail to force kill spark in standalone, none driverId found in tracer.");
+    }
+    try {
+      String driverId = tracer.getString("driverId");
+      String host = restApi.getString("host");
+      int port = restApi.getInteger("port");
+      String killTemplate = restApi.getJsonObject("requestURI").getString("kill");
+      WebClient webClient = WebClient.create(vertx);
+      UriTemplate killUri = UriTemplate.of(killTemplate);
+      return webClient.post(port, host, killUri)
+          .setTemplateParam("driverId", driverId)
+          .send().compose((HttpResponse<Buffer> response) -> {
+            return Future.succeededFuture(response.bodyAsJsonObject());
+          }).compose((JsonObject resp) -> {
+            try {
+              Boolean isSuccess = resp.getBoolean("success");
+              if (isSuccess == null || isSuccess == false) {
+                return Future.failedFuture("Fail to kill spark standalone backend.");
+              }
+              return Future.succeededFuture(resp);
+            } catch (ClassCastException e) {
+              return Future.failedFuture(e);
+            }
+          });
+    } catch (ClassCastException | NullPointerException e) {
+      return Future.failedFuture(e);
+    }
+  }
 
   private static List<String> antiInject(List<String> backendArgs) {
     List<String> ret = new ArrayList<>();
