@@ -64,13 +64,20 @@ public class BackendServiceImpl implements BackendService {
     try {
       Spec specObj = new SpecFactoryOnJson().get(spec.toString());
       Draft draft = DraftMaster.draft(specObj);
-      backend.service().analyse(draft);
-      List<String> analysed = backend.service().analysed();
-      List<String> unAnalysed = backend.service().unAnalysed();
-      JsonObject resp = new JsonObject();
-      resp.put("analysed", analysed)
-          .put("unAnalysed", unAnalysed);
-      return Future.succeededFuture(resp);
+      return workerExecutor.executeBlocking(promise -> {
+        try {
+          backend.service().analyse(draft);
+          List<String> analysed = backend.service().analysed();
+          List<String> unAnalysed = backend.service().unAnalysed();
+          JsonObject resp = new JsonObject();
+          resp.put("analysed", analysed)
+              .put("unAnalysed", unAnalysed);
+          promise.complete(resp);
+        } catch (MetalAnalysedException e) {
+          LOGGER.error(e);
+          promise.fail(e);
+        }
+      });
     } catch (MetalSpecParseException e) {
       LOGGER.error(e);
       return Future.failedFuture(e);
