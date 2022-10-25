@@ -171,6 +171,67 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> getSpecOfName(String userId, String name) {
+    return ProjectDBEx.getSpecOfName(mongo, userId, name);
+  }
+
+  @Override
+  public Future<JsonObject> getSpecSchemaOfMetalId(String deployId, String metalId) {
+    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+      if (deploy == null || deploy.isEmpty()) {
+        return Future.failedFuture("Fail to get schema, no deploy found.");
+      }
+      try {
+        checkBackendUp(deploy);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+
+      JsonObject address = backendAddress(deploy);
+      BackendService backendService = BackendService.create(vertx, address);
+      return backendService.schema(metalId);
+    });
+  }
+
+  @Override
+  public Future<JsonObject> heartOfDeployId(String deployId) {
+    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+      if (deploy == null || deploy.isEmpty()) {
+        return Future.failedFuture("Fail to get schema, no deploy found.");
+      }
+      try {
+        checkBackendUp(deploy);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+
+      JsonObject address = backendAddress(deploy);
+      BackendService backendService = BackendService.create(vertx, address);
+      return backendService.heart();
+    });
+  }
+
+  @Override
+  public Future<JsonObject> getBackendServiceStatusOfDeployId(String deployId) {
+    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+      if (deploy == null || deploy.isEmpty()) {
+        return Future.failedFuture("Fail to get schema, no deploy found.");
+      }
+      try {
+        checkBackendUp(deploy);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+
+      JsonObject address = backendAddress(deploy);
+      BackendService backendService = BackendService.create(vertx, address);
+      /** TODO
+       */
+      return backendService.status();
+    });
+  }
+
+  @Override
   public Future<List<JsonObject>> getAllOfUser(String userId) {
     return ProjectDBEx.getAllOfUser(mongo, userId);
   }
@@ -361,11 +422,11 @@ public class ProjectServiceImpl implements IProjectService{
       JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
       JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
       if (backendStatus == null || backendStatus.isEmpty()) {
-        throw new IllegalArgumentException("Fail to analysis spec in request, the backend is not UP.");
+        throw new IllegalArgumentException("The backend is not UP.");
       }
       BackendState current = BackendState.valueOf(backendStatus.getString(ProjectDBEx.DEPLOY_BACKEND_STATUS_CURRENT));
       if (!current.equals(BackendState.UP)) {
-        throw new IllegalArgumentException("Fail to analysis spec in request, the backend is not UP.");
+        throw new IllegalArgumentException("The backend is not UP.");
       }
       return true;
     } catch (Exception e) {

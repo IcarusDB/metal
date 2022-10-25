@@ -173,6 +173,56 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void getSpecOfName(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = ctx.request().params().get("name");
+      if (
+          OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getSpecOfName(userId, name);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void getSpecSchemaOfMetalId(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+      String metalId = ctx.request().params().get("metalId");
+
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
+
+      if (OnFailure.doTry(ctx, ()->{return metalId == null || metalId.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getSpecSchemaOfMetalId(deployId, metalId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void getBackendServiceStatusOfDeployId(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getBackendServiceStatusOfDeployId(deployId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void heartOfDeployId(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.heartOfDeployId(deployId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void getAllOfUser(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");

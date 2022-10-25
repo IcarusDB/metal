@@ -10,6 +10,7 @@ import org.metal.server.api.BackendState;
 import org.metal.server.user.UserDB;
 import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
+import org.metal.server.util.SpecJson;
 
 public class ProjectDBEx {
   public final static String DB = "project";
@@ -257,6 +258,24 @@ public class ProjectDBEx {
           String address = deployId + "-" + epoch;
           return Future.succeededFuture(new JsonObject().put("address", address));
         });
+  }
+
+  public static Future<JsonObject> getSpecOfName(MongoClient mongo, String userId, String name) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(userIdPath(), userId)
+        .put(NAME, name);
+    return getOfMatcher(mongo, matcher).compose(proj -> {
+      if (proj == null || proj.isEmpty()) {
+        return Future.succeededFuture(SpecJson.empty());
+      }
+      JsonObject spec = proj.getJsonObject(SPEC);
+      try {
+        SpecJson.check(spec);
+        return Future.succeededFuture(spec);
+      } catch (IllegalArgumentException e) {
+        return Future.failedFuture(e);
+      }
+    });
   }
 
   public static Future<JsonObject> update(MongoClient mongo, JsonObject matcher, JsonObject updater) {

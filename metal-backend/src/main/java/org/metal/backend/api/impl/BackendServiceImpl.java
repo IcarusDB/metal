@@ -100,7 +100,7 @@ public class BackendServiceImpl implements BackendService {
   @Override
   public Future<JsonObject> heart() {
     JsonObject resp = new JsonObject();
-    resp.put("time", LocalDateTime.now());
+    resp.put("time", LocalDateTime.now().toString());
     return Future.succeededFuture(resp);
   }
 

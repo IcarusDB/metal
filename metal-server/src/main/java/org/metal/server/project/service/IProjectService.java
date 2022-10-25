@@ -76,11 +76,19 @@ public interface IProjectService {
 
   public Future<JsonObject> getOfName(String userId, String name);
 
+  public Future<JsonObject> getSpecOfName(String userId, String name);
+
+  public Future<JsonObject> getSpecSchemaOfMetalId(String deployId, String metalId);
+
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);
 
   public Future<List<JsonObject>> getAll();
+
+  public Future<JsonObject> heartOfDeployId(String deployId);
+
+  public Future<JsonObject> getBackendServiceStatusOfDeployId(String deployId);
 
   public Future<JsonObject> removeOfId(String userId, String projectId);
 
