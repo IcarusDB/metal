@@ -19,7 +19,7 @@ public class ExecServiceImpl implements ExecService {
   }
 
   @Override
-  public Future<String> add(String userId, JsonObject exec) {
+  public Future<String> add(String userId, String name, JsonObject exec) {
     return null;
   }
 

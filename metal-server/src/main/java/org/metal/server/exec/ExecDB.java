@@ -7,6 +7,7 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.MongoClientDeleteResult;
 import org.metal.server.api.ExecState;
 import org.metal.server.project.ProjectDB;
+import org.metal.server.project.service.ProjectDBEx;
 
 public class ExecDB {
 
@@ -19,27 +20,33 @@ public class ExecDB {
   public final static String FIELD_FINISH_TIME = "finishTime";
   public final static String FIELD_TERMINATE_TIME = "terminateTime";
   public final static String FIELD_STATUS = "status";
-  public final static String FIELD_DEPLOY_ID = "deployId";
-  public final static String FIELD_DEPLOY_ARGS = "deployArgs";
-  public final static String FIELD_DEPLOY_ARGS_PLATFORM = "platform";
-  public final static String FIELD_DEPLOY_ARGS_PLATFORM_ARGS = "platformArgs";
-  public final static String FIELD_DEPLOY_ARGS_BACKEND_ARGS = "backendArgs";
+
+  public final static String FIELD_ARGS = "args";
+
+  public final static String FIELD_DEPLOY = "deploy";
   public final static String FIELD_FROM_PROJECT = "fromProject";
   public final static String FIELD_SPEC = "SPEC";
 
-  public static Future<String> add(MongoClient mongo, String userId, String projectId) {
-    return ProjectDB.getOfId(mongo, userId, projectId)
-        .compose((JsonObject project) -> {
-          JsonObject exec = new JsonObject();
-          exec.put(FIELD_FROM_PROJECT, projectId)
-              .put(FIELD_USER_ID, userId)
-              .put(FIELD_CREATE_TIME, System.currentTimeMillis())
-              .put(FIELD_STATUS, ExecState.CREATE)
-              .put(FIELD_DEPLOY_ID, project.getString(ProjectDB.FIELD_DEPLOY_ID))
-              .put(FIELD_DEPLOY_ARGS, project.getJsonObject(ProjectDB.FIELD_DEPLOY_ARGS))
-              .put(FIELD_SPEC, project.getJsonObject(ProjectDB.FIELD_SPEC));
-          return mongo.insert(DB, exec);
-        });
+  public static Future<String> add(MongoClient mongo, String userId, JsonObject project, JsonObject execArgs) {
+    JsonObject spec = project.getJsonObject(ProjectDBEx.SPEC);
+    if (spec == null || spec.isEmpty()) {
+      return Future.failedFuture("No spec found.");
+    }
+
+    String projectId = project.getString(ProjectDBEx.ID);
+    JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
+    JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+    backend.remove(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+    JsonObject exec = new JsonObject();
+    exec.put(FIELD_USER_ID, userId)
+        .put(FIELD_SPEC, spec)
+        .put(FIELD_STATUS, ExecState.CREATE.toString())
+        .put(FIELD_CREATE_TIME, System.currentTimeMillis())
+        .put(FIELD_ARGS, execArgs)
+        .put(FIELD_FROM_PROJECT, projectId)
+        .put(FIELD_DEPLOY, deploy);
+
+    return mongo.insert(DB, exec);
   }
 
   public static Future<JsonObject> updateStatus(MongoClient mongo, String execId, ExecState status) {
