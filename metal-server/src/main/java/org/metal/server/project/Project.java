@@ -472,8 +472,29 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void analysisCurrent(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = ctx.request().params().get("name");
 
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
 
+      service.getSpecOfName(userId, name).compose((JsonObject spec) -> {
+        try {
+          SpecJson.check(spec);
+        } catch (IllegalArgumentException e) {
+          return Future.failedFuture(e);
+        }
+        return Future.<JsonObject>succeededFuture(spec);
+      }).onFailure(error -> {
+        OnFailure.doTry(ctx, ()->{return true;}, error.getLocalizedMessage(), 400);
+      }).onSuccess((JsonObject spec) -> {
+        Future<JsonObject> result = service.analysis(userId, name, spec);
+        RestServiceEnd.end(ctx, result, LOGGER);
+      });
+    }
   }
 
 }
