@@ -94,6 +94,9 @@ public class BackendServiceImpl implements BackendService {
     } catch (MetalServiceException e) {
       LOGGER.error(e);
       return Future.failedFuture(e);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return Future.failedFuture(e);
     }
   }
 

@@ -111,6 +111,7 @@
         <groupId>org.apache.arrow</groupId>
         <artifactId>arrow-vector</artifactId>
         <version>${arrow-vector.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
