@@ -5,9 +5,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.MongoClientDeleteResult;
+import java.util.List;
 import org.metal.server.api.ExecState;
 import org.metal.server.project.service.ProjectDBEx;
 import org.metal.server.util.JsonKeyReplacer;
+import org.metal.server.util.ReadStreamCollector;
 
 public class ExecDB {
 
@@ -82,26 +84,94 @@ public class ExecDB {
     ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
   }
 
-  public static Future<JsonObject> get(MongoClient mongo, String execId) {
+  public static Future<JsonObject> getOfId(MongoClient mongo, String execId) {
     return mongo.findOne(
         DB,
         new JsonObject()
             .put(FIELD_ID , execId),
         new JsonObject()
+    ).compose((JsonObject exec) -> {
+      return Future.succeededFuture(compatJsonOnPlatform(exec));
+    });
+  }
+
+  public static Future<JsonObject> getOfIdNoDetail(MongoClient mongo, String execId) {
+    return getOfId(mongo, execId).compose((JsonObject exec) -> {
+      noDetail(exec);
+      return Future.succeededFuture(exec);
+    });
+  }
+
+  private static JsonObject noDetail(JsonObject exec) {
+    JsonObject deploy = exec.getJsonObject(FIELD_DEPLOY);
+    String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+    int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+    exec.remove(FIELD_SPEC);
+    exec.remove(FIELD_DEPLOY);
+    exec.put("deployId", deployId);
+    exec.put("epoch", epoch);
+    return exec;
+  }
+
+  private static JsonObject compatJsonOnPlatform(JsonObject exec) {
+    JsonObject platform = exec.getJsonObject(FIELD_DEPLOY).getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    platform = JsonKeyReplacer.compatJson(platform);
+    exec.getJsonObject(FIELD_DEPLOY).put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+    return exec;
+  }
+
+  public static Future<List<JsonObject>> getAllOfUser(MongoClient mongo, String userId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(FIELD_USER_ID, userId);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::compatJsonOnPlatform);
+  }
+
+  public static Future<List<JsonObject>> getAllOfUserNoDetail(MongoClient mongo, String userId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(FIELD_USER_ID, userId);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::noDetail
     );
   }
 
-  public static ReadStream<JsonObject> getAllOfUser(MongoClient mongo, String userId) {
-    return mongo.findBatch(
-        DB,
-        new JsonObject().put(FIELD_USER_ID, userId)
+  public static Future<List<JsonObject>> getAll(MongoClient mongo) {
+    JsonObject matcher = new JsonObject();
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::compatJsonOnPlatform);
+  }
+
+  public static Future<List<JsonObject>> getAllNoDetail(MongoClient mongo) {
+    JsonObject matcher = new JsonObject();
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::noDetail
     );
   }
 
-  public static ReadStream<JsonObject> getAll(MongoClient mongo) {
-    return mongo.findBatch(
-        DB,
-        new JsonObject()
+  public static Future<List<JsonObject>> getAllOfProject(MongoClient mongo, String projectId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(FIELD_FROM_PROJECT, projectId);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::compatJsonOnPlatform);
+  }
+
+  public static Future<List<JsonObject>> getAllOfProjectNoDetail(MongoClient mongo, String projectId) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(FIELD_FROM_PROJECT, projectId);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.findBatch(DB, matcher),
+        ExecDB::noDetail
     );
   }
 

@@ -5,7 +5,6 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
 import org.metal.server.exec.impl.ExecServiceImpl;
@@ -32,11 +31,19 @@ public interface ExecService {
 
     public Future<JsonObject> getStatus(String execId);
 
-    public Future<JsonObject> get(String execId);
+    public Future<JsonObject> getOfId(String execId);
+
+    public Future<JsonObject> getOfIdNoDetail(String execId);
 
     public Future<List<JsonObject>> getAll();
 
+    public Future<List<JsonObject>> getAllNoDetail();
+
     public Future<List<JsonObject>> getAllOfUser(String userId);
 
-    public Future<List<JsonObject>> getAllOfProject(String userId, String projectId);
+    public Future<List<JsonObject>> getAllOfUserNoDetail(String userId);
+
+    public Future<List<JsonObject>> getAllOfProject(String projectId);
+
+    public Future<List<JsonObject>> getAllOfProjectNoDetail(String projectId);
 }

@@ -21,6 +21,7 @@ import io.vertx.ext.web.handler.JWTAuthHandler;
 import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
+import org.metal.server.exec.Exec;
 import org.metal.server.project.Project;
 import org.metal.server.repo.MetalRepo;
 import org.metal.server.repo.Repo;
@@ -40,6 +41,7 @@ public class Gateway extends AbstractVerticle {
   public static final String BACKEND_REPORT_SERVICE_CONF = "backendReportService";
   public static final String METAL_REPO_SERVICE_CONF = "metalRepoService";
   public static final String METAL_REPO_SERVICE_ADDRESS_CONF = "address";
+  public static final String EXEC_SERVICE_ADDRESS_CONF = "address";
 
   private HttpServer httpServer;
   private int gatewayPort = 19000;
@@ -47,6 +49,7 @@ public class Gateway extends AbstractVerticle {
   private Auth auth;
   private Repo repo;
 
+  private Exec.RestApi exec;
   private MetalRepo.RestApi metalRepo;
   private Project.RestApi project;
 
@@ -205,12 +208,6 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::updateName);
 
-//    router.put("/api/v1/projects/name/:name/spec")
-//        .produces("application/json")
-//        .handler(BodyHandler.create())
-//        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
-//        .handler(project::updateSpec);
-
     router.put("/api/v1/projects/deploy/:deployId/platform")
         .produces("application/json")
         .handler(BodyHandler.create())
@@ -296,6 +293,56 @@ public class Gateway extends AbstractVerticle {
         .handler(AuthorizationHandler.create(Auth.adminAuthor()))
         .handler(project::removeAll);
 
+    router.get("/api/v1/execs/id/:execId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getOfIdNoDetail);
+
+    router.get("/api/v1/execs/id/:execId/detail")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getOfId);
+
+    router.get("/api/v1/execs")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getAllOfUserNoDetail);
+
+    router.get("/api/v1/execs/detail")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getAllOfUser);
+
+    router.get("/api/v1/execs/project/:projectId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getAllOfProjectNoDetail);
+
+    router.get("/api/v1/execs/project/:projectId/detail")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::getAllOfProject);
+
+    router.get("/api/v1/execs/all")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(exec::getAllNoDetail);
+
+    router.get("/api/v1/execs/all/detail")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(exec::getAll);
+
     return Future.succeededFuture(router);
   }
 
@@ -317,6 +364,7 @@ public class Gateway extends AbstractVerticle {
       JsonObject execService = gatewayConf.getJsonObject(EXEC_SERVICE_CONF);
       JsonObject backendReportService = gatewayConf.getJsonObject(BACKEND_REPORT_SERVICE_CONF);
 
+      String execServiceAddress = execService.getString(EXEC_SERVICE_ADDRESS_CONF);
       String metalRepoServiceAddress = metalRepoService.getString(METAL_REPO_SERVICE_ADDRESS_CONF);
       String projectServiceAddress = projectService.getString(PROJECT_SERVICE_ADDRESS_CONF);
       if (gatewayConf == null) {
@@ -337,6 +385,14 @@ public class Gateway extends AbstractVerticle {
       if (metalRepoServiceAddress == null || metalRepoServiceAddress.isBlank()) {
         return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + METAL_REPO_SERVICE_CONF));
       }
+      if (execService == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+      }
+      if (execServiceAddress == null || execServiceAddress.isBlank()) {
+        return Future.failedFuture(String.format("%s is not configured in %s.",
+            EXEC_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + METAL_REPO_SERVICE_CONF));
+      }
+
       try {
         if (gatewayConf.getInteger(GATEWAY_PORT_CONF) == null) {
           return Future.failedFuture(String.format("%s is not configured in %s.", GATEWAY_PORT_CONF, CONF_METAL_SERVER_PATH + "." + GATEWAY_CONF));
@@ -352,6 +408,7 @@ public class Gateway extends AbstractVerticle {
       repo = new Repo();
       project = Project.createRestApi(getVertx(), projectServiceAddress);
       metalRepo = MetalRepo.createRestApi(getVertx(), metalRepoServiceAddress);
+      exec = Exec.createRestApi(getVertx(), execServiceAddress);
       return Auth.create(mongo);
     }).compose((Auth auth) -> {
       this.auth = auth;

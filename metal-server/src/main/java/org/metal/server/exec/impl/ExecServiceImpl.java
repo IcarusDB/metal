@@ -118,7 +118,7 @@ public class ExecServiceImpl implements ExecService {
 
   @Override
   public Future<JsonObject> getStatus(String execId) {
-    return ExecDB.get(mongo, execId)
+    return ExecDB.getOfId(mongo, execId)
         .compose((JsonObject exec) -> {
           JsonObject execStatus = new JsonObject();
           JsonObject deploy = exec.getJsonObject(ExecDB.FIELD_DEPLOY);
@@ -135,22 +135,42 @@ public class ExecServiceImpl implements ExecService {
   }
 
   @Override
-  public Future<JsonObject> get(String execId) {
-    return null;
+  public Future<JsonObject> getOfId(String execId) {
+    return ExecDB.getOfId(mongo, execId);
+  }
+
+  @Override
+  public Future<JsonObject> getOfIdNoDetail(String execId) {
+    return ExecDB.getOfIdNoDetail(mongo, execId);
   }
 
   @Override
   public Future<List<JsonObject>> getAll() {
-    return null;
+    return ExecDB.getAll(mongo);
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllNoDetail() {
+    return ExecDB.getAllNoDetail(mongo);
   }
 
   @Override
   public Future<List<JsonObject>> getAllOfUser(String userId) {
-    return null;
+    return ExecDB.getAllOfUser(mongo, userId);
   }
 
   @Override
-  public Future<List<JsonObject>> getAllOfProject(String userId, String projectId) {
-    return null;
+  public Future<List<JsonObject>> getAllOfUserNoDetail(String userId) {
+    return ExecDB.getAllOfUserNoDetail(mongo, userId);
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllOfProject(String projectId) {
+    return ExecDB.getAllOfProject(mongo, projectId);
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllOfProjectNoDetail(String projectId) {
+    return ExecDB.getAllOfProjectNoDetail(mongo, projectId);
   }
 }

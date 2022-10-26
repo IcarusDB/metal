@@ -6,10 +6,20 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
+import java.util.List;
+import org.metal.server.project.Project;
+import org.metal.server.project.Project.RestApi;
+import org.metal.server.util.OnFailure;
+import org.metal.server.util.RestServiceEnd;
 
 public class Exec extends AbstractVerticle {
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
@@ -24,6 +34,94 @@ public class Exec extends AbstractVerticle {
   private Exec() {}
   public static Exec create() {
     return new Exec();
+  }
+
+  public static RestApi createRestApi(Vertx vertx, String provider) {
+    return new RestApi(vertx, provider);
+  }
+
+  public static class RestApi {
+    private final static Logger LOGGER = LoggerFactory.getLogger(Exec.RestApi.class);
+    private ExecService service;
+
+    private RestApi(Vertx vertx, String provider) {
+      service = ExecService.create(vertx, new JsonObject().put("address", provider));
+    }
+
+    public void getOfId(RoutingContext ctx) {
+      String execId = ctx.request().params().get("execId");
+      if (
+          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getOfId(execId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void getOfIdNoDetail(RoutingContext ctx) {
+      String execId = ctx.request().params().get("execId");
+      if (
+          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getOfIdNoDetail(execId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void getAll(RoutingContext ctx) {
+      Future<List<JsonObject>> result = service.getAll();
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+    public void getAllNoDetail(RoutingContext ctx) {
+      Future<List<JsonObject>> result = service.getAllNoDetail();
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+    public void getAllOfUser(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      Future<List<JsonObject>> result = service.getAllOfUser(userId);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+
+
+    public void getAllOfUserNoDetail(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      Future<List<JsonObject>> result = service.getAllOfUserNoDetail(userId);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+    public void getAllOfProject(RoutingContext ctx) {
+      String projectId = ctx.request().params().get("projectId");
+      if (
+          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+      ) {
+        return;
+      }
+      Future<List<JsonObject>> result = service.getAllOfProject(projectId);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+    public void getAllOfProjectNoDetail(RoutingContext ctx) {
+      String projectId = ctx.request().params().get("projectId");
+      if (
+          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+      ) {
+        return;
+      }
+      Future<List<JsonObject>> result = service.getAllOfProjectNoDetail(projectId);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
   }
 
   @Override
