@@ -6,8 +6,8 @@ import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.mongo.MongoClientDeleteResult;
 import org.metal.server.api.ExecState;
-import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.ProjectDBEx;
+import org.metal.server.util.JsonKeyReplacer;
 
 public class ExecDB {
 
@@ -21,13 +21,11 @@ public class ExecDB {
   public final static String FIELD_TERMINATE_TIME = "terminateTime";
   public final static String FIELD_STATUS = "status";
 
-  public final static String FIELD_ARGS = "args";
-
   public final static String FIELD_DEPLOY = "deploy";
   public final static String FIELD_FROM_PROJECT = "fromProject";
   public final static String FIELD_SPEC = "SPEC";
 
-  public static Future<String> add(MongoClient mongo, String userId, JsonObject project, JsonObject execArgs) {
+  public static Future<String> add(MongoClient mongo, String userId, JsonObject project) {
     JsonObject spec = project.getJsonObject(ProjectDBEx.SPEC);
     if (spec == null || spec.isEmpty()) {
       return Future.failedFuture("No spec found.");
@@ -37,38 +35,25 @@ public class ExecDB {
     JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
     JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
     backend.remove(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+
+    JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    if (platform != null) {
+      platform = JsonKeyReplacer.compatBson(platform);
+    }
+    deploy.put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+
     JsonObject exec = new JsonObject();
     exec.put(FIELD_USER_ID, userId)
         .put(FIELD_SPEC, spec)
         .put(FIELD_STATUS, ExecState.CREATE.toString())
         .put(FIELD_CREATE_TIME, System.currentTimeMillis())
-        .put(FIELD_ARGS, execArgs)
         .put(FIELD_FROM_PROJECT, projectId)
         .put(FIELD_DEPLOY, deploy);
 
     return mongo.insert(DB, exec);
   }
 
-  public static Future<JsonObject> updateStatus(MongoClient mongo, String execId, ExecState status) {
-    JsonObject update = new JsonObject()
-        .put(FIELD_STATUS, status.toString());
-    switch (status) {
-      case CREATE: update.put(FIELD_CREATE_TIME, System.currentTimeMillis()); break;
-      case SUBMIT: update.put(FIELD_SUBMIT_TIME, System.currentTimeMillis()); break;
-      case RUNNING: update.put(FIELD_BEAT_TIME, System.currentTimeMillis()); break;
-      case FINISH: update.put(FIELD_FINISH_TIME, System.currentTimeMillis()); break;
-      case FAILURE: update.put(FIELD_TERMINATE_TIME, System.currentTimeMillis()); break;
-    }
-
-    return mongo.findOneAndUpdate(
-        DB,
-        new JsonObject().put(FIELD_ID , execId),
-        new JsonObject().put("$set", update)
-    );
-  }
-
-  public static Future<JsonObject> updateStatus(MongoClient mongo, JsonObject execStatus) {
-    String execId = execStatus.getString("id");
+  public static Future<JsonObject> updateStatus(MongoClient mongo, String execId, JsonObject execStatus) {
     ExecState status = ExecState.valueOf(execStatus.getString("status"));
     JsonObject update = new JsonObject();
     update.put(FIELD_STATUS, status.toString());
@@ -84,7 +69,9 @@ public class ExecDB {
         DB,
         new JsonObject().put(FIELD_ID, execId),
         new JsonObject().put("$set", update)
-    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+    ).compose(ret -> {
+      return Future.<JsonObject>succeededFuture(ret.toJson());
+    });
   }
 
   public static Future<JsonObject> updateByPath(MongoClient mongo, String execId, JsonObject updateByPath) {

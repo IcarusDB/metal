@@ -8,6 +8,7 @@ import java.util.List;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecDB;
 import org.metal.server.exec.ExecService;
+import org.metal.server.project.service.ProjectDBEx;
 
 public class ExecServiceImpl implements ExecService {
   private Vertx vertx;
@@ -19,8 +20,8 @@ public class ExecServiceImpl implements ExecService {
   }
 
   @Override
-  public Future<String> add(String userId, String name, JsonObject exec) {
-    return null;
+  public Future<String> add(String userId, JsonObject project) {
+    return ExecDB.add(mongo, userId, project);
   }
 
   @Override
@@ -112,32 +113,23 @@ public class ExecServiceImpl implements ExecService {
       }; break;
     }
 
-    return ExecDB.updateStatus(mongo, update).compose(ret -> {return Future.succeededFuture();});
+    return ExecDB.updateStatus(mongo, execId, update).compose(ret -> {return Future.succeededFuture();});
   }
 
   @Override
   public Future<JsonObject> getStatus(String execId) {
     return ExecDB.get(mongo, execId)
         .compose((JsonObject exec) -> {
-          String status = exec.getString("status");
-          long createTime = exec.getLong("createTime");
-          long submitTime = exec.getLong("submitTime");
-          long finishTime = exec.getLong("finishTime");
-          long beatTime = exec.getLong("beatTime");
-          long terminateTime = exec.getLong("terminateTime");
-          int epoch = exec.getInteger("epoch");
-          String deployId = exec.getString("deployId");
-
           JsonObject execStatus = new JsonObject();
-          execStatus.put("id", execId)
-              .put("deployId", deployId)
-              .put("epoch", epoch)
-              .put("status", status)
-              .put("createTime", createTime)
-              .put("submitTIme", submitTime)
-              .put("finishTime", finishTime)
-              .put("beatTime", beatTime)
-              .put("terminateTime", terminateTime);
+          JsonObject deploy = exec.getJsonObject(ExecDB.FIELD_DEPLOY);
+          String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+          int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+
+          execStatus = exec.copy();
+          execStatus.remove(ExecDB.FIELD_SPEC);
+          execStatus.remove(ExecDB.FIELD_DEPLOY);
+          execStatus.put("deployId", deployId);
+          execStatus.put("epoch", epoch);
           return Future.<JsonObject>succeededFuture(execStatus);
         });
   }

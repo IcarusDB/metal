@@ -107,19 +107,20 @@ public class ProjectDB {
   }
 
   public static Future<String> recoverFrom(MongoClient mongo, String userId, String execId) {
-    return ExecDB.get(mongo, execId)
-        .compose((JsonObject exec) -> {
-          JsonObject project = new JsonObject();
-          JsonObject deployArgs = exec.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS);
-          return add(mongo,
-              userId,
-              "recover_" + execId,
-              Platform.valueOf(deployArgs.getString(ExecDB.FIELD_DEPLOY_ARGS_PLATFORM)),
-              deployArgs.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS),
-              deployArgs.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS),
-              exec.getJsonObject(ExecDB.FIELD_SPEC)
-              );
-        });
+//    return ExecDB.get(mongo, execId)
+//        .compose((JsonObject exec) -> {
+//          JsonObject project = new JsonObject();
+//          JsonObject deployArgs = exec.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS);
+//          return add(mongo,
+//              userId,
+//              "recover_" + execId,
+//              Platform.valueOf(deployArgs.getString(ExecDB.FIELD_DEPLOY_ARGS_PLATFORM)),
+//              deployArgs.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS_PLATFORM_ARGS),
+//              deployArgs.getJsonObject(ExecDB.FIELD_DEPLOY_ARGS_BACKEND_ARGS),
+//              exec.getJsonObject(ExecDB.FIELD_SPEC)
+//              );
+//        });
+    return null;
   }
 
   private static JsonObject emptySpec() {

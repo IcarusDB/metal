@@ -18,6 +18,7 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.List;
+import org.metal.server.exec.ExecService;
 import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.OnFailure;
@@ -30,6 +31,10 @@ public class Project extends AbstractVerticle {
   private final static Logger LOGGER = LoggerFactory.getLogger(Project.class);
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
   public static final String MONGO_CONF = "mongoConf";
+
+  public static final String EXEC_SERVICE_CONF = "execService";
+  public static final String EXEC_SERVICE_ADDRESS_CONF = "address";
+
   public static final String PROJECT_CONF = "project";
   public static final String PROJECT_SERVICE_CONF = "projectService";
   public static final String PROJECT_SERVICE_ADDRESS_CONF = "address";
@@ -37,6 +42,8 @@ public class Project extends AbstractVerticle {
   private MongoClient mongo;
   private ServiceBinder binder;
   private MessageConsumer<JsonObject> consumer;
+
+  private ExecService execService;
   private IProjectService provider;
   private WorkerExecutor workerExecutor;
 
@@ -67,6 +74,8 @@ public class Project extends AbstractVerticle {
           mongoConf
       );
 
+
+
       JsonObject projectConf = conf.getJsonObject(PROJECT_CONF);
       if (projectConf == null) {
         return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
@@ -83,8 +92,15 @@ public class Project extends AbstractVerticle {
             PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
       }
 
+      JsonObject execServiceConf = projectConf.getJsonObject(EXEC_SERVICE_CONF);
+      String execServiceAddress = execServiceConf.getString(EXEC_SERVICE_ADDRESS_CONF);
+      if (execServiceConf == null) {
+        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+      }
+
+      execService = ExecService.create(vertx, execServiceConf);
       workerExecutor = vertx.createSharedWorkerExecutor("project-worker-executor", 1);
-      provider = IProjectService.createProvider(getVertx(), mongo, workerExecutor, projectServiceConf);
+      provider = IProjectService.createProvider(getVertx(), mongo, workerExecutor, execService, projectServiceConf);
       binder = new ServiceBinder(getVertx());
       binder.setAddress(address);
       consumer = binder.register(IProjectService.class, provider);
@@ -495,6 +511,21 @@ public class Project extends AbstractVerticle {
         RestServiceEnd.end(ctx, result, LOGGER);
       });
     }
+
+    public void exec(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String name = ctx.request().params().get("name");
+
+      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.exec(userId, name);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
   }
+
+
 
 }

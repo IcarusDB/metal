@@ -22,7 +22,7 @@ public interface ExecService {
         return new ExecServiceImpl(vertx, mongo, conf);
     }
 
-    public Future<String> add(String userId, String name, JsonObject exec);
+    public Future<String> add(String userId, JsonObject project);
 
     public Future<Void> remove(String execId);
 

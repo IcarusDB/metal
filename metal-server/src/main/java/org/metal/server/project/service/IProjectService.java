@@ -8,12 +8,13 @@ import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
+import org.metal.server.exec.ExecService;
 
 @ProxyGen
 @VertxGen
 public interface IProjectService {
-  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, JsonObject conf) {
-    IProjectService provider = new ProjectServiceImpl(vertx, mongo, workerExecutor, conf);
+  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, ExecService execService, JsonObject conf) {
+    IProjectService provider = new ProjectServiceImpl(vertx, mongo, workerExecutor, execService, conf);
     return provider;
   }
 
@@ -105,4 +106,6 @@ public interface IProjectService {
   public Future<JsonObject> reDeploy(String userId, String name);
 
   public Future<JsonObject> analysis(String userId, String name, JsonObject spec);
+
+  public Future<JsonObject> exec(String userId, String name);
 }

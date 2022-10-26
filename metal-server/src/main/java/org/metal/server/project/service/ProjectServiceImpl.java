@@ -4,7 +4,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
@@ -20,8 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.metal.backend.api.BackendService;
 import org.metal.server.api.BackendState;
-import org.metal.server.project.Platform;
-import org.metal.server.project.ProjectDB;
+import org.metal.server.exec.ExecService;
 import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.SpecJson;
 
@@ -30,14 +28,17 @@ public class ProjectServiceImpl implements IProjectService{
 
   private MongoClient mongo;
   private Vertx vertx;
+
+  private ExecService execService;
   private WorkerExecutor workerExecutor;
   private JsonObject conf;
 
-  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, JsonObject conf) {
+  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, ExecService execService, JsonObject conf) {
     this.vertx = vertx;
     this.mongo = mongo;
     this.conf = conf.copy();
     this.workerExecutor = workerExecutor;
+    this.execService = execService;
   }
 
   @Override
@@ -96,7 +97,8 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<String> createProjectFromExec(String userId, String execId) {
-    return ProjectDB.recoverFrom(mongo, userId, execId);
+//    return ProjectDB.recoverFrom(mongo, userId, execId);
+    return null;
   }
 
   @Override
@@ -407,6 +409,23 @@ public class ProjectServiceImpl implements IProjectService{
                 .compose(ret -> {
                   return Future.succeededFuture(resp);
                 });
+          }, error -> {
+            LOGGER.error(error);
+            return heartOfDeployId(deployId).compose(ret -> {
+              return sparkStandaloneForceKill(tracer, restApi);
+            }).compose(ret -> {
+              return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId).compose(v -> {
+                return Future.succeededFuture(ret);
+              });
+            }, err -> {
+              return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId)
+                  .compose(ret -> {
+                    JsonObject resp = new JsonObject();
+                    resp.put("Status", "OK")
+                        .put("msg", err.getLocalizedMessage());
+                    return Future.succeededFuture(resp);
+                  });
+            });
           });
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
@@ -461,6 +480,27 @@ public class ProjectServiceImpl implements IProjectService{
         return ProjectDBEx.updateSpec(mongo, userId, name, spec).compose((JsonObject ret) -> {
           BackendService backendService = BackendService.create(vertx, address);
           return backendService.analyse(spec);
+        });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
+  public Future<JsonObject> exec(String userId, String name) {
+    return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
+      try {
+        JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+        checkBackendUp(deploy);
+        JsonObject address = backendAddress(deploy);
+        return execService.add(userId, proj).compose((String execId) -> {
+          BackendService backendService = BackendService.create(vertx, address);
+          JsonObject execArgs = new JsonObject();
+          execArgs.put("id", execId);
+          return backendService.exec(execArgs).compose(r -> {
+            return Future.succeededFuture(new JsonObject().put("status", "OK"));
+          });
         });
       } catch (Exception e) {
         return Future.failedFuture(e);

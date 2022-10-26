@@ -8,7 +8,6 @@ import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecService;
-import org.metal.server.project.ProjectDB;
 import org.metal.server.project.service.IProjectService;
 import org.metal.server.project.service.ProjectDBEx;
 
@@ -26,6 +25,7 @@ public class BackendReportServiceImpl implements BackendReportService {
 
   @Override
   public Future<Void> reportExecSubmit(JsonObject submit) {
+    LOGGER.info("Exec Submit: " + submit.toString());
     String timeName = "submitTime";
     try {
       checkExecStatus(submit, ExecState.SUBMIT);
@@ -164,6 +164,7 @@ public class BackendReportServiceImpl implements BackendReportService {
 
   @Override
   public Future<Void> reportExecRunning(JsonObject running) {
+    LOGGER.info("Exec Running: " + running.toString());
     String timeName = "beatTime";
     try {
       checkExecStatus(running, ExecState.RUNNING);
@@ -202,6 +203,7 @@ public class BackendReportServiceImpl implements BackendReportService {
 
   @Override
   public Future<Void> reportExecFinish(JsonObject finish) {
+    LOGGER.info("Exec Finish: " + finish.toString());
     String timeName = "finishTime";
     try {
       checkExecStatus(finish, ExecState.FINISH);
@@ -240,6 +242,7 @@ public class BackendReportServiceImpl implements BackendReportService {
 
   @Override
   public Future<Void> reportExecFailure(JsonObject failure) {
+    LOGGER.info("Exec Failure: " + failure.toString());
     String timeName = "terminateTime";
     try {
       checkExecStatus(failure, ExecState.FAILURE);
@@ -297,7 +300,7 @@ public class BackendReportServiceImpl implements BackendReportService {
         .compose((JsonObject lastStatus) -> {
           int lastEpoch = -1;
           try {
-            lastEpoch = lastStatus.getInteger(ProjectDB.FIELD_BACKEND_STATUS_EPOCH);
+            lastEpoch = lastStatus.getInteger(ProjectDBEx.DEPLOY_EPOCH);
           } catch (Exception e) {
             return Future.failedFuture(e);
           }

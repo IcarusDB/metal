@@ -23,6 +23,9 @@
     }
   },
   "project": {
+    "execService": {
+      "address": "exec.metal.org"
+    },
     "projectService": {
       "address": "project.metal.org",
       "backendJar": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
