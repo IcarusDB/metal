@@ -1,0 +1,2844 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "metal-server",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "spark standalone"
+    },
+    {
+      "name": "metal-server-rest-api"
+    },
+    {
+      "name": "metal-server-rest-api/工程"
+    },
+    {
+      "name": "metal-server-rest-api/metal仓库"
+    },
+    {
+      "name": "metal-server-rest-api/用户"
+    },
+    {
+      "name": "metal-server-rest-api/权限"
+    },
+    {
+      "name": "metal-server-rest-api/执行任务"
+    }
+  ],
+  "paths": {
+    "/v1/submissions/create": {
+      "post": {
+        "summary": "spark standalone 提交backend",
+        "x-apifox-folder": "spark standalone",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "spark standalone"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appResource": {
+                    "type": "string"
+                  },
+                  "sparkProperties": {
+                    "type": "object",
+                    "properties": {
+                      "spark.executor.userClassPathFirst": {
+                        "type": "string"
+                      },
+                      "spark.driver.userClassPathFirst": {
+                        "type": "string"
+                      },
+                      "spark.master": {
+                        "type": "string"
+                      },
+                      "spark.app.name": {
+                        "type": "string"
+                      },
+                      "spark.submit.deployMode": {
+                        "type": "string"
+                      },
+                      "spark.eventLog.enabled": {
+                        "type": "string"
+                      },
+                      "spark.eventLog.dir": {
+                        "type": "string"
+                      },
+                      "spark.jars": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "spark.executor.userClassPathFirst",
+                      "spark.driver.userClassPathFirst",
+                      "spark.master",
+                      "spark.app.name",
+                      "spark.submit.deployMode",
+                      "spark.eventLog.enabled",
+                      "spark.eventLog.dir",
+                      "spark.jars"
+                    ],
+                    "x-apifox-orders": [
+                      "spark.executor.userClassPathFirst",
+                      "spark.driver.userClassPathFirst",
+                      "spark.master",
+                      "spark.app.name",
+                      "spark.submit.deployMode",
+                      "spark.eventLog.enabled",
+                      "spark.eventLog.dir",
+                      "spark.jars"
+                    ],
+                    "x-apifox-ignore-properties": []
+                  },
+                  "clientSparkVersion": {
+                    "type": "string"
+                  },
+                  "mainClass": {
+                    "type": "string"
+                  },
+                  "environmentVariables": {
+                    "type": "object",
+                    "properties": {
+                      "SPARK_ENV_LOADED": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "SPARK_ENV_LOADED"
+                    ],
+                    "x-apifox-orders": [
+                      "SPARK_ENV_LOADED"
+                    ],
+                    "x-apifox-ignore-properties": []
+                  },
+                  "action": {
+                    "type": "string"
+                  },
+                  "appArgs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "appResource",
+                  "sparkProperties",
+                  "clientSparkVersion",
+                  "mainClass",
+                  "environmentVariables",
+                  "action",
+                  "appArgs"
+                ],
+                "x-apifox-orders": [
+                  "appResource",
+                  "sparkProperties",
+                  "clientSparkVersion",
+                  "mainClass",
+                  "environmentVariables",
+                  "action",
+                  "appArgs"
+                ],
+                "x-apifox-ignore-properties": []
+              },
+              "example": {
+                "appResource": "/home/spark/metal/metal-backend-{{metal_backend_version}}.jar",
+                "sparkProperties": {
+                  "spark.executor.userClassPathFirst": "true",
+                  "spark.driver.userClassPathFirst": "true",
+                  "spark.master": "{{spark_master}}",
+                  "spark.app.name": "Spark REST API - Metal-Backend",
+                  "spark.submit.deployMode": "cluster",
+                  "spark.eventLog.enabled": "true",
+                  "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
+                  "spark.jars": "/home/spark/metal/metal-backend-{{metal_backend_version}}.jar"
+                },
+                "clientSparkVersion": "3.3.0",
+                "mainClass": "org.metal.backend.BackendLauncher",
+                "environmentVariables": {
+                  "SPARK_ENV_LOADED": "1"
+                },
+                "action": "CreateSubmissionRequest",
+                "appArgs": [
+                  "--interactive-mode",
+                  "--deploy-id",
+                  "{{deploy_id}}",
+                  "--deploy-epoch",
+                  "{{deploy_epoch}}",
+                  "--report-service-address",
+                  "{{report_service_address}}",
+                  "--rest-api-port",
+                  "{{rest_api_port}}"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "serverSparkVersion": {
+                      "type": "string"
+                    },
+                    "submissionId": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "message",
+                    "serverSparkVersion",
+                    "submissionId",
+                    "success"
+                  ],
+                  "x-apifox-orders": [
+                    "action",
+                    "message",
+                    "serverSparkVersion",
+                    "submissionId",
+                    "success"
+                  ],
+                  "x-apifox-ignore-properties": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43944292-run"
+      }
+    },
+    "/v1/submissions/status/{driver_id}": {
+      "get": {
+        "summary": "查看backend状态",
+        "x-apifox-folder": "spark standalone",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "spark standalone"
+        ],
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{driver_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43949764-run"
+      }
+    },
+    "/v1/submissions/kill/{driver_id}": {
+      "post": {
+        "summary": "关闭backend",
+        "x-apifox-folder": "spark standalone",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "spark standalone"
+        ],
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{driver_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43951102-run"
+      }
+    },
+    "/api/v1/tokens": {
+      "post": {
+        "summary": "获取JWT 管理员",
+        "x-apifox-folder": "metal-server-rest-api/权限",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/权限"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44007787-run"
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "summary": "创建用户",
+        "x-apifox-folder": "metal-server-rest-api/用户",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/用户"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "x-apifox-orders": [
+                  "username",
+                  "password"
+                ],
+                "x-apifox-ignore-properties": []
+              },
+              "example": {
+                "username": "{{test_user}}",
+                "password": "{{test_user_password}}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44010726-run"
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "summary": "创建空工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectName": {
+                    "type": "string",
+                    "title": "",
+                    "default": ""
+                  }
+                },
+                "required": [
+                  "projectName"
+                ],
+                "x-apifox-orders": [
+                  "projectName"
+                ],
+                "x-apifox-ignore-properties": []
+              },
+              "example": {
+                "name": "{{project_name}}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44013040-run"
+      },
+      "get": {
+        "summary": "查看用户全部工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44937405-run"
+      },
+      "delete": {
+        "summary": "删除用户全部工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45019483-run"
+      }
+    },
+    "/api/v1/metalRepo/all": {
+      "get": {
+        "summary": "查看用户可访问的所有Metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44505002-run"
+      },
+      "delete": {
+        "summary": "管理员清除全部metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44563159-run"
+      }
+    },
+    "/api/v1/metalRepo": {
+      "post": {
+        "summary": "添加Metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "type": "SOURCE",
+                "scope": "PRIVATE",
+                "metal": {
+                  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                  "class": "org.metal.backend.spark.extension.JsonFileMSource",
+                  "formSchema": {
+                    "type": "object",
+                    "id": "urn:jsonschema:org:metal:backend:spark:extension:IJsonFileMSourceProps",
+                    "properties": {
+                      "schema": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44505080-run"
+      },
+      "delete": {
+        "summary": "删除用户全部私有metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44562456-run"
+      }
+    },
+    "/api/v1/metalRepo/scope/{scope}": {
+      "get": {
+        "summary": "按scope查看用户所提供的Metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "PUBLIC",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44529940-run"
+      },
+      "post": {
+        "summary": "批量添加metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "PUBLIC",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "manifest": {
+                  "sources": [
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:IJsonFileMSourceProps",
+                        "properties": {
+                          "schema": {
+                            "type": "string"
+                          },
+                          "path": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "sinks": [
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.ml.LogisticRegressionLearner",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionLearnerProps",
+                        "required": [
+                          "savePath",
+                          "labelCol",
+                          "featuresCol"
+                        ],
+                        "properties": {
+                          "labelCol": {
+                            "type": "string"
+                          },
+                          "featuresCol": {
+                            "type": "string"
+                          },
+                          "aggregationDepth": {
+                            "type": "integer"
+                          },
+                          "elasticNetParam": {
+                            "type": "number"
+                          },
+                          "family": {
+                            "type": "string"
+                          },
+                          "fitIntercept": {
+                            "type": "boolean"
+                          },
+                          "initialModel": {
+                            "type": "string"
+                          },
+                          "lowerBoundsOnCoefficients": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "lowerBoundsOnIntercepts": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "maxBlockSizeInMB": {
+                            "type": "number"
+                          },
+                          "maxIter": {
+                            "type": "integer"
+                          },
+                          "regParam": {
+                            "type": "number"
+                          },
+                          "standardization": {
+                            "type": "boolean"
+                          },
+                          "thresholds": {
+                            "type": "number"
+                          },
+                          "threshold": {
+                            "type": "number"
+                          },
+                          "tol": {
+                            "type": "number"
+                          },
+                          "upperBoundsOnCoefficients": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "upperBoundsOnIntercepts": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "weightCol": {
+                            "type": "string"
+                          },
+                          "savePath": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "uiSchema": {
+                        "ui:order": [
+                          "savePath",
+                          "labelCol",
+                          "featuresCol",
+                          "*"
+                        ]
+                      }
+                    },
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:IConsoleMSinkProps",
+                        "properties": {
+                          "numRows": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "setups": [
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.ml.udf.AsVector",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:udf:AsVector",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "fusions": [
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.SqlMFusion",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMFusionProps",
+                        "properties": {
+                          "tableAlias": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "sql": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "mappers": [
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.SqlMMapper",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMMapperProps",
+                        "properties": {
+                          "tableAlias": {
+                            "type": "string"
+                          },
+                          "sql": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.WhereMMapper",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:IWhereMMapperProps",
+                        "properties": {
+                          "conditionExpr": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+                      "class": "org.metal.backend.spark.extension.ml.LogisticRegressionPredictor",
+                      "formSchema": {
+                        "type": "object",
+                        "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionPredictorProps",
+                        "required": [
+                          "modelPath",
+                          "featuresCol"
+                        ],
+                        "properties": {
+                          "featuresCol": {
+                            "type": "string"
+                          },
+                          "predictionCol": {
+                            "type": "string"
+                          },
+                          "probabilityCol": {
+                            "type": "string"
+                          },
+                          "rawPredictionCol": {
+                            "type": "string"
+                          },
+                          "thresholds": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "threshold": {
+                            "type": "number"
+                          },
+                          "modelPath": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "uiSchema": {
+                        "ui:order": [
+                          "modelPath",
+                          "featuresCol",
+                          "*"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44549952-run"
+      }
+    },
+    "/api/v1/metalRepo/all/PUBLIC": {
+      "get": {
+        "summary": "查看全部PUBLIC的metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44535677-run"
+      }
+    },
+    "/api/v1/metalRepo/metalId/{metalId}": {
+      "delete": {
+        "summary": "删除用户私有metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "metalId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{metal_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44559350-run"
+      }
+    },
+    "/api/v1/metalRepo/pkg/{groupId}/{artifactId}/{version}": {
+      "get": {
+        "summary": "按照包坐标查找用户可访问metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "org.metal",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artifactId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "metal-on-spark-extensions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "1.0.0-SNAPSHOT",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44715315-run"
+      }
+    },
+    "/api/v1/metalRepo/type/{metalType}": {
+      "get": {
+        "summary": "按照metal类型查找用户可访问metal",
+        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "metalType",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "SOURCE",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44717191-run"
+      }
+    },
+    "/api/v1/projects/name/{name}": {
+      "get": {
+        "summary": "根据工程名查看工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "test-proj",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44771221-run"
+      },
+      "put": {
+        "summary": "更新工程名",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "newName": "{{project_new_name}}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44942522-run"
+      },
+      "delete": {
+        "summary": "根据工程名删除工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45016657-run"
+      }
+    },
+    "/api/v1/projects/all": {
+      "get": {
+        "summary": "查看全部工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44937937-run"
+      },
+      "delete": {
+        "summary": "删除全部工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45020302-run"
+      }
+    },
+    "/api/v1/projects/name/{name}/spec": {
+      "post": {
+        "summary": "提交分析Spec",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "spec": {
+                  "version": "1.0",
+                  "metals": [
+                    {
+                      "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "id": "00-00",
+                      "name": "source-00",
+                      "props": {
+                        "schema": "",
+                        "path": "hdfs://namenode.hdfs.metal.org:9000/metal/test.json"
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.SqlMMapper",
+                      "id": "01-00",
+                      "name": "mapper-00",
+                      "props": {
+                        "tableAlias": "source",
+                        "sql": "select * from source where id != \"0001\""
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-00",
+                      "name": "sink-00",
+                      "props": {
+                        "numRows": 10
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-01",
+                      "name": "sink-01",
+                      "props": {
+                        "numRows": 10
+                      }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "left": "00-00",
+                      "right": "01-00"
+                    },
+                    {
+                      "left": "01-00",
+                      "right": "02-00"
+                    },
+                    {
+                      "left": "00-00",
+                      "right": "02-01"
+                    }
+                  ],
+                  "waitFor": [
+                    {
+                      "left": "02-00",
+                      "right": "02-01"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44949696-run"
+      },
+      "get": {
+        "summary": "查看工程spec",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45689974-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/platform": {
+      "put": {
+        "summary": "更新工程platform",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "platform": {
+                  "spark.standalone": {
+                    "appResource": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+                    "sparkProperties": {
+                      "spark.executor.userClassPathFirst": "true",
+                      "spark.driver.userClassPathFirst": "true",
+                      "spark.master": "spark://master-0.spark.metal.org:7077",
+                      "spark.app.name": "Spark REST API - Metal-Backend",
+                      "spark.submit.deployMode": "cluster",
+                      "spark.eventLog.enabled": "true",
+                      "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
+                      "spark.jars": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar"
+                    },
+                    "clientSparkVersion": "3.3.0",
+                    "mainClass": "org.metal.backend.BackendLauncher",
+                    "environmentVariables": {
+                      "SPARK_ENV_LOADED": "1"
+                    },
+                    "action": "CreateSubmissionRequest"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44951312-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/backend/args": {
+      "put": {
+        "summary": "更新工程Backend.args参数",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "args": [
+                  "--rest-api-port",
+                  "18000"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44954508-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/backend/status": {
+      "put": {
+        "summary": "更新部署的后端状态",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "status": {
+                  "current": "UP",
+                  "upTime": 1666238329112
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-44956231-run"
+      },
+      "get": {
+        "summary": "查看后端状态",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45450153-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}": {
+      "put": {
+        "summary": "更新工程Deploy配置",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "updateConfs": {
+                  "epoch": 1
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45001398-run"
+      }
+    },
+    "/api/v1/projects/copy": {
+      "post": {
+        "summary": "从其它工程复制为新工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "name": "{{project_name}}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45179559-run"
+      }
+    },
+    "/api/v1/projects/deploy/name/{name}": {
+      "post": {
+        "summary": "部署工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45189466-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/force": {
+      "delete": {
+        "summary": "强制关闭部署的后端",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45471808-run"
+      }
+    },
+    "/api/v1/projects/deploy/name/{name}/epoch": {
+      "put": {
+        "summary": "重新部署后端",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45535103-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/spec/metals/{metalId}": {
+      "get": {
+        "summary": "查看metal的schema",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "metalId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "01-00",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45690146-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/service/status": {
+      "get": {
+        "summary": "查看后端服务状态",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45690726-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/service/heart": {
+      "get": {
+        "summary": "向后端请求心跳",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45690970-run"
+      }
+    },
+    "/api/v1/projects/name/{name}/spec/current": {
+      "post": {
+        "summary": "分析当前工程中的Spec",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45695756-run"
+      }
+    },
+    "/api/v1/projects/name/{name}/spec/current/exec": {
+      "post": {
+        "summary": "执行",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{project_name}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45921598-run"
+      }
+    },
+    "/api/v1/execs/id/{execId}": {
+      "get": {
+        "summary": "根据任务id查找任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "execId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "6358be7d1627e66ec65046df",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45970655-run"
+      },
+      "delete": {
+        "summary": "根据任务id删除任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "execId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "6358be7d1627e66ec65046df",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46123877-run"
+      }
+    },
+    "/api/v1/execs/id/{execId}/detail": {
+      "get": {
+        "summary": "根据任务id查找任务详情",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "execId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "6358be7d1627e66ec65046df",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45970887-run"
+      }
+    },
+    "/api/v1/execs": {
+      "get": {
+        "summary": "查找用户全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45972740-run"
+      },
+      "delete": {
+        "summary": "删除用户全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46124625-run"
+      }
+    },
+    "/api/v1/execs/detail": {
+      "get": {
+        "summary": "查找用户群全部任务详情",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45973434-run"
+      }
+    },
+    "/api/v1/execs/project/{projectId}": {
+      "get": {
+        "summary": "查找工程的全部任务 ",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45973870-run"
+      },
+      "delete": {
+        "summary": "删除工程关联的全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46124981-run"
+      }
+    },
+    "/api/v1/execs/project/{projectId}/detail": {
+      "get": {
+        "summary": "查找工程的全部任务详情",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45974165-run"
+      }
+    },
+    "/api/v1/execs/all": {
+      "get": {
+        "summary": "管理员查找全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45978951-run"
+      },
+      "delete": {
+        "summary": "管理员删除全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46125329-run"
+      }
+    },
+    "/api/v1/execs/all/detail": {
+      "get": {
+        "summary": "管理员查找全部任务详情",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-45979792-run"
+      }
+    },
+    "/api/v1/execs/id/{execId}/force": {
+      "delete": {
+        "summary": "强制根据任务id删除任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "execId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "6358be7d1627e66ec65046df",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46124098-run"
+      }
+    },
+    "/api/v1/execs/force": {
+      "delete": {
+        "summary": "强制删除用户全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46124933-run"
+      }
+    },
+    "/api/v1/execs/project/{projectId}/force": {
+      "delete": {
+        "summary": "强制删除工程关联的全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46125270-run"
+      }
+    },
+    "/api/v1/execs/all/force": {
+      "delete": {
+        "summary": "管理员强制删除全部任务",
+        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/执行任务"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46126046-run"
+      }
+    },
+    "/api/v1/projects/recover/exec": {
+      "post": {
+        "summary": "从执行任务创建新工程",
+        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server-rest-api/工程"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": false,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectName": {
+                    "type": "string",
+                    "title": "",
+                    "default": ""
+                  }
+                },
+                "required": [
+                  "projectName"
+                ],
+                "x-apifox-orders": [
+                  "projectName"
+                ],
+                "x-apifox-ignore-properties": []
+              },
+              "example": {
+                "execId": "6358bd91911b94326f984d1c"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46145786-run"
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
