@@ -97,8 +97,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<String> createProjectFromExec(String userId, String execId) {
-//    return ProjectDB.recoverFrom(mongo, userId, execId);
-    return null;
+    return ProjectDBEx.recoverFromExec(mongo, userId, execId);
   }
 
   @Override

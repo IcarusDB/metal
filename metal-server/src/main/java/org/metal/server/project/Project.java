@@ -175,6 +175,19 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void createFromExec(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String execId = body.getString("execId");
+      if (OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)) {
+        return;
+      }
+
+      Future<String> result = service.createProjectFromExec(userId, execId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void getOfName(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");

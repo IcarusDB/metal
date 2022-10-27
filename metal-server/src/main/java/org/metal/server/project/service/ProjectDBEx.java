@@ -7,7 +7,9 @@ import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
 import java.util.UUID;
 import org.metal.server.api.BackendState;
+import org.metal.server.exec.ExecDB;
 import org.metal.server.user.UserDB;
+import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
 import org.metal.server.util.SpecJson;
@@ -107,6 +109,58 @@ public class ProjectDBEx {
       return Future.succeededFuture(project);
     }).compose(project -> {
       return mongo.insert(DB, project);
+    });
+  }
+
+  public static Future<String> recoverFromExec(MongoClient mongo, String userId, String execId) {
+    String name = "recover-from-exec[" + execId + "]";
+
+    return ExecDB.getOfId(mongo, execId).compose((JsonObject exec) -> {
+      if (exec == null || exec.isEmpty()) {
+        return Future.failedFuture("No exec[" + execId + "] found.");
+      }
+      try {
+        JsonObject spec = exec.getJsonObject(ExecDB.FIELD_SPEC);
+        if (spec == null || spec.isEmpty() || !SpecJson.check(spec)) {
+          return Future.failedFuture("No spec found.");
+        }
+
+        JsonObject deploy = exec.getJsonObject(ExecDB.FIELD_DEPLOY);
+        if (deploy == null || deploy.isEmpty()) {
+          return Future.failedFuture("No deploy found");
+        }
+
+        JsonObject platform = deploy.getJsonObject(DEPLOY_PLATFORM);
+        if (platform == null || platform.isEmpty()) {
+          return Future.failedFuture("No platform found.");
+        }
+
+        JsonObject backend = deploy.getJsonObject(DEPLOY_BACKEND);
+        if (backend == null || backend.isEmpty()) {
+          return Future.failedFuture("No backend found.");
+        }
+
+        List<String> pkgs = JsonConvertor.jsonArrayToList(
+            deploy.getJsonArray(DEPLOY_PKGS)
+        );
+
+
+        List<String> backendArgs = JsonConvertor.jsonArrayToList(
+            backend.getJsonArray(DEPLOY_BACKEND_ARGS)
+        );
+
+        return add(
+            mongo,
+            userId,
+            name,
+            pkgs,
+            platform,
+            backendArgs,
+            spec
+        );
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
     });
   }
 
