@@ -343,6 +343,56 @@ public class Gateway extends AbstractVerticle {
         .handler(AuthorizationHandler.create(Auth.adminAuthor()))
         .handler(exec::getAll);
 
+    router.delete("/api/v1/execs/id/:execId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::remove);
+
+    router.delete("/api/v1/execs/id/:execId/force")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::forceRemove);
+
+    router.delete("/api/v1/execs")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::removeAllOfUser);
+
+    router.delete("/api/v1/execs/force")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::forceRemoveAllOfUser);
+
+    router.delete("/api/v1/execs/project/:projectId")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::removeAllOfProject);
+
+    router.delete("/api/v1/execs/project/:projectId/force")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(exec::forceRemoveAllOfProject);
+
+    router.delete("/api/v1/execs/all")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(exec::removeAll);
+
+    router.delete("/api/v1/execs/all/force")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(AuthorizationHandler.create(Auth.adminAuthor()))
+        .handler(exec::forceRemoveAll);
+
     return Future.succeededFuture(router);
   }
 

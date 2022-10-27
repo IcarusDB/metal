@@ -25,14 +25,49 @@ public class ExecServiceImpl implements ExecService {
   }
 
   @Override
-  public Future<Void> remove(String execId) {
-    return null;
+  public Future<JsonObject>remove(String userId, String execId) {
+    return ExecDB.remove(mongo, userId, execId);
   }
 
   @Override
-  public Future<Void> update(String execId, JsonObject update) {
-    return null;
+  public Future<JsonObject> forceRemove(String userId, String execId) {
+    return ExecDB.forceRemove(mongo, userId, execId);
   }
+
+  @Override
+  public Future<JsonObject> removeAllOfUser(String userId) {
+    return ExecDB.removeAllOfUser(mongo, userId);
+  }
+
+  @Override
+  public Future<JsonObject> forceRemoveAllOfUser(String userId) {
+    return ExecDB.forceRemoveAllOfUser(mongo, userId);
+  }
+
+  @Override
+  public Future<JsonObject> removeAllOfProject(String userId, String projectId) {
+    return ExecDB.removeAllOfProject(mongo, userId, projectId);
+  }
+
+  @Override
+  public Future<JsonObject> forceRemoveAllOfProject(String userId, String projectId) {
+    return ExecDB.forceRemoveAllOfProject(mongo, userId, projectId);
+  }
+
+  @Override
+  public Future<JsonObject> removeAll() {
+    return ExecDB.removeAll(mongo);
+  }
+
+  @Override
+  public Future<JsonObject> forceRemoveAll() {
+    return ExecDB.forceRemoveAll(mongo);
+  }
+
+//  @Override
+//  public Future<Void> update(String execId, JsonObject update) {
+//    return null;
+//  }
 
   @Override
   public Future<Void> updateStatus(String execId, JsonObject execStatus) {

@@ -23,9 +23,23 @@ public interface ExecService {
 
     public Future<String> add(String userId, JsonObject project);
 
-    public Future<Void> remove(String execId);
+    public Future<JsonObject> remove(String userId, String execId);
 
-    public Future<Void> update(String execId, JsonObject update);
+    public Future<JsonObject> forceRemove(String userId, String execId);
+
+    public Future<JsonObject> removeAllOfUser(String userId);
+
+    public Future<JsonObject> forceRemoveAllOfUser(String userId);
+
+    public Future<JsonObject> removeAllOfProject(String userId, String projectId);
+
+    public Future<JsonObject> forceRemoveAllOfProject(String userId, String projectId);
+
+    public Future<JsonObject> removeAll();
+
+    public Future<JsonObject> forceRemoveAll();
+
+//    public Future<Void> update(String execId, JsonObject update);
 
     public Future<Void> updateStatus(String execId, JsonObject execStatus);
 

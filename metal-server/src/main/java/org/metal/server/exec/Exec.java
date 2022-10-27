@@ -122,6 +122,88 @@ public class Exec extends AbstractVerticle {
       RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
     }
 
+    public void remove(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String execId = ctx.request().params().get("execId");
+      if (
+          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.remove(userId, execId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void forceRemove(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String execId = ctx.request().params().get("execId");
+      if (
+          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.forceRemove(userId, execId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void removeAllOfUser(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      Future<JsonObject> result = service.removeAllOfUser(userId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void forceRemoveAllOfUser(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+
+      Future<JsonObject> result = service.forceRemoveAllOfUser(userId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void removeAllOfProject(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectId = ctx.request().params().get("projectId");
+      if (
+          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.removeAllOfProject(userId, projectId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void forceRemoveAllOfProject(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String projectId = ctx.request().params().get("projectId");
+      if (
+          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.forceRemoveAllOfProject(userId, projectId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void removeAll(RoutingContext ctx) {
+      Future<JsonObject> result = service.removeAll();
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void forceRemoveAll(RoutingContext ctx) {
+      Future<JsonObject> result = service.forceRemoveAll();
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
   }
 
   @Override

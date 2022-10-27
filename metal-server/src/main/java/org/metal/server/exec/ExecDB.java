@@ -1,6 +1,7 @@
 package org.metal.server.exec;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
@@ -91,12 +92,18 @@ public class ExecDB {
             .put(FIELD_ID , execId),
         new JsonObject()
     ).compose((JsonObject exec) -> {
+      if (exec == null || exec.isEmpty()) {
+        return Future.succeededFuture(new JsonObject());
+      }
       return Future.succeededFuture(compatJsonOnPlatform(exec));
     });
   }
 
   public static Future<JsonObject> getOfIdNoDetail(MongoClient mongo, String execId) {
     return getOfId(mongo, execId).compose((JsonObject exec) -> {
+      if (exec == null || exec.isEmpty()) {
+        return Future.succeededFuture(new JsonObject());
+      }
       noDetail(exec);
       return Future.succeededFuture(exec);
     });
@@ -175,15 +182,69 @@ public class ExecDB {
     );
   }
 
-  public static Future<MongoClientDeleteResult> remove(MongoClient mongo, String userId, String execId) {
-    return mongo.removeDocument(DB, new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_ID , execId));
+  public static Future<JsonObject>  forceRemove(MongoClient mongo, String userId, String execId) {
+    return mongo.removeDocument(DB, new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_ID , execId)).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
   }
 
-  public static Future<MongoClientDeleteResult> removeAllOfUser(MongoClient mongo, String userId) {
-    return mongo.removeDocuments(DB, new JsonObject().put(FIELD_USER_ID, userId));
+  public static Future<JsonObject>  forceRemoveAllOfUser(MongoClient mongo, String userId) {
+    return mongo.removeDocuments(DB, new JsonObject().put(FIELD_USER_ID, userId)).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
   }
 
-  public static Future<MongoClientDeleteResult> removeAll(MongoClient mongo) {
-    return mongo.removeDocuments(DB, new JsonObject());
+  public static Future<JsonObject>  forceRemoveAllOfProject(MongoClient mongo, String userId, String projectId) {
+    return mongo.removeDocuments(DB, new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_FROM_PROJECT, projectId)).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
+  }
+
+  public static Future<JsonObject>  forceRemoveAll(MongoClient mongo) {
+    return mongo.removeDocuments(DB, new JsonObject()).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
+  }
+
+  public static Future<JsonObject> remove(MongoClient mongo, String userId, String execId) {
+    JsonObject matcher = terminateMatcher();
+    matcher.put(FIELD_USER_ID, userId);
+    matcher.put(FIELD_ID, execId);
+    return mongo.removeDocument(DB, matcher).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
+  }
+
+  private static JsonObject terminateMatcher() {
+    JsonObject matcher = new JsonObject();
+    matcher.put(
+        FIELD_STATUS,
+        new JsonObject().put("$in", new JsonArray().add(ExecState.FINISH.toString()).add(ExecState.FAILURE.toString()))
+    );
+    return matcher;
+  }
+
+  public static Future<JsonObject> removeAllOfUser(MongoClient mongo, String userId) {
+    JsonObject matcher = terminateMatcher();
+    matcher.put(FIELD_USER_ID, userId);
+    return mongo.removeDocument(DB, matcher).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
+  }
+
+  public static Future<JsonObject> removeAllOfProject(MongoClient mongo, String userId, String projectId) {
+    JsonObject matcher = terminateMatcher();
+    matcher.put(FIELD_USER_ID, userId);
+    matcher.put(FIELD_FROM_PROJECT, projectId);
+    return mongo.removeDocument(DB, matcher).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
+  }
+
+  public static Future<JsonObject> removeAll(MongoClient mongo) {
+    JsonObject matcher = terminateMatcher();
+    return mongo.removeDocument(DB, matcher).compose(ret -> {
+      return Future.succeededFuture(ret.toJson());
+    });
   }
 }
