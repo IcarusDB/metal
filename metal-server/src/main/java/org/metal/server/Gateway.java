@@ -10,6 +10,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
@@ -25,7 +26,9 @@ import org.metal.server.exec.Exec;
 import org.metal.server.project.Project;
 import org.metal.server.repo.MetalRepo;
 import org.metal.server.repo.Repo;
+import org.metal.server.user.UserDB;
 import org.metal.server.util.BodyJsonValid;
+import org.metal.server.util.RestServiceEnd;
 
 public class Gateway extends AbstractVerticle {
 
@@ -75,6 +78,12 @@ public class Gateway extends AbstractVerticle {
         ))
         .handler(BodyJsonValid::valid)
         .handler(this.auth::createJWT);
+
+    router.get("/api/v1/user")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(this::userInfo);
 
     router.route("/api/v1/something")
         .produces("application/json")
@@ -509,5 +518,11 @@ public class Gateway extends AbstractVerticle {
     String author = ctx.user().authorizations().getProviderIds().toString();
     boolean isRole = RoleBasedAuthorization.create(Roles.USER.toString()).match(ctx.user());
     ctx.response().end(ctx.user().get("username").toString() + ":" + isRole + ":" + author);
+  }
+
+  private void userInfo(RoutingContext ctx) {
+    User user = ctx.user();
+    Future<JsonObject> result = UserDB.getWithoutPassword(mongo, user.get("username"));
+    RestServiceEnd.end(ctx, result, LOGGER);
   }
 }

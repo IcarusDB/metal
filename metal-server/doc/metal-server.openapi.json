@@ -1,5 +1,5 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.1",
   "info": {
     "title": "metal-server",
     "description": "",
@@ -10,22 +10,22 @@
       "name": "spark standalone"
     },
     {
-      "name": "metal-server-rest-api"
+      "name": "metal-server"
     },
     {
-      "name": "metal-server-rest-api/工程"
+      "name": "metal-server/工程"
     },
     {
-      "name": "metal-server-rest-api/metal仓库"
+      "name": "metal-server/metal仓库"
     },
     {
-      "name": "metal-server-rest-api/用户"
+      "name": "metal-server/用户"
     },
     {
-      "name": "metal-server-rest-api/权限"
+      "name": "metal-server/权限"
     },
     {
-      "name": "metal-server-rest-api/执行任务"
+      "name": "metal-server/执行任务"
     }
   ],
   "paths": {
@@ -313,12 +313,12 @@
     "/api/v1/tokens": {
       "post": {
         "summary": "获取JWT 管理员",
-        "x-apifox-folder": "metal-server-rest-api/权限",
+        "x-apifox-folder": "metal-server/权限",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/权限"
+          "metal-server/权限"
         ],
         "parameters": [
           {
@@ -353,12 +353,12 @@
     "/api/v1/users": {
       "post": {
         "summary": "创建用户",
-        "x-apifox-folder": "metal-server-rest-api/用户",
+        "x-apifox-folder": "metal-server/用户",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/用户"
+          "metal-server/用户"
         ],
         "parameters": [
           {
@@ -423,12 +423,12 @@
     "/api/v1/projects": {
       "post": {
         "summary": "创建空工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -487,12 +487,12 @@
       },
       "get": {
         "summary": "查看用户全部工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [],
         "responses": {
@@ -514,12 +514,12 @@
       },
       "delete": {
         "summary": "删除用户全部工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [],
         "responses": {
@@ -543,12 +543,12 @@
     "/api/v1/metalRepo/all": {
       "get": {
         "summary": "查看用户可访问的所有Metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -581,12 +581,12 @@
       },
       "delete": {
         "summary": "管理员清除全部metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [],
         "responses": {
@@ -610,12 +610,12 @@
     "/api/v1/metalRepo": {
       "post": {
         "summary": "添加Metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -680,12 +680,12 @@
       },
       "delete": {
         "summary": "删除用户全部私有metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [],
         "responses": {
@@ -709,12 +709,12 @@
     "/api/v1/metalRepo/scope/{scope}": {
       "get": {
         "summary": "按scope查看用户所提供的Metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -747,12 +747,12 @@
       },
       "post": {
         "summary": "批量添加metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -1053,12 +1053,12 @@
     "/api/v1/metalRepo/all/PUBLIC": {
       "get": {
         "summary": "查看全部PUBLIC的metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [],
         "responses": {
@@ -1082,12 +1082,12 @@
     "/api/v1/metalRepo/metalId/{metalId}": {
       "delete": {
         "summary": "删除用户私有metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -1122,12 +1122,12 @@
     "/api/v1/metalRepo/pkg/{groupId}/{artifactId}/{version}": {
       "get": {
         "summary": "按照包坐标查找用户可访问metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -1182,12 +1182,12 @@
     "/api/v1/metalRepo/type/{metalType}": {
       "get": {
         "summary": "按照metal类型查找用户可访问metal",
-        "x-apifox-folder": "metal-server-rest-api/metal仓库",
+        "x-apifox-folder": "metal-server/metal仓库",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/metal仓库"
+          "metal-server/metal仓库"
         ],
         "parameters": [
           {
@@ -1222,12 +1222,12 @@
     "/api/v1/projects/name/{name}": {
       "get": {
         "summary": "根据工程名查看工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1270,12 +1270,12 @@
       },
       "put": {
         "summary": "更新工程名",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1323,12 +1323,12 @@
       },
       "delete": {
         "summary": "根据工程名删除工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1363,12 +1363,12 @@
     "/api/v1/projects/all": {
       "get": {
         "summary": "查看全部工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [],
         "responses": {
@@ -1390,12 +1390,12 @@
       },
       "delete": {
         "summary": "删除全部工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [],
         "responses": {
@@ -1419,12 +1419,12 @@
     "/api/v1/projects/name/{name}/spec": {
       "post": {
         "summary": "提交分析Spec",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1530,12 +1530,12 @@
       },
       "get": {
         "summary": "查看工程spec",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1570,12 +1570,12 @@
     "/api/v1/projects/deploy/{deployId}/platform": {
       "put": {
         "summary": "更新工程platform",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1645,12 +1645,12 @@
     "/api/v1/projects/deploy/{deployId}/backend/args": {
       "put": {
         "summary": "更新工程Backend.args参数",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1703,12 +1703,12 @@
     "/api/v1/projects/deploy/{deployId}/backend/status": {
       "put": {
         "summary": "更新部署的后端状态",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1759,12 +1759,12 @@
       },
       "get": {
         "summary": "查看后端状态",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1799,12 +1799,12 @@
     "/api/v1/projects/deploy/{deployId}": {
       "put": {
         "summary": "更新工程Deploy配置",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1856,12 +1856,12 @@
     "/api/v1/projects/copy": {
       "post": {
         "summary": "从其它工程复制为新工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [],
         "requestBody": {
@@ -1900,12 +1900,12 @@
     "/api/v1/projects/deploy/name/{name}": {
       "post": {
         "summary": "部署工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1940,12 +1940,12 @@
     "/api/v1/projects/deploy/{deployId}/force": {
       "delete": {
         "summary": "强制关闭部署的后端",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -1980,12 +1980,12 @@
     "/api/v1/projects/deploy/name/{name}/epoch": {
       "put": {
         "summary": "重新部署后端",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2020,12 +2020,12 @@
     "/api/v1/projects/deploy/{deployId}/spec/metals/{metalId}": {
       "get": {
         "summary": "查看metal的schema",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2070,12 +2070,12 @@
     "/api/v1/projects/deploy/{deployId}/service/status": {
       "get": {
         "summary": "查看后端服务状态",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2110,12 +2110,12 @@
     "/api/v1/projects/deploy/{deployId}/service/heart": {
       "get": {
         "summary": "向后端请求心跳",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2150,12 +2150,12 @@
     "/api/v1/projects/name/{name}/spec/current": {
       "post": {
         "summary": "分析当前工程中的Spec",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2190,12 +2190,12 @@
     "/api/v1/projects/name/{name}/spec/current/exec": {
       "post": {
         "summary": "执行",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2230,12 +2230,12 @@
     "/api/v1/execs/id/{execId}": {
       "get": {
         "summary": "根据任务id查找任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2268,12 +2268,12 @@
       },
       "delete": {
         "summary": "根据任务id删除任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2308,12 +2308,12 @@
     "/api/v1/execs/id/{execId}/detail": {
       "get": {
         "summary": "根据任务id查找任务详情",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2348,12 +2348,12 @@
     "/api/v1/execs": {
       "get": {
         "summary": "查找用户全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2375,12 +2375,12 @@
       },
       "delete": {
         "summary": "删除用户全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2404,12 +2404,12 @@
     "/api/v1/execs/detail": {
       "get": {
         "summary": "查找用户群全部任务详情",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2433,12 +2433,12 @@
     "/api/v1/execs/project/{projectId}": {
       "get": {
         "summary": "查找工程的全部任务 ",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2471,12 +2471,12 @@
       },
       "delete": {
         "summary": "删除工程关联的全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2511,12 +2511,12 @@
     "/api/v1/execs/project/{projectId}/detail": {
       "get": {
         "summary": "查找工程的全部任务详情",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2551,12 +2551,12 @@
     "/api/v1/execs/all": {
       "get": {
         "summary": "管理员查找全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2578,12 +2578,12 @@
       },
       "delete": {
         "summary": "管理员删除全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2607,12 +2607,12 @@
     "/api/v1/execs/all/detail": {
       "get": {
         "summary": "管理员查找全部任务详情",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2636,12 +2636,12 @@
     "/api/v1/execs/id/{execId}/force": {
       "delete": {
         "summary": "强制根据任务id删除任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2676,12 +2676,12 @@
     "/api/v1/execs/force": {
       "delete": {
         "summary": "强制删除用户全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2705,12 +2705,12 @@
     "/api/v1/execs/project/{projectId}/force": {
       "delete": {
         "summary": "强制删除工程关联的全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [
           {
@@ -2745,12 +2745,12 @@
     "/api/v1/execs/all/force": {
       "delete": {
         "summary": "管理员强制删除全部任务",
-        "x-apifox-folder": "metal-server-rest-api/执行任务",
+        "x-apifox-folder": "metal-server/执行任务",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/执行任务"
+          "metal-server/执行任务"
         ],
         "parameters": [],
         "responses": {
@@ -2774,12 +2774,12 @@
     "/api/v1/projects/recover/exec": {
       "post": {
         "summary": "从执行任务创建新工程",
-        "x-apifox-folder": "metal-server-rest-api/工程",
+        "x-apifox-folder": "metal-server/工程",
         "x-apifox-status": "developing",
         "deprecated": false,
         "description": "",
         "tags": [
-          "metal-server-rest-api/工程"
+          "metal-server/工程"
         ],
         "parameters": [
           {
@@ -2835,6 +2835,46 @@
           }
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46145786-run"
+      }
+    },
+    "/api/v1/user": {
+      "get": {
+        "summary": "用户详情",
+        "x-apifox-folder": "metal-server/用户",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/用户"
+        ],
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "application/json",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-46956953-run"
       }
     }
   },

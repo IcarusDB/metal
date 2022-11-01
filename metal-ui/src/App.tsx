@@ -1,58 +1,77 @@
 import React from 'react';
 import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
+import {Counter} from './features/counter/Counter';
 import './App.css';
+import {Designer} from "./features/designer/Designer";
+import {SpecViewer} from "./features/spec/SpecViewer";
+import {Spec} from "./model/Spec";
+import {Login} from "./features/user/Login";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
-  );
+    const spec: Spec = {
+        "version": "1.0",
+        "metals": [
+            {
+                "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                "id": "00-00",
+                "name": "source-00",
+                "props": {
+                    "schema": "",
+                    "path": "src/test/resources/test.json"
+                }
+            },
+            {
+                "type": "org.metal.backend.spark.extension.SqlMMapper",
+                "id": "01-00",
+                "name": "mapper-00",
+                "props": {
+                    "tableAlias": "source",
+                    "sql": "select * from source where id != \"0001\""
+                }
+            },
+            {
+                "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                "id": "02-00",
+                "name": "sink-00",
+                "props": {
+                    "numRows": 10
+                }
+            },
+            {
+                "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                "id": "02-01",
+                "name": "sink-01",
+                "props": {
+                    "numRows": 10
+                }
+            }
+        ],
+        "edges": [
+            {
+                "left": "00-00",
+                "right": "01-00"
+            },
+            {
+                "left": "01-00",
+                "right": "02-00"
+            },
+            {
+                "left": "00-00",
+                "right": "02-01"
+            }
+        ],
+        "waitFor": [
+            {
+                "left": "02-00",
+                "right": "02-01"
+            }
+        ]
+    }
+    return (
+        <div className="App">
+            <Login></Login>
+        </div>
+    );
 }
 
 export default App;
