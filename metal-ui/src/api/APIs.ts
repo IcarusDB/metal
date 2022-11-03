@@ -16,3 +16,9 @@ export function baseUrl() {
 export function timeout() {
     return Gateway.timeout
 }
+
+export interface ApiResponseEntity {
+    status: string,
+    data?: any
+    msg?: string
+}

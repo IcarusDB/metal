@@ -6,6 +6,7 @@ import {Designer} from "./features/designer/Designer";
 import {SpecViewer} from "./features/spec/SpecViewer";
 import {Spec} from "./model/Spec";
 import {Login} from "./features/user/Login";
+import {UserNotice} from "./features/user/UserNotice";
 
 function App() {
     const spec: Spec = {
@@ -70,6 +71,7 @@ function App() {
     return (
         <div className="App">
             <Login></Login>
+            <UserNotice/>
         </div>
     );
 }

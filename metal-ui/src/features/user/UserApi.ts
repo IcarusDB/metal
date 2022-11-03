@@ -1,5 +1,5 @@
-import axios from "axios";
-import {baseUrl, timeout, wrapUrl} from "../../api/APIs";
+import axios, {AxiosBasicCredentials} from "axios";
+import {timeout} from "../../api/APIs";
 
 const instance = axios.create({
     headers: {
@@ -8,9 +8,20 @@ const instance = axios.create({
     timeout: timeout()
 })
 
-export async function token(user: {username: string, password: string}) {
+export interface UserBasicCredentials extends AxiosBasicCredentials {}
+
+export async function authenticate(user: UserBasicCredentials) {
     const url = '/api/v1/tokens'
     return instance.post(url, {}, {
         auth: user
+    })
+}
+
+export async function sync(token: string) {
+    const url = '/api/v1/user'
+    return instance.get(url, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
     })
 }
