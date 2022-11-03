@@ -15,7 +15,7 @@ enum State {
 function LoginForm() {
     const dispatch = useAppDispatch()
     const [state, setState] = useState(State.idle)
-    const [token, setToken] = useState(null)
+    const [token, setToken] = useState<string|null>(null)
 
     const onFinish = (values: any) => {
         const user: UserBasicCredentials = {
@@ -23,12 +23,9 @@ function LoginForm() {
             password: values.password
         }
 
-        authenticate(user).then(response => {
-            const token = response.data.jwt
-            return token
-        }).then(token => {
+        authenticate(user).then((_token: string) => {
             setState(State.success)
-            setToken(token)
+            setToken(_token)
         }, reason => {
             setState(State.fail)
         })

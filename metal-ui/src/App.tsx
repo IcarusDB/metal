@@ -7,6 +7,7 @@ import {SpecViewer} from "./features/spec/SpecViewer";
 import {Spec} from "./model/Spec";
 import {Login} from "./features/user/Login";
 import {UserNotice} from "./features/user/UserNotice";
+import {ProjectList} from "./features/project/Project";
 
 function App() {
     const spec: Spec = {
@@ -72,6 +73,7 @@ function App() {
         <div className="App">
             <Login></Login>
             <UserNotice/>
+            <ProjectList/>
         </div>
     );
 }

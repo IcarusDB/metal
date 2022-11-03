@@ -1,14 +1,6 @@
-import {createSlice, createAsyncThunk, PayloadAction, createSelector} from "@reduxjs/toolkit";
-import {authenticate, sync, UserBasicCredentials} from "./UserApi";
-import {AxiosResponse} from "axios";
-import {ApiResponseEntity} from "../../api/APIs";
+import {createSelector, createSlice} from "@reduxjs/toolkit";
 import {RootState} from "../../app/store";
-
-export interface User {
-    id: string,
-    name: string,
-    roles: string[]
-}
+import {User} from "../../model/User";
 
 export interface UserState {
     auth: {
