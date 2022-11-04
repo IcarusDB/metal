@@ -1,6 +1,8 @@
+import './UserNotice.css';
 import {useAppDispatch, useAppSelector} from "../../app/hooks";
 import {tokenSelector} from "./userSlice";
 import {message} from "antd";
+
 import {useEffect} from "react";
 
 export function UserNotice() {
