@@ -1,5 +1,21 @@
 import {Spec} from "./Spec";
 
+export enum BackendState {
+    UN_DEPLOY= 'UN_DEPLOY',
+    UP = 'UP',
+    DOWN = 'DOWN',
+    FAILURE = 'FAILURE'
+}
+
+export interface BackendStatus {
+    current: BackendState,
+    upTime?: number,
+    downTime?: number,
+    failureTime?: number,
+    failureMsg?: string,
+    tracer: any
+}
+
 export interface Deploy {
     id: string,
     epoch: number,
@@ -7,14 +23,7 @@ export interface Deploy {
     platform: any,
     backend: {
         args: string[],
-        status?:{
-            current: string,
-            upTime?: number,
-            downTime?: number,
-            failureTime?: number,
-            failureMsg?: string,
-            tracer: any
-        }
+        status?: BackendStatus
     }
 }
 

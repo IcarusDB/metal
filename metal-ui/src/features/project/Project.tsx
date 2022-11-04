@@ -1,10 +1,97 @@
-
+import {
+    ApiTwoTone,
+    CheckCircleTwoTone,
+    QuestionCircleTwoTone,
+    StopTwoTone,
+    ThunderboltTwoTone,
+    UserOutlined,
+    WarningFilled
+} from '@ant-design/icons';
 import {useAppSelector} from "../../app/hooks";
 import {tokenSelector} from "../user/userSlice";
-import {List, Tag, Skeleton, message} from "antd";
+import {Card, Descriptions, List, message, Skeleton, Popover} from "antd";
 import {useEffect, useState} from "react";
-import {Project} from "../../model/Project";
+import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
 import {getAllProjectOfUser} from "./ProjectApi";
+
+function backendStatusTip(backendStatus: BackendStatus) {
+    const upTime = backendStatus.upTime === undefined? <></>: (
+        <Descriptions.Item label={'Up Time'}>{backendStatus.upTime}</Descriptions.Item>
+    )
+
+    const downTime = backendStatus.downTime === undefined? <></>: (
+        <Descriptions.Item label={'Down Time'}>{backendStatus.downTime}</Descriptions.Item>
+    )
+
+    const failureTime = backendStatus.failureTime === undefined ||
+    backendStatus.current !== BackendState.FAILURE? <></>: (
+        <Descriptions.Item label={'Failure Time'}>{backendStatus.failureTime}</Descriptions.Item>
+    )
+
+    const failureMsg = backendStatus.failureTime === undefined ||
+    backendStatus.current !== BackendState.FAILURE? <></>: (
+        <Descriptions.Item label={'Failure Message'}>{backendStatus.failureMsg}</Descriptions.Item>
+    )
+
+    return (
+        <Descriptions>
+            <Descriptions.Item label={'current'}>{backendStatus.current}</Descriptions.Item>
+            {upTime}
+            {downTime}
+            {failureTime}
+            {failureMsg}
+        </Descriptions>
+    )
+}
+
+function backendStatus(deploy: Deploy) {
+    if (deploy.backend === undefined || deploy.backend.status === undefined) {
+        return (
+            <Popover content={'No deployment is set.'}>
+                <StopTwoTone />
+            </Popover>
+        )
+    }
+
+    switch (deploy.backend.status.current) {
+        case BackendState.UN_DEPLOY: {
+            return (
+                <Popover content={backendStatusTip(deploy.backend.status)}>
+                    <ApiTwoTone/>
+                </Popover>
+            )
+        };
+        case BackendState.UP: {
+            return (
+                <Popover content={backendStatusTip(deploy.backend.status)}>
+                    <ThunderboltTwoTone/>
+                </Popover>
+            )
+        };
+        case BackendState.DOWN: {
+            return (
+                <Popover content={backendStatusTip(deploy.backend.status)}>
+                    <CheckCircleTwoTone />
+                </Popover>
+            )
+        };
+        case BackendState.FAILURE: {
+            return (
+                <Popover content={backendStatusTip(deploy.backend.status)}>
+                    <WarningFilled />
+                </Popover>
+            )
+        };
+        default: {
+            return (
+                <Popover content={'Unknown'}>
+                    <QuestionCircleTwoTone />
+                </Popover>
+            )
+        }
+    }
+
+}
 
 export function ProjectItem(props: {item: Project, index: number}) {
     const {item, index} = props;
@@ -12,8 +99,12 @@ export function ProjectItem(props: {item: Project, index: number}) {
         <List.Item
             key={item.id}
         >
-            <Tag color="#f50">{item.name}</Tag>
-            <Tag color="#f50">{item.user.username}</Tag>
+            <Card title={item.name} hoverable={true}>
+                <Descriptions column={1} bordered={false}>
+                    <Descriptions.Item label={<UserOutlined/>}>{item.user.username}</Descriptions.Item>
+                    <Descriptions.Item label={'Status'}>{backendStatus(item.deploy)}</Descriptions.Item>
+                </Descriptions>
+            </Card>
         </List.Item>
     )
 }
@@ -43,7 +134,15 @@ export function ProjectList() {
 
     return (
         <List
-            itemLayout="vertical"
+            grid={{
+                gutter: 16,
+                xs: 1,
+                sm: 2,
+                md: 4,
+                lg: 4,
+                xl: 6,
+                xxl: 3,
+            }}
             pagination={{pageSize: 10}}
             dataSource={projects}
             renderItem={(item: Project, index: number) => {
