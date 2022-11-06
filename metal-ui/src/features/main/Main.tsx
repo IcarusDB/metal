@@ -2,6 +2,7 @@ import * as FlexLayout from "flexlayout-react";
 import {ProjectList} from "../project/Project";
 import {Empty} from "antd";
 import {IJsonModel, Model, TabNode} from "flexlayout-react";
+import {Designer} from "../designer/Designer";
 
 function factory(node: TabNode) {
     const component = node.getComponent()
@@ -10,8 +11,12 @@ function factory(node: TabNode) {
             return (
                 <ProjectList/>
             )
+        };
+        case "designer": {
+            return (
+                <Designer/>
+            )
         }
-            ;
         default: {
             return (
                 <div className={'panel'}>
@@ -72,8 +77,8 @@ export function Main() {
                 weight: 50,
                 children: [{
                     type: "tab",
-                    name: "Empty",
-                    component: "empty",
+                    name: "Designer",
+                    component: "designer",
                 }]
             }]
         }

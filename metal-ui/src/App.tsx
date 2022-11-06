@@ -7,8 +7,8 @@ import {Main} from "./features/main/Main";
 function App() {
     return (
         <div className="App">
-            <Login></Login>
-            <UserNotice/>
+            {/*<Login></Login>*/}
+            {/*<UserNotice/>*/}
             <Main/>
         </div>
     );

@@ -148,14 +148,6 @@ export function ProjectList() {
         }
     }, [token])
 
-    if (token == null) {
-        return (
-            <Skeleton/>
-        )
-    }
-
-    console.log(projects)
-
     return (
         <div className={'panel'}>
             <List
