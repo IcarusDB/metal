@@ -1,13 +1,13 @@
 import './App.css';
 import React from 'react';
-import {Login} from "./features/user/Login";
+import {SignIn} from "./features/user/SignIn";
 import {UserNotice} from "./features/user/UserNotice";
 import {Main} from "./features/main/Main";
 
 function App() {
     return (
         <div className="App">
-            {/*<Login></Login>*/}
+            <SignIn></SignIn>
             {/*<UserNotice/>*/}
             <Main/>
         </div>

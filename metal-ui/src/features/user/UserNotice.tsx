@@ -1,7 +1,7 @@
 import './UserNotice.css';
 import {useAppDispatch, useAppSelector} from "../../app/hooks";
 import {tokenSelector} from "./userSlice";
-import {message} from "antd";
+
 
 import {useEffect} from "react";
 
@@ -11,9 +11,9 @@ export function UserNotice() {
 
     useEffect(()=>{
         if (token != null) {
-            message.info("User has authenticated.")
+            // message.info("User has authenticated.")
         } else {
-            message.info("User has no authenticated.")
+            // message.info("User has no authenticated.")
         }
     }, [token])
 

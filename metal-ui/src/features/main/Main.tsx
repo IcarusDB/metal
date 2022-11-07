@@ -1,8 +1,8 @@
 import * as FlexLayout from "flexlayout-react";
 import {ProjectList} from "../project/Project";
-import {Empty} from "antd";
 import {IJsonModel, Model, TabNode} from "flexlayout-react";
 import {Designer} from "../designer/Designer";
+import {Skeleton} from "@mui/material";
 
 function factory(node: TabNode) {
     const component = node.getComponent()
@@ -20,7 +20,7 @@ function factory(node: TabNode) {
         default: {
             return (
                 <div className={'panel'}>
-                    <Empty/>
+                    <Skeleton/>
                 </div>
             )
         }
