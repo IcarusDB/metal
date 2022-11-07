@@ -2,6 +2,11 @@ import './Project.css';
 import {useAppSelector} from "../../app/hooks";
 import {tokenSelector} from "../user/userSlice";
 import {
+    Box,
+    Paper,
+    Container,
+    Divider,
+    IconButton,
     Card,
     List,
     ListItem,
@@ -11,9 +16,28 @@ import {
     ListItemButton,
     CardHeader,
     CardContent,
-    Snackbar
+    Snackbar,
+    TableContainer,
+    Table,
+    TableHead,
+    TableRow,
+    TableBody,
+    TableCell,
+    Button,
+    CssBaseline
 } from "@mui/material";
-import {AiOutlineStop, AiOutlineApi, AiFillThunderbolt, AiOutlineWarning, AiOutlineQuestionCircle} from "react-icons/ai";
+import Stack from '@mui/material/Stack';
+import {createTheme, ThemeProvider} from '@mui/material/styles';
+import {
+    AiOutlineStop,
+    AiOutlineApi,
+    AiFillThunderbolt,
+    AiOutlineWarning,
+    AiOutlineQuestionCircle,
+    AiOutlineEye,
+    AiOutlineEdit,
+    AiOutlineReload
+} from "react-icons/ai";
 import {HiStop} from "react-icons/hi";
 import {useEffect, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
@@ -69,7 +93,9 @@ function backendStatus(deploy: Deploy) {
     if (deploy.backend === undefined || deploy.backend.status === undefined) {
         return (
             <Tooltip title={'No deployment is set.'}>
-                <AiOutlineStop/>
+                <IconButton>
+                    <AiOutlineStop/>
+                </IconButton>
             </Tooltip>
         )
     }
@@ -78,7 +104,9 @@ function backendStatus(deploy: Deploy) {
         case BackendState.UN_DEPLOY: {
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <AiOutlineApi/>
+                    <IconButton>
+                        <AiOutlineApi/>
+                    </IconButton>
                 </Tooltip>
             )
         }
@@ -86,7 +114,9 @@ function backendStatus(deploy: Deploy) {
         case BackendState.UP: {
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <AiFillThunderbolt/>
+                    <IconButton>
+                        <AiFillThunderbolt/>
+                    </IconButton>
                 </Tooltip>
             )
         }
@@ -94,7 +124,9 @@ function backendStatus(deploy: Deploy) {
         case BackendState.DOWN: {
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <HiStop/>
+                    <IconButton>
+                        <HiStop/>
+                    </IconButton>
                 </Tooltip>
             )
         }
@@ -102,7 +134,9 @@ function backendStatus(deploy: Deploy) {
         case BackendState.FAILURE: {
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <AiOutlineWarning/>
+                    <IconButton>
+                        <AiOutlineWarning/>
+                    </IconButton>
                 </Tooltip>
             )
         }
@@ -131,25 +165,17 @@ function projectItemBar(item: Project) {
 export function ProjectItem(props: { item: Project, index: number }) {
     const {item, index} = props;
     return (
-        <ListItem>
-            <Card>
-                <CardHeader title={item.name}/>
-                <CardContent>
-                    <List>
-                        <ListItem>
-                            <ListItemText>{'User Name'}</ListItemText>
-                            <ListItemText>{item.user.username}</ListItemText>
-                        </ListItem>
-                        <ListItem>
-                            <ListItemText>{'Status'}</ListItemText>
-                            <ListItemText>{backendStatus(item.deploy)}</ListItemText>
-                        </ListItem>
-                    </List>
-                </CardContent>
-            </Card>
-        </ListItem>
+        <TableRow key={item.id}>
+            <TableCell>{item.name}</TableCell>
+            <TableCell>{item.user.username}</TableCell>
+            <TableCell>
+                {backendStatus(item.deploy)}
+            </TableCell>
+        </TableRow>
     )
 }
+
+const theme = createTheme()
 
 export function ProjectList() {
     const token: string | null = useAppSelector(state => {
@@ -170,13 +196,55 @@ export function ProjectList() {
     }, [token])
 
     return (
-        <div className={'panel'}>
-            <List>
-                {projects.map((item: Project, index: number) => {
-                    return ProjectItem({item: item, index: index})
-                })}
-            </List>
-        </div>
+        <ThemeProvider theme={theme}>
+            <div className={'panel'}
+                 style={{flexDirection: "column", alignItems:"stretch", justifyContent: "flex-start"}}
+            >
+                <Stack
+                    direction="column"
+                    justifyContent="flex-start"
+                    alignItems="stretch"
+                    spacing={2}
+                    divider={<Divider orientation="horizontal" flexItem/>}
+                >
+                    <></>
+                    <Box sx={{width: "100%"}}>
+                        <Paper>
+                            <Stack
+                                direction="row"
+                                justifyContent="flex-end"
+                                alignItems="center"
+                                divider={<Divider orientation="vertical" flexItem/>}
+                                spacing={0}
+                            >
+                                <></>
+                                <IconButton><AiOutlineReload/></IconButton>
+                            </Stack>
+                        </Paper>
+                    </Box>
+                    <TableContainer component={Paper}>
+                        <Table
+                            sx={{minWidth: 400}}
+                            size={"small"}
+                        >
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>{"Name"}</TableCell>
+                                    <TableCell>{"User"}</TableCell>
+                                    <TableCell>{"Status"}</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {projects.map((item: Project, index: number) => {
+                                    return ProjectItem({item: item, index: index})
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Stack>
+
+            </div>
+        </ThemeProvider>
     )
 
 
