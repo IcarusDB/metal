@@ -3,6 +3,47 @@ import {ProjectList} from "../project/Project";
 import {IJsonModel, Model, TabNode} from "flexlayout-react";
 import {Designer} from "../designer/Designer";
 import {Skeleton} from "@mui/material";
+import {AiOutlineDeploymentUnit} from "react-icons/ai";
+import {FaProjectDiagram, FaDrawPolygon} from "react-icons/fa";
+import {RiFunctionLine} from "react-icons/ri";
+import {VscCircuitBoard, VscExtensions} from "react-icons/vsc";
+import {GrTasks} from "react-icons/gr";
+
+function iconFatory(node: TabNode) {
+    const icon = node.getIcon()
+    switch (icon) {
+        case "projectsIcon": {
+            return (
+                <FaProjectDiagram/>
+            )
+        };
+        case "designerIcon": {
+            return (
+                <VscCircuitBoard/>
+            )
+        };
+        case "metalRepoIcon": {
+            return (
+                <VscExtensions/>
+            )
+        };
+        case "deploymentIcon": {
+            return (
+                <AiOutlineDeploymentUnit/>
+            )
+        }
+        case "executionsIcon": {
+            return (
+                <GrTasks/>
+            )
+        }
+        default: {
+            return (
+                <RiFunctionLine/>
+            )
+        }
+    }
+}
 
 function factory(node: TabNode) {
     const component = node.getComponent()
@@ -45,6 +86,7 @@ export function Main() {
                 enableDrag: false,
                 enableClose: false,
                 enableFloat: false,
+                icon: "projectsIcon",
                 component: "projects",
             }, {
                 type: "tab",
@@ -52,6 +94,7 @@ export function Main() {
                 enableDrag: false,
                 enableClose: false,
                 enableFloat: false,
+                icon: "metalRepoIcon",
                 component: "empty",
             }, {
                 type: "tab",
@@ -59,6 +102,7 @@ export function Main() {
                 enableDrag: false,
                 enableClose: false,
                 enableFloat: false,
+                icon: "deploymentIcon",
                 component: "empty",
             }, {
                 type: "tab",
@@ -66,6 +110,7 @@ export function Main() {
                 enableDrag: false,
                 enableClose: false,
                 enableFloat: false,
+                icon: "executionsIcon",
                 component: "empty",
             }]
         }],
@@ -78,12 +123,13 @@ export function Main() {
                 children: [{
                     type: "tab",
                     name: "Designer",
+                    icon: "designerIcon",
                     component: "designer",
                 }]
             }]
         }
     }
     return (
-        <FlexLayout.Layout model={Model.fromJson(layout)} factory={factory}></FlexLayout.Layout>
+        <FlexLayout.Layout model={Model.fromJson(layout)} factory={factory} iconFactory={iconFatory}></FlexLayout.Layout>
     )
 }

@@ -24,7 +24,7 @@ import {
     TableBody,
     TableCell,
     Button,
-    CssBaseline
+    CssBaseline, CircularProgress, Alert, Backdrop
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -38,6 +38,9 @@ import {
     AiOutlineEdit,
     AiOutlineReload
 } from "react-icons/ai";
+import {
+    BsCommand
+} from "react-icons/bs";
 import {HiStop} from "react-icons/hi";
 import {useEffect, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
@@ -149,17 +152,6 @@ function backendStatus(deploy: Deploy) {
             )
         }
     }
-
-}
-
-function projectItemBar(item: Project) {
-    return (
-        <ListItem>
-            <ListItemText>{item.name}</ListItemText>
-            <ListItemButton></ListItemButton>
-            <ListItemButton></ListItemButton>
-        </ListItem>
-    )
 }
 
 export function ProjectItem(props: { item: Project, index: number }) {
@@ -171,8 +163,27 @@ export function ProjectItem(props: { item: Project, index: number }) {
             <TableCell>
                 {backendStatus(item.deploy)}
             </TableCell>
+            <TableCell>
+                <Stack
+                    direction="row"
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    divider={<Divider orientation="vertical" flexItem/>}
+                    spacing={0}
+                >
+                    <IconButton><AiOutlineEye/></IconButton>
+                    <IconButton><AiOutlineEdit/></IconButton>
+                </Stack>
+            </TableCell>
         </TableRow>
     )
+}
+
+enum State {
+    idle,
+    pending,
+    success,
+    failure
 }
 
 const theme = createTheme()
@@ -182,24 +193,42 @@ export function ProjectList() {
         return tokenSelector(state)
     })
     const [projects, setProjects] = useState<Project[]>([])
+    const [status, setStatus] = useState<State>(State.idle)
+    const isPending = () => {
+        return status === State.pending
+    }
+    const isFail = () => {
+        return status === State.failure
+    }
 
-    useEffect(() => {
+    const load = () => {
         if (token != null) {
+            setStatus(State.pending)
             getAllProjectOfUser(token).then((_projects: Project[]) => {
-                setProjects(_projects)
+                setTimeout(() => {
+                    setProjects(_projects)
+                    setStatus(State.success)
+                }, 3000)
             }, reason => {
                 console.error(reason)
-                // Snackbar.
-                // message.error("Fail to get projects.")
+                setStatus(State.failure)
             })
         }
+    }
+
+    useEffect(() => {
+        load()
     }, [token])
 
     return (
         <ThemeProvider theme={theme}>
             <div className={'panel'}
-                 style={{flexDirection: "column", alignItems:"stretch", justifyContent: "flex-start"}}
+                 style={{flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start"}}
             >
+                <Backdrop
+                    open={isPending()}
+                    sx={{position: "absolute"}}
+                />
                 <Stack
                     direction="column"
                     justifyContent="flex-start"
@@ -207,7 +236,9 @@ export function ProjectList() {
                     spacing={2}
                     divider={<Divider orientation="horizontal" flexItem/>}
                 >
-                    <></>
+                    {isFail() &&
+                        <Alert severity={"error"}>{"Fail to load projects."}</Alert>
+                    }
                     <Box sx={{width: "100%"}}>
                         <Paper>
                             <Stack
@@ -218,10 +249,23 @@ export function ProjectList() {
                                 spacing={0}
                             >
                                 <></>
-                                <IconButton><AiOutlineReload/></IconButton>
+                                <IconButton
+                                    disabled={isPending()}
+                                    onClick={load}
+                                >
+                                    <AiOutlineReload/>
+                                    {isPending() &&
+                                        <CircularProgress
+                                            sx={{
+                                                position: 'absolute'
+                                            }}
+                                        />
+                                    }
+                                </IconButton>
                             </Stack>
                         </Paper>
                     </Box>
+
                     <TableContainer component={Paper}>
                         <Table
                             sx={{minWidth: 400}}
@@ -232,6 +276,7 @@ export function ProjectList() {
                                     <TableCell>{"Name"}</TableCell>
                                     <TableCell>{"User"}</TableCell>
                                     <TableCell>{"Status"}</TableCell>
+                                    <TableCell align={"right"}><BsCommand/></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -242,7 +287,6 @@ export function ProjectList() {
                         </Table>
                     </TableContainer>
                 </Stack>
-
             </div>
         </ThemeProvider>
     )
