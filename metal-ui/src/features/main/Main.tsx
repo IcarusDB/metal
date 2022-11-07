@@ -1,8 +1,17 @@
 import * as FlexLayout from "flexlayout-react";
 import {ProjectList} from "../project/Project";
-import {IJsonModel, Model, TabNode} from "flexlayout-react";
+import {
+    Action,
+    Actions,
+    DockLocation,
+    IJsonModel,
+    IJsonTabNode,
+    IJsonTabSetNode,
+    Model,
+    TabNode
+} from "flexlayout-react";
 import {Designer} from "../designer/Designer";
-import {Skeleton} from "@mui/material";
+import {Button, Container, Paper, Skeleton, Stack} from "@mui/material";
 import {AiOutlineDeploymentUnit} from "react-icons/ai";
 import {FaProjectDiagram, FaDrawPolygon} from "react-icons/fa";
 import {RiFunctionLine} from "react-icons/ri";
@@ -16,17 +25,20 @@ function iconFatory(node: TabNode) {
             return (
                 <FaProjectDiagram/>
             )
-        };
+        }
+            ;
         case "designerIcon": {
             return (
                 <VscCircuitBoard/>
             )
-        };
+        }
+            ;
         case "metalRepoIcon": {
             return (
                 <VscExtensions/>
             )
-        };
+        }
+            ;
         case "deploymentIcon": {
             return (
                 <AiOutlineDeploymentUnit/>
@@ -52,12 +64,13 @@ function factory(node: TabNode) {
             return (
                 <ProjectList/>
             )
-        };
+        }
+            ;
         case "designer": {
             return (
                 <Designer/>
             )
-        }
+        };
         default: {
             return (
                 <div className={'panel'}>
@@ -72,6 +85,27 @@ export function Main() {
     const projectList = (
         <ProjectList/>
     )
+    const designerNode: IJsonTabNode = {
+        type: "tab",
+        name: "Designer",
+        icon: "designerIcon",
+        component: "designer",
+    }
+
+    const designerNode1: IJsonTabNode = {
+        type: "tab",
+        name: "Designer-1",
+        icon: "designerIcon",
+        component: "designer",
+    }
+
+    const tabsets: IJsonTabSetNode = {
+        type: "tabset",
+        id: "main",
+        weight: 50,
+        children: [designerNode]
+    }
+
     const layout: IJsonModel = {
         global: {"tabEnableFloat": true},
         borders: [{
@@ -117,19 +151,26 @@ export function Main() {
         layout: {
             type: "row",
             weight: 100,
-            children: [{
-                type: "tabset",
-                weight: 50,
-                children: [{
-                    type: "tab",
-                    name: "Designer",
-                    icon: "designerIcon",
-                    component: "designer",
-                }]
-            }]
+            children: [tabsets]
         }
     }
+    const layoutModel: FlexLayout.Model = Model.fromJson(layout)
+
+    const add = () => {
+        const action: Action = Actions.addNode({
+                type: "tab",
+                name: "Designer-1",
+                icon: "designerIcon",
+                component: "designer",
+            },
+            "main",
+            DockLocation.TOP,
+            1
+        )
+        layoutModel.doAction(action)
+    }
+
     return (
-        <FlexLayout.Layout model={Model.fromJson(layout)} factory={factory} iconFactory={iconFatory}></FlexLayout.Layout>
+        <FlexLayout.Layout model={layoutModel} factory={factory} iconFactory={iconFatory}></FlexLayout.Layout>
     )
 }
