@@ -174,6 +174,9 @@ export function Designer() {
                     setNodes((prevNds: Node<MetalNodeProps>[]) => {
                         return prevNds.filter(nd => (nd.id !== nodeId))
                     })
+                    setEdges((prevEdges: Edge[]) => {
+                        return prevEdges.filter(edge => (!(edge.source === nodeId || edge.target === nodeId)))
+                    })
                 },
             }
             return prevNodes.concat({
