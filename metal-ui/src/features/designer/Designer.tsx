@@ -9,11 +9,12 @@ import ReactFlow, {
     Node,
     OnConnect,
     useEdgesState,
-    useNodesState
+    useNodesState, useReactFlow
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import {MetalNodeProps, MetalNodeTypes} from "./MetalView";
-import {MetalTypes} from "../../model/Metal";
+import {MetalNodeProps, MetalNodeTypes, onConnectValid} from "./MetalView";
+import {Metals, MetalTypes} from "../../model/Metal";
+import {tableFooterClasses} from "@mui/material";
 
 const sourceNode: MetalNodeProps = {
     type: MetalTypes.SOURCE,
@@ -119,7 +120,7 @@ const fusionNode: MetalNodeProps = {
 export function Designer() {
     const nodeTypes = useMemo(()=>({...MetalNodeTypes}), [])
 
-    const initialNodes: Node[] = [{
+    const initialNodes: Node<MetalNodeProps>[] = [{
         id: sourceNode.metal.id,
         data: sourceNode,
         type: "metal",
@@ -141,12 +142,14 @@ export function Designer() {
         position: {x: 5, y: 5}
     }]
 
-    const initialEdges: Edge[] = [{
-        id: '0-1',
-        source: 'node-0',
-        target: 'node-1',
-        animated: true
-    }]
+    const initialEdges: Edge[] = [
+    //     {
+    //     id: '0-1',
+    //     source: 'node-0',
+    //     target: 'node-1',
+    //     animated: true
+    // }
+    ]
 
     const fitViewOptions: FitViewOptions = {
         padding: 0.2
@@ -157,12 +160,13 @@ export function Designer() {
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection ) => {
+            if (!onConnectValid(connection, nodes, edges)) {
+                return
+            }
             setEdges((edges) => {
                 return addEdge(connection, edges)
             })
-        }, [])
-
-
+        }, [nodes, edges])
 
     return (
         <div style={{ height: '100%' }}>

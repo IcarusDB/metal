@@ -1,7 +1,7 @@
 import {ImUpload, ImDownload} from "react-icons/im"
 import {AiOutlineFunction, AiOutlineDelete} from "react-icons/ai"
 import {VscMerge, VscExpandAll} from "react-icons/vsc"
-import {NodeProps} from "reactflow";
+import {Connection, Node, Edge, NodeProps} from "reactflow";
 import {Handle, Position} from 'reactflow';
 import {
     Avatar,
@@ -19,7 +19,8 @@ import {
 } from "@mui/material";
 import {useMemo} from "react";
 import {MetalPkg} from "../../model/MetalPkg";
-import {Metal, MetalTypes} from "../../model/Metal";
+import {Metal, Metals, MetalTypes} from "../../model/Metal";
+import {GraphTopology} from "../../model/GraphTopology";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload/>,
@@ -129,6 +130,46 @@ export const MetalNodeViews = {
         }
     }
 }
+
+export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProps>[], edges: Edge[]) {
+    if (connection.target === null || connection.source === null) {
+        return false
+    }
+
+    if (connection.target === connection.source) {
+        return false
+    }
+
+    const nodesOnGraph = new Set<string>(nodes.map(node => node.id))
+    const edgesOnGraph = edges.map(edge => {
+        return {source: edge.source, target: edge.target}
+    })
+
+    const graphTopology: GraphTopology = new GraphTopology(nodesOnGraph, edgesOnGraph)
+    let isValid = true
+    const inputs: Node<MetalNodeProps>[] = nodes.filter(node => (node.id === connection.target))
+    inputs.forEach(node => {
+        isValid = isValid &&
+            Metals.metal(node.data.type).hasInput() &&
+            Metals.metal(node.data.type).canAddInput(graphTopology, node.id)
+    })
+    if (!isValid) {
+        return false
+    }
+
+    const outputs: Node<MetalNodeProps>[] = nodes.filter(node => (node.id === connection.source))
+    outputs.forEach(node => {
+        isValid = isValid && Metals.metal(node.data.type).hasOutput()
+    })
+    if (!isValid) {
+        return false
+    }
+
+    const next = graphTopology.next(connection.target)
+    return !next.has(connection.source)
+}
+
+
 
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
