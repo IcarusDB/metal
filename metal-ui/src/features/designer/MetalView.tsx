@@ -32,13 +32,27 @@ export const MetalViewIcons = {
 export interface MetalNodeProps {
     metalPkg: MetalPkg,
     metal: Metal,
-    type: MetalTypes
+    type: MetalTypes,
+    onUpdate: (newMetal: Metal) => void;
+    onDelete: () => void;
 }
 
 export interface IMetalNodeView {
     inputHandle: (props: MetalNodeProps) => JSX.Element
     outputHandle: (props: MetalNodeProps) => JSX.Element
     logo: (props: MetalNodeProps) => JSX.Element
+}
+
+const inputHandle = (props: MetalNodeProps) => {
+    return (
+        <Handle type={"target"} id={`${props.metal.id}-input`} position={Position.Top}></Handle>
+    )
+}
+
+const outputHandle = (props: MetalNodeProps) => {
+    return (
+        <Handle type={"source"} id={`${props.metal.id}-output`} position={Position.Bottom}></Handle>
+    )
 }
 
 export const MetalSourceNodeView: IMetalNodeView = {
@@ -48,9 +62,7 @@ export const MetalSourceNodeView: IMetalNodeView = {
         )
     },
     outputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"source"} id={`${props.metal.id}-output`} position={Position.Bottom}></Handle>
-        )
+        return outputHandle(props)
     },
     logo: (props: MetalNodeProps) => {
         return MetalViewIcons.SOURCE
@@ -59,9 +71,7 @@ export const MetalSourceNodeView: IMetalNodeView = {
 
 export const MetalSinkNodeView: IMetalNodeView = {
     inputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"target"} id={`${props.metal.id}-input`} position={Position.Top}></Handle>
-        )
+        return inputHandle(props)
     },
     outputHandle: (props: MetalNodeProps) => {
         return (
@@ -75,14 +85,10 @@ export const MetalSinkNodeView: IMetalNodeView = {
 
 export const MetalMapperNodeView: IMetalNodeView = {
     inputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"target"} id={`${props.metal.id}-input`} position={Position.Top}></Handle>
-        )
+        return inputHandle(props)
     },
     outputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"source"} id={`${props.metal.id}-output`} position={Position.Bottom}></Handle>
-        )
+        return outputHandle(props)
     },
     logo: (props: MetalNodeProps) => {
         return MetalViewIcons.MAPPER
@@ -91,14 +97,10 @@ export const MetalMapperNodeView: IMetalNodeView = {
 
 export const MetalFusionNodeView: IMetalNodeView = {
     inputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"target"}  id={`${props.metal.id}-input`} position={Position.Top}></Handle>
-        )
+        return inputHandle(props)
     },
     outputHandle: (props: MetalNodeProps) => {
-        return (
-            <Handle type={"source"}  id={`${props.metal.id}-output`} position={Position.Bottom}></Handle>
-        )
+        return outputHandle(props)
     },
     logo: (props: MetalNodeProps) => {
         return MetalViewIcons.FUSION
@@ -173,40 +175,42 @@ export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProp
 
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
-    const {metal, metalPkg, type} = props.data
+    const {metal, metalPkg, type, onDelete, onUpdate} = props.data
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type)
 
     return (
         <Badge color="secondary" badgeContent={"?"}>
-            <Box sx={{flexGrow: 0, paddingLeft: "1em", paddingRight: "0em"}} component={Paper}>
+            <div>
                 {nodeView.inputHandle(props.data)}
-                <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    spacing={1}
-                >
-                    {nodeView.logo(props.data)}
-                    <Divider orientation="vertical" flexItem/>
+                <Box sx={{flexGrow: 0, paddingLeft: "1em", paddingRight: "0em"}} component={Paper}>
                     <Stack
-                        direction="column"
-                        justifyContent="space-around"
-                        alignItems="flex-start"
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={1}
                     >
-                        <Typography variant={"h6"}>{metal.name}</Typography>
-                        <Typography variant={"caption"} color={"GrayText"}>{metalPkg.class}</Typography>
+                        {nodeView.logo(props.data)}
+                        <Divider orientation="vertical" flexItem/>
+                        <Stack
+                            direction="column"
+                            justifyContent="space-around"
+                            alignItems="flex-start"
+                        >
+                            <Typography variant={"h6"}>{metal.name}</Typography>
+                            <Typography variant={"caption"} color={"GrayText"}>{metalPkg.class}</Typography>
+                        </Stack>
+                        <Stack
+                            direction="column"
+                            justifyContent="flex-end"
+                            alignItems="stretch"
+                        >
+                            <Button size="small" sx={{borderTopLeftRadius: 0}}><VscExpandAll/></Button>
+                            <Button size="small" sx={{borderBottomLeftRadius: 0}} onClick={onDelete}><AiOutlineDelete/></Button>
+                        </Stack>
                     </Stack>
-                    <Stack
-                        direction="column"
-                        justifyContent="flex-end"
-                        alignItems="stretch"
-                    >
-                        <Button size="small" sx={{borderTopLeftRadius: 0}}><VscExpandAll/></Button>
-                        <Button size="small" sx={{borderBottomLeftRadius: 0}}><AiOutlineDelete/></Button>
-                    </Stack>
-                </Stack>
+                </Box>
                 {nodeView.outputHandle(props.data)}
-            </Box>
+            </div>
         </Badge>
 
 
