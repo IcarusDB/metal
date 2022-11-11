@@ -18,11 +18,15 @@ import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {VscDebugStart, VscDebugStop} from "react-icons/vsc";
 import {CgRadioChecked} from "react-icons/cg";
 import {AiOutlineDeploymentUnit} from "react-icons/ai";
+import {Drawer, Grid, Paper, Stack, Container} from "@mui/material";
+import {MetalNodeEditor, MetalNodeEditorRef} from "./MetalNodeEditor";
 
 const sourceNode: MetalNodeProps = {
     type: MetalTypes.SOURCE,
-    onDelete: ()=>{},
-    onUpdate: (newMetal: Metal) => {},
+    onDelete: () => {
+    },
+    onUpdate: () => {
+    },
     metal: {
         id: 'node-0',
         name: 'node-0',
@@ -48,8 +52,10 @@ const sourceNode: MetalNodeProps = {
 
 const sinkNode: MetalNodeProps = {
     type: MetalTypes.SINK,
-    onDelete: ()=>{},
-    onUpdate: (newMetal: Metal) => {},
+    onDelete: () => {
+    },
+    onUpdate: () => {
+    },
     metal: {
         id: 'node-1',
         name: 'node-1',
@@ -72,8 +78,10 @@ const sinkNode: MetalNodeProps = {
 
 const mapperNode: MetalNodeProps = {
     type: MetalTypes.MAPPER,
-    onDelete: ()=>{},
-    onUpdate: (newMetal: Metal) => {},
+    onDelete: () => {
+    },
+    onUpdate: () => {
+    },
     metal: {
         id: 'node-2',
         name: 'node-2',
@@ -99,8 +107,10 @@ const mapperNode: MetalNodeProps = {
 
 const fusionNode: MetalNodeProps = {
     type: MetalTypes.FUSION,
-    onDelete: ()=>{},
-    onUpdate: (newMetal: Metal) => {},
+    onDelete: () => {
+    },
+    onUpdate: () => {
+    },
     metal: {
         id: 'node-3',
         name: 'node-3',
@@ -129,8 +139,9 @@ const fusionNode: MetalNodeProps = {
 
 
 export function Designer() {
-    const nodeTypes = useMemo(()=>({...MetalNodeTypes}), [])
+    const nodeTypes = useMemo(() => ({...MetalNodeTypes}), [])
     const counter = useRef<number>(0)
+    const nodeEditorRef = useRef<MetalNodeEditorRef>(null)
 
     const initialNodes: Node<MetalNodeProps>[] = []
 
@@ -140,11 +151,11 @@ export function Designer() {
         padding: 0.2
     }
 
-    const[nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-    const[edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
     const onConnect: OnConnect = useCallback(
-        (connection: Connection ) => {
+        (connection: Connection) => {
             if (!onConnectValid(connection, nodes, edges)) {
                 return
             }
@@ -159,7 +170,7 @@ export function Designer() {
         })
     }, [])
 
-    const onAddNode = useCallback((nodeTmpl: MetalNodeProps)=>{
+    const onAddNode = useCallback((nodeTmpl: MetalNodeProps) => {
         setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             const id = counter.current++
             const nodeId = `node-${id}`
@@ -170,7 +181,14 @@ export function Designer() {
                     name: `node-${id}`,
                     props: {}
                 },
-                onDelete: ()=>{
+                onUpdate: () => {
+                    if (nodeEditorRef.current == null) {
+                        return
+                    }
+                    const editorRef: MetalNodeEditorRef = nodeEditorRef.current
+                    editorRef.load(nodeTmpl)
+                },
+                onDelete: () => {
                     setNodes((prevNds: Node<MetalNodeProps>[]) => {
                         return prevNds.filter(nd => (nd.id !== nodeId))
                     })
@@ -189,43 +207,63 @@ export function Designer() {
     }, [])
 
 
+
     return (
-        <div style={{ height: '100%' }}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onNodeContextMenu={(event: ReactMouseEvent, node: Node)=>{}}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onEdgeDoubleClick={onEdgeDoubleClick}
-                fitView
-                fitViewOptions={fitViewOptions}
-                nodeTypes={nodeTypes}
-            >
-                <Background />
-                <Controls>
-                    <ControlButton onClick={()=>{onAddNode(sourceNode)}}>
-                        {MetalViewIcons.SOURCE}
-                    </ControlButton>
-                    <ControlButton onClick={()=>{onAddNode(sinkNode)}}>
-                        {MetalViewIcons.SINK}
-                    </ControlButton>
-                    <ControlButton onClick={()=>{onAddNode(mapperNode)}}>
-                        {MetalViewIcons.MAPPER}
-                    </ControlButton>
-                    <ControlButton onClick={()=>{onAddNode(fusionNode)}}>
-                        {MetalViewIcons.FUSION}
-                    </ControlButton>
-                </Controls>
-                <Controls showZoom={false} showFitView={false} showInteractive={false} position={'top-right'}>
-                    <ControlButton><AiOutlineDeploymentUnit/></ControlButton>
-                    <ControlButton><CgRadioChecked/></ControlButton>
-                    <ControlButton><VscDebugStart/></ControlButton>
-                    <ControlButton><VscDebugStop/></ControlButton>
-                </Controls>
-                <MiniMap></MiniMap>
-            </ReactFlow>
-        </div>
+        <>
+            <Grid container sx={{height: '100%'}}>
+                <Grid item xs={8}>
+                    <div style={{height: '100%'}}>
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onNodeContextMenu={(event: ReactMouseEvent, node: Node) => {
+                            }}
+                            onEdgesChange={onEdgesChange}
+                            onConnect={onConnect}
+                            onEdgeDoubleClick={onEdgeDoubleClick}
+                            fitView
+                            fitViewOptions={fitViewOptions}
+                            nodeTypes={nodeTypes}
+                        >
+                            <Background/>
+                            <Controls>
+                                <ControlButton onClick={() => {
+                                    onAddNode(sourceNode)
+                                }}>
+                                    {MetalViewIcons.SOURCE}
+                                </ControlButton>
+                                <ControlButton onClick={() => {
+                                    onAddNode(sinkNode)
+                                }}>
+                                    {MetalViewIcons.SINK}
+                                </ControlButton>
+                                <ControlButton onClick={() => {
+                                    onAddNode(mapperNode)
+                                }}>
+                                    {MetalViewIcons.MAPPER}
+                                </ControlButton>
+                                <ControlButton onClick={() => {
+                                    onAddNode(fusionNode)
+                                }}>
+                                    {MetalViewIcons.FUSION}
+                                </ControlButton>
+                            </Controls>
+                            <Controls showZoom={false} showFitView={false} showInteractive={false} position={'top-right'}>
+                                <ControlButton><AiOutlineDeploymentUnit/></ControlButton>
+                                <ControlButton><CgRadioChecked/></ControlButton>
+                                <ControlButton><VscDebugStart/></ControlButton>
+                                <ControlButton><VscDebugStop/></ControlButton>
+                            </Controls>
+                            <MiniMap></MiniMap>
+                        </ReactFlow>
+
+                    </div>
+                </Grid>
+                <Grid item xs={4}>
+                </Grid>
+            </Grid>
+            <MetalNodeEditor ref={nodeEditorRef}/>
+        </>
     )
 }

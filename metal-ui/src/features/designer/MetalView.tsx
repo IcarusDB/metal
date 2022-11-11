@@ -33,7 +33,7 @@ export interface MetalNodeProps {
     metalPkg: MetalPkg,
     metal: Metal,
     type: MetalTypes,
-    onUpdate: (newMetal: Metal) => void;
+    onUpdate: () => void;
     onDelete: () => void;
 }
 
@@ -204,7 +204,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                             justifyContent="flex-end"
                             alignItems="stretch"
                         >
-                            <Button size="small" sx={{borderTopLeftRadius: 0}}><VscExpandAll/></Button>
+                            <Button size="small" sx={{borderTopLeftRadius: 0}} onClick={onUpdate}><VscExpandAll/></Button>
                             <Button size="small" sx={{borderBottomLeftRadius: 0}} onClick={onDelete}><AiOutlineDelete/></Button>
                         </Stack>
                     </Stack>
