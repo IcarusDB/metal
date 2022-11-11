@@ -17,10 +17,11 @@ import {
     ButtonGroup,
     Typography
 } from "@mui/material";
-import {useMemo} from "react";
+import {RefObject, useMemo, MouseEvent} from "react";
 import {MetalPkg} from "../../model/MetalPkg";
 import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {GraphTopology} from "../../model/GraphTopology";
+import {MetalNodeEditorHandler} from "./MetalNodeEditor";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload/>,
@@ -33,8 +34,9 @@ export interface MetalNodeProps {
     metalPkg: MetalPkg,
     metal: Metal,
     type: MetalTypes,
-    onUpdate: () => void;
+    onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
+    editorRef?: RefObject<MetalNodeEditorHandler>
 }
 
 export interface IMetalNodeView {
@@ -176,7 +178,16 @@ export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProp
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const {metal, metalPkg, type, onDelete, onUpdate} = props.data
+    const editorRef = props.data.editorRef
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type)
+
+    const onEdit = (event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
+        if (editorRef === undefined || editorRef === null || editorRef.current === null) {
+            return
+        }
+        const editorHandler: MetalNodeEditorHandler = editorRef.current
+        editorHandler.load(props.data)
+    }
 
     return (
         <Badge color="secondary" badgeContent={"?"}>
@@ -204,7 +215,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                             justifyContent="flex-end"
                             alignItems="stretch"
                         >
-                            <Button size="small" sx={{borderTopLeftRadius: 0}} onClick={onUpdate}><VscExpandAll/></Button>
+                            <Button size="small" sx={{borderTopLeftRadius: 0}} onClick={onEdit}><VscExpandAll/></Button>
                             <Button size="small" sx={{borderBottomLeftRadius: 0}} onClick={onDelete}><AiOutlineDelete/></Button>
                         </Stack>
                     </Stack>

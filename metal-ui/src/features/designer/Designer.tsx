@@ -19,7 +19,7 @@ import {VscDebugStart, VscDebugStop} from "react-icons/vsc";
 import {CgRadioChecked} from "react-icons/cg";
 import {AiOutlineDeploymentUnit} from "react-icons/ai";
 import {Drawer, Grid, Paper, Stack, Container} from "@mui/material";
-import {MetalNodeEditor, MetalNodeEditorRef} from "./MetalNodeEditor";
+import {MetalNodeEditor, MetalNodeEditorHandler} from "./MetalNodeEditor";
 
 const sourceNode: MetalNodeProps = {
     type: MetalTypes.SOURCE,
@@ -141,7 +141,7 @@ const fusionNode: MetalNodeProps = {
 export function Designer() {
     const nodeTypes = useMemo(() => ({...MetalNodeTypes}), [])
     const counter = useRef<number>(0)
-    const nodeEditorRef = useRef<MetalNodeEditorRef>(null)
+    const nodeEditorRef = useRef<MetalNodeEditorHandler>(null)
 
     const initialNodes: Node<MetalNodeProps>[] = []
 
@@ -170,6 +170,23 @@ export function Designer() {
         })
     }, [])
 
+    const updateNodeMetal = useCallback((newMetal: Metal)=>{
+        setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+            return prevNodes.map((prevNode: Node<MetalNodeProps>) => {
+                if (prevNode.data.metal.id !== newMetal.id) {
+                    return prevNode
+                }
+                return {
+                    ...prevNode,
+                    data: {
+                        ...prevNode.data,
+                        metal: newMetal
+                    }
+                }
+            })
+        })
+    }, [])
+
     const onAddNode = useCallback((nodeTmpl: MetalNodeProps) => {
         setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             const id = counter.current++
@@ -181,13 +198,7 @@ export function Designer() {
                     name: `node-${id}`,
                     props: {}
                 },
-                onUpdate: () => {
-                    if (nodeEditorRef.current == null) {
-                        return
-                    }
-                    const editorRef: MetalNodeEditorRef = nodeEditorRef.current
-                    editorRef.load(nodeTmpl)
-                },
+                onUpdate: updateNodeMetal,
                 onDelete: () => {
                     setNodes((prevNds: Node<MetalNodeProps>[]) => {
                         return prevNds.filter(nd => (nd.id !== nodeId))
@@ -196,6 +207,7 @@ export function Designer() {
                         return prevEdges.filter(edge => (!(edge.source === nodeId || edge.target === nodeId)))
                     })
                 },
+                editorRef: nodeEditorRef
             }
             return prevNodes.concat({
                 id: nodeCopy.metal.id,
