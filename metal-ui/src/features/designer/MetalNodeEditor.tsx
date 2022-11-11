@@ -1,5 +1,5 @@
-import {FormEvent, ForwardedRef, forwardRef, MouseEvent, useImperativeHandle, useRef, useState} from "react";
-import {MetalNodeProps} from "./MetalView";
+import {FormEvent, ForwardedRef, forwardRef, MouseEvent, RefObject, useImperativeHandle, useRef, useState} from "react";
+import {MetalNodeInOut, MetalNodeProps} from "./MetalView";
 import {Backdrop, Button, Container, Drawer, Input, Paper, Skeleton, Stack, TextField} from "@mui/material";
 import {RJSFSchema} from "@rjsf/utils";
 import {IChangeEvent} from "@rjsf/core";
@@ -8,6 +8,7 @@ import validator from "@rjsf/validator-ajv8";
 import {Metal} from "../../model/Metal";
 
 export interface MetalNodeEditorProps {
+    metalNodeInOutRef: RefObject<MetalNodeInOut>
 }
 
 export interface MetalNodeEditorHandler {
@@ -16,9 +17,21 @@ export interface MetalNodeEditorHandler {
 }
 
 export const MetalNodeEditor = forwardRef((props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
+        const metalNodeInOutRef = props.metalNodeInOutRef
         const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null)
         const [isOpen, setOpen] = useState(false)
         const nameInputRef = useRef<HTMLInputElement>()
+
+        const printInputs = ()=> {
+            if (metalNodeInOutRef === null || metalNodeInOutRef.current === null || metalNodeInOutRef.current === undefined) {
+                return
+            }
+            const inOut: MetalNodeInOut = metalNodeInOutRef.current
+            if (metalProps === null) {
+                return;
+            }
+            console.log(inOut.inputs(metalProps.metal.id))
+        }
 
         useImperativeHandle(ref, () => ({
             load: (props: MetalNodeProps) => {
@@ -92,8 +105,8 @@ export const MetalNodeEditor = forwardRef((props: MetalNodeEditorProps, ref: For
                                     spacing={8}
                                 >
                                     <Button type={"submit"} variant={"contained"}>{"confirm"}</Button>
-                                    <Button onClick={onCancel}
-                                    >{"cancel"}</Button>
+                                    <Button onClick={onCancel}>{"cancel"}</Button>
+                                    <Button onClick={printInputs}>{"inputs"}</Button>
                                 </Stack>
                             </Form>
                         </Stack>

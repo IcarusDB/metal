@@ -39,6 +39,42 @@ export interface MetalNodeProps {
     editorRef?: RefObject<MetalNodeEditorHandler>
 }
 
+export interface MetalNodeInOut {
+    inputs: (id: string) => Node<MetalNodeProps>[];
+    outputs: (id: string) => Node<MetalNodeProps>[];
+}
+
+export class MetalNodeInOutUtil implements MetalNodeInOut {
+    private inner: MetalNodeInOut
+    private constructor(instance: MetalNodeInOut) {
+        this.inner = instance
+    }
+
+    public static instance(instance: MetalNodeInOut) {
+        return new MetalNodeInOutUtil(instance)
+    }
+
+    public static default() {
+        return new MetalNodeInOutUtil({
+            inputs: (id: string) => ([]),
+            outputs: (id: string) => ([])
+        })
+    }
+
+    public update(instance: MetalNodeInOut): void {
+        this.inner = instance
+    }
+
+    inputs(id: string): Node<MetalNodeProps>[] {
+        return this.inner.inputs(id);
+    }
+
+    outputs(id: string): Node<MetalNodeProps>[] {
+        return this.inner.outputs(id);
+    }
+
+}
+
 export interface IMetalNodeView {
     inputHandle: (props: MetalNodeProps) => JSX.Element
     outputHandle: (props: MetalNodeProps) => JSX.Element
@@ -135,7 +171,7 @@ export const MetalNodeViews = {
     }
 }
 
-export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProps>[], edges: Edge[]) {
+export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) {
     if (connection.target === null || connection.source === null) {
         return false
     }
