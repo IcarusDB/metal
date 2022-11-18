@@ -8,6 +8,7 @@ import {
     Container,
     Divider,
     IconButton,
+    LinearProgress,
     List,
     ListItem,
     Paper,
@@ -17,7 +18,8 @@ import {
     Typography,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useCallback, useEffect, useState } from "react";
+import _, { filter } from "lodash";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AiOutlineReload } from "react-icons/ai";
 import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
@@ -66,6 +68,29 @@ export function MetalPkgView(props: MetalPkgProps) {
     );
 }
 
+interface ITypeFilter {
+    isOn: () => boolean;
+    onToggle: () => void;
+}
+
+function TypeFilter(
+    type: MetalTypes,
+    pkgFilter: Set<MetalTypes>,
+    setPkgFilter: React.Dispatch<React.SetStateAction<Set<MetalTypes>>>
+): ITypeFilter {
+    return {
+        isOn: () => pkgFilter.has(type),
+        onToggle: () => {
+            if (pkgFilter.has(type)) {
+                pkgFilter.delete(type);
+            } else {
+                pkgFilter.add(type);
+            }
+            setPkgFilter(_.clone(pkgFilter));
+        },
+    };
+}
+
 export function MetalExplorer() {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
@@ -73,17 +98,31 @@ export function MetalExplorer() {
 
     const [status, setStatus] = useState<State>(State.idle);
     const [metalPkgs, setMetalPkgs] = useState<MetalPkg[]>([]);
+    const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
+
+    const filters = useMemo(
+        () => ({
+            source: TypeFilter(MetalTypes.SOURCE, pkgFilter, setPkgFilter),
+            sink: TypeFilter(MetalTypes.SINK, pkgFilter, setPkgFilter),
+            mapper: TypeFilter(MetalTypes.MAPPER, pkgFilter, setPkgFilter),
+            fusion: TypeFilter(MetalTypes.FUSION, pkgFilter, setPkgFilter),
+            setup: TypeFilter(MetalTypes.SETUP, pkgFilter, setPkgFilter),
+        }),
+        [pkgFilter, setPkgFilter]
+    );
 
     const load = useCallback(() => {
         if (token !== null) {
             setStatus(State.pending);
             getAllMetalPkgsOfUserAccess(token).then(
                 (pkgs: MetalPkg[]) => {
-                    setMetalPkgs(pkgs);
-                    setStatus(State.success);
+                    setTimeout(() => {
+                        setMetalPkgs(pkgs);
+                        setStatus(State.success);
+                    }, 3000);
                 },
                 (reason) => {
                     console.error(reason);
@@ -97,9 +136,15 @@ export function MetalExplorer() {
         load();
     }, [load]);
 
-    if (token === null || metalPkgs === null || metalPkgs.length === 0) {
-        return <Skeleton />;
-    }
+    // if (token === null || metalPkgs === null || metalPkgs.length === 0) {
+    //     return <Skeleton />;
+    // }
+
+    const progress = isPending()? (
+        <LinearProgress/>
+    ): (
+        <LinearProgress variant="determinate" value={0}/>
+    )
 
     return (
         <ThemeProvider theme={theme}>
@@ -116,39 +161,84 @@ export function MetalExplorer() {
                     divider={<Divider orientation="vertical" flexItem />}
                 >
                     <Toolbar sx={{ width: "80%" }}>
-                        <IconButton>{MetalViewIcons.SOURCE}</IconButton>
-                        <IconButton>{MetalViewIcons.SINK}</IconButton>
-                        <IconButton>{MetalViewIcons.MAPPER}</IconButton>
-                        <IconButton>{MetalViewIcons.FUSION}</IconButton>
-                        <IconButton>{MetalViewIcons.SETUP}</IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.source.isOn() ? "primary" : "secondary"}
+                            onClick={filters.source.onToggle}
+                        >
+                            {MetalViewIcons.SOURCE}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.sink.isOn() ? "primary" : "secondary"}
+                            onClick={filters.sink.onToggle}
+                        >
+                            {MetalViewIcons.SINK}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.mapper.isOn() ? "primary" : "secondary"}
+                            onClick={filters.mapper.onToggle}
+                        >
+                            {MetalViewIcons.MAPPER}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.fusion.isOn() ? "primary" : "secondary"}
+                            onClick={filters.fusion.onToggle}
+                        >
+                            {MetalViewIcons.FUSION}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.setup.isOn() ? "primary" : "secondary"}
+                            onClick={filters.setup.onToggle}
+                        >
+                            {MetalViewIcons.SETUP}
+                        </IconButton>
                     </Toolbar>
                     <Toolbar sx={{ width: "20%" }}>
-                        <IconButton>
+                        <IconButton disabled={isPending()} onClick={load}>
                             <AiOutlineReload />
                         </IconButton>
                     </Toolbar>
                 </Stack>
             </AppBar>
-            <Backdrop open={isPending()} sx={{ position: "absolute" }} />
-            {isFailure() && <Alert severity={"error"}>{"Fail to load projects."}</Alert>}
+            {progress}
             <Box
                 component={Paper}
-                sx={{ display: "flex", height: "100%", width: "100%", overflow: "hidden" }}
+                sx={{ display: "flex", flexDirection:"column", height: "100%", width: "100%", overflow: "hidden" }}
             >
+                <Stack>
+                {isFailure() && <Alert severity={"error"}>{"Fail to load metal packages."}</Alert>}
+                
                 <List sx={{ overflowY: "scroll", width: "inherit" }}>
-                    {metalPkgs.map((metalPkg: MetalPkg, index: number) => {
-                        const props = {
-                            type: metalType(metalPkg.type),
-                            metalPkg: metalPkg,
-                        };
-                        return (
-                            <ListItem key={index} sx={{ width: "auto" }}>
-                                <MetalPkgView {...props} />
-                            </ListItem>
-                        );
-                    })}
+                    <Backdrop open={isPending()} sx={{ position: "absolute", height: "auto"}} />
+                    {afterTypeFilter(pkgFilter, metalPkgs).map(
+                        (metalPkg: MetalPkg, index: number) => {
+                            const props = {
+                                type: metalType(metalPkg.type),
+                                metalPkg: metalPkg,
+                            };
+                            return (
+                                <>
+                                <ListItem key={index} sx={{ width: "auto" }}>
+                                    <MetalPkgView {...props} />
+                                </ListItem>
+                                <Divider variant="inset" component="li" />
+                                </>
+                                
+                            );
+                        }
+                    )}
                 </List>
+                </Stack>
             </Box>
         </ThemeProvider>
     );
+}
+function afterTypeFilter(pkgFilter: Set<MetalTypes>, pkgs: MetalPkg[]) {
+    return pkgFilter.size > 0
+        ? pkgs.filter((pkg: MetalPkg) => pkgFilter.has(metalType(pkg.type)))
+        : pkgs;
 }
