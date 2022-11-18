@@ -60,24 +60,20 @@ function iconFatory(node: TabNode) {
 function factory(node: TabNode) {
     const component = node.getComponent()
     switch (component) {
-        case "projects": {
+        case "projects":
             return (
                 <ProjectList/>
-            )
-        }
-            ;
-        case "designer": {
+            );
+        case "designer":
             return (
                 <Designer/>
-            )
-        };
-        default: {
+            );
+        default:
             return (
                 <div className={'panel'}>
                     <Skeleton/>
                 </div>
             )
-        }
     }
 }
 

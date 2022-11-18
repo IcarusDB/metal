@@ -4,27 +4,19 @@ import {tokenSelector} from "../user/userSlice";
 import {
     Box,
     Paper,
-    Container,
     Divider,
     IconButton,
-    Card,
     List,
     ListItem,
     ListItemText,
-    ListItemIcon,
     Tooltip,
-    ListItemButton,
-    CardHeader,
-    CardContent,
-    Snackbar,
     TableContainer,
     Table,
     TableHead,
     TableRow,
     TableBody,
     TableCell,
-    Button,
-    CssBaseline, CircularProgress, Alert, Backdrop
+    CircularProgress, Alert, Backdrop
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -42,9 +34,10 @@ import {
     BsCommand
 } from "react-icons/bs";
 import {HiStop} from "react-icons/hi";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
 import {getAllProjectOfUser} from "./ProjectApi";
+import { State } from '../../api/State';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -104,7 +97,7 @@ function backendStatus(deploy: Deploy) {
     }
 
     switch (deploy.backend.status.current) {
-        case BackendState.UN_DEPLOY: {
+        case BackendState.UN_DEPLOY: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -112,9 +105,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+
             ;
-        case BackendState.UP: {
+        case BackendState.UP: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -122,9 +115,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        case BackendState.DOWN: {
+        case BackendState.DOWN: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -132,9 +125,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        case BackendState.FAILURE: {
+        case BackendState.FAILURE: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -142,20 +135,20 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        default: {
+        default: 
             return (
                 <Tooltip title={'Unknown'}>
                     <AiOutlineQuestionCircle/>
                 </Tooltip>
             )
         }
-    }
+    
 }
 
 export function ProjectItem(props: { item: Project, index: number }) {
-    const {item, index} = props;
+    const {item} = props;
     return (
         <TableRow key={item.id}>
             <TableCell>{item.name}</TableCell>
@@ -179,13 +172,6 @@ export function ProjectItem(props: { item: Project, index: number }) {
     )
 }
 
-enum State {
-    idle,
-    pending,
-    success,
-    failure
-}
-
 const theme = createTheme()
 
 export function ProjectList() {
@@ -201,7 +187,7 @@ export function ProjectList() {
         return status === State.failure
     }
 
-    const load = () => {
+    const load = useCallback(() => {
         if (token != null) {
             setStatus(State.pending)
             getAllProjectOfUser(token).then((_projects: Project[]) => {
@@ -214,11 +200,11 @@ export function ProjectList() {
                 setStatus(State.failure)
             })
         }
-    }
+    }, [token])
 
     useEffect(() => {
         load()
-    }, [token])
+    }, [load])
 
     return (
         <ThemeProvider theme={theme}>

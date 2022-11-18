@@ -42,5 +42,16 @@ export const ApiResponse = {
         } catch (err) {
             return false
         }
+    },
+    mayBeFailure: (response: ApiResponseEntity) => {
+        if (!ApiResponse.isSuccess(response)) {
+            if (response.msg === undefined) {
+                throw new Error('Response is failure, and no msg found in response.')
+            }
+            throw new Error(response.msg)
+        }
+        if (response.data === undefined) {
+            throw new Error('Response is successful, but no data found in response.')
+        }
     }
 }

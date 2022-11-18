@@ -20,12 +20,12 @@ export async function getAllProjectOfUser(token: string): Promise<Project[]> {
         try {
             const resp: ApiResponseEntity = response.data
             if (!ApiResponse.isSuccess(resp)) {
-                if (resp.msg == undefined) {
+                if (resp.msg === undefined) {
                     throw new Error('Response is failure, and no msg found in response.')
                 }
                 throw new Error(resp.msg)
             }
-            if (resp.data == undefined) {
+            if (resp.data === undefined) {
                 throw new Error('Response is successful, but no data found in response.')
             }
             const result: Project[] = resp.data.map((obj: any) => {

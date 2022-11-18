@@ -8,6 +8,17 @@ export enum MetalTypes {
     SETUP = "setup"
 }
 
+export function metalType(type: string): MetalTypes {
+    switch (type.toUpperCase()) {
+        case "SOURCE": return MetalTypes.SOURCE;
+        case "SINK": return MetalTypes.SINK;
+        case "MAPPER": return MetalTypes.MAPPER;
+        case "FUSION": return MetalTypes.FUSION;
+        case "SETUP": return MetalTypes.SETUP;
+        default: return MetalTypes.SOURCE;
+    }
+}
+
 export interface Metal {
     id: string,
     name: string,

@@ -7,7 +7,7 @@ import {Main} from "./features/main/Main";
 function App() {
     return (
         <div className="App">
-            {/*<SignIn></SignIn>*/}
+            <SignIn></SignIn>
             {/*<UserNotice/>*/}
             <Main/>
         </div>
