@@ -46,25 +46,54 @@ export function MetalPkgView(props: MetalPkgProps) {
     const version = pkgSubs.length > 2 ? pkgSubs[2] : "?";
 
     return (
-        <Stack direction="row" justifyContent="stretch" alignItems="center">
-            {metalViewIcon(type)}
+        <Box
+            sx={{
+                flexGrow: 0,
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "row",
+                paddingLeft: "0em",
+                paddingRight: "0em",
+                width: "100%",
+            }}
+            component={Paper}
+        >
+            <Container sx={{ width: "30%" }}>
+                <h1>{metalViewIcon(type)}</h1>
+            </Container>
+
+            <Divider light orientation="vertical" />
             <Stack
                 direction="column"
                 justifyContent="flex-start"
                 alignItems="flex-start"
                 spacing={2}
+                sx={{ width: "90%" }}
             >
-                <Typography>{className}</Typography>
+                <Typography
+                    sx={{ width: "inherit", overflow: "hidden" }}
+                    variant="h6"
+                    noWrap={false}
+                >
+                    {className}
+                </Typography>
                 <Stack direction="column" justifyContent="flex-start" alignItems="flex-start">
-                    <Typography>{groupId}</Typography>
-                    <Typography>{artifactId}</Typography>
-                    <Typography>{version}</Typography>
+                    <Typography variant="caption">{groupId}</Typography>
+                    <Typography variant="caption">{artifactId}</Typography>
+                    <Typography variant="caption">{version}</Typography>
                 </Stack>
-                <Stack>
-                    <Button>{"Add"}</Button>
+                <Stack
+                    direction="row"
+                    justifyContent="flex-end"
+                    alignItems="flex-end"
+                    sx={{ width: "inherit" }}
+                >
+                    <Button variant="contained" color="primary">
+                        {"Add"}
+                    </Button>
                 </Stack>
             </Stack>
-        </Stack>
+        </Box>
     );
 }
 
@@ -136,15 +165,11 @@ export function MetalExplorer() {
         load();
     }, [load]);
 
-    // if (token === null || metalPkgs === null || metalPkgs.length === 0) {
-    //     return <Skeleton />;
-    // }
-
-    const progress = isPending()? (
-        <LinearProgress/>
-    ): (
-        <LinearProgress variant="determinate" value={0}/>
-    )
+    const progress = isPending() ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
 
     return (
         <ThemeProvider theme={theme}>
@@ -207,13 +232,18 @@ export function MetalExplorer() {
             {progress}
             <Box
                 component={Paper}
-                sx={{ display: "flex", flexDirection:"column", height: "100%", width: "100%", overflow: "hidden" }}
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    width: "100%",
+                    overflow: "hidden",
+                }}
             >
-                <Stack>
                 {isFailure() && <Alert severity={"error"}>{"Fail to load metal packages."}</Alert>}
-                
+
                 <List sx={{ overflowY: "scroll", width: "inherit" }}>
-                    <Backdrop open={isPending()} sx={{ position: "absolute", height: "auto"}} />
+                    <Backdrop open={isPending()} sx={{ position: "absolute", height: "auto" }} />
                     {afterTypeFilter(pkgFilter, metalPkgs).map(
                         (metalPkg: MetalPkg, index: number) => {
                             const props = {
@@ -222,17 +252,14 @@ export function MetalExplorer() {
                             };
                             return (
                                 <>
-                                <ListItem key={index} sx={{ width: "auto" }}>
-                                    <MetalPkgView {...props} />
-                                </ListItem>
-                                <Divider variant="inset" component="li" />
+                                    <ListItem key={index} sx={{ width: "auto" }}>
+                                        <MetalPkgView {...props} />
+                                    </ListItem>
                                 </>
-                                
                             );
                         }
                     )}
                 </List>
-                </Stack>
             </Box>
         </ThemeProvider>
     );
