@@ -175,6 +175,7 @@ export function Designer() {
                         nodeTypes={nodeTypes}
                     >
                         <Background />
+                        <Controls/>
                         <Controls
                             showZoom={false}
                             showFitView={false}

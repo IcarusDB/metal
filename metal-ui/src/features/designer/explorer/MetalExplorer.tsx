@@ -1,8 +1,6 @@
 import {
     Alert,
-    AppBar,
     Backdrop,
-    Badge,
     Box,
     Button,
     Container,
@@ -13,21 +11,21 @@ import {
     List,
     ListItem,
     Paper,
-    Skeleton,
     Stack,
     Toolbar,
     Typography,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import _, { filter } from "lodash";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import _ from "lodash";
+import React, { ForwardedRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { AiOutlineReload } from "react-icons/ai";
+import { VscExpandAll } from "react-icons/vsc";
 import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
 import { metalType, MetalTypes } from "../../../model/Metal";
 import { MetalPkg } from "../../../model/MetalPkg";
 import { tokenSelector } from "../../user/userSlice";
-import { MetalNodeProps, MetalNodeTypes, metalViewIcon, MetalViewIcons } from "../MetalView";
+import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
 
 const theme = createTheme();
@@ -36,16 +34,18 @@ export interface MetalPkgProps {
     type: MetalTypes;
     metalPkg: MetalPkg;
     addNode: (nodeTmpl: MetalNodeProps) => void;
+    openDetail: (pkg: MetalPkg) => void;
 }
 
 export function MetalPkgView(props: MetalPkgProps) {
-    const { type, metalPkg, addNode } = props;
+    const { type, metalPkg, addNode, openDetail } = props;
     const classSubs = metalPkg.class.split(".");
     const className = classSubs.length > 0 ? classSubs[classSubs.length - 1] : "?";
     const pkgSubs = metalPkg.pkg.split(":");
     const groupId = pkgSubs.length > 0 ? pkgSubs[0] : "?";
     const artifactId = pkgSubs.length > 1 ? pkgSubs[1] : "?";
     const version = pkgSubs.length > 2 ? pkgSubs[2] : "?";
+
 
     const onAddNode = () => {
         const nodeTmpl: MetalNodeProps = {
@@ -61,6 +61,10 @@ export function MetalPkgView(props: MetalPkgProps) {
         };
         addNode(nodeTmpl);
     };
+
+    const onDetail = () => {
+        openDetail(metalPkg)
+    }
 
     return (
         <Box
@@ -110,11 +114,65 @@ export function MetalPkgView(props: MetalPkgProps) {
                             {"Add"}
                         </Button>
                     )}
+                    <IconButton onClick={onDetail}>
+                        <VscExpandAll />
+                    </IconButton>
                 </Stack>
             </Stack>
         </Box>
     );
 }
+
+export interface MetalPkgDetailHandler {
+    open: (pkg: MetalPkg) => void;
+    close: () => void;
+}
+
+export interface MetalPkgDetailProps {
+}
+
+export const MetalPkgDetail = forwardRef((props: MetalPkgDetailProps, ref: ForwardedRef<MetalPkgDetailHandler>) => {
+    const [isOpen, setOpen] = useState(false);
+    const [pkgDetail, setPkg] = useState<MetalPkg | null>(null);
+
+    function open(pkg: MetalPkg) {
+        setPkg(pkg);
+        setOpen(true);
+    }
+
+    function close() {
+        setPkg(null)
+        setOpen(false);
+    }
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        open: open,
+        close: close
+      }),
+      [],
+    )
+
+    return (
+        <div id="container" style={{position: "relative", margin: "0", height: isOpen? "100%": "0%"}}>
+            <Box component={Paper}>
+                <Grid container>
+                    <Grid item xs={12}>
+                        <Button onClick={close}>back</Button>
+                    </Grid>
+                    <Grid item xs={2}>
+                        {"Class"}
+                    </Grid>
+                    <Grid item xs={10}>
+                        <Typography>{pkgDetail === null ? "" : pkgDetail.class}</Typography>
+                    </Grid>
+                </Grid>
+            </Box>
+        </div>
+        
+    );
+})
 
 interface ITypeFilter {
     isOn: () => boolean;
@@ -152,6 +210,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const [status, setStatus] = useState<State>(State.idle);
     const [metalPkgs, setMetalPkgs] = useState<MetalPkg[]>([]);
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
+    const detailRef = useRef<MetalPkgDetailHandler>(null);
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
@@ -184,6 +243,13 @@ export function MetalExplorer(props: MetalExplorerProps) {
             );
         }
     }, [token]);
+
+    const openDetail = (pkg: MetalPkg) => {
+        if (detailRef.current !== null) {
+            detailRef.current.open(pkg)
+        }
+    };
+
 
     useEffect(() => {
         load();
@@ -281,6 +347,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                                     type: metalType(metalPkg.type),
                                     metalPkg: metalPkg,
                                     addNode: addNode,
+                                    openDetail: openDetail,
                                 };
                                 return (
                                     <>
@@ -291,8 +358,13 @@ export function MetalExplorer(props: MetalExplorerProps) {
                                 );
                             }
                         )}
-                        <Backdrop open={isPending()} sx={{ position: "absolute" }} />
                     </List>
+                    <div style={{position: "relative", margin: "0"}}>
+                        <Backdrop open={isPending()} sx={{ position: "absolute" }} />
+                    </div>          
+                    <MetalPkgDetail ref={detailRef}></MetalPkgDetail>
+                 
+                    
                 </Box>
             </div>
         </ThemeProvider>
