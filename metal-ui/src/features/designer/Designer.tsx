@@ -19,158 +19,18 @@ import "reactflow/dist/style.css";
 import {
     MetalNodeProps,
     MetalNodeTypes,
-    MetalViewIcons,
     onConnectValid,
     MetalNodeInOutUtil,
 } from "./MetalView";
-import { Metal, MetalTypes } from "../../model/Metal";
+import { Metal } from "../../model/Metal";
 import { VscDebugStart, VscDebugStop } from "react-icons/vsc";
 import { CgRadioChecked } from "react-icons/cg";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
-import { Container, Grid, Paper, Stack } from "@mui/material";
+import { Paper, Stack } from "@mui/material";
 import { MetalNodeEditor, MetalNodeEditorHandler } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 
-const sourceNode: MetalNodeProps = {
-    type: MetalTypes.SOURCE,
-    onDelete: () => {},
-    onUpdate: () => {},
-    metal: {
-        id: "node-0",
-        name: "node-0",
-        props: {},
-    },
-    metalPkg: {
-        id: "634e5cd2be183877031fc1d1",
-        userId: "63490d88c8c0b246291970aa",
-        type: "SOURCE",
-        scope: "PRIVATE",
-        createTime: 1666079954739,
-        pkg: "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-        class: "org.metal.backend.spark.extension.JsonFileMSource",
-        groupId: "org.metal",
-        artifactId: "metal-on-spark-extensions",
-        version: "1.0.0-SNAPSHOT",
-        formSchema: {
-            type: "object",
-            id: "urn:jsonschema:org:metal:backend:spark:extension:IJsonFileMSourceProps",
-            properties: {
-                schema: {
-                    type: "string",
-                },
-                path: {
-                    type: "string",
-                },
-            },
-        },
-    },
-};
-
-const sinkNode: MetalNodeProps = {
-    type: MetalTypes.SINK,
-    onDelete: () => {},
-    onUpdate: () => {},
-    metal: {
-        id: "node-1",
-        name: "node-1",
-        props: {},
-    },
-    metalPkg: {
-        id: "634e5cd2be183877031fc1d1",
-        userId: "63490d88c8c0b246291970aa",
-        type: "SINK",
-        scope: "PRIVATE",
-        createTime: 1666079954743,
-        pkg: "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-        class: "org.metal.backend.spark.extension.ConsoleMSink",
-        formSchema: {
-            type: "object",
-            id: "urn:jsonschema:org:metal:backend:spark:extension:IConsoleMSinkProps",
-            properties: {
-                numRows: {
-                    type: "integer",
-                },
-            },
-        },
-        groupId: "org.metal",
-        artifactId: "metal-on-spark-extensions",
-        version: "1.0.0-SNAPSHOT",
-    },
-};
-
-const mapperNode: MetalNodeProps = {
-    type: MetalTypes.MAPPER,
-    onDelete: () => {},
-    onUpdate: () => {},
-    metal: {
-        id: "node-2",
-        name: "node-2",
-        props: {},
-    },
-    metalPkg: {
-        id: "634e5cd2be183877031fc1d1",
-        userId: "63490d88c8c0b246291970aa",
-        type: "MAPPER",
-        scope: "PRIVATE",
-        createTime: 1666079954741,
-        pkg: "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-        class: "org.metal.backend.spark.extension.SqlMMapper",
-        formSchema: {
-            type: "object",
-            id: "urn:jsonschema:org:metal:backend:spark:extension:ISqlMMapperProps",
-            properties: {
-                tableAlias: {
-                    type: "string",
-                },
-                sql: {
-                    type: "string",
-                },
-            },
-        },
-        groupId: "org.metal",
-        artifactId: "metal-on-spark-extensions",
-        version: "1.0.0-SNAPSHOT",
-    },
-};
-
-const fusionNode: MetalNodeProps = {
-    type: MetalTypes.FUSION,
-    onDelete: () => {},
-    onUpdate: () => {},
-    metal: {
-        id: "node-3",
-        name: "node-3",
-        props: {},
-    },
-    metalPkg: {
-        id: "634e5cd2be183877031fc1d1",
-        userId: "63490d88c8c0b246291970aa",
-        type: "FUSION",
-        scope: "PRIVATE",
-        createTime: 1666079954742,
-        pkg: "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-        class: "org.metal.backend.spark.extension.SqlMFusion",
-        formSchema: {
-            type: "object",
-            id: "urn:jsonschema:org:metal:backend:spark:extension:ISqlMFusionProps",
-            properties: {
-                tableAlias: {
-                    type: "object",
-                    additionalProperties: {
-                        type: "string",
-                    },
-                },
-                sql: {
-                    type: "string",
-                },
-            },
-        },
-        groupId: "org.metal",
-        artifactId: "metal-on-spark-extensions",
-        version: "1.0.0-SNAPSHOT",
-    },
-};
 
 export function Designer() {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
@@ -283,6 +143,7 @@ export function Designer() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+
     useEffect(() => {
         nodeInOutRef.current.update({
             inputs: inputs,
@@ -314,36 +175,6 @@ export function Designer() {
                         nodeTypes={nodeTypes}
                     >
                         <Background />
-                        <Controls>
-                            <ControlButton
-                                onClick={() => {
-                                    onAddNode(sourceNode);
-                                }}
-                            >
-                                {MetalViewIcons.SOURCE}
-                            </ControlButton>
-                            <ControlButton
-                                onClick={() => {
-                                    onAddNode(sinkNode);
-                                }}
-                            >
-                                {MetalViewIcons.SINK}
-                            </ControlButton>
-                            <ControlButton
-                                onClick={() => {
-                                    onAddNode(mapperNode);
-                                }}
-                            >
-                                {MetalViewIcons.MAPPER}
-                            </ControlButton>
-                            <ControlButton
-                                onClick={() => {
-                                    onAddNode(fusionNode);
-                                }}
-                            >
-                                {MetalViewIcons.FUSION}
-                            </ControlButton>
-                        </Controls>
                         <Controls
                             showZoom={false}
                             showFitView={false}
@@ -367,7 +198,7 @@ export function Designer() {
                     </ReactFlow>
                 </Box>
                 <Box component={Paper} sx={{height:"100%", width:"20%"}}>
-                    <MetalExplorer/>
+                    <MetalExplorer addNode={onAddNode}/>
                 </Box>
             </Stack>
 

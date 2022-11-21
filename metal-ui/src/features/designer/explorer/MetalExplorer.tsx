@@ -27,7 +27,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { metalType, MetalTypes } from "../../../model/Metal";
 import { MetalPkg } from "../../../model/MetalPkg";
 import { tokenSelector } from "../../user/userSlice";
-import { metalViewIcon, MetalViewIcons } from "../MetalView";
+import { MetalNodeProps, MetalNodeTypes, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
 
 const theme = createTheme();
@@ -35,16 +35,32 @@ const theme = createTheme();
 export interface MetalPkgProps {
     type: MetalTypes;
     metalPkg: MetalPkg;
+    addNode: (nodeTmpl: MetalNodeProps) => void;
 }
 
 export function MetalPkgView(props: MetalPkgProps) {
-    const { type, metalPkg } = props;
+    const { type, metalPkg, addNode } = props;
     const classSubs = metalPkg.class.split(".");
     const className = classSubs.length > 0 ? classSubs[classSubs.length - 1] : "?";
     const pkgSubs = metalPkg.pkg.split(":");
     const groupId = pkgSubs.length > 0 ? pkgSubs[0] : "?";
     const artifactId = pkgSubs.length > 1 ? pkgSubs[1] : "?";
     const version = pkgSubs.length > 2 ? pkgSubs[2] : "?";
+
+    const onAddNode = () => {
+        const nodeTmpl: MetalNodeProps = {
+            type: type,
+            onDelete: () => {},
+            onUpdate: () => {},
+            metal: {
+                id: "node-0",
+                name: "node-0",
+                props: {},
+            },
+            metalPkg: metalPkg,
+        };
+        addNode(nodeTmpl);
+    };
 
     return (
         <Box
@@ -69,10 +85,10 @@ export function MetalPkgView(props: MetalPkgProps) {
                 justifyContent="flex-start"
                 alignItems="flex-start"
                 spacing={2}
-                sx={{ width: "90%" }}
+                sx={{ width: "70%" }}
             >
                 <Typography
-                    sx={{ width: "inherit", overflow: "hidden" }}
+                    sx={{ width: "90%", overflow: "hidden", textOverflow: "ellipsis" }}
                     variant="h6"
                     noWrap={false}
                 >
@@ -87,11 +103,13 @@ export function MetalPkgView(props: MetalPkgProps) {
                     direction="row"
                     justifyContent="flex-end"
                     alignItems="flex-end"
-                    sx={{ width: "inherit" }}
+                    sx={{ width: "90%" }}
                 >
-                    <Button variant="contained" color="primary">
-                        {"Add"}
-                    </Button>
+                    {type !== MetalTypes.SETUP && (
+                        <Button variant="contained" color="primary" onClick={onAddNode}>
+                            {"Add"}
+                        </Button>
+                    )}
                 </Stack>
             </Stack>
         </Box>
@@ -121,7 +139,12 @@ function TypeFilter(
     };
 }
 
-export function MetalExplorer() {
+interface MetalExplorerProps {
+    addNode: (nodeTmpl: MetalNodeProps) => void;
+}
+
+export function MetalExplorer(props: MetalExplorerProps) {
+    const { addNode } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -184,7 +207,7 @@ export function MetalExplorer() {
                     justifyContent: "space-between",
                 }}
             >
-                <Paper sx={{width: "auto", height: "auto"}}>
+                <Paper sx={{ width: "auto", height: "auto" }}>
                     <Stack
                         sx={{ width: "auto" }}
                         direction="row"
@@ -195,35 +218,35 @@ export function MetalExplorer() {
                         <Toolbar sx={{ width: "80%" }}>
                             <IconButton
                                 disabled={isPending()}
-                                color={filters.source.isOn() ? "primary" : "secondary"}
+                                color={filters.source.isOn() ? "success" : "secondary"}
                                 onClick={filters.source.onToggle}
                             >
                                 {MetalViewIcons.SOURCE}
                             </IconButton>
                             <IconButton
                                 disabled={isPending()}
-                                color={filters.sink.isOn() ? "primary" : "secondary"}
+                                color={filters.sink.isOn() ? "success" : "secondary"}
                                 onClick={filters.sink.onToggle}
                             >
                                 {MetalViewIcons.SINK}
                             </IconButton>
                             <IconButton
                                 disabled={isPending()}
-                                color={filters.mapper.isOn() ? "primary" : "secondary"}
+                                color={filters.mapper.isOn() ? "success" : "secondary"}
                                 onClick={filters.mapper.onToggle}
                             >
                                 {MetalViewIcons.MAPPER}
                             </IconButton>
                             <IconButton
                                 disabled={isPending()}
-                                color={filters.fusion.isOn() ? "primary" : "secondary"}
+                                color={filters.fusion.isOn() ? "success" : "secondary"}
                                 onClick={filters.fusion.onToggle}
                             >
                                 {MetalViewIcons.FUSION}
                             </IconButton>
                             <IconButton
                                 disabled={isPending()}
-                                color={filters.setup.isOn() ? "primary" : "secondary"}
+                                color={filters.setup.isOn() ? "success" : "secondary"}
                                 onClick={filters.setup.onToggle}
                             >
                                 {MetalViewIcons.SETUP}
@@ -252,12 +275,12 @@ export function MetalExplorer() {
                     )}
 
                     <List sx={{ overflowY: "scroll", height: "100%" }}>
-                       
                         {afterTypeFilter(pkgFilter, metalPkgs).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
                                     type: metalType(metalPkg.type),
                                     metalPkg: metalPkg,
+                                    addNode: addNode,
                                 };
                                 return (
                                     <>
@@ -268,16 +291,10 @@ export function MetalExplorer() {
                                 );
                             }
                         )}
-                        <Backdrop
-                            open={isPending()}
-                            sx={{ position: "absolute"}}
-                        />
+                        <Backdrop open={isPending()} sx={{ position: "absolute" }} />
                     </List>
-                    
                 </Box>
-                
             </div>
-            
         </ThemeProvider>
     );
 }
