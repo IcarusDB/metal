@@ -7,6 +7,7 @@ import {
     Button,
     Container,
     Divider,
+    Grid,
     IconButton,
     LinearProgress,
     List,
@@ -173,94 +174,110 @@ export function MetalExplorer() {
 
     return (
         <ThemeProvider theme={theme}>
-            <AppBar
-                color="primary"
-                position="sticky"
-                sx={{ width: "auto", backgroundColor: "white" }}
-            >
-                <Stack
-                    sx={{ width: "auto" }}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    divider={<Divider orientation="vertical" flexItem />}
-                >
-                    <Toolbar sx={{ width: "80%" }}>
-                        <IconButton
-                            disabled={isPending()}
-                            color={filters.source.isOn() ? "primary" : "secondary"}
-                            onClick={filters.source.onToggle}
-                        >
-                            {MetalViewIcons.SOURCE}
-                        </IconButton>
-                        <IconButton
-                            disabled={isPending()}
-                            color={filters.sink.isOn() ? "primary" : "secondary"}
-                            onClick={filters.sink.onToggle}
-                        >
-                            {MetalViewIcons.SINK}
-                        </IconButton>
-                        <IconButton
-                            disabled={isPending()}
-                            color={filters.mapper.isOn() ? "primary" : "secondary"}
-                            onClick={filters.mapper.onToggle}
-                        >
-                            {MetalViewIcons.MAPPER}
-                        </IconButton>
-                        <IconButton
-                            disabled={isPending()}
-                            color={filters.fusion.isOn() ? "primary" : "secondary"}
-                            onClick={filters.fusion.onToggle}
-                        >
-                            {MetalViewIcons.FUSION}
-                        </IconButton>
-                        <IconButton
-                            disabled={isPending()}
-                            color={filters.setup.isOn() ? "primary" : "secondary"}
-                            onClick={filters.setup.onToggle}
-                        >
-                            {MetalViewIcons.SETUP}
-                        </IconButton>
-                    </Toolbar>
-                    <Toolbar sx={{ width: "20%" }}>
-                        <IconButton disabled={isPending()} onClick={load}>
-                            <AiOutlineReload />
-                        </IconButton>
-                    </Toolbar>
-                </Stack>
-            </AppBar>
-            {progress}
-            <Box
-                component={Paper}
-                sx={{
+            <div
+                style={{
+                    height: "100%",
+                    width: "auto",
                     display: "flex",
                     flexDirection: "column",
-                    height: "100%",
-                    width: "100%",
-                    overflow: "hidden",
+                    alignContent: "space-between",
+                    justifyContent: "space-between",
                 }}
             >
-                {isFailure() && <Alert severity={"error"}>{"Fail to load metal packages."}</Alert>}
-
-                <List sx={{ overflowY: "scroll", width: "inherit" }}>
-                    <Backdrop open={isPending()} sx={{ position: "absolute", height: "auto" }} />
-                    {afterTypeFilter(pkgFilter, metalPkgs).map(
-                        (metalPkg: MetalPkg, index: number) => {
-                            const props = {
-                                type: metalType(metalPkg.type),
-                                metalPkg: metalPkg,
-                            };
-                            return (
-                                <>
-                                    <ListItem key={index} sx={{ width: "auto" }}>
-                                        <MetalPkgView {...props} />
-                                    </ListItem>
-                                </>
-                            );
-                        }
+                <Paper sx={{width: "auto", height: "auto"}}>
+                    <Stack
+                        sx={{ width: "auto" }}
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        divider={<Divider orientation="vertical" flexItem />}
+                    >
+                        <Toolbar sx={{ width: "80%" }}>
+                            <IconButton
+                                disabled={isPending()}
+                                color={filters.source.isOn() ? "primary" : "secondary"}
+                                onClick={filters.source.onToggle}
+                            >
+                                {MetalViewIcons.SOURCE}
+                            </IconButton>
+                            <IconButton
+                                disabled={isPending()}
+                                color={filters.sink.isOn() ? "primary" : "secondary"}
+                                onClick={filters.sink.onToggle}
+                            >
+                                {MetalViewIcons.SINK}
+                            </IconButton>
+                            <IconButton
+                                disabled={isPending()}
+                                color={filters.mapper.isOn() ? "primary" : "secondary"}
+                                onClick={filters.mapper.onToggle}
+                            >
+                                {MetalViewIcons.MAPPER}
+                            </IconButton>
+                            <IconButton
+                                disabled={isPending()}
+                                color={filters.fusion.isOn() ? "primary" : "secondary"}
+                                onClick={filters.fusion.onToggle}
+                            >
+                                {MetalViewIcons.FUSION}
+                            </IconButton>
+                            <IconButton
+                                disabled={isPending()}
+                                color={filters.setup.isOn() ? "primary" : "secondary"}
+                                onClick={filters.setup.onToggle}
+                            >
+                                {MetalViewIcons.SETUP}
+                            </IconButton>
+                        </Toolbar>
+                        <Toolbar sx={{ width: "20%" }}>
+                            <IconButton disabled={isPending()} onClick={load}>
+                                <AiOutlineReload />
+                            </IconButton>
+                        </Toolbar>
+                    </Stack>
+                    {progress}
+                </Paper>
+                <Box
+                    component={Paper}
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "90%",
+                        width: "auto",
+                        overflow: "hidden",
+                    }}
+                >
+                    {isFailure() && (
+                        <Alert severity={"error"}>{"Fail to load metal packages."}</Alert>
                     )}
-                </List>
-            </Box>
+
+                    <List sx={{ overflowY: "scroll", height: "100%" }}>
+                       
+                        {afterTypeFilter(pkgFilter, metalPkgs).map(
+                            (metalPkg: MetalPkg, index: number) => {
+                                const props = {
+                                    type: metalType(metalPkg.type),
+                                    metalPkg: metalPkg,
+                                };
+                                return (
+                                    <>
+                                        <ListItem key={index} sx={{ width: "auto" }}>
+                                            <MetalPkgView {...props} />
+                                        </ListItem>
+                                    </>
+                                );
+                            }
+                        )}
+                        <Backdrop
+                            open={isPending()}
+                            sx={{ position: "absolute"}}
+                        />
+                    </List>
+                    
+                </Box>
+                
+            </div>
+            
         </ThemeProvider>
     );
 }
