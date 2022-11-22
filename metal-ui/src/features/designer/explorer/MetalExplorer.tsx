@@ -349,13 +349,13 @@ export function MetalExplorer(props: MetalExplorerProps) {
                 }}
             >
                 <Paper sx={{ width: "auto", height: "auto" }}>
-                    <Stack
-                        sx={{ width: "auto" }}
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        divider={<Divider orientation="vertical" flexItem />}
-                    >
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                    }}>
                         <Toolbar sx={{ width: "80%" }}>
                             <IconButton
                                 disabled={isPending()}
@@ -393,12 +393,10 @@ export function MetalExplorer(props: MetalExplorerProps) {
                                 {MetalViewIcons.SETUP}
                             </IconButton>
                         </Toolbar>
-                        <Toolbar sx={{ }}>
-                            <IconButton disabled={isPending()} onClick={load}>
+                        <IconButton disabled={isPending()} onClick={load}>
                                 <AiOutlineReload />
-                            </IconButton>
-                        </Toolbar>
-                    </Stack>
+                        </IconButton>
+                    </div>
                     {progress}
                 </Paper>
                 <Box
