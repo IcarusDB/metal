@@ -17,9 +17,19 @@ import {
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import _ from "lodash";
-import React, { ForwardedRef, forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import moment from "moment";
+import React, {
+    ForwardedRef,
+    forwardRef,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { AiOutlineReload } from "react-icons/ai";
-import { VscExpandAll } from "react-icons/vsc";
+import { VscExpandAll, VscChromeMinimize } from "react-icons/vsc";
 import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
 import { metalType, MetalTypes } from "../../../model/Metal";
@@ -29,6 +39,7 @@ import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
 
 const theme = createTheme();
+moment.locale("zh_CN")
 
 export interface MetalPkgProps {
     type: MetalTypes;
@@ -46,7 +57,6 @@ export function MetalPkgView(props: MetalPkgProps) {
     const artifactId = pkgSubs.length > 1 ? pkgSubs[1] : "?";
     const version = pkgSubs.length > 2 ? pkgSubs[2] : "?";
 
-
     const onAddNode = () => {
         const nodeTmpl: MetalNodeProps = {
             type: type,
@@ -63,8 +73,8 @@ export function MetalPkgView(props: MetalPkgProps) {
     };
 
     const onDetail = () => {
-        openDetail(metalPkg)
-    }
+        openDetail(metalPkg);
+    };
 
     return (
         <Box
@@ -128,51 +138,144 @@ export interface MetalPkgDetailHandler {
     close: () => void;
 }
 
-export interface MetalPkgDetailProps {
-}
+export interface MetalPkgDetailProps {}
 
-export const MetalPkgDetail = forwardRef((props: MetalPkgDetailProps, ref: ForwardedRef<MetalPkgDetailHandler>) => {
-    const [isOpen, setOpen] = useState(false);
-    const [pkgDetail, setPkg] = useState<MetalPkg | null>(null);
+export const MetalPkgDetail = forwardRef(
+    (props: MetalPkgDetailProps, ref: ForwardedRef<MetalPkgDetailHandler>) => {
+        const [isOpen, setOpen] = useState(false);
+        const [pkgDetail, setPkg] = useState<MetalPkg | null>(null);
+        const bodyRef = useRef<HTMLDivElement>(null)
 
-    function open(pkg: MetalPkg) {
-        setPkg(pkg);
-        setOpen(true);
-    }
+        function open(pkg: MetalPkg) {
+            setPkg(pkg);
+            setOpen(true);
+        }
 
-    function close() {
-        setPkg(null)
-        setOpen(false);
-    }
+        function close() {
+            setPkg(null);
+            setOpen(false);
+        }
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        open: open,
-        close: close
-      }),
-      [],
-    )
+        useImperativeHandle(
+            ref,
+            () => ({
+                open: open,
+                close: close,
+            }),
+            []
+        );
 
-    return (
-        <div id="container" style={{position: "relative", margin: "0", height: isOpen? "100%": "0%"}}>
-            <Box component={Paper}>
-                <Grid container>
-                    <Grid item xs={12}>
-                        <Button onClick={close}>back</Button>
-                    </Grid>
-                    <Grid item xs={2}>
-                        {"Class"}
-                    </Grid>
-                    <Grid item xs={10}>
-                        <Typography>{pkgDetail === null ? "" : pkgDetail.class}</Typography>
-                    </Grid>
-                </Grid>
+        function width() {
+            if (bodyRef.current !== null) {
+                const width = bodyRef.current.parentElement?.clientWidth;
+                if (width === undefined) {
+                    return 0;
+                } else {
+                    return width;
+                }
+            } else {
+                return 0;
+            }
+        }
+
+        function height() {
+            if (bodyRef.current !== null) {
+                const height = bodyRef.current.parentElement?.clientHeight;
+                if (height === undefined) {
+                    return 0;
+                } else {
+                    return height;
+                }
+            } else {
+                return 0;
+            }
+        }
+
+        useEffect(()=>{
+            if (bodyRef.current !== null) {
+                bodyRef.current.setAttribute("style", `width: ${width()}px; height: ${height()}px`);
+            }
+        }, [])
+
+        return (
+            <Box ref={bodyRef} component={Paper} sx={{ 
+                position: "relative", 
+                width: "100%", 
+                height: "100%", 
+                display: isOpen ? "block" : "none",
+                wordBreak: "break-all",
+                }}>
+                <div 
+                style={{
+                    height: "100%",
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignContent: "space-between",
+                    justifyContent: "flex-start",
+                }}>
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignContent: "space-between",
+                        justifyContent: "flex-end",
+                        backgroundColor: "silver",
+                    }}>
+                        <IconButton onClick={close}>
+                            <VscChromeMinimize/>
+                        </IconButton>
+                    </div>
+                    <div>
+                        <Grid container>
+                            <Grid item xs={4}>Type</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.type}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Scope</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.scope}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Class</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.class}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Group ID</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.groupId}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Artifact ID</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.artifactId}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Publisher</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": pkgDetail.userId}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>Publish Time</Grid>
+                            <Grid item xs={8}>
+                                <Typography>
+                                {pkgDetail === null? "": moment(pkgDetail.createTime).format("YYYY-MM-DD HH:mm:ss")}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                    </div>
+                </div>
             </Box>
-        </div>
-        
-    );
-})
+        );
+    }
+);
 
 interface ITypeFilter {
     isOn: () => boolean;
@@ -246,10 +349,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
 
     const openDetail = (pkg: MetalPkg) => {
         if (detailRef.current !== null) {
-            detailRef.current.open(pkg)
+            detailRef.current.open(pkg);
         }
     };
-
 
     useEffect(() => {
         load();
@@ -359,12 +461,10 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             }
                         )}
                     </List>
-                    <div style={{position: "relative", margin: "0"}}>
+                    <div style={{ position: "relative", margin: "0" }}>
                         <Backdrop open={isPending()} sx={{ position: "absolute" }} />
-                    </div>          
+                    </div>
                     <MetalPkgDetail ref={detailRef}></MetalPkgDetail>
-                 
-                    
                 </Box>
             </div>
         </ThemeProvider>
