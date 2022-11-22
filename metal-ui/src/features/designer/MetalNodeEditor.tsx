@@ -1,14 +1,15 @@
 import {FormEvent, ForwardedRef, forwardRef, MouseEvent, RefObject, useImperativeHandle, useRef, useState} from "react";
-import {MetalNodeInOut, MetalNodeProps} from "./MetalView";
-import {Backdrop, Button, Container, Drawer, Input, Paper, Skeleton, Stack, TextField} from "@mui/material";
+import {Backdrop, Button, Container, Paper, Skeleton, Stack, TextField} from "@mui/material";
 import {RJSFSchema} from "@rjsf/utils";
 import {IChangeEvent} from "@rjsf/core";
 import {Form} from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import {Metal} from "../../model/Metal";
+import { MetalFlowHandler } from "./MetalFlow";
+import { MetalNodeProps } from "./MetalView";
 
 export interface MetalNodeEditorProps {
-    metalNodeInOutRef: RefObject<MetalNodeInOut>
+    metalFlowRef: RefObject<MetalFlowHandler>
 }
 
 export interface MetalNodeEditorHandler {
@@ -17,20 +18,20 @@ export interface MetalNodeEditorHandler {
 }
 
 export const MetalNodeEditor = forwardRef((props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
-        const metalNodeInOutRef = props.metalNodeInOutRef
+        const metalFlowRef = props.metalFlowRef
         const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null)
         const [isOpen, setOpen] = useState(false)
         const nameInputRef = useRef<HTMLInputElement>()
 
         const printInputs = ()=> {
-            if (metalNodeInOutRef === null || metalNodeInOutRef.current === null || metalNodeInOutRef.current === undefined) {
+            if (metalFlowRef === null || metalFlowRef.current === null) {
                 return
             }
-            const inOut: MetalNodeInOut = metalNodeInOutRef.current
+            const inputs = metalFlowRef.current.inputs;
             if (metalProps === null) {
                 return;
             }
-            console.log(inOut.inputs(metalProps.metal.id))
+            console.log(inputs(metalProps.metal.id))
         }
 
         useImperativeHandle(ref, () => ({

@@ -8,7 +8,6 @@ import {
     Edge,
     ReactFlow,
     ReactFlowProvider,
-    useReactFlow,
     FitViewOptions,
     OnConnect,
     Connection,
@@ -18,6 +17,8 @@ import {
     MiniMap,
     getIncomers,
     getOutgoers,
+    useNodesState,
+    useEdgesState,
 } from "reactflow";
 import { Metal } from "../../model/Metal";
 import { MetalNodeEditorHandler } from "./MetalNodeEditor";
@@ -41,11 +42,15 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const {
         nodeEditorRef
     } = props;
-    const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
 
-    const initialNodes: Node<MetalNodeProps>[] = getNodes();
+    
+    const initialNodes: Node<MetalNodeProps>[] = [];
+    const initialEdges: Edge<any>[] = [];
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+   
 
-    const initialEdges: Edge<any>[] = getEdges();
+    
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
@@ -54,9 +59,6 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
-            const nodes:Node<MetalNodeProps>[] = getNodes()
-            const edges: Edge<any>[] = getEdges()
-
             if (!onConnectValid(connection, nodes, edges)) {
                 return;
             }
@@ -64,39 +66,37 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                 return addEdge(connection, edges);
             });
         },
-        []
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [edges, nodes]
     );
 
     const onEdgeDoubleClick = useCallback((event: ReactMouseEvent, edge: Edge) => {
         setEdges((prevEdges: Edge[]) => {
             return prevEdges.filter((prevEdge) => edge.id !== prevEdge.id);
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const inputs = useCallback(
         (id: string) => {
-            const nodes:Node<MetalNodeProps>[] = getNodes();
-            const edges: Edge<any>[] = getEdges();
             return nodes
                 .filter((node: Node<MetalNodeProps>) => node.id === id)
                 .flatMap((node: Node<MetalNodeProps>) =>
                     getIncomers<MetalNodeProps, MetalNodeProps>(node, nodes, edges)
                 );
         },
-        []
+        [edges, nodes]
     );
 
     const outputs = useCallback(
         (id: string) => {
-            const nodes:Node<MetalNodeProps>[] = getNodes();
-            const edges: Edge<any>[] = getEdges();
             return nodes
                 .filter((node: Node<MetalNodeProps>) => node.id === id)
                 .flatMap((node: Node<MetalNodeProps>) =>
                     getOutgoers<MetalNodeProps, MetalNodeProps>(node, nodes, edges)
                 );
         },
-        []
+        [edges, nodes]
     );
 
     const updateNodeMetal = useCallback((newMetal: Metal) => {
@@ -115,6 +115,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
             });
         });
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addNode = useCallback((nodeTmpl: MetalNodeProps) => {
@@ -148,6 +149,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                 position: { x: 5, y: 5 },
             });
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useImperativeHandle(ref, ()=>({
@@ -155,16 +157,16 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
         outputs: outputs,
         updateNodeMetal: updateNodeMetal,
         addNode: addNode
-    }), [])
+    }), [addNode, inputs, outputs, updateNodeMetal])
     
 
     return (
-        <ReactFlowProvider>
+<ReactFlowProvider>
             <ReactFlow
-                nodes={initialNodes}
-                edges={initialEdges}
-                onNodesChange={()=>{}}
-                onEdgesChange={()=>{}}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onEdgeDoubleClick={onEdgeDoubleClick}
                 fitView
