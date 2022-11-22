@@ -16,7 +16,7 @@ import {
     TableRow,
     TableBody,
     TableCell,
-    CircularProgress, Alert, Backdrop
+    CircularProgress, Alert, Backdrop, LinearProgress
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -38,6 +38,8 @@ import {useCallback, useEffect, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
 import {getAllProjectOfUser} from "./ProjectApi";
 import { State } from '../../api/State';
+import { useAsync } from '../../api/Hooks';
+import { PendingBackdrop } from '../ui/PendingBackdrop';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -178,8 +180,8 @@ export function ProjectList() {
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
-    const [projects, setProjects] = useState<Project[]>([])
-    const [status, setStatus] = useState<State>(State.idle)
+    const [run, status, result, error] = useAsync<Project[]>()
+    const projects = result === null? []: result;
     const isPending = () => {
         return status === State.pending
     }
@@ -189,21 +191,18 @@ export function ProjectList() {
 
     const load = useCallback(() => {
         if (token != null) {
-            setStatus(State.pending)
-            getAllProjectOfUser(token).then((_projects: Project[]) => {
-                setTimeout(() => {
-                    setProjects(_projects)
-                    setStatus(State.success)
-                }, 3000)
-            }, reason => {
-                console.error(reason)
-                setStatus(State.failure)
-            })
+            run(getAllProjectOfUser(token));
         }
-    }, [token])
+    }, [run, token])
+
+    const progress = isPending() ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
 
     useEffect(() => {
-        load()
+        load();
     }, [load])
 
     return (
@@ -211,10 +210,7 @@ export function ProjectList() {
             <div className={'panel'}
                  style={{flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start"}}
             >
-                <Backdrop
-                    open={isPending()}
-                    sx={{position: "absolute"}}
-                />
+                
                 <Stack
                     direction="column"
                     justifyContent="flex-start"
@@ -249,6 +245,7 @@ export function ProjectList() {
                                     }
                                 </IconButton>
                             </Stack>
+                            {progress}
                         </Paper>
                     </Box>
 
@@ -273,6 +270,7 @@ export function ProjectList() {
                         </Table>
                     </TableContainer>
                 </Stack>
+                <PendingBackdrop isPending={isPending()} />
             </div>
         </ThemeProvider>
     )

@@ -393,7 +393,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                                 {MetalViewIcons.SETUP}
                             </IconButton>
                         </Toolbar>
-                        <Toolbar sx={{ width: "20%" }}>
+                        <Toolbar sx={{ }}>
                             <IconButton disabled={isPending()} onClick={load}>
                                 <AiOutlineReload />
                             </IconButton>

@@ -161,7 +161,7 @@ export function Designer() {
                 spacing={2}
                 sx={{height:"100%", width:"100%"}}
             >
-                <Box component={Paper} sx={{ height: "100%", width: "80%" }}>
+                <Box component={Paper} sx={{ height: "100%", width: "75%" }}>
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -198,7 +198,7 @@ export function Designer() {
                         <MiniMap></MiniMap>
                     </ReactFlow>
                 </Box>
-                <Box component={Paper} sx={{height:"100%", width:"20%"}}>
+                <Box component={Paper} sx={{height:"100%", width:"25%"}}>
                     <MetalExplorer addNode={onAddNode}/>
                 </Box>
             </Stack>
