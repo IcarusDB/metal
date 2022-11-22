@@ -144,7 +144,6 @@ export const MetalPkgDetail = forwardRef(
     (props: MetalPkgDetailProps, ref: ForwardedRef<MetalPkgDetailHandler>) => {
         const [isOpen, setOpen] = useState(false);
         const [pkgDetail, setPkg] = useState<MetalPkg | null>(null);
-        const bodyRef = useRef<HTMLDivElement>(null)
 
         function open(pkg: MetalPkg) {
             setPkg(pkg);
@@ -165,40 +164,8 @@ export const MetalPkgDetail = forwardRef(
             []
         );
 
-        function width() {
-            if (bodyRef.current !== null) {
-                const width = bodyRef.current.parentElement?.clientWidth;
-                if (width === undefined) {
-                    return 0;
-                } else {
-                    return width;
-                }
-            } else {
-                return 0;
-            }
-        }
-
-        function height() {
-            if (bodyRef.current !== null) {
-                const height = bodyRef.current.parentElement?.clientHeight;
-                if (height === undefined) {
-                    return 0;
-                } else {
-                    return height;
-                }
-            } else {
-                return 0;
-            }
-        }
-
-        useEffect(()=>{
-            if (bodyRef.current !== null) {
-                bodyRef.current.setAttribute("style", `width: ${width()}px; height: ${height()}px`);
-            }
-        }, [])
-
         return (
-            <Box ref={bodyRef} component={Paper} sx={{ 
+            <Box component={Paper} sx={{ 
                 position: "relative", 
                 width: "100%", 
                 height: "100%", 
@@ -225,7 +192,7 @@ export const MetalPkgDetail = forwardRef(
                             <VscChromeMinimize/>
                         </IconButton>
                     </div>
-                    <div>
+                    <Container>
                         <Grid container>
                             <Grid item xs={4}>Type</Grid>
                             <Grid item xs={8}>
@@ -270,7 +237,7 @@ export const MetalPkgDetail = forwardRef(
                                 </Typography>
                             </Grid>
                         </Grid>
-                    </div>
+                    </Container>
                 </div>
             </Box>
         );
