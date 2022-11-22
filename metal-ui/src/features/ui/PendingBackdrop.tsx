@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface PendingBackdropSize {
@@ -11,12 +12,8 @@ export interface PendingBackdropProps {
 
 export const PendingBackdrop = (props: PendingBackdropProps) => {
     const { isPending } = props;
+    const [size, setSize] = useState<PendingBackdropSize>({width: 0, height: 0});
     const containerRef = useRef<HTMLDivElement>(null);
-
-    const [size, setSize] = useState<PendingBackdropSize>({
-        width: 0,
-        height: 0,
-    });
 
     const syncSize = useCallback(() => {
         if (containerRef.current !== null && containerRef.current.parentElement !== null) {
@@ -31,14 +28,18 @@ export const PendingBackdrop = (props: PendingBackdropProps) => {
     }, []);
 
     useEffect(() => {
-        syncSize();
-        const onResize = (ev: UIEvent) => {
-            syncSize();
-        };
-        window.addEventListener("resize", onResize);
-        return () => {
-            window.removeEventListener("resize", onResize);
-        };
+        if (containerRef.current !== null && containerRef.current.parentElement !== null) {
+            const observer = new ResizeObserver((entries) => {
+                syncSize()
+            })
+            observer.observe(containerRef.current.parentElement)
+            return ()=>{
+                if (containerRef.current !== null && containerRef.current.parentElement !== null) {
+                    observer.unobserve(containerRef.current.parentElement)
+                    observer.disconnect();
+                }
+            }
+        }
     }, [syncSize]);
 
     return (
