@@ -41,7 +41,7 @@ import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
 
 const theme = createTheme();
-moment.locale("zh_CN")
+moment.locale("zh_CN");
 
 export interface MetalPkgProps {
     type: MetalTypes;
@@ -167,75 +167,93 @@ export const MetalPkgDetail = forwardRef(
         );
 
         return (
-            <Box component={Paper} sx={{ 
-                position: "relative", 
-                width: "100%", 
-                height: "100%", 
-                display: isOpen ? "block" : "none",
-                wordBreak: "break-all",
-                }}>
-                <div 
-                style={{
-                    height: "100%",
+            <Box
+                component={Paper}
+                sx={{
+                    position: "relative",
                     width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignContent: "space-between",
-                    justifyContent: "flex-start",
-                }}>
-                    <div style={{
+                    height: "100%",
+                    display: isOpen ? "block" : "none",
+                    wordBreak: "break-all",
+                }}
+            >
+                <div
+                    style={{
+                        height: "100%",
+                        width: "100%",
                         display: "flex",
-                        flexDirection: "row",
+                        flexDirection: "column",
                         alignContent: "space-between",
-                        justifyContent: "flex-end",
-                        backgroundColor: "silver",
-                    }}>
+                        justifyContent: "flex-start",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignContent: "space-between",
+                            justifyContent: "flex-end",
+                            backgroundColor: "silver",
+                        }}
+                    >
                         <IconButton onClick={close}>
-                            <VscChromeMinimize/>
+                            <VscChromeMinimize />
                         </IconButton>
                     </div>
                     <Container>
                         <Grid container>
-                            <Grid item xs={4}>Type</Grid>
+                            <Grid item xs={4}>
+                                Type
+                            </Grid>
+                            <Grid item xs={8}>
+                                <Typography>{pkgDetail === null ? "" : pkgDetail.type}</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                                Scope
+                            </Grid>
+                            <Grid item xs={8}>
+                                <Typography>{pkgDetail === null ? "" : pkgDetail.scope}</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                                Class
+                            </Grid>
+                            <Grid item xs={8}>
+                                <Typography>{pkgDetail === null ? "" : pkgDetail.class}</Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                                Group ID
+                            </Grid>
                             <Grid item xs={8}>
                                 <Typography>
-                                {pkgDetail === null? "": pkgDetail.type}
+                                    {pkgDetail === null ? "" : pkgDetail.groupId}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={4}>Scope</Grid>
+                            <Grid item xs={4}>
+                                Artifact ID
+                            </Grid>
                             <Grid item xs={8}>
                                 <Typography>
-                                {pkgDetail === null? "": pkgDetail.scope}
+                                    {pkgDetail === null ? "" : pkgDetail.artifactId}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={4}>Class</Grid>
+                            <Grid item xs={4}>
+                                Publisher
+                            </Grid>
                             <Grid item xs={8}>
                                 <Typography>
-                                {pkgDetail === null? "": pkgDetail.class}
+                                    {pkgDetail === null ? "" : pkgDetail.userId}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={4}>Group ID</Grid>
-                            <Grid item xs={8}>
-                                <Typography>
-                                {pkgDetail === null? "": pkgDetail.groupId}
-                                </Typography>
+                            <Grid item xs={4}>
+                                Publish Time
                             </Grid>
-                            <Grid item xs={4}>Artifact ID</Grid>
                             <Grid item xs={8}>
                                 <Typography>
-                                {pkgDetail === null? "": pkgDetail.artifactId}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={4}>Publisher</Grid>
-                            <Grid item xs={8}>
-                                <Typography>
-                                {pkgDetail === null? "": pkgDetail.userId}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={4}>Publish Time</Grid>
-                            <Grid item xs={8}>
-                                <Typography>
-                                {pkgDetail === null? "": moment(pkgDetail.createTime).format("YYYY-MM-DD HH:mm:ss")}
+                                    {pkgDetail === null
+                                        ? ""
+                                        : moment(pkgDetail.createTime).format(
+                                              "YYYY-MM-DD HH:mm:ss"
+                                          )}
                                 </Typography>
                             </Grid>
                         </Grid>
@@ -278,12 +296,12 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [run, status, result, error] = useAsync<MetalPkg[]>()
+    const [run, status, result, error] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
     const detailRef = useRef<MetalPkgDetailHandler>(null);
 
     const isPending = () => status === State.pending;
-    const isFailure = () => status === State.failure;   
+    const isFailure = () => status === State.failure;
 
     const filters = useMemo(
         () => ({
@@ -296,11 +314,11 @@ export function MetalExplorer(props: MetalExplorerProps) {
         [pkgFilter, setPkgFilter]
     );
 
-    const load = useCallback(()=>{
+    const load = useCallback(() => {
         if (token !== null) {
-            run(getAllMetalPkgsOfUserAccess(token))
+            run(getAllMetalPkgsOfUserAccess(token));
         }
-    }, [run, token])
+    }, [run, token]);
 
     const openDetail = (pkg: MetalPkg) => {
         if (detailRef.current !== null) {
@@ -398,7 +416,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     )}
 
                     <List sx={{ overflowY: "scroll", height: "100%" }}>
-                        {afterTypeFilter(pkgFilter, result === null? []: result).map(
+                        {afterTypeFilter(pkgFilter, result === null ? [] : result).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
                                     type: metalType(metalPkg.type),
@@ -407,11 +425,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                                     openDetail: openDetail,
                                 };
                                 return (
-                                    <>
-                                        <ListItem key={index} sx={{ width: "auto" }}>
-                                            <MetalPkgView {...props} />
-                                        </ListItem>
-                                    </>
+                                    <ListItem key={index} sx={{ width: "auto" }}>
+                                        <MetalPkgView {...props} />
+                                    </ListItem>
                                 );
                             }
                         )}
