@@ -30,10 +30,12 @@ import React, {
 } from "react";
 import { AiOutlineReload } from "react-icons/ai";
 import { VscExpandAll, VscChromeMinimize } from "react-icons/vsc";
+import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
 import { metalType, MetalTypes } from "../../../model/Metal";
 import { MetalPkg } from "../../../model/MetalPkg";
+import { PendingBackdrop } from "../../ui/PendingBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
@@ -276,14 +278,12 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-
-    const [status, setStatus] = useState<State>(State.idle);
-    const [metalPkgs, setMetalPkgs] = useState<MetalPkg[]>([]);
+    const [run, status, result, error] = useAsync<MetalPkg[]>()
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
     const detailRef = useRef<MetalPkgDetailHandler>(null);
 
     const isPending = () => status === State.pending;
-    const isFailure = () => status === State.failure;
+    const isFailure = () => status === State.failure;   
 
     const filters = useMemo(
         () => ({
@@ -296,23 +296,11 @@ export function MetalExplorer(props: MetalExplorerProps) {
         [pkgFilter, setPkgFilter]
     );
 
-    const load = useCallback(() => {
+    const load = useCallback(()=>{
         if (token !== null) {
-            setStatus(State.pending);
-            getAllMetalPkgsOfUserAccess(token).then(
-                (pkgs: MetalPkg[]) => {
-                    setTimeout(() => {
-                        setMetalPkgs(pkgs);
-                        setStatus(State.success);
-                    }, 3000);
-                },
-                (reason) => {
-                    console.error(reason);
-                    setStatus(State.failure);
-                }
-            );
+            run(getAllMetalPkgsOfUserAccess(token))
         }
-    }, [token]);
+    }, [run, token])
 
     const openDetail = (pkg: MetalPkg) => {
         if (detailRef.current !== null) {
@@ -410,7 +398,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     )}
 
                     <List sx={{ overflowY: "scroll", height: "100%" }}>
-                        {afterTypeFilter(pkgFilter, metalPkgs).map(
+                        {afterTypeFilter(pkgFilter, result === null? []: result).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
                                     type: metalType(metalPkg.type),
@@ -428,9 +416,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             }
                         )}
                     </List>
-                    <div style={{ position: "relative", margin: "0" }}>
-                        <Backdrop open={isPending()} sx={{ position: "absolute" }} />
-                    </div>
+                    <PendingBackdrop isPending={isPending()} />
                     <MetalPkgDetail ref={detailRef}></MetalPkgDetail>
                 </Box>
             </div>
