@@ -292,6 +292,7 @@ interface MetalExplorerProps {
 }
 
 export function MetalExplorer(props: MetalExplorerProps) {
+    console.log("explorer")
     const { addNode } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);

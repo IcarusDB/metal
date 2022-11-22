@@ -143,6 +143,18 @@ export function Designer() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const explorer = useMemo(()=>{
+        return (
+            <MetalExplorer addNode={onAddNode}/>
+        )
+    }, [onAddNode])
+
+    const nodeEditor = useMemo(()=>{
+        return (
+            <MetalNodeEditor ref={nodeEditorRef} metalNodeInOutRef={nodeInOutRef} />
+        )
+    }, [])
+
 
     useEffect(() => {
         nodeInOutRef.current.update({
@@ -199,11 +211,10 @@ export function Designer() {
                     </ReactFlow>
                 </Box>
                 <Box component={Paper} sx={{height:"100%", width:"25%"}}>
-                    <MetalExplorer addNode={onAddNode}/>
+                    {explorer}
                 </Box>
             </Stack>
-
-            <MetalNodeEditor ref={nodeEditorRef} metalNodeInOutRef={nodeInOutRef} />
+            {nodeEditor}
         </div>
     );
 }
