@@ -24,6 +24,7 @@ export function useAsync<R>() {
             setResult(null);
             setStatus(State.failure);
             setError(reason);
+            console.log(reason)
         }
     }, [])
 

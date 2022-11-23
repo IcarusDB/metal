@@ -1,7 +1,7 @@
 import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useImperativeHandle, useMemo, useRef } from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
-import { VscDebugStart, VscDebugStop } from "react-icons/vsc";
+import { VscDebugStart, VscDebugStop, VscTypeHierarchy } from "react-icons/vsc";
 import {
     addEdge,
     Node,
@@ -20,7 +20,10 @@ import {
     useNodesState,
     useEdgesState,
 } from "reactflow";
+import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
+import { PendingBackdrop } from "../ui/PendingBackdrop";
+import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 
 export interface MetalFlowProps {
@@ -46,9 +49,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const initialEdges: Edge<any>[] = [];
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-   
-
-    
+    const [run, isPending] = useAsync<void>();
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
@@ -150,6 +151,10 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const autoLayout = useCallback(() => {
+        run(layout(nodes, edges).then(newNodes => setNodes(newNodes)))
+    }, [edges, nodes, run, setNodes])
+
     useImperativeHandle(ref, ()=>({
         inputs: inputs,
         outputs: outputs,
@@ -190,6 +195,9 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                     </ControlButton>
                     <ControlButton>
                         <VscDebugStop />
+                    </ControlButton>
+                    <ControlButton onClick={autoLayout}>
+                        <VscTypeHierarchy/>
                     </ControlButton>
                 </Controls>
                 <MiniMap></MiniMap>

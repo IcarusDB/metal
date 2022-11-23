@@ -190,7 +190,6 @@ export const MetalPkgDetail = forwardRef(
                     <Paper
                         variant="outlined"
                         square
-                        elevation={4}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
