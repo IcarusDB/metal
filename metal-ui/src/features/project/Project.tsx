@@ -39,7 +39,7 @@ import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project"
 import {getAllProjectOfUser} from "./ProjectApi";
 import { State } from '../../api/State';
 import { useAsync } from '../../api/Hooks';
-import { PendingBackdrop } from '../ui/PendingBackdrop';
+import { ResizeBackdrop } from '../ui/ResizeBackdrop';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -270,7 +270,7 @@ export function ProjectList() {
                         </Table>
                     </TableContainer>
                 </Stack>
-                <PendingBackdrop isPending={isPending()} />
+                <ResizeBackdrop open={isPending()} />
             </div>
         </ThemeProvider>
     )

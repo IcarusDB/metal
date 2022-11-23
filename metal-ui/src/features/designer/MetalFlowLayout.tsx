@@ -7,8 +7,11 @@ export async function layout(nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) 
     const graph = {
         id: "root",
         layoutOptions: { 
-            "graphviz.algorithm": "dot",
+            "ekl.algorithm": "layered",
             "elk.direction": "DOWN",
+            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "80",
+            "org.eclipse.elk.spacing.edgeNode": "80",
+            "org.eclipse.elk.spacing.nodeNode": "80",
         },
         children: nodes.map(node => ({
             id: node.id,

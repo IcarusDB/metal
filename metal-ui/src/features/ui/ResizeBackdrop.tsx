@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 export interface PendingBackdropSize {
     width: number;
@@ -7,11 +7,14 @@ export interface PendingBackdropSize {
 }
 
 export interface PendingBackdropProps {
-    isPending: boolean;
+    open: boolean,
+    children?: ReactNode,
+    backgroundColor?: string,
+    opacity?: string,
 }
 
-export const PendingBackdrop = (props: PendingBackdropProps) => {
-    const { isPending } = props;
+export const ResizeBackdrop = (props: PendingBackdropProps) => {
+    const { open, children, backgroundColor, opacity } = props;
     const [size, setSize] = useState<PendingBackdropSize>({width: 0, height: 0});
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -47,12 +50,15 @@ export const PendingBackdrop = (props: PendingBackdropProps) => {
             ref={containerRef}
             style={{
                 position: "absolute",
+                overflow: "hidden",
                 width: size.width.toString() + "px",
                 height: size.height.toString() + "px",
-                display: isPending ? "block" : "none",
-                backgroundColor: "gray",
-                opacity: "0.5",
+                display: open ? "block" : "none",
+                backgroundColor: backgroundColor === undefined? "gray": backgroundColor,
+                opacity: opacity === undefined? "0.5": opacity,
             }}
-        ></div>
+        >
+            {children}
+        </div>
     );
 }

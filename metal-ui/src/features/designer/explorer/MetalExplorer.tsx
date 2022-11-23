@@ -34,7 +34,7 @@ import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
 import { metalType, MetalTypes } from "../../../model/Metal";
 import { MetalPkg } from "../../../model/MetalPkg";
-import { PendingBackdrop } from "../../ui/PendingBackdrop";
+import { ResizeBackdrop } from "../../ui/ResizeBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
@@ -432,7 +432,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             }
                         )}
                     </List>
-                    <PendingBackdrop isPending={isPending()} />
+                    <ResizeBackdrop open={isPending()} />
                     <MetalPkgDetail ref={detailRef}></MetalPkgDetail>
                 </Box>
             </div>

@@ -1,120 +1,208 @@
-import {FormEvent, ForwardedRef, forwardRef, MouseEvent, RefObject, useImperativeHandle, useRef, useState} from "react";
-import {Backdrop, Button, Container, Paper, Skeleton, Stack, TextField} from "@mui/material";
-import {RJSFSchema} from "@rjsf/utils";
-import {IChangeEvent} from "@rjsf/core";
-import {Form} from "@rjsf/mui";
+import {
+    FormEvent,
+    ForwardedRef,
+    forwardRef,
+    MouseEvent,
+    RefObject,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from "react";
+import {
+    Backdrop,
+    Box,
+    Button,
+    Container,
+    Grid,
+    IconButton,
+    Paper,
+    Skeleton,
+    Stack,
+    TextField,
+} from "@mui/material";
+import { RJSFSchema } from "@rjsf/utils";
+import { IChangeEvent } from "@rjsf/core";
+import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
-import {Metal} from "../../model/Metal";
+import { Metal } from "../../model/Metal";
 import { MetalFlowHandler } from "./MetalFlow";
 import { MetalNodeProps } from "./MetalView";
+import { VscArrowLeft } from "react-icons/vsc";
+import { display } from "@mui/system";
+import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 
 export interface MetalNodeEditorProps {
-    metalFlowRef: RefObject<MetalFlowHandler>
+    metalFlowRef: RefObject<MetalFlowHandler>;
 }
 
 export interface MetalNodeEditorHandler {
     load: (props: MetalNodeProps) => void;
-    close: () => void
+    close: () => void;
 }
 
-export const MetalNodeEditor = forwardRef((props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
-        const metalFlowRef = props.metalFlowRef
-        const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null)
-        const [isOpen, setOpen] = useState(false)
-        const nameInputRef = useRef<HTMLInputElement>()
+export const MetalNodeEditor = forwardRef(
+    (props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
+        const metalFlowRef = props.metalFlowRef;
+        const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
+        const [isOpen, setOpen] = useState(false);
+        const containerRef = useRef<HTMLDivElement>();
+        const nameInputRef = useRef<HTMLInputElement>();
 
-        const printInputs = ()=> {
+        const printInputs = () => {
             if (metalFlowRef === null || metalFlowRef.current === null) {
-                return
+                return;
             }
             const inputs = metalFlowRef.current.inputs;
             if (metalProps === null) {
                 return;
             }
-            console.log(inputs(metalProps.metal.id))
-        }
+            console.log(inputs(metalProps.metal.id));
+        };
 
-        useImperativeHandle(ref, () => ({
-            load: (props: MetalNodeProps) => {
-                setMetalProps(props)
-                setOpen(true)
-            },
-            close: () => {
-                setMetalProps(null)
-                setOpen(false)
-            }
-        }), [])
+        useImperativeHandle(
+            ref,
+            () => ({
+                load: (props: MetalNodeProps) => {
+                    setMetalProps(props);
+                    setOpen(true);
+                },
+                close: () => {
+                    setMetalProps(null);
+                    setOpen(false);
+                },
+            }),
+            []
+        );
 
         if (metalProps == null) {
-            return (
-                <Skeleton></Skeleton>
-            )
+            return <Skeleton></Skeleton>;
         }
-        const metal = metalProps.metal
-        const schema = metalProps.metalPkg.formSchema
-        const uiSchema = metalProps.metalPkg.uiSchema
+        const metal = metalProps.metal;
+        const schema = metalProps.metalPkg.formSchema;
+        const uiSchema = metalProps.metalPkg.uiSchema;
 
         const onConfirm = (data: IChangeEvent<any, RJSFSchema, any>, event: FormEvent<any>) => {
-            let newName = metal.name
+            let newName = metal.name;
             if (nameInputRef !== null && nameInputRef.current !== undefined) {
-                newName = nameInputRef.current.value
+                newName = nameInputRef.current.value;
             }
             const newMetal: Metal = {
                 ...metal,
                 name: newName,
-                props: data.formData
-            }
-            metalProps.onUpdate(newMetal)
-            setMetalProps(null)
-            setOpen(false)
-        }
+                props: data.formData,
+            };
+            metalProps.onUpdate(newMetal);
+            setMetalProps(null);
+            setOpen(false);
+        };
 
         const onCancel = (e: MouseEvent<HTMLButtonElement> | MouseEvent<HTMLAnchorElement>) => {
-            setMetalProps(null)
-            setOpen(false)
-        }
+            setMetalProps(null);
+            setOpen(false);
+        };
 
         return (
-            <Backdrop
-                open={isOpen}
-                sx={{height: '100%', position: "absolute"}}
-            >
-                <Container component={Paper} sx={{paddingTop: "1em", paddingBottom: "1em"}}>
-                    <Container component={Paper} sx={{paddingTop: "1rem", paddingBottom: "1rem"}}>
-                        <Stack
-                            direction="column"
-                            justifyContent="center"
-                            alignItems="flex-start"
-                        >
-                            <TextField
-                                id={"name"}
-                                label={"name"}
-                                defaultValue={metal.name}
-                                inputRef={nameInputRef}
-                            />
-                            <Form
-                                schema={schema}
-                                uiSchema={uiSchema}
-                                validator={validator}
-                                formData={metalProps.metal.props}
-                                onSubmit={onConfirm}
+            <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "inherit",
+                        height: "96%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "flex-start",
+                    }}
+                >
+                    <Paper
+                        square
+                        variant="outlined"
+                        sx={{
+                            width: "-webkit-fill-available",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignContent: "space-between",
+                            justifyContent: "flex-start",
+                        }}
+                    >
+                        <IconButton onClick={onCancel}>
+                            <VscArrowLeft />
+                        </IconButton>
+                    </Paper>
+                    <Grid
+                        container
+                        spacing={1}
+                        sx={{
+                            height: "95%",
+                        }}
+                    >
+                        <Grid item xs={3}>
+                            <Paper
+                                sx={{
+                                    height: "100%",
+                                    width: "100%",
+                                }}
+                            ></Paper>
+                        </Grid>
+                        <Grid item xs={9}>
+                            <Paper
+                                sx={{
+                                    position: "absolute",
+                                    height: "100%",
+                                    overflowY: "hidden",
+                                }}
                             >
-                                <Stack
-                                    direction="row"
-                                    justifyContent="flex-start"
-                                    alignItems="center"
-                                    spacing={8}
+                                <Container
+                                    sx={{
+                                        
+                                        margin: "0px",
+                                        height: "100%",
+                                        overflowY: "auto",
+                                            display: "block",
+                                    }}
                                 >
-                                    <Button type={"submit"} variant={"contained"}>{"confirm"}</Button>
-                                    <Button onClick={onCancel}>{"cancel"}</Button>
-                                    <Button onClick={printInputs}>{"inputs"}</Button>
-                                </Stack>
-                            </Form>
-                        </Stack>
-                    </Container>
-                </Container>
-            </Backdrop>
-        )
-    }
-)
+                                        <Stack
+                                            direction="column"
+                                            justifyContent="flex-start"
+                                            alignItems="flex-start"
+                                            spacing={2}
+                                        >
+                                            <div></div>
+                                            <TextField
+                                                id={"name"}
+                                                label={"name"}
+                                                defaultValue={metal.name}
+                                                inputRef={nameInputRef}
+                                            />
+                                            <Form
+                                                schema={schema}
+                                                uiSchema={uiSchema}
+                                                validator={validator}
+                                                formData={metalProps.metal.props}
+                                                onSubmit={onConfirm}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    justifyContent="flex-start"
+                                                    alignItems="center"
+                                                    spacing={8}
+                                                >
+                                                    <Button type={"submit"} variant={"contained"}>
+                                                        {"confirm"}
+                                                    </Button>
 
+                                                    <Button onClick={printInputs}>
+                                                        {"inputs"}
+                                                    </Button>
+                                                </Stack>
+                                            </Form>
+                                        </Stack>
+                                </Container>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                </div>
+            </ResizeBackdrop>
+        );
+    }
+);

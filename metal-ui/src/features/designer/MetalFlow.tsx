@@ -23,7 +23,7 @@ import {
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
-import { PendingBackdrop } from "../ui/PendingBackdrop";
+import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 
