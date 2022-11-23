@@ -166,8 +166,9 @@ export const MetalPkgDetail = forwardRef(
         );
 
         return (
-            <Box
-                component={Paper}
+            <Paper
+                square
+                elevation={3}
                 sx={{
                     position: "relative",
                     width: "100%",
@@ -186,19 +187,22 @@ export const MetalPkgDetail = forwardRef(
                         justifyContent: "flex-start",
                     }}
                 >
-                    <div
-                        style={{
+                    <Paper
+                        variant="outlined"
+                        square
+                        elevation={4}
+                        sx={{
                             display: "flex",
                             flexDirection: "row",
                             alignContent: "space-between",
                             justifyContent: "flex-end",
-                            backgroundColor: "silver",
+                            // backgroundColor: "silver",
                         }}
                     >
                         <IconButton onClick={close}>
                             <VscChromeMinimize />
                         </IconButton>
-                    </div>
+                    </Paper>
                     <Container>
                         <Grid container>
                             <Grid item xs={4}>
@@ -258,7 +262,7 @@ export const MetalPkgDetail = forwardRef(
                         </Grid>
                     </Container>
                 </div>
-            </Box>
+            </Paper>
         );
     }
 );

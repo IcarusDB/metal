@@ -21,12 +21,10 @@ import {
     useEdgesState,
 } from "reactflow";
 import { Metal } from "../../model/Metal";
-import { MetalNodeEditorHandler } from "./MetalNodeEditor";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 
 export interface MetalFlowProps {
-    nodeEditorRef: React.RefObject<MetalNodeEditorHandler>,
-
+    nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps,
 }
 
 export interface MetalFlowHandler {
@@ -40,7 +38,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
     const {
-        nodeEditorRef
+        nodePropsWrap,
     } = props;
 
     
@@ -122,7 +120,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
         setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             const id = counter.current++;
             const nodeId = `node-${id}`;
-            const nodeCopy = {
+            const nodeProps = {
                 ...nodeTmpl,
                 metal: {
                     id: nodeId,
@@ -140,11 +138,11 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                         );
                     });
                 },
-                editorRef: nodeEditorRef,
             };
+            const nodePropsWrapped = nodePropsWrap(nodeProps)
             return prevNodes.concat({
-                id: nodeCopy.metal.id,
-                data: nodeCopy,
+                id: nodePropsWrapped.metal.id,
+                data: nodePropsWrapped,
                 type: "metal",
                 position: { x: 5, y: 5 },
             });

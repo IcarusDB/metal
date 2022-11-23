@@ -33,13 +33,10 @@ export function Designer() {
     }, [])
 
 
-    // useEffect(() => {
-    //     nodeInOutRef.current.update({
-    //         inputs: inputs,
-    //         outputs: outputs,
-    //     });
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [nodes, edges]);
+    const nodePropsWrap = useCallback((nodeProps: MetalNodeProps) => ({
+        ...nodeProps,
+        editorRef: nodeEditorRef
+    }), [])
 
     return (
         <div className="panel">
@@ -51,42 +48,7 @@ export function Designer() {
                 sx={{height:"100%", width:"100%"}}
             >
                 <Box component={Paper} sx={{ height: "100%", width: "75%" }}>
-                    <MetalFlow ref={metalFlowRef} nodeEditorRef={nodeEditorRef}/>
-                    {/* <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onNodeContextMenu={(event: ReactMouseEvent, node: Node) => {}}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        onEdgeDoubleClick={onEdgeDoubleClick}
-                        fitView
-                        fitViewOptions={fitViewOptions}
-                        nodeTypes={nodeTypes}
-                    >
-                        <Background />
-                        <Controls/>
-                        <Controls
-                            showZoom={false}
-                            showFitView={false}
-                            showInteractive={false}
-                            position={"top-right"}
-                        >
-                            <ControlButton>
-                                <AiOutlineDeploymentUnit />
-                            </ControlButton>
-                            <ControlButton>
-                                <CgRadioChecked />
-                            </ControlButton>
-                            <ControlButton>
-                                <VscDebugStart />
-                            </ControlButton>
-                            <ControlButton>
-                                <VscDebugStop />
-                            </ControlButton>
-                        </Controls>
-                        <MiniMap></MiniMap>
-                    </ReactFlow> */}
+                    <MetalFlow ref={metalFlowRef} nodePropsWrap={nodePropsWrap}/>
                 </Box>
                 <Box component={Paper} sx={{height:"100%", width:"25%"}}>
                     {explorer}
