@@ -148,7 +148,8 @@ export const MetalNodeEditor = forwardRef(
                             <Paper
                                 sx={{
                                     position: "absolute",
-                                    height: "100%",
+                                    height: "-webkit-fill-available",
+                                    width: "-webkit-fill-available",
                                     overflowY: "hidden",
                                 }}
                             >
@@ -158,7 +159,7 @@ export const MetalNodeEditor = forwardRef(
                                         margin: "0px",
                                         height: "100%",
                                         overflowY: "auto",
-                                            display: "block",
+                                        display: "block",
                                     }}
                                 >
                                         <Stack
@@ -196,6 +197,7 @@ export const MetalNodeEditor = forwardRef(
                                                     </Button>
                                                 </Stack>
                                             </Form>
+                                            <div></div>
                                         </Stack>
                                 </Container>
                             </Paper>
