@@ -19,6 +19,7 @@ import {
     getOutgoers,
     useNodesState,
     useEdgesState,
+    MarkerType,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
@@ -49,7 +50,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const initialEdges: Edge<any>[] = [];
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const [run, isPending] = useAsync<void>();
+    const [run] = useAsync<void>();
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
@@ -62,7 +63,18 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                 return;
             }
             setEdges((edges) => {
-                return addEdge(connection, edges);
+                return addEdge(
+                    {
+                        ...connection,
+                        markerEnd: { 
+                            type: MarkerType.ArrowClosed,
+                            color: "black",
+                            width: 18,
+                            height: 24,
+                        },
+                    },
+                    edges
+                );
             });
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
