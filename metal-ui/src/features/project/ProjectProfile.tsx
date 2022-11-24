@@ -1,23 +1,19 @@
-import {
-    FormControl,
-    FormControlLabel,
-    FormGroup,
-    FormLabel,
-    Grid,
-    IconButton,
-    Paper,
-    Switch,
-    Typography,
-} from "@mui/material";
+import { Button, Grid, IconButton, LinearProgress, Paper, Switch, Typography } from "@mui/material";
+import { DataGrid, GridColDef, GridToolbarContainer, GridValidRowModel, useGridApiContext } from "@mui/x-data-grid";
 import { Form } from "@rjsf/mui";
 import { RJSFSchema } from "@rjsf/utils";
-import { IChangeEvent } from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { ForwardedRef, forwardRef, RefObject, useImperativeHandle, useState } from "react";
-import { VscArrowLeft } from "react-icons/vsc";
+import { ForwardedRef, forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { VscArrowLeft, VscCheck } from "react-icons/vsc";
 import { PlatformType } from "../../model/Project";
-import { Container, height, Stack } from "@mui/system";
+import { useAsync } from "../../api/Hooks";
+import { MetalPkg } from "../../model/MetalPkg";
+import _ from "lodash";
+import { getAllMetalPkgsOfUserAccess } from "../designer/explorer/MetalPkgApi";
+import { useAppSelector } from "../../app/hooks";
+import { tokenSelector } from "../user/userSlice";
+import { State } from "../../api/State";
 
 export function ProjectBasicProfile() {
     const formSchema: RJSFSchema = {
@@ -51,13 +47,89 @@ export function ProjectBasicProfile() {
 }
 
 export const PkgSelector = () => {
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
     const [isAuto, setAuto] = useState(true);
+    const { run, status, result, error } = useAsync<MetalPkg[]>();
 
     const onSwitch = () => {
         setAuto(!isAuto);
+        if (token !== null && isAuto) {
+            run(getAllMetalPkgsOfUserAccess(token));
+        }
     };
 
+    const isLoading = () => status === State.pending;
+
+    const packages =
+        result === null
+            ? []
+            : result.map((metalPkg: MetalPkg, index: number) => {
+                  return {
+                      id: index,
+                      groupId: metalPkg.groupId,
+                      artifactId: metalPkg.artifactId,
+                      version: metalPkg.version,
+                      scope: metalPkg.scope,
+                  };
+              });
+
+    const packagesUniq = _.sortedUniqBy(
+        packages,
+        (pkg) => pkg.groupId + ":" + pkg.artifactId + ":" + pkg.version
+    );
+
     const mode = () => (isAuto ? "Auto mode." : "Custom mode.");
+
+    const progress = (status === State.pending)? <LinearProgress/>: <LinearProgress variant="determinate" value={0} />
+
+    const columns: GridColDef[] = useMemo<GridColDef[]>(
+        () => [
+            { field: "groupId", headerName: "Group ID", width: 200, filterable: true },
+            { field: "artifactId", headerName: "Artifact ID", width: 300 },
+            { field: "version", headerName: "Version", width: 200 },
+            { field: "scope", headerName: "Scope", width: 100 },
+        ],
+        []
+    );
+
+    const TblToolBar = ()=>{
+        const dataGridApi = useGridApiContext();
+        const selectedPackages = () => {
+            dataGridApi.current.getSelectedRows()
+            .forEach((rowModel: GridValidRowModel) => {
+                console.log(rowModel)
+            })
+        }
+        return (
+            <GridToolbarContainer
+                sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    alignContent: "center",
+                }}
+            >
+                <Button variant="contained" color="primary" onClick={selectedPackages}>
+                    {"Confirm"}
+                </Button>
+            </GridToolbarContainer>
+        );
+    }
+
+    const tbl = useMemo(()=>(
+        <DataGrid
+            rows={packagesUniq}
+            columns={columns}
+            pageSize={5}
+            rowsPerPageOptions={[5]}
+            checkboxSelection
+            components={{
+                Toolbar: TblToolBar,
+            }}
+        />
+    ), [columns, packagesUniq]);
 
     return (
         <Paper
@@ -100,7 +172,21 @@ export const PkgSelector = () => {
                         <Typography variant="body1">{mode()}</Typography>
                     </Paper>
                 </Grid>
-                <Grid item xs={12}></Grid>
+                <Grid
+                    item
+                    xs={12}
+                    sx={{
+                        boxSizing: "border-box",
+                        margin: "0px",
+                        width: "100%",
+                        height: "70%",
+                        position: "relative",
+                    }}
+                >
+                    {!isAuto && progress}
+                    {!isAuto && tbl}
+                    <ResizeBackdrop open={isLoading()} />
+                </Grid>
             </Grid>
         </Paper>
     );

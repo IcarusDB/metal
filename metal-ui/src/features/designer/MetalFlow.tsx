@@ -50,7 +50,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const initialEdges: Edge<any>[] = [];
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const [run] = useAsync<void>();
+    const {run} = useAsync<void>();
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,

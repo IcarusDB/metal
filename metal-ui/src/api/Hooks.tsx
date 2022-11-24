@@ -28,5 +28,5 @@ export function useAsync<R>() {
         }
     }, [])
 
-    return [run, status, result, error]
+    return {run, status, result, error}
 }

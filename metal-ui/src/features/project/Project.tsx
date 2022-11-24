@@ -180,7 +180,7 @@ export function ProjectList() {
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
-    const [run, status, result, error] = useAsync<Project[]>()
+    const {run, status, result, error} = useAsync<Project[]>()
     const projects = result === null? []: result;
     const isPending = () => {
         return status === State.pending
