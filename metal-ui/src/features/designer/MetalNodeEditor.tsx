@@ -9,8 +9,6 @@ import {
     useState,
 } from "react";
 import {
-    Backdrop,
-    Box,
     Button,
     Container,
     Grid,
@@ -28,7 +26,6 @@ import { Metal } from "../../model/Metal";
 import { MetalFlowHandler } from "./MetalFlow";
 import { MetalNodeProps } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
-import { display } from "@mui/system";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 
 export interface MetalNodeEditorProps {
@@ -45,7 +42,6 @@ export const MetalNodeEditor = forwardRef(
         const metalFlowRef = props.metalFlowRef;
         const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
         const [isOpen, setOpen] = useState(false);
-        const containerRef = useRef<HTMLDivElement>();
         const nameInputRef = useRef<HTMLInputElement>();
 
         const printInputs = () => {
@@ -81,7 +77,7 @@ export const MetalNodeEditor = forwardRef(
         const schema = metalProps.metalPkg.formSchema;
         const uiSchema = metalProps.metalPkg.uiSchema;
 
-        const onConfirm = (data: IChangeEvent<any, RJSFSchema, any>, event: FormEvent<any>) => {
+        const onConfirm = (data: IChangeEvent<any, RJSFSchema, any>) => {
             let newName = metal.name;
             if (nameInputRef !== null && nameInputRef.current !== undefined) {
                 newName = nameInputRef.current.value;
@@ -96,7 +92,7 @@ export const MetalNodeEditor = forwardRef(
             setOpen(false);
         };
 
-        const onCancel = (e: MouseEvent<HTMLButtonElement> | MouseEvent<HTMLAnchorElement>) => {
+        const onCancel = () => {
             setMetalProps(null);
             setOpen(false);
         };
@@ -106,8 +102,10 @@ export const MetalNodeEditor = forwardRef(
                 <div
                     style={{
                         position: "absolute",
-                        width: "inherit",
-                        height: "96%",
+                        boxSizing: "border-box",
+                        margin: "0px",
+                        width: "100%",
+                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "flex-start",
@@ -118,7 +116,10 @@ export const MetalNodeEditor = forwardRef(
                         square
                         variant="outlined"
                         sx={{
-                            width: "-webkit-fill-available",
+                            boxSizing: "border-box",
+                            margin: "0px",
+                            width: "100%",
+                            height: "5vh",
                             display: "flex",
                             flexDirection: "row",
                             alignContent: "space-between",
@@ -133,7 +134,13 @@ export const MetalNodeEditor = forwardRef(
                         container
                         spacing={1}
                         sx={{
-                            height: "95%",
+                            boxSizing: "border-box",
+                            margin: "0px",
+                            position: "absolute",
+                            left: "0px",
+                            right: "0px",
+                            top: "5.5vh",
+                            bottom: "1vh",
                         }}
                     >
                         <Grid item xs={3}>
@@ -155,50 +162,47 @@ export const MetalNodeEditor = forwardRef(
                             >
                                 <Container
                                     sx={{
-                                        
                                         margin: "0px",
                                         height: "100%",
                                         overflowY: "auto",
                                         display: "block",
                                     }}
                                 >
-                                        <Stack
-                                            direction="column"
-                                            justifyContent="flex-start"
-                                            alignItems="flex-start"
-                                            spacing={2}
+                                    <Stack
+                                        direction="column"
+                                        justifyContent="flex-start"
+                                        alignItems="flex-start"
+                                        spacing={2}
+                                    >
+                                        <div></div>
+                                        <TextField
+                                            id={"name"}
+                                            label={"name"}
+                                            defaultValue={metal.name}
+                                            inputRef={nameInputRef}
+                                        />
+                                        <Form
+                                            schema={schema}
+                                            uiSchema={uiSchema}
+                                            validator={validator}
+                                            formData={metalProps.metal.props}
+                                            onSubmit={onConfirm}
                                         >
-                                            <div></div>
-                                            <TextField
-                                                id={"name"}
-                                                label={"name"}
-                                                defaultValue={metal.name}
-                                                inputRef={nameInputRef}
-                                            />
-                                            <Form
-                                                schema={schema}
-                                                uiSchema={uiSchema}
-                                                validator={validator}
-                                                formData={metalProps.metal.props}
-                                                onSubmit={onConfirm}
+                                            <Stack
+                                                direction="row"
+                                                justifyContent="flex-start"
+                                                alignItems="center"
+                                                spacing={8}
                                             >
-                                                <Stack
-                                                    direction="row"
-                                                    justifyContent="flex-start"
-                                                    alignItems="center"
-                                                    spacing={8}
-                                                >
-                                                    <Button type={"submit"} variant={"contained"}>
-                                                        {"confirm"}
-                                                    </Button>
+                                                <Button type={"submit"} variant={"contained"}>
+                                                    {"confirm"}
+                                                </Button>
 
-                                                    <Button onClick={printInputs}>
-                                                        {"inputs"}
-                                                    </Button>
-                                                </Stack>
-                                            </Form>
-                                            <div></div>
-                                        </Stack>
+                                                <Button onClick={printInputs}>{"inputs"}</Button>
+                                            </Stack>
+                                        </Form>
+                                        <div></div>
+                                    </Stack>
                                 </Container>
                             </Paper>
                         </Grid>

@@ -409,6 +409,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                         height: "90%",
                         width: "auto",
                         overflow: "hidden",
+                        position: "relative",
                     }}
                 >
                     {isFailure() && (
