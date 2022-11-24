@@ -3,16 +3,19 @@ import "reactflow/dist/style.css";
 import {
     MetalNodeProps,
 } from "./MetalView";
-import { Paper, Stack } from "@mui/material";
+import { IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor, MetalNodeEditorHandler } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow, MetalFlowHandler } from "./MetalFlow";
+import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
+import { VscSettingsGear } from "react-icons/vsc";
 
 
 export function Designer() {
     const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const metalFlowRef = useRef<MetalFlowHandler>(null);
+    const projectProfileRef = useRef<ProjectProfileHandler>(null);
 
     const onAddNode = useCallback((nodeProps: MetalNodeProps)=>{
         if (metalFlowRef.current !== null) {
@@ -29,6 +32,12 @@ export function Designer() {
     const nodeEditor = useMemo(()=>{
         return (
             <MetalNodeEditor ref={nodeEditorRef} metalFlowRef={metalFlowRef} />
+        )
+    }, [])
+
+    const projectProfile = useMemo(()=>{
+        return (
+            <ProjectProfile open={false} ref={projectProfileRef}/>
         )
     }, [])
 
@@ -54,7 +63,24 @@ export function Designer() {
                     {explorer}
                 </Box>
             </Stack>
+            <Paper
+                elevation={2}
+                sx={{
+                    position: "absolute",
+                    top: "1vh",
+                    left: "1vw",
+                }}
+            >
+                <IconButton onClick={()=>{
+                    if (projectProfileRef.current !== null) {
+                        projectProfileRef.current.open()
+                    }
+                }}>
+                    <VscSettingsGear/>
+                </IconButton>
+            </Paper>
             {nodeEditor}
+            {projectProfile}
         </div>
     );
 }

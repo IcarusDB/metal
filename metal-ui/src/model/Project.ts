@@ -16,6 +16,10 @@ export interface BackendStatus {
     tracer: any
 }
 
+export enum PlatformType {
+    SPARK_STANDALONE = "spark.standalone"
+}
+
 export interface Deploy {
     id: string,
     epoch: number,
