@@ -1,11 +1,32 @@
-import { Button, Grid, IconButton, LinearProgress, Paper, Switch, Typography } from "@mui/material";
-import { DataGrid, GridColDef, GridToolbarContainer, GridValidRowModel, useGridApiContext } from "@mui/x-data-grid";
+import {
+    Alert,
+    Button,
+    Grid,
+    IconButton,
+    Input,
+    LinearProgress,
+    Paper,
+    Stack,
+    Step,
+    StepLabel,
+    Stepper,
+    Switch,
+    Typography,
+} from "@mui/material";
+import {
+    DataGrid,
+    GridColDef,
+    GridSelectionModel,
+    GridToolbarContainer,
+    GridValidRowModel,
+    useGridApiContext,
+} from "@mui/x-data-grid";
 import { Form } from "@rjsf/mui";
 import { RJSFSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { ForwardedRef, forwardRef, useImperativeHandle, useMemo, useState } from "react";
-import { VscArrowLeft, VscCheck } from "react-icons/vsc";
+import { VscArrowLeft, VscCheck, VscClose } from "react-icons/vsc";
 import { PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -14,8 +35,19 @@ import { getAllMetalPkgsOfUserAccess } from "../designer/explorer/MetalPkgApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
+import { IChangeEvent } from "@rjsf/core";
 
-export function ProjectBasicProfile() {
+export interface ProjectBasicProfileValue {
+    name: string;
+    platfomr: string;
+}
+export interface ProjectBasicProfileProps {
+    profile?: ProjectBasicProfileValue;
+    onFinish?: (profile: ProjectBasicProfileValue) => void;
+}
+
+export function ProjectBasicProfile(props: ProjectBasicProfileProps) {
+    const { profile, onFinish } = props;
     const formSchema: RJSFSchema = {
         type: "object",
         required: ["name", "platform"],
@@ -32,6 +64,13 @@ export function ProjectBasicProfile() {
         },
     };
 
+    const onSubmit = (data: IChangeEvent<any, RJSFSchema, any>) => {
+        const newProfile: ProjectBasicProfileValue = data.formData;
+        if (onFinish !== undefined) {
+            onFinish(newProfile);
+        }
+    };
+
     return (
         <Paper
             sx={{
@@ -41,16 +80,45 @@ export function ProjectBasicProfile() {
                 height: "100%",
             }}
         >
-            <Form schema={formSchema} validator={validator}></Form>
+            <Form
+                formData={profile === undefined ? {} : profile}
+                schema={formSchema}
+                validator={validator}
+                onSubmit={onSubmit}
+            >
+                <Button type={"submit"} variant={"contained"}>
+                    {"confirm"}
+                </Button>
+            </Form>
         </Paper>
     );
 }
 
-export const PkgSelector = () => {
+export interface PkgSelectorProps {
+    profile?: PkgProfileValue;
+    onFinish?: (profile: PkgProfileValue) => void;
+}
+
+export interface PkgProfileValue {
+    packages: MetalPackage[];
+}
+
+export interface MetalPackage {
+    id: string | number;
+    groupId: string;
+    artifactId: string;
+    version: string;
+    scope: "PRIVATE" | "PUBLIC";
+}
+
+export const PkgSelector = (props: PkgSelectorProps) => {
+    const { profile, onFinish } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [isAuto, setAuto] = useState(true);
+    const [isAuto, setAuto] = useState(
+        profile === undefined ? true : profile.packages.length === 0
+    );
     const { run, status, result, error } = useAsync<MetalPkg[]>();
 
     const onSwitch = () => {
@@ -62,17 +130,18 @@ export const PkgSelector = () => {
 
     const isLoading = () => status === State.pending;
 
-    const packages =
+    const packages: MetalPackage[] =
         result === null
             ? []
             : result.map((metalPkg: MetalPkg, index: number) => {
-                  return {
+                  const pkg: MetalPackage = {
                       id: index,
                       groupId: metalPkg.groupId,
                       artifactId: metalPkg.artifactId,
                       version: metalPkg.version,
                       scope: metalPkg.scope,
                   };
+                  return pkg;
               });
 
     const packagesUniq = _.sortedUniqBy(
@@ -80,9 +149,36 @@ export const PkgSelector = () => {
         (pkg) => pkg.groupId + ":" + pkg.artifactId + ":" + pkg.version
     );
 
+    const initialSelectionModel: GridSelectionModel = packagesUniq
+        .filter((pkg) => {
+            if (profile === undefined) {
+                return false;
+            }
+            const equalPkg = profile.packages.find((prevPkg) => {
+                return (
+                    prevPkg.groupId === pkg.groupId &&
+                    prevPkg.artifactId === pkg.artifactId &&
+                    prevPkg.version === pkg.version
+                );
+            });
+
+            if (equalPkg === undefined) {
+                return false;
+            }
+            return true;
+        })
+        .map((pkg) => pkg.id);
+
+    const [selectionModel, setSelectionModel] = useState(initialSelectionModel);
+
     const mode = () => (isAuto ? "Auto mode." : "Custom mode.");
 
-    const progress = (status === State.pending)? <LinearProgress/>: <LinearProgress variant="determinate" value={0} />
+    const progress =
+        status === State.pending ? (
+            <LinearProgress />
+        ) : (
+            <LinearProgress variant="determinate" value={0} />
+        );
 
     const columns: GridColDef[] = useMemo<GridColDef[]>(
         () => [
@@ -94,14 +190,27 @@ export const PkgSelector = () => {
         []
     );
 
-    const TblToolBar = ()=>{
+    const TblToolBar = () => {
         const dataGridApi = useGridApiContext();
         const selectedPackages = () => {
-            dataGridApi.current.getSelectedRows()
-            .forEach((rowModel: GridValidRowModel) => {
-                console.log(rowModel)
-            })
-        }
+            let selectedPkgs: MetalPackage[] = [];
+            dataGridApi.current.getSelectedRows().forEach((rowModel: GridValidRowModel) => {
+                const selectedPkg: MetalPackage = {
+                    id: rowModel["id"],
+                    groupId: rowModel["groupId"],
+                    artifactId: rowModel["artifactId"],
+                    version: rowModel["version"],
+                    scope: rowModel["scope"],
+                };
+                selectedPkgs.push(selectedPkg);
+            });
+            const newProfile: PkgProfileValue = {
+                packages: selectedPkgs,
+            };
+            if (onFinish !== undefined) {
+                onFinish(newProfile);
+            }
+        };
         return (
             <GridToolbarContainer
                 sx={{
@@ -116,20 +225,35 @@ export const PkgSelector = () => {
                 </Button>
             </GridToolbarContainer>
         );
-    }
+    };
 
-    const tbl = useMemo(()=>(
-        <DataGrid
-            rows={packagesUniq}
-            columns={columns}
-            pageSize={5}
-            rowsPerPageOptions={[5]}
-            checkboxSelection
-            components={{
-                Toolbar: TblToolBar,
-            }}
-        />
-    ), [columns, packagesUniq]);
+    const tbl = useMemo(
+        () => (
+            <DataGrid
+                rows={packagesUniq}
+                columns={columns}
+                selectionModel={selectionModel}
+                onSelectionModelChange={(newSelectionModel) => {
+                    setSelectionModel(newSelectionModel);
+                }}
+                pageSize={5}
+                rowsPerPageOptions={[5]}
+                checkboxSelection
+                components={{
+                    Toolbar: TblToolBar,
+                }}
+            />
+        ),
+        [columns, packagesUniq]
+    );
+
+    const onAutoConfirm = () => {
+        if (onFinish !== undefined) {
+            onFinish({
+                packages: [],
+            });
+        }
+    };
 
     return (
         <Paper
@@ -170,6 +294,11 @@ export const PkgSelector = () => {
                     >
                         <Switch checked={isAuto} onChange={onSwitch} />
                         <Typography variant="body1">{mode()}</Typography>
+                        {isAuto && (
+                            <Button variant="contained" color="primary" onClick={onAutoConfirm}>
+                                {"Confirm"}
+                            </Button>
+                        )}
                     </Paper>
                 </Grid>
                 <Grid
@@ -201,13 +330,36 @@ export interface ProjectProfileHandler {
     close: () => void;
 }
 
+const STEP_SIZE = 3;
+
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
         const { open } = props;
         const [isOpen, setOpen] = useState(open);
+        const [activeStep, setActiveStep] = useState(0);
+        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue>();
+        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue>();
 
         const close = () => {
             setOpen(false);
+        };
+
+        const handleNextStep = () => {
+            setActiveStep(activeStep + 1 > STEP_SIZE - 1 ? STEP_SIZE - 1 : activeStep + 1);
+        };
+
+        const handleBackStep = () => {
+            setActiveStep(activeStep - 1 >= 0 ? activeStep - 1 : 0);
+        };
+
+        const onBasicProfileFinish = (newProfile: ProjectBasicProfileValue) => {
+            setBasicProfile(newProfile);
+            handleNextStep();
+        };
+
+        const onPkgProfileFinish = (newProfile: PkgProfileValue) => {
+            setPkgProfile(newProfile);
+            handleNextStep();
         };
 
         useImperativeHandle(
@@ -251,11 +403,61 @@ export const ProjectProfile = forwardRef(
                         }}
                     >
                         <IconButton onClick={close}>
-                            <VscArrowLeft />
+                            <VscClose />
                         </IconButton>
                     </Paper>
-                    {/* <ProjectBasicProfile />  */}
-                    <PkgSelector />
+
+                    <Stepper activeStep={activeStep}>
+                        <Step key={"Basic Profile."} completed={false}>
+                            <StepLabel>{"Basic Profile."}</StepLabel>
+                        </Step>
+                        <Step key={"Package select."} completed={false}>
+                            <StepLabel>{"Package select."}</StepLabel>
+                        </Step>
+                        <Step key={"Profile Finish."} completed={false}>
+                            <StepLabel>{"Profile Finish."}</StepLabel>
+                        </Step>
+                    </Stepper>
+
+                    <Stack
+                        direction="column"
+                        justifyContent="flex-start"
+                        alignItems="stretch"
+                        spacing={2}
+                    >
+                        {activeStep === 0 && (
+                            <ProjectBasicProfile
+                                profile={basicProfile}
+                                onFinish={onBasicProfileFinish}
+                            />
+                        )}
+                        {activeStep === 1 && (
+                            <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
+                        )}
+                        {activeStep === 2 && (
+                            <Alert variant="outlined" severity="success">
+                                {"Profile Finish"}
+                            </Alert>
+                        )}
+                        <Paper
+                            square
+                            variant="outlined"
+                            sx={{
+                                boxSizing: "border-box",
+                                margin: "0px",
+                                width: "100%",
+                                height: "5vh",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignContent: "space-between",
+                                justifyContent: "flex-start",
+                            }}
+                        >
+                            <IconButton onClick={handleBackStep}>
+                                <VscArrowLeft />
+                            </IconButton>
+                        </Paper>
+                    </Stack>
                 </div>
             </ResizeBackdrop>
         );
