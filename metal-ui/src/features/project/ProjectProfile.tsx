@@ -250,7 +250,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     const onAutoConfirm = () => {
         if (onFinish !== undefined) {
             onFinish({
-                packages: [],
+                packages: packagesUniq,
             });
         }
     };
@@ -418,46 +418,39 @@ export const ProjectProfile = forwardRef(
                             <StepLabel>{"Profile Finish."}</StepLabel>
                         </Step>
                     </Stepper>
+                    {activeStep === 0 && (
+                        <ProjectBasicProfile
+                            profile={basicProfile}
+                            onFinish={onBasicProfileFinish}
+                        />
+                    )}
+                    {activeStep === 1 && (
+                        <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
+                    )}
+                    {activeStep === 2 && (
+                        <Alert variant="outlined" severity="success">
+                            {"Profile Finish"}
+                        </Alert>
+                    )}
 
-                    <Stack
-                        direction="column"
-                        justifyContent="flex-start"
-                        alignItems="stretch"
-                        spacing={2}
+                    <Paper
+                        square
+                        variant="outlined"
+                        sx={{
+                            boxSizing: "border-box",
+                            margin: "0px",
+                            width: "100%",
+                            height: "5vh",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignContent: "space-between",
+                            justifyContent: "flex-start",
+                        }}
                     >
-                        {activeStep === 0 && (
-                            <ProjectBasicProfile
-                                profile={basicProfile}
-                                onFinish={onBasicProfileFinish}
-                            />
-                        )}
-                        {activeStep === 1 && (
-                            <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
-                        )}
-                        {activeStep === 2 && (
-                            <Alert variant="outlined" severity="success">
-                                {"Profile Finish"}
-                            </Alert>
-                        )}
-                        <Paper
-                            square
-                            variant="outlined"
-                            sx={{
-                                boxSizing: "border-box",
-                                margin: "0px",
-                                width: "100%",
-                                height: "5vh",
-                                display: "flex",
-                                flexDirection: "row",
-                                alignContent: "space-between",
-                                justifyContent: "flex-start",
-                            }}
-                        >
-                            <IconButton onClick={handleBackStep}>
-                                <VscArrowLeft />
-                            </IconButton>
-                        </Paper>
-                    </Stack>
+                        <IconButton onClick={handleBackStep}>
+                            <VscArrowLeft />
+                        </IconButton>
+                    </Paper>
                 </div>
             </ResizeBackdrop>
         );
