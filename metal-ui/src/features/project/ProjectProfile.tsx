@@ -25,9 +25,9 @@ import { Form } from "@rjsf/mui";
 import { RJSFSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { ForwardedRef, forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { VscArrowLeft, VscCheck, VscClose } from "react-icons/vsc";
-import { PlatformType } from "../../model/Project";
+import { platformSchema, platformType, PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
 import _ from "lodash";
@@ -36,10 +36,12 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
+import Editor, { EditorProps, Monaco, OnMount, useMonaco } from "@monaco-editor/react";
+import * as EditorApi from 'monaco-editor/esm/vs/editor/editor.api';
 
 export interface ProjectBasicProfileValue {
     name: string;
-    platfomr: string;
+    platform: string;
 }
 export interface ProjectBasicProfileProps {
     profile?: ProjectBasicProfileValue;
@@ -321,6 +323,98 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     );
 };
 
+export interface PlatformProfileProps {
+    type: PlatformType,
+    profile?: any
+}
+
+export interface IPlatformProfileHandler {
+    value: ()=>string;
+}
+
+export class PlatformProfileHandler {
+    private inner: IPlatformProfileHandler
+
+    constructor(handler: IPlatformProfileHandler) {
+        this.inner = handler;
+    }
+
+    public update(handler: IPlatformProfileHandler) {
+        this.inner = handler;
+    }
+
+    public value() {
+        return this.inner.value();
+    }
+
+}
+
+export function PlatformProfile(props: PlatformProfileProps) {
+    const {type, profile} = props;
+
+    const schema = platformSchema(type);
+    const handlerRef = useRef<PlatformProfileHandler>(new PlatformProfileHandler({
+        value: ()=>("")
+    }));
+
+    const handleWillMount = (monaco: Monaco) => {
+        monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+            validate: true,
+            schemas: [{
+                uri: type,
+                schema: schema
+            }]
+        })
+    }
+
+    const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+        const handler: PlatformProfileHandler = handlerRef.current;
+        handler.update({
+            value: () => {
+                const model = editor.getModel();
+                if (model === null) {
+                    return "";
+                } else {
+                    return model.getValue();
+                }
+            },
+        });
+    };
+    
+
+    return (
+        <Stack
+        direction="column"
+        justifyContent="flex-start"
+        alignItems="stretch"
+    spacing={2}
+    sx={{
+        width: "100%",
+    }}
+        >
+            <Editor
+            height={"60vh"}
+            defaultLanguage={"json"}
+            defaultValue={profile?.toString()}
+            theme={"vs-dark"}
+            beforeMount={handleWillMount}
+            onMount={handleDidMount}
+            />
+            <Paper
+            sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                alignContent: "center",
+            }}
+            >
+                <Button variant="contained" color="primary">{"Confirm"}</Button>
+            </Paper>
+        </Stack>
+        
+    )
+}
+
 export interface ProjectProfileProps {
     open: boolean;
 }
@@ -330,7 +424,7 @@ export interface ProjectProfileHandler {
     close: () => void;
 }
 
-const STEP_SIZE = 3;
+const STEP_SIZE = 4;
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
@@ -414,6 +508,9 @@ export const ProjectProfile = forwardRef(
                         <Step key={"Package select."} completed={false}>
                             <StepLabel>{"Package select."}</StepLabel>
                         </Step>
+                        <Step key={"Platform profile."} completed={false}>
+                            <StepLabel>{"Platform profile."}</StepLabel>
+                        </Step>
                         <Step key={"Profile Finish."} completed={false}>
                             <StepLabel>{"Profile Finish."}</StepLabel>
                         </Step>
@@ -427,7 +524,15 @@ export const ProjectProfile = forwardRef(
                     {activeStep === 1 && (
                         <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
                     )}
-                    {activeStep === 2 && (
+                    {activeStep ===2 && (
+                        <PlatformProfile 
+                            type={
+                                basicProfile === undefined? 
+                                PlatformType.SPARK_STANDALONE: platformType(basicProfile.platform)
+                            }
+                        />
+                    )}
+                    {activeStep === 3 && (
                         <Alert variant="outlined" severity="success">
                             {"Profile Finish"}
                         </Alert>
