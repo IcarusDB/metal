@@ -1,6 +1,7 @@
 import {
     Alert,
     Button,
+    Container,
     Grid,
     IconButton,
     Input,
@@ -34,7 +35,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { VscArrowLeft, VscCheck, VscClose } from "react-icons/vsc";
+import { VscArrowLeft, VscCheck, VscClose, VscInfo } from "react-icons/vsc";
 import { platformSchema, platformType, PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -538,8 +539,56 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
     );
 }
 
+export interface ProjectProfileFinishProps {
+    isCreate: boolean;
+    onFinish?: () => void;
+}
+
+export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
+    const { isCreate, onFinish } = props;
+
+    return (
+        <Paper
+            square
+            sx={{
+                boxSizing: "border-box",
+                margin: "0px",
+                width: "100%",
+                height: "100%",
+            }}
+        >
+            <Container
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "80%",
+                }}
+            >
+                <Stack direction="column" justifyContent="center" alignItems="stretch" spacing={2}>
+                    <Alert
+                        variant="outlined"
+                        severity="info"
+                        icon={<VscInfo fontSize={"2em"} />}
+                        sx={{
+                            fontSize: "2em",
+                        }}
+                    >
+                        {"Profile Will Finish"}
+                    </Alert>
+                    {isCreate && <Button variant={"contained"}>{"Create"}</Button>}
+                    {!isCreate && <Button variant={"contained"}>{"Update"}</Button>}
+                </Stack>
+            </Container>
+        </Paper>
+    );
+}
+
 export interface ProjectProfileProps {
     open: boolean;
+    isCreate: boolean;
 }
 
 export interface ProjectProfileHandler {
@@ -551,7 +600,7 @@ const STEP_SIZE = 5;
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
-        const { open } = props;
+        const { open, isCreate } = props;
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
         const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue>();
@@ -635,24 +684,31 @@ export const ProjectProfile = forwardRef(
                             <VscClose />
                         </IconButton>
                     </Paper>
+                    <Container>
+                        <Stepper
+                            activeStep={activeStep}
+                            sx={{
+                                height: "10vh",
+                            }}
+                        >
+                            <Step key={"Basic Profile."} completed={false}>
+                                <StepLabel>{"Basic Profile."}</StepLabel>
+                            </Step>
+                            <Step key={"Package select."} completed={false}>
+                                <StepLabel>{"Package select."}</StepLabel>
+                            </Step>
+                            <Step key={"Platform profile."} completed={false}>
+                                <StepLabel>{"Platform profile."}</StepLabel>
+                            </Step>
+                            <Step key={"Backend arguments profile."} completed={false}>
+                                <StepLabel>{"Platform profile."}</StepLabel>
+                            </Step>
+                            <Step key={"Profile Finish."} completed={false}>
+                                <StepLabel>{"Profile Finish."}</StepLabel>
+                            </Step>
+                        </Stepper>
+                    </Container>
 
-                    <Stepper activeStep={activeStep}>
-                        <Step key={"Basic Profile."} completed={false}>
-                            <StepLabel>{"Basic Profile."}</StepLabel>
-                        </Step>
-                        <Step key={"Package select."} completed={false}>
-                            <StepLabel>{"Package select."}</StepLabel>
-                        </Step>
-                        <Step key={"Platform profile."} completed={false}>
-                            <StepLabel>{"Platform profile."}</StepLabel>
-                        </Step>
-                        <Step key={"Backend arguments profile."} completed={false}>
-                            <StepLabel>{"Platform profile."}</StepLabel>
-                        </Step>
-                        <Step key={"Profile Finish."} completed={false}>
-                            <StepLabel>{"Profile Finish."}</StepLabel>
-                        </Step>
-                    </Stepper>
                     {activeStep === 0 && (
                         <ProjectBasicProfile
                             profile={basicProfile}
@@ -679,11 +735,7 @@ export const ProjectProfile = forwardRef(
                             onFinish={onBackendArgsProfileFinish}
                         />
                     )}
-                    {activeStep === 4 && (
-                        <Alert variant="outlined" severity="success">
-                            {"Profile Finish"}
-                        </Alert>
-                    )}
+                    {activeStep === 4 && <ProjectProfileFinish isCreate={isCreate} />}
 
                     <Paper
                         square

@@ -37,7 +37,7 @@ export function Designer() {
 
     const projectProfile = useMemo(()=>{
         return (
-            <ProjectProfile open={false} ref={projectProfileRef}/>
+            <ProjectProfile open={false} isCreate={false} ref={projectProfileRef}/>
         )
     }, [])
 
