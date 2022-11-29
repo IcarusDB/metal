@@ -25,7 +25,15 @@ import { Form } from "@rjsf/mui";
 import { RJSFSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import {
+    ForwardedRef,
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { VscArrowLeft, VscCheck, VscClose } from "react-icons/vsc";
 import { platformSchema, platformType, PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
@@ -37,7 +45,7 @@ import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { EditorProps, Monaco, OnMount, useMonaco } from "@monaco-editor/react";
-import * as EditorApi from 'monaco-editor/esm/vs/editor/editor.api';
+import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -324,16 +332,17 @@ export const PkgSelector = (props: PkgSelectorProps) => {
 };
 
 export interface PlatformProfileProps {
-    type: PlatformType,
-    profile?: any
+    type: PlatformType;
+    profile?: any;
+    onFinish?: (profile: any) => void;
 }
 
 export interface IPlatformProfileHandler {
-    value: ()=>string;
+    value: () => string;
 }
 
 export class PlatformProfileHandler {
-    private inner: IPlatformProfileHandler
+    private inner: IPlatformProfileHandler;
 
     constructor(handler: IPlatformProfileHandler) {
         this.inner = handler;
@@ -346,26 +355,31 @@ export class PlatformProfileHandler {
     public value() {
         return this.inner.value();
     }
-
 }
 
 export function PlatformProfile(props: PlatformProfileProps) {
-    const {type, profile} = props;
+    const { type, profile, onFinish } = props;
+    const [isDefault, setIsDefault] = useState(profile === undefined);
+    const [error, setError] = useState<any>(null);
 
     const schema = platformSchema(type);
-    const handlerRef = useRef<PlatformProfileHandler>(new PlatformProfileHandler({
-        value: ()=>("")
-    }));
+    const handlerRef = useRef<PlatformProfileHandler>(
+        new PlatformProfileHandler({
+            value: () => "",
+        })
+    );
 
     const handleWillMount = (monaco: Monaco) => {
         monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
             validate: true,
-            schemas: [{
-                uri: type,
-                schema: schema
-            }]
-        })
-    }
+            schemas: [
+                {
+                    uri: type,
+                    schema: schema,
+                },
+            ],
+        });
+    };
 
     const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor, monaco: Monaco) => {
         const handler: PlatformProfileHandler = handlerRef.current;
@@ -380,39 +394,148 @@ export function PlatformProfile(props: PlatformProfileProps) {
             },
         });
     };
-    
+
+    const onSwitch = () => {
+        setIsDefault(!isDefault);
+        setError(null);
+    };
+
+    const mode = () => {
+        if (isDefault) {
+            return "Default";
+        } else {
+            return "Custom";
+        }
+    };
+
+    const onConfirm = () => {
+        if (isDefault) {
+            if (onFinish !== undefined) {
+                onFinish(undefined);
+            }
+            return;
+        }
+        const payload = handlerRef.current.value();
+        try {
+            const json = JSON.parse(payload);
+            if (onFinish !== undefined) {
+                onFinish(json);
+            }
+            setError(null);
+        } catch (reason) {
+            setError(reason);
+            console.error(reason);
+        }
+    };
+
+    const profileValue: string = profile === undefined ? "" : JSON.stringify(profile, null, 2);
 
     return (
-        <Stack
-        direction="column"
-        justifyContent="flex-start"
-        alignItems="stretch"
-    spacing={2}
-    sx={{
-        width: "100%",
-    }}
-        >
-            <Editor
-            height={"60vh"}
-            defaultLanguage={"json"}
-            defaultValue={profile?.toString()}
-            theme={"vs-dark"}
-            beforeMount={handleWillMount}
-            onMount={handleDidMount}
-            />
-            <Paper
+        <Paper
             sx={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "flex-end",
-                alignContent: "center",
+                boxSizing: "border-box",
+                margin: "0px",
+                width: "100%",
+                height: "100%",
             }}
+        >
+            <Stack
+                direction="column"
+                justifyContent="flex-start"
+                alignItems="stretch"
+                spacing={2}
+                sx={{
+                    width: "100%",
+                }}
             >
-                <Button variant="contained" color="primary">{"Confirm"}</Button>
-            </Paper>
-        </Stack>
-        
-    )
+                {error !== null && (
+                    <Alert severity="error">{"Fail to parse your input into json format."}</Alert>
+                )}
+                <Paper>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        spacing={2}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "flex-start",
+                                alignContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Switch onClick={onSwitch} />
+                            <Typography>{mode()}</Typography>
+                        </div>
+                        <Button variant="contained" color="primary" onClick={onConfirm}>
+                            {"Confirm"}
+                        </Button>
+                    </Stack>
+                </Paper>
+                {!isDefault && (
+                    <Paper>
+                        <Editor
+                            height={"60vh"}
+                            defaultLanguage={"json"}
+                            defaultValue={profileValue}
+                            theme={"vs-dark"}
+                            beforeMount={handleWillMount}
+                            onMount={handleDidMount}
+                        />
+                    </Paper>
+                )}
+            </Stack>
+        </Paper>
+    );
+}
+
+export interface BackendArgsProfileProps {
+    profile?: string[];
+    onFinish?: (args: string[]) => void;
+}
+
+export function BackendArgsProfile(props: BackendArgsProfileProps) {
+    const { profile, onFinish } = props;
+    const schema: RJSFSchema = {
+        title: "Backend Arguments",
+        type: "array",
+        items: {
+            type: "string",
+        },
+    };
+
+    const onSubmit = (data: IChangeEvent<any, RJSFSchema, any>) => {
+        const newProfile: string[] = data.formData;
+        if (onFinish !== undefined) {
+            onFinish(newProfile);
+        }
+    };
+
+    return (
+        <Paper
+            square
+            sx={{
+                boxSizing: "border-box",
+                margin: "0px",
+                width: "100%",
+                height: "100%",
+            }}
+        >
+            <Form
+                formData={profile === undefined ? [] : profile}
+                schema={schema}
+                validator={validator}
+                onSubmit={onSubmit}
+            >
+                <Button type={"submit"} variant={"contained"}>
+                    {"confirm"}
+                </Button>
+            </Form>
+        </Paper>
+    );
 }
 
 export interface ProjectProfileProps {
@@ -424,7 +547,7 @@ export interface ProjectProfileHandler {
     close: () => void;
 }
 
-const STEP_SIZE = 4;
+const STEP_SIZE = 5;
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
@@ -433,6 +556,8 @@ export const ProjectProfile = forwardRef(
         const [activeStep, setActiveStep] = useState(0);
         const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue>();
         const [pkgProfile, setPkgProfile] = useState<PkgProfileValue>();
+        const [platformProfile, setPlatformProfile] = useState<any>();
+        const [backendArgsProfile, setBackendArgsProfile] = useState<string[]>();
 
         const close = () => {
             setOpen(false);
@@ -453,6 +578,16 @@ export const ProjectProfile = forwardRef(
 
         const onPkgProfileFinish = (newProfile: PkgProfileValue) => {
             setPkgProfile(newProfile);
+            handleNextStep();
+        };
+
+        const onPlatformProfileFinish = (newProfile: any) => {
+            setPlatformProfile(newProfile);
+            handleNextStep();
+        };
+
+        const onBackendArgsProfileFinish = (newProfile: string[]) => {
+            setBackendArgsProfile(newProfile);
             handleNextStep();
         };
 
@@ -511,6 +646,9 @@ export const ProjectProfile = forwardRef(
                         <Step key={"Platform profile."} completed={false}>
                             <StepLabel>{"Platform profile."}</StepLabel>
                         </Step>
+                        <Step key={"Backend arguments profile."} completed={false}>
+                            <StepLabel>{"Platform profile."}</StepLabel>
+                        </Step>
                         <Step key={"Profile Finish."} completed={false}>
                             <StepLabel>{"Profile Finish."}</StepLabel>
                         </Step>
@@ -524,15 +662,24 @@ export const ProjectProfile = forwardRef(
                     {activeStep === 1 && (
                         <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
                     )}
-                    {activeStep ===2 && (
-                        <PlatformProfile 
+                    {activeStep === 2 && (
+                        <PlatformProfile
                             type={
-                                basicProfile === undefined? 
-                                PlatformType.SPARK_STANDALONE: platformType(basicProfile.platform)
+                                basicProfile === undefined
+                                    ? PlatformType.SPARK_STANDALONE
+                                    : platformType(basicProfile.platform)
                             }
+                            profile={basicProfile === undefined ? undefined : platformProfile}
+                            onFinish={onPlatformProfileFinish}
                         />
                     )}
                     {activeStep === 3 && (
+                        <BackendArgsProfile
+                            profile={backendArgsProfile}
+                            onFinish={onBackendArgsProfileFinish}
+                        />
+                    )}
+                    {activeStep === 4 && (
                         <Alert variant="outlined" severity="success">
                             {"Profile Finish"}
                         </Alert>
