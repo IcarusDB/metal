@@ -44,18 +44,19 @@ export interface MainHandler {
 }
 
 export function Main() {
-    // const home = {
-    //     type: "tab",
-    //     name: "Home",
-    //     icon: "executionsIcon",
-    //     component: "home",
+    const home: IJsonTabNode = {
+        type: "tab",
+        name: "Home",
+        icon: "executionsIcon",
+        component: "home", 
+        enableClose: false,
+    }
     
-    // }
     const main: IJsonTabSetNode = {
         type: "tabset",
         id: "main",
         weight: 50,
-        children: [],
+        children: [home],
     };
 
     const layout: IJsonModel = {
@@ -130,8 +131,8 @@ export function Main() {
                 component: "designer",
                 config: props,
             },
-            "Main",
-            DockLocation.TOP,
+            "main",
+            DockLocation.CENTER,
             1
         );
         layoutModel.doAction(action);
