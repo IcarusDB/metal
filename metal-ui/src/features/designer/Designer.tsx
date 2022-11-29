@@ -10,9 +10,15 @@ import { Box } from "@mui/system";
 import { MetalFlow, MetalFlowHandler } from "./MetalFlow";
 import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
 import { VscSettingsGear } from "react-icons/vsc";
+import { Project } from "../../model/Project";
 
+export interface DesignerProps {
+    project?: Project
+}
 
-export function Designer() {
+export function Designer(props: DesignerProps) {
+    const {project} = props;
+
     const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const metalFlowRef = useRef<MetalFlowHandler>(null);
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
@@ -37,7 +43,7 @@ export function Designer() {
 
     const projectProfile = useMemo(()=>{
         return (
-            <ProjectProfile open={false} isCreate={false} ref={projectProfileRef}/>
+            <ProjectProfile open={false} isCreate={false} project={project} ref={projectProfileRef}/>
         )
     }, [])
 

@@ -40,6 +40,7 @@ import {getAllProjectOfUser} from "./ProjectApi";
 import { State } from '../../api/State';
 import { useAsync } from '../../api/Hooks';
 import { ResizeBackdrop } from '../ui/ResizeBackdrop';
+import { MainHandler } from '../main/Main';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -149,8 +150,13 @@ function backendStatus(deploy: Deploy) {
     
 }
 
-export function ProjectItem(props: { item: Project, index: number }) {
-    const {item} = props;
+export function ProjectItem(props: { item: Project, index: number, mainHandler?: MainHandler }) {
+    const {item, mainHandler} = props;
+    const onEdit = () => {
+        mainHandler?.openDesigner({
+            project: item,
+        })
+    }
     return (
         <TableRow key={item.id}>
             <TableCell>{item.name}</TableCell>
@@ -167,7 +173,7 @@ export function ProjectItem(props: { item: Project, index: number }) {
                     spacing={0}
                 >
                     <IconButton><AiOutlineEye/></IconButton>
-                    <IconButton><AiOutlineEdit/></IconButton>
+                    <IconButton onClick={onEdit}><AiOutlineEdit/></IconButton>
                 </Stack>
             </TableCell>
         </TableRow>
@@ -176,7 +182,13 @@ export function ProjectItem(props: { item: Project, index: number }) {
 
 const theme = createTheme()
 
-export function ProjectList() {
+export interface ProjectListProps {
+    mainHandler: MainHandler
+}
+
+export function ProjectList(props: ProjectListProps) {
+    const {mainHandler} = props;
+
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
@@ -264,7 +276,7 @@ export function ProjectList() {
                             </TableHead>
                             <TableBody>
                                 {projects.map((item: Project, index: number) => {
-                                    return ProjectItem({item: item, index: index})
+                                    return ProjectItem({item: item, index: index, mainHandler: mainHandler})
                                 })}
                             </TableBody>
                         </Table>

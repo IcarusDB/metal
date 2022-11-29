@@ -4,7 +4,6 @@ import {
     Container,
     Grid,
     IconButton,
-    Input,
     LinearProgress,
     Paper,
     Stack,
@@ -29,14 +28,13 @@ import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import {
     ForwardedRef,
     forwardRef,
-    useEffect,
     useImperativeHandle,
     useMemo,
     useRef,
     useState,
 } from "react";
-import { VscArrowLeft, VscCheck, VscClose, VscInfo } from "react-icons/vsc";
-import { platformSchema, platformType, PlatformType } from "../../model/Project";
+import { VscArrowLeft, VscClose, VscInfo } from "react-icons/vsc";
+import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
 import _ from "lodash";
@@ -45,7 +43,7 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
-import Editor, { EditorProps, Monaco, OnMount, useMonaco } from "@monaco-editor/react";
+import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 
 export interface ProjectBasicProfileValue {
@@ -589,6 +587,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 export interface ProjectProfileProps {
     open: boolean;
     isCreate: boolean;
+    project?: Project
 }
 
 export interface ProjectProfileHandler {
@@ -598,15 +597,80 @@ export interface ProjectProfileHandler {
 
 const STEP_SIZE = 5;
 
+function extractBasicProfile(project: Project | undefined): ProjectBasicProfileValue | null {
+    if (project === undefined || project === null) {
+        return null;
+    }
+    const platforms = _.keys(project.deploy.platform);
+    if (platforms.length === 0) {
+        return {
+            name: project.name,
+            platform: PlatformType.SPARK_STANDALONE,
+        }
+    }
+
+    return {
+        name: project.name,
+        platform: platformType(platforms[0])
+    }
+}
+
+function extractPkgProfile(project: Project | undefined): PkgProfileValue | null {
+    if (project === undefined || project === null) {
+        return null;
+    }
+    return {
+        packages: project.deploy.pkgs.filter(pkg => {
+            return pkg.split(":").length === 3
+        }).map(pkg => {
+            const sub = pkg.split(":")
+            return {
+                id: pkg,
+                groupId: sub[0],
+                artifactId: sub[1],
+                version: sub[2],
+                scope: "PRIVATE",
+            }
+        })
+    }
+}
+
+function extractPlatformProfile(type: PlatformType, project: Project| undefined): any {
+    if (project === undefined || project === null) {
+        return null;
+    }
+    if (_.hasIn(project.deploy.platform, type)) {
+        return project.deploy.platform[type];
+    } else {
+        return null;
+    }
+}
+
+function extractBackendArgumentsProfile(project: Project | undefined): string[] | null {
+    if (project === undefined || project === null) {
+        return null;
+    }
+    return project.deploy.backend.args;
+}
+
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
-        const { open, isCreate } = props;
+        const { open, isCreate, project } = props;
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
-        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue>();
-        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue>();
-        const [platformProfile, setPlatformProfile] = useState<any>();
-        const [backendArgsProfile, setBackendArgsProfile] = useState<string[]>();
+
+        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(
+            () => (extractBasicProfile(project))
+        );
+        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(
+            ()=>(extractPkgProfile(project))
+        );
+        const [platformProfile, setPlatformProfile] = useState<any>(
+            ()=>(extractPlatformProfile(basicProfile === null? PlatformType.SPARK_STANDALONE: platformType(basicProfile.platform), project))
+        );
+        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(
+            ()=>(extractBackendArgumentsProfile(project))
+        );
 
         const close = () => {
             setOpen(false);
@@ -711,27 +775,30 @@ export const ProjectProfile = forwardRef(
 
                     {activeStep === 0 && (
                         <ProjectBasicProfile
-                            profile={basicProfile}
+                            profile={basicProfile === null? undefined: basicProfile}
                             onFinish={onBasicProfileFinish}
                         />
                     )}
                     {activeStep === 1 && (
-                        <PkgSelector profile={pkgProfile} onFinish={onPkgProfileFinish} />
+                        <PkgSelector 
+                            profile={pkgProfile === null? undefined: pkgProfile} 
+                            onFinish={onPkgProfileFinish} 
+                            />
                     )}
                     {activeStep === 2 && (
                         <PlatformProfile
                             type={
-                                basicProfile === undefined
+                                basicProfile === null
                                     ? PlatformType.SPARK_STANDALONE
                                     : platformType(basicProfile.platform)
                             }
-                            profile={basicProfile === undefined ? undefined : platformProfile}
+                            profile={basicProfile === null ? undefined : platformProfile}
                             onFinish={onPlatformProfileFinish}
                         />
                     )}
                     {activeStep === 3 && (
                         <BackendArgsProfile
-                            profile={backendArgsProfile}
+                            profile={backendArgsProfile === null? []: backendArgsProfile}
                             onFinish={onBackendArgsProfileFinish}
                         />
                     )}
