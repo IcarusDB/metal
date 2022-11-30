@@ -28,12 +28,14 @@ import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import {
     ForwardedRef,
     forwardRef,
+    useCallback,
+    useEffect,
     useImperativeHandle,
     useMemo,
     useRef,
     useState,
 } from "react";
-import { VscArrowLeft, VscClose, VscInfo } from "react-icons/vsc";
+import { VscArrowLeft, VscClose, VscError, VscInfo, VscWarning } from "react-icons/vsc";
 import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -45,6 +47,7 @@ import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
+import { createProject } from "./ProjectApi";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -539,11 +542,86 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
 
 export interface ProjectProfileFinishProps {
     isCreate: boolean;
-    onFinish?: () => void;
+    profile: ProjectProfileValue;
+    onFinish?: (projectId: string) => void;
 }
 
 export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
-    const { isCreate, onFinish } = props;
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+
+    const { isCreate, profile, onFinish } = props;
+    const { basic, pkgs, platform, backendArgs } = profile;
+    const [warnTip, setWarnTip] = useState<string>();
+    const { run, status, error, result } = useAsync<string>();
+
+    const check: () => [boolean, string | undefined] = useCallback(() => {
+        if (basic === null || basic.name === "") {
+            return [false, "The project basic profile is not configured."];
+        }
+
+        if (pkgs === null || pkgs.packages === null || pkgs.packages.length === 0) {
+            return [false, "The project packages is not configured."];
+        }
+
+        if (platform !== null) {
+            if (platform[basic.platform] === undefined) {
+                return [false, `The project platform[${basic.platform}] is not configured.`];
+            }
+        }
+        return [true, undefined];
+    }, [basic, pkgs, platform]);
+
+    const isPending = () => status === State.pending;
+    const isSuccess = () => status === State.success;
+
+    const progress = isPending() ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
+
+    const onCreate = () => {
+        if (token === null) {
+            setWarnTip("User is not authorized");
+            return;
+        }
+        const [isChecked, msg] = check();
+        if (!isChecked) {
+            setWarnTip(msg);
+        } else {
+            run(createProject(token, profile));
+        }
+    };
+
+    const onOpenProject = () => {
+        if (isSuccess()) {
+            if (onFinish !== undefined && result !== null) {
+                onFinish(result);
+            }
+        }
+    };
+
+    const onUpdate = () => {
+        if (token === null) {
+            setWarnTip("User is not authorized");
+            return;
+        }
+        const [isChecked, msg] = check();
+        if (!isChecked) {
+            setWarnTip(msg);
+        } else {
+            run(createProject(token, profile));
+        }
+    };
+
+    useEffect(() => {
+        const [isChecked, msg] = check();
+        if (!isChecked) {
+            setWarnTip(msg);
+        }
+    }, [check]);
 
     return (
         <Paper
@@ -566,6 +644,31 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                 }}
             >
                 <Stack direction="column" justifyContent="center" alignItems="stretch" spacing={2}>
+                    {warnTip !== undefined && (
+                        <Alert
+                            variant="outlined"
+                            severity="warning"
+                            icon={<VscWarning fontSize={"2em"} />}
+                            sx={{
+                                fontSize: "2em",
+                            }}
+                        >
+                            {warnTip}
+                        </Alert>
+                    )}
+                    {!isSuccess() && (
+                        <Alert
+                            variant="outlined"
+                            severity="error"
+                            icon={<VscError fontSize={"2em"} />}
+                            sx={{
+                                fontSize: "2em",
+                            }}
+                        >
+                            {"Fail to request server."}
+                        </Alert>
+                    )}
+
                     <Alert
                         variant="outlined"
                         severity="info"
@@ -574,12 +677,20 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                             fontSize: "2em",
                         }}
                     >
-                        {"Profile Will Finish"}
+                        {isSuccess() ? "Profile Will Finish" : "Profile is Finished."}
                     </Alert>
-                    {isCreate && <Button variant={"contained"}>{"Create"}</Button>}
+                    {isCreate && (
+                        <Button variant={"contained"} onClick={onCreate}>
+                            {"Create"}
+                        </Button>
+                    )}
                     {!isCreate && <Button variant={"contained"}>{"Update"}</Button>}
+                    {isCreate && isSuccess() && (
+                        <Button variant={"contained"} onClick={onOpenProject}>{"Open Project"}</Button>
+                    )}
                 </Stack>
             </Container>
+            <ResizeBackdrop open={isPending()} />
         </Paper>
     );
 }
@@ -587,12 +698,20 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 export interface ProjectProfileProps {
     open: boolean;
     isCreate: boolean;
-    project?: Project
+    project?: Project;
+    onFinish?: (projectId: string) => void;
 }
 
 export interface ProjectProfileHandler {
     open: () => void;
     close: () => void;
+}
+
+export interface ProjectProfileValue {
+    basic: ProjectBasicProfileValue | null;
+    pkgs: PkgProfileValue | null;
+    platform: any;
+    backendArgs: string[] | null;
 }
 
 const STEP_SIZE = 5;
@@ -606,13 +725,13 @@ function extractBasicProfile(project: Project | undefined): ProjectBasicProfileV
         return {
             name: project.name,
             platform: PlatformType.SPARK_STANDALONE,
-        }
+        };
     }
 
     return {
         name: project.name,
-        platform: platformType(platforms[0])
-    }
+        platform: platformType(platforms[0]),
+    };
 }
 
 function extractPkgProfile(project: Project | undefined): PkgProfileValue | null {
@@ -620,22 +739,24 @@ function extractPkgProfile(project: Project | undefined): PkgProfileValue | null
         return null;
     }
     return {
-        packages: project.deploy.pkgs.filter(pkg => {
-            return pkg.split(":").length === 3
-        }).map(pkg => {
-            const sub = pkg.split(":")
-            return {
-                id: pkg,
-                groupId: sub[0],
-                artifactId: sub[1],
-                version: sub[2],
-                scope: "PRIVATE",
-            }
-        })
-    }
+        packages: project.deploy.pkgs
+            .filter((pkg) => {
+                return pkg.split(":").length === 3;
+            })
+            .map((pkg) => {
+                const sub = pkg.split(":");
+                return {
+                    id: pkg,
+                    groupId: sub[0],
+                    artifactId: sub[1],
+                    version: sub[2],
+                    scope: "PRIVATE",
+                };
+            }),
+    };
 }
 
-function extractPlatformProfile(type: PlatformType, project: Project| undefined): any {
+function extractPlatformProfile(type: PlatformType, project: Project | undefined): any {
     if (project === undefined || project === null) {
         return null;
     }
@@ -655,21 +776,26 @@ function extractBackendArgumentsProfile(project: Project | undefined): string[] 
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
-        const { open, isCreate, project } = props;
+        const { open, isCreate, project, onFinish } = props;
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(
-            () => (extractBasicProfile(project))
+        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(() =>
+            extractBasicProfile(project)
         );
-        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(
-            ()=>(extractPkgProfile(project))
+        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(() =>
+            extractPkgProfile(project)
         );
-        const [platformProfile, setPlatformProfile] = useState<any>(
-            ()=>(extractPlatformProfile(basicProfile === null? PlatformType.SPARK_STANDALONE: platformType(basicProfile.platform), project))
+        const [platformProfile, setPlatformProfile] = useState<any>(() =>
+            extractPlatformProfile(
+                basicProfile === null
+                    ? PlatformType.SPARK_STANDALONE
+                    : platformType(basicProfile.platform),
+                project
+            )
         );
-        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(
-            ()=>(extractBackendArgumentsProfile(project))
+        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(() =>
+            extractBackendArgumentsProfile(project)
         );
 
         const close = () => {
@@ -702,6 +828,17 @@ export const ProjectProfile = forwardRef(
         const onBackendArgsProfileFinish = (newProfile: string[]) => {
             setBackendArgsProfile(newProfile);
             handleNextStep();
+        };
+
+        const platformWithType = () => {
+            if (platformProfile === null) {
+                return null;
+            }
+            if (basicProfile === null) {
+                return null;
+            }
+            const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
+            return JSON.parse(withType);
         };
 
         useImperativeHandle(
@@ -775,15 +912,15 @@ export const ProjectProfile = forwardRef(
 
                     {activeStep === 0 && (
                         <ProjectBasicProfile
-                            profile={basicProfile === null? undefined: basicProfile}
+                            profile={basicProfile === null ? undefined : basicProfile}
                             onFinish={onBasicProfileFinish}
                         />
                     )}
                     {activeStep === 1 && (
-                        <PkgSelector 
-                            profile={pkgProfile === null? undefined: pkgProfile} 
-                            onFinish={onPkgProfileFinish} 
-                            />
+                        <PkgSelector
+                            profile={pkgProfile === null ? undefined : pkgProfile}
+                            onFinish={onPkgProfileFinish}
+                        />
                     )}
                     {activeStep === 2 && (
                         <PlatformProfile
@@ -798,11 +935,22 @@ export const ProjectProfile = forwardRef(
                     )}
                     {activeStep === 3 && (
                         <BackendArgsProfile
-                            profile={backendArgsProfile === null? []: backendArgsProfile}
+                            profile={backendArgsProfile === null ? [] : backendArgsProfile}
                             onFinish={onBackendArgsProfileFinish}
                         />
                     )}
-                    {activeStep === 4 && <ProjectProfileFinish isCreate={isCreate} />}
+                    {activeStep === 4 && (
+                        <ProjectProfileFinish
+                            isCreate={isCreate}
+                            profile={{
+                                basic: basicProfile,
+                                pkgs: pkgProfile,
+                                platform: platformWithType(),
+                                backendArgs: backendArgsProfile,
+                            }}
+                            onFinish={onFinish}
+                        />
+                    )}
 
                     <Paper
                         square

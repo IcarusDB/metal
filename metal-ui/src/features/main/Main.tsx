@@ -18,6 +18,7 @@ import { RiFunctionLine } from "react-icons/ri";
 import { VscCircuitBoard, VscExtensions } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { useMemo } from "react";
+import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
@@ -41,6 +42,8 @@ function iconFatory(node: TabNode) {
 
 export interface MainHandler {
     openDesigner: (props: DesignerProps) => void;
+    close?: (id: string) => void;
+    renameDesigner?: (id: string, newName: string) => void;
 }
 
 export function Main() {
@@ -120,17 +123,39 @@ export function Main() {
     };
     const layoutModel: FlexLayout.Model = Model.fromJson(layout);
 
-    const openDesigner = (props: DesignerProps) => {
-        const { project } = props;
+    const openProjectStarter = (props: ProjectStarterProps) => {
+        const {id} = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: id,
+            name: `Starter[${id}]`,
+            icon: "designerIcon",
+            component: "starter",
+            config: props,
+        }
 
         const action: Action = Actions.addNode(
-            {
-                type: "tab",
-                name: project === undefined? "new": project.name,
-                icon: "designerIcon",
-                component: "designer",
-                config: props,
-            },
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        layoutModel.doAction(action);
+    }
+
+    const openDesigner = (props: DesignerProps) => {
+        const { project } = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: project?.id,
+            name: project === undefined? "Project[new]": `Project[${project.name}]`,
+            icon: "designerIcon",
+            component: "designer",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
             "main",
             DockLocation.CENTER,
             1
@@ -138,8 +163,20 @@ export function Main() {
         layoutModel.doAction(action);
     };
 
+    const close = (id: string) => {
+        const action: Action = Actions.deleteTab(id);
+        layoutModel.doAction(action);
+    }
+
+    const renameDesigner = (id: string, newName: string) => {
+        const action: Action = Actions.renameTab(id, newName);
+        layoutModel.doAction(action);
+    }
+
     const mainHandler: MainHandler = {
         openDesigner: openDesigner,
+        close: close,
+        renameDesigner: renameDesigner,
     }
 
     const factory = (node: TabNode) => {
@@ -153,11 +190,19 @@ export function Main() {
                 };
                 return <ProjectList {...props}/>;
             }
+
+            case "starter": {
+                const props: ProjectStarterProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return <ProjectStarter {...props}/>;
+            }
                 
             case "designer": {
                 const props: DesignerProps = config;
                 return (
-                    <Designer {...props} />
+                    <Designer {...props} mainHandler={mainHandler}/>
                 );
             }
 

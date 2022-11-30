@@ -30,6 +30,7 @@ export function platformType(type: string) {
         }    }
 }
 
+
 export function platformSchema(type: PlatformType) {
     switch (type) {
         case PlatformType.SPARK_STANDALONE: {

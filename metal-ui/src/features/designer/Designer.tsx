@@ -11,9 +11,11 @@ import { MetalFlow, MetalFlowHandler } from "./MetalFlow";
 import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
 import { VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
+import { MainHandler } from "../main/Main";
 
 export interface DesignerProps {
-    project?: Project
+    project?: Project,
+    mainHandler?: MainHandler
 }
 
 export function Designer(props: DesignerProps) {
