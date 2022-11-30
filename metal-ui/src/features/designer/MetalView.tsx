@@ -1,23 +1,18 @@
 import {ImUpload, ImDownload} from "react-icons/im"
 import {AiOutlineFunction, AiOutlineDelete} from "react-icons/ai"
-import {VscMerge, VscExpandAll} from "react-icons/vsc"
+import {VscMerge, VscExpandAll, VscExtensions} from "react-icons/vsc"
 import {Connection, Node, Edge, NodeProps} from "reactflow";
 import {Handle, Position} from 'reactflow';
 import {
-    Avatar,
     Box,
-    Grid,
     Button,
-    IconButton,
     Paper,
     Stack,
-    Container,
     Badge,
     Divider,
-    ButtonGroup,
     Typography
 } from "@mui/material";
-import {RefObject, useMemo, MouseEvent} from "react";
+import {RefObject, MouseEvent} from "react";
 import {MetalPkg} from "../../model/MetalPkg";
 import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {GraphTopology} from "../../model/GraphTopology";
@@ -27,7 +22,19 @@ export const MetalViewIcons = {
     SOURCE: <ImUpload/>,
     SINK: <ImDownload/>,
     MAPPER: <AiOutlineFunction/>,
-    FUSION: <VscMerge/>
+    FUSION: <VscMerge/>,
+    SETUP: <VscExtensions/>
+}
+
+export function metalViewIcon(type: MetalTypes) {
+    switch(type) {
+        case MetalTypes.SOURCE: return MetalViewIcons.SOURCE;
+        case MetalTypes.SINK: return MetalViewIcons.SINK;
+        case MetalTypes.MAPPER: return MetalViewIcons.MAPPER;
+        case MetalTypes.FUSION: return MetalViewIcons.FUSION;
+        default: return MetalViewIcons.SETUP;
+
+    }
 }
 
 export interface MetalNodeProps {
@@ -37,42 +44,6 @@ export interface MetalNodeProps {
     onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
     editorRef?: RefObject<MetalNodeEditorHandler>
-}
-
-export interface MetalNodeInOut {
-    inputs: (id: string) => Node<MetalNodeProps>[];
-    outputs: (id: string) => Node<MetalNodeProps>[];
-}
-
-export class MetalNodeInOutUtil implements MetalNodeInOut {
-    private inner: MetalNodeInOut
-    private constructor(instance: MetalNodeInOut) {
-        this.inner = instance
-    }
-
-    public static instance(instance: MetalNodeInOut) {
-        return new MetalNodeInOutUtil(instance)
-    }
-
-    public static default() {
-        return new MetalNodeInOutUtil({
-            inputs: (id: string) => ([]),
-            outputs: (id: string) => ([])
-        })
-    }
-
-    public update(instance: MetalNodeInOut): void {
-        this.inner = instance
-    }
-
-    inputs(id: string): Node<MetalNodeProps>[] {
-        return this.inner.inputs(id);
-    }
-
-    outputs(id: string): Node<MetalNodeProps>[] {
-        return this.inner.outputs(id);
-    }
-
 }
 
 export interface IMetalNodeView {
@@ -148,25 +119,20 @@ export const MetalFusionNodeView: IMetalNodeView = {
 export const MetalNodeViews = {
     metalNodeView: (type: string) => {
         switch (type) {
-            case MetalTypes.SOURCE: {
+            case MetalTypes.SOURCE: 
                 return MetalSourceNodeView
-            }
-                ;
-            case MetalTypes.SINK: {
+            ;
+            case MetalTypes.SINK: 
                 return MetalSinkNodeView
-            }
-                ;
-            case MetalTypes.FUSION: {
+            ;
+            case MetalTypes.FUSION: 
                 return MetalFusionNodeView
-            }
-                ;
-            case MetalTypes.MAPPER: {
+            ;
+            case MetalTypes.MAPPER: 
                 return MetalMapperNodeView
-            }
-                ;
-            default: {
+             ;
+            default: 
                 return MetalSourceNodeView
-            }
         }
     }
 }

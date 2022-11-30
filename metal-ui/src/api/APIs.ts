@@ -31,7 +31,7 @@ export enum ApiResponseStatus {
 export const ApiResponse = {
     isSuccess: (response: ApiResponseEntity) => {
         try {
-            return response.status == ApiResponseStatus.success
+            return response.status === ApiResponseStatus.success
         } catch (err) {
             return false
         }
@@ -41,6 +41,17 @@ export const ApiResponse = {
             return response.status == ApiResponseStatus.failure
         } catch (err) {
             return false
+        }
+    },
+    mayBeFailure: (response: ApiResponseEntity) => {
+        if (!ApiResponse.isSuccess(response)) {
+            if (response.msg === undefined) {
+                throw new Error('Response is failure, and no msg found in response.')
+            }
+            throw new Error(response.msg)
+        }
+        if (response.data === undefined) {
+            throw new Error('Response is successful, but no data found in response.')
         }
     }
 }

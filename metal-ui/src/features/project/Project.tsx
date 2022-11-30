@@ -4,27 +4,19 @@ import {tokenSelector} from "../user/userSlice";
 import {
     Box,
     Paper,
-    Container,
     Divider,
     IconButton,
-    Card,
     List,
     ListItem,
     ListItemText,
-    ListItemIcon,
     Tooltip,
-    ListItemButton,
-    CardHeader,
-    CardContent,
-    Snackbar,
     TableContainer,
     Table,
     TableHead,
     TableRow,
     TableBody,
     TableCell,
-    Button,
-    CssBaseline, CircularProgress, Alert, Backdrop
+    CircularProgress, Alert, Backdrop, LinearProgress, Container, Button
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -42,9 +34,14 @@ import {
     BsCommand
 } from "react-icons/bs";
 import {HiStop} from "react-icons/hi";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
 import {getAllProjectOfUser} from "./ProjectApi";
+import { State } from '../../api/State';
+import { useAsync } from '../../api/Hooks';
+import { ResizeBackdrop } from '../ui/ResizeBackdrop';
+import { MainHandler } from '../main/Main';
+import { VscAdd } from 'react-icons/vsc';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -104,7 +101,7 @@ function backendStatus(deploy: Deploy) {
     }
 
     switch (deploy.backend.status.current) {
-        case BackendState.UN_DEPLOY: {
+        case BackendState.UN_DEPLOY: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -112,9 +109,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+
             ;
-        case BackendState.UP: {
+        case BackendState.UP: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -122,9 +119,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        case BackendState.DOWN: {
+        case BackendState.DOWN: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -132,9 +129,9 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        case BackendState.FAILURE: {
+        case BackendState.FAILURE: 
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
@@ -142,20 +139,25 @@ function backendStatus(deploy: Deploy) {
                     </IconButton>
                 </Tooltip>
             )
-        }
+        
             ;
-        default: {
+        default: 
             return (
                 <Tooltip title={'Unknown'}>
                     <AiOutlineQuestionCircle/>
                 </Tooltip>
             )
         }
-    }
+    
 }
 
-export function ProjectItem(props: { item: Project, index: number }) {
-    const {item, index} = props;
+export function ProjectItem(props: { item: Project, index: number, mainHandler?: MainHandler }) {
+    const {item, mainHandler} = props;
+    const onEdit = () => {
+        mainHandler?.openDesigner({
+            project: item,
+        })
+    }
     return (
         <TableRow key={item.id}>
             <TableCell>{item.name}</TableCell>
@@ -172,28 +174,29 @@ export function ProjectItem(props: { item: Project, index: number }) {
                     spacing={0}
                 >
                     <IconButton><AiOutlineEye/></IconButton>
-                    <IconButton><AiOutlineEdit/></IconButton>
+                    <IconButton onClick={onEdit}><AiOutlineEdit/></IconButton>
                 </Stack>
             </TableCell>
         </TableRow>
     )
 }
 
-enum State {
-    idle,
-    pending,
-    success,
-    failure
-}
-
 const theme = createTheme()
 
-export function ProjectList() {
+export interface ProjectListProps {
+    mainHandler: MainHandler
+}
+
+export function ProjectList(props: ProjectListProps) {
+    const {mainHandler} = props;
+
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
-    const [projects, setProjects] = useState<Project[]>([])
-    const [status, setStatus] = useState<State>(State.idle)
+    const starterCounter = useRef(0);
+
+    const {run, status, result, error} = useAsync<Project[]>()
+    const projects = result === null? []: result;
     const isPending = () => {
         return status === State.pending
     }
@@ -201,34 +204,35 @@ export function ProjectList() {
         return status === State.failure
     }
 
-    const load = () => {
+    const load = useCallback(() => {
         if (token != null) {
-            setStatus(State.pending)
-            getAllProjectOfUser(token).then((_projects: Project[]) => {
-                setTimeout(() => {
-                    setProjects(_projects)
-                    setStatus(State.success)
-                }, 3000)
-            }, reason => {
-                console.error(reason)
-                setStatus(State.failure)
-            })
+            run(getAllProjectOfUser(token));
         }
+    }, [run, token])
+
+    const progress = isPending() ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
+
+    const onAddProject = () => {
+        mainHandler.openProjectStarter({
+            id: `starter[${starterCounter.current++}]`,
+            mainHandler: mainHandler,
+        })
     }
 
     useEffect(() => {
-        load()
-    }, [token])
+        load();
+    }, [load])
 
     return (
         <ThemeProvider theme={theme}>
             <div className={'panel'}
                  style={{flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start"}}
             >
-                <Backdrop
-                    open={isPending()}
-                    sx={{position: "absolute"}}
-                />
+                
                 <Stack
                     direction="column"
                     justifyContent="flex-start"
@@ -263,6 +267,7 @@ export function ProjectList() {
                                     }
                                 </IconButton>
                             </Stack>
+                            {progress}
                         </Paper>
                     </Box>
 
@@ -281,12 +286,16 @@ export function ProjectList() {
                             </TableHead>
                             <TableBody>
                                 {projects.map((item: Project, index: number) => {
-                                    return ProjectItem({item: item, index: index})
+                                    return ProjectItem({item: item, index: index, mainHandler: mainHandler})
                                 })}
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    <Container>
+                        <Button variant='contained' onClick={onAddProject}><VscAdd/></Button>
+                    </Container>
                 </Stack>
+                <ResizeBackdrop open={isPending()} />
             </div>
         </ThemeProvider>
     )
