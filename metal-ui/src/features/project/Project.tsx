@@ -16,7 +16,7 @@ import {
     TableRow,
     TableBody,
     TableCell,
-    CircularProgress, Alert, Backdrop, LinearProgress
+    CircularProgress, Alert, Backdrop, LinearProgress, Container, Button
 } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import {createTheme, ThemeProvider} from '@mui/material/styles';
@@ -34,13 +34,14 @@ import {
     BsCommand
 } from "react-icons/bs";
 import {HiStop} from "react-icons/hi";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
 import {getAllProjectOfUser} from "./ProjectApi";
 import { State } from '../../api/State';
 import { useAsync } from '../../api/Hooks';
 import { ResizeBackdrop } from '../ui/ResizeBackdrop';
 import { MainHandler } from '../main/Main';
+import { VscAdd } from 'react-icons/vsc';
 
 
 function backendStatusTip(backendStatus: BackendStatus) {
@@ -192,6 +193,8 @@ export function ProjectList(props: ProjectListProps) {
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
+    const starterCounter = useRef(0);
+
     const {run, status, result, error} = useAsync<Project[]>()
     const projects = result === null? []: result;
     const isPending = () => {
@@ -212,6 +215,13 @@ export function ProjectList(props: ProjectListProps) {
     ) : (
         <LinearProgress variant="determinate" value={0} />
     );
+
+    const onAddProject = () => {
+        mainHandler.openProjectStarter({
+            id: `starter[${starterCounter.current++}]`,
+            mainHandler: mainHandler,
+        })
+    }
 
     useEffect(() => {
         load();
@@ -281,6 +291,9 @@ export function ProjectList(props: ProjectListProps) {
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    <Container>
+                        <Button variant='contained' onClick={onAddProject}><VscAdd/></Button>
+                    </Container>
                 </Stack>
                 <ResizeBackdrop open={isPending()} />
             </div>

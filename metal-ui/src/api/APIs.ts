@@ -31,7 +31,7 @@ export enum ApiResponseStatus {
 export const ApiResponse = {
     isSuccess: (response: ApiResponseEntity) => {
         try {
-            return response.status == ApiResponseStatus.success
+            return response.status === ApiResponseStatus.success
         } catch (err) {
             return false
         }

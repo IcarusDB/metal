@@ -47,7 +47,7 @@ import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
-import { createProject } from "./ProjectApi";
+import { createProject, CreateProjectParams } from "./ProjectApi";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -128,17 +128,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [isAuto, setAuto] = useState(
-        profile === undefined ? true : profile.packages.length === 0
-    );
     const { run, status, result, error } = useAsync<MetalPkg[]>();
-
-    const onSwitch = () => {
-        setAuto(!isAuto);
-        if (token !== null && isAuto) {
-            run(getAllMetalPkgsOfUserAccess(token));
-        }
-    };
 
     const isLoading = () => status === State.pending;
 
@@ -182,8 +172,6 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         .map((pkg) => pkg.id);
 
     const [selectionModel, setSelectionModel] = useState(initialSelectionModel);
-
-    const mode = () => (isAuto ? "Auto mode." : "Custom mode.");
 
     const progress =
         status === State.pending ? (
@@ -259,13 +247,11 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         [columns, packagesUniq]
     );
 
-    const onAutoConfirm = () => {
-        if (onFinish !== undefined) {
-            onFinish({
-                packages: packagesUniq,
-            });
+    useEffect(()=>{
+        if (token !== null) {
+            run(getAllMetalPkgsOfUserAccess(token));
         }
-    };
+    }, [run, token]);
 
     return (
         <Paper
@@ -291,28 +277,6 @@ export const PkgSelector = (props: PkgSelectorProps) => {
                 <Grid item xs={12}>
                     <Typography variant="h6">{"Metal Package Selector"}</Typography>
                 </Grid>
-                <Grid item xs={12}>
-                    <Paper
-                        square
-                        variant="outlined"
-                        sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            alignContent: "center",
-                            justifyContent: "flex-start",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Switch checked={isAuto} onChange={onSwitch} />
-                        <Typography variant="body1">{mode()}</Typography>
-                        {isAuto && (
-                            <Button variant="contained" color="primary" onClick={onAutoConfirm}>
-                                {"Confirm"}
-                            </Button>
-                        )}
-                    </Paper>
-                </Grid>
                 <Grid
                     item
                     xs={12}
@@ -324,8 +288,8 @@ export const PkgSelector = (props: PkgSelectorProps) => {
                         position: "relative",
                     }}
                 >
-                    {!isAuto && progress}
-                    {!isAuto && tbl}
+                    {progress}
+                    {tbl}
                     <ResizeBackdrop open={isLoading()} />
                 </Grid>
             </Grid>
@@ -361,7 +325,7 @@ export class PlatformProfileHandler {
 
 export function PlatformProfile(props: PlatformProfileProps) {
     const { type, profile, onFinish } = props;
-    const [isDefault, setIsDefault] = useState(profile === undefined);
+    const [isDefault, setIsDefault] = useState(profile === undefined || profile === null);
     const [error, setError] = useState<any>(null);
 
     const schema = platformSchema(type);
@@ -430,7 +394,7 @@ export function PlatformProfile(props: PlatformProfileProps) {
         }
     };
 
-    const profileValue: string = profile === undefined ? "" : JSON.stringify(profile, null, 2);
+    const profileValue: string = profile === undefined || profile === null ? "" : JSON.stringify(profile, null, 2);
 
     return (
         <Paper
@@ -575,6 +539,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 
     const isPending = () => status === State.pending;
     const isSuccess = () => status === State.success;
+    const isFailure = () => status === State.failure;
 
     const progress = isPending() ? (
         <LinearProgress />
@@ -591,7 +556,21 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         if (!isChecked) {
             setWarnTip(msg);
         } else {
-            run(createProject(token, profile));
+            const params: CreateProjectParams = {
+                name: profile.basic === null ? undefined : profile.basic.name,
+                pkgs:
+                    profile.pkgs === null
+                        ? undefined
+                        : profile.pkgs.packages.map(
+                              (pkg) => `${pkg.groupId}:${pkg.artifactId}:${pkg.version}`
+                          ),
+                platform:
+                    profile.platform === null || profile.platform === undefined
+                        ? undefined
+                        : profile.platform,
+                backendArgs: profile.backendArgs === null ? undefined : profile.backendArgs,
+            };
+            run(createProject(token, params));
         }
     };
 
@@ -612,7 +591,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         if (!isChecked) {
             setWarnTip(msg);
         } else {
-            run(createProject(token, profile));
+            // run(createProject(token, profile));
         }
     };
 
@@ -656,7 +635,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                             {warnTip}
                         </Alert>
                     )}
-                    {!isSuccess() && (
+                    {isFailure() && (
                         <Alert
                             variant="outlined"
                             severity="error"
@@ -677,7 +656,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                             fontSize: "2em",
                         }}
                     >
-                        {isSuccess() ? "Profile Will Finish" : "Profile is Finished."}
+                        {!isSuccess() ? "Profile Will Finish" : "Profile is Finished."}
                     </Alert>
                     {isCreate && (
                         <Button variant={"contained"} onClick={onCreate}>
@@ -831,13 +810,14 @@ export const ProjectProfile = forwardRef(
         };
 
         const platformWithType = () => {
-            if (platformProfile === null) {
+            if (platformProfile === null || platformProfile === undefined) {
                 return null;
             }
             if (basicProfile === null) {
                 return null;
             }
             const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
+    
             return JSON.parse(withType);
         };
 

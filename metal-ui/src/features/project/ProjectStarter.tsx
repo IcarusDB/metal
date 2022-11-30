@@ -15,6 +15,6 @@ export function ProjectStarter(props: ProjectStarterProps) {
         }
     }
     return (
-        <ProjectProfile open={true} isCreate={true}/>
+        <ProjectProfile open={true} isCreate={true} onFinish={onCreateFinish}/>
     )
 }

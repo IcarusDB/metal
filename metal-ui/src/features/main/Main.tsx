@@ -41,6 +41,7 @@ function iconFatory(node: TabNode) {
 }
 
 export interface MainHandler {
+    openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
     close?: (id: string) => void;
     renameDesigner?: (id: string, newName: string) => void;
@@ -174,6 +175,7 @@ export function Main() {
     }
 
     const mainHandler: MainHandler = {
+        openProjectStarter: openProjectStarter,
         openDesigner: openDesigner,
         close: close,
         renameDesigner: renameDesigner,

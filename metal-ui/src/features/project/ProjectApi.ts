@@ -49,9 +49,16 @@ export async function getAllProjectOfUser(token: string): Promise<Project[]> {
     })
 }
 
-export async function createProject(token:string, profile: ProjectProfileValue) {
+export interface CreateProjectParams {
+    name?: string,
+    pkgs?: string[],
+    platform?: any;
+    backendArgs?: string[],
+}
+
+export async function createProject(token:string, params: CreateProjectParams) {
     const url = "/api/v1/projects";
-    return instance.post(url, profile, {
+    return instance.post(url, params, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
