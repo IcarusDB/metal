@@ -346,6 +346,39 @@ public class ProjectDBEx {
     return update(mongo, matcher, updater);
   }
 
+  public static Future<JsonObject> updateProject(
+      MongoClient mongo,
+      String userId,
+      String id,
+      String name,
+      List<String> pkgs,
+      JsonObject platform,
+      List<String> backendArgs,
+      JsonObject spec) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(ID, id)
+        .put(userIdPath(), userId);
+
+    JsonObject updater = new JsonObject();
+    if (name != null && !name.isBlank()) {
+      updater.put(NAME, name);
+    }
+    if (pkgs != null) {
+      updater.put(pkgsPath(), pkgs);
+    }
+    if (platform != null || !platform.isEmpty()) {
+      updater.put(platformPath(), platform);
+    }
+    if (backendArgs != null) {
+      updater.put(backendArgsPath(), backendArgs);
+    }
+    if (spec != null && !spec.isEmpty()) {
+      updater.put(SPEC, spec);
+    }
+
+    return update(mongo, matcher, new JsonObject().put("$set", updater));
+  }
+
   public static Future<JsonObject> updateOnDeployUnlock(MongoClient mongo, String userId, String name, JsonObject updater) {
     JsonObject matcher = deployIsUnlock();
     matcher.put(NAME, name)

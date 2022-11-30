@@ -101,6 +101,22 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> updateProject(
+      String userId,
+      String id,
+      boolean isUpdateName, boolean isUpdatePkgs, boolean isUpdatePlatform, boolean isUpdateBackendArgs, boolean isUpdateSpec,
+      String name, List<String> pkgs,
+      JsonObject platform, List<String> backendArgs, JsonObject spec) {
+    name = isUpdateName? name: null;
+    pkgs = isUpdatePkgs? pkgs: null;
+    platform = isUpdatePlatform? platform: null;
+    backendArgs = isUpdateBackendArgs? backendArgs: null;
+    spec = isUpdateSpec? spec: null;
+
+    return ProjectDBEx.updateProject(mongo, userId, id, name, pkgs, platform, backendArgs, spec);
+  }
+
+  @Override
   public Future<JsonObject> updateName(String userId, String name, String newName) {
     return ProjectDBEx.updateName(mongo, userId, name, newName);
   }

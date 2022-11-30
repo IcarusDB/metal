@@ -5,6 +5,7 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
@@ -47,6 +48,17 @@ public interface IProjectService {
 
   public Future<String> createProjectFromExec(
       String userId, String execId
+  );
+
+  public Future<JsonObject> updateProject(
+      String userId,
+      String id,
+      boolean isUpdateName, boolean isUpdatePkgs, boolean isUpdatePlatform, boolean isUpdateBackendArgs, boolean isUpdateSpec,
+      String name,
+      List<String> pkgs,
+      JsonObject platform,
+      List<String> backendArgs,
+      JsonObject spec
   );
 
   public Future<JsonObject> updateName(

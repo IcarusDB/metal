@@ -17,6 +17,7 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
+import java.util.ArrayList;
 import java.util.List;
 import org.metal.server.exec.ExecService;
 import org.metal.server.util.JsonConvertor;
@@ -188,6 +189,20 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void getOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (
+          OnFailure.doTry(ctx, ()->{return id == null || id.isBlank();}, "Fail to found id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.getOfId(userId, id);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void getOfName(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
@@ -262,6 +277,94 @@ public class Project extends AbstractVerticle {
     public void getAll(RoutingContext ctx) {
       Future<List<JsonObject>> result = service.getAll();
       RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+    public void updateProject(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (OnFailure.doTry(ctx, ()->{return id == null || id.isBlank();}, "Fail to found project id in request.", 400)) {
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      String name = body.getString("name");
+      if (OnFailure.doTry(ctx, ()->{return name != null && name.isBlank();}, "The new project name in request is invalid.", 400)) {
+        return;
+      }
+      boolean isUpdateName = name != null && name.isBlank();
+
+      List<String> pkgs = new ArrayList<>();
+      boolean isUpdatePkgs = false;
+      try {
+        JsonArray pkgsArray = body.getJsonArray("pkgs");
+        if (pkgsArray != null) {
+          pkgs = JsonConvertor.jsonArrayToList(pkgsArray);
+          isUpdatePkgs = true;
+        }
+      } catch (ClassCastException e) {
+        if (OnFailure.doTry(ctx, ()->{return true;}, "The pkgs in request is invalid.", 400)) {
+          return;
+        }
+      }
+
+      JsonObject platform = new JsonObject();
+      boolean isUpdatePlatform = false;
+      try {
+        platform = body.getJsonObject("platform");
+        isUpdatePlatform = platform != null && !platform.isEmpty();
+      } catch (ClassCastException e) {
+        if (OnFailure.doTry(ctx, ()->{return true;}, "The platform in request is invalid.", 400)) {
+          return;
+        }
+      }
+
+      List<String> backendArgs = new ArrayList<>();
+      boolean isUpdateBackendArgs = false;
+      try {
+        JsonArray argArray = body.getJsonArray("backendArgs");
+        if (argArray != null) {
+          backendArgs = JsonConvertor.jsonArrayToList(argArray);
+          isUpdateBackendArgs = true;
+        }
+      } catch (ClassCastException e) {
+        if (OnFailure.doTry(ctx, ()->{return true;}, "The backendArgs in request is invalid.", 400)) {
+          return;
+        }
+      }
+
+      JsonObject spec = null;
+      boolean isUpdateSpec = false;
+        try {
+          spec = body.getJsonObject("spec");
+          if (spec != null) {
+            SpecJson.check(spec);
+            isUpdateSpec = true;
+          } else {
+            spec = new JsonObject();
+          }
+
+        } catch (IllegalArgumentException | ClassCastException e) {
+          if (OnFailure.doTry(ctx, ()->{return true;}, "The spec in request is invalid.", 400)) {
+            return;
+          }
+        }
+
+      Future<JsonObject> result = service.updateProject(
+          userId,
+          id,
+          isUpdateName,
+          isUpdatePkgs,
+          isUpdatePlatform,
+          isUpdateBackendArgs,
+          isUpdateSpec,
+          name,
+          pkgs,
+          platform,
+          backendArgs,
+          spec
+      );
+      RestServiceEnd.end(ctx, result, LOGGER);
     }
 
     public void updateName(RoutingContext ctx) {
