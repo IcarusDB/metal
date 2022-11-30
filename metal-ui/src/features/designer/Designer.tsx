@@ -12,14 +12,17 @@ import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile
 import { VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
 import { MainHandler } from "../main/Main";
+import { useAsync } from "../../api/Hooks";
 
 export interface DesignerProps {
-    project?: Project,
+    id?: string,
     mainHandler?: MainHandler
 }
 
 export function Designer(props: DesignerProps) {
-    const {project} = props;
+    const {id} = props;
+    const {run, status, result, error} = useAsync<Project>()
+    const project = result === null? undefined: result;
 
     const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const metalFlowRef = useRef<MetalFlowHandler>(null);
@@ -47,7 +50,7 @@ export function Designer(props: DesignerProps) {
         return (
             <ProjectProfile open={false} isCreate={false} project={project} ref={projectProfileRef}/>
         )
-    }, [])
+    }, [project])
 
 
     const nodePropsWrap = useCallback((nodeProps: MetalNodeProps) => ({

@@ -247,7 +247,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         [columns, packagesUniq]
     );
 
-    useEffect(()=>{
+    useEffect(() => {
         if (token !== null) {
             run(getAllMetalPkgsOfUserAccess(token));
         }
@@ -394,7 +394,8 @@ export function PlatformProfile(props: PlatformProfileProps) {
         }
     };
 
-    const profileValue: string = profile === undefined || profile === null ? "" : JSON.stringify(profile, null, 2);
+    const profileValue: string =
+        profile === undefined || profile === null ? "" : JSON.stringify(profile, null, 2);
 
     return (
         <Paper
@@ -610,8 +611,10 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                 margin: "0px",
                 width: "100%",
                 height: "100%",
+                position: "relative",
             }}
         >
+            {isPending() && progress}
             <Container
                 sx={{
                     display: "flex",
@@ -665,7 +668,9 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                     )}
                     {!isCreate && <Button variant={"contained"}>{"Update"}</Button>}
                     {isCreate && isSuccess() && (
-                        <Button variant={"contained"} onClick={onOpenProject}>{"Open Project"}</Button>
+                        <Button variant={"contained"} onClick={onOpenProject}>
+                            {"Open Project"}
+                        </Button>
                     )}
                 </Stack>
             </Container>
@@ -817,7 +822,7 @@ export const ProjectProfile = forwardRef(
                 return null;
             }
             const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
-    
+
             return JSON.parse(withType);
         };
 
@@ -847,24 +852,27 @@ export const ProjectProfile = forwardRef(
                         justifyContent: "flex-start",
                     }}
                 >
-                    <Paper
-                        square
-                        variant="outlined"
-                        sx={{
-                            boxSizing: "border-box",
-                            margin: "0px",
-                            width: "100%",
-                            height: "5vh",
-                            display: "flex",
-                            flexDirection: "row",
-                            alignContent: "space-between",
-                            justifyContent: "flex-start",
-                        }}
-                    >
-                        <IconButton onClick={close}>
-                            <VscClose />
-                        </IconButton>
-                    </Paper>
+                    {!isCreate && (
+                        <Paper
+                            square
+                            variant="outlined"
+                            sx={{
+                                boxSizing: "border-box",
+                                margin: "0px",
+                                width: "100%",
+                                height: "5vh",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignContent: "space-between",
+                                justifyContent: "flex-start",
+                            }}
+                        >
+                            <IconButton onClick={close}>
+                                <VscClose />
+                            </IconButton>
+                        </Paper>
+                    )}
+
                     <Container>
                         <Stepper
                             activeStep={activeStep}
