@@ -15,11 +15,14 @@ export function useAsync<R>() {
         setStatus(State.pending);
         try {
             const res = await promise;
+            // setResult(res);
+            //     setStatus(State.success);
+            //     setError(null);
             setTimeout(()=>{
                 setResult(res);
                 setStatus(State.success);
                 setError(null);
-            }, 2000);
+            }, 1000);
         } catch (reason) {
             setResult(null);
             setStatus(State.failure);

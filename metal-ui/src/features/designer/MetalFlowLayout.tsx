@@ -9,9 +9,11 @@ export async function layout(nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) 
         layoutOptions: { 
             "ekl.algorithm": "layered",
             "elk.direction": "DOWN",
-            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "80",
-            "org.eclipse.elk.spacing.edgeNode": "80",
-            "org.eclipse.elk.spacing.nodeNode": "80",
+            "org.eclipse.elk.layered.spacing.edgeNodeBetweenLayers": "180",
+            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "180",
+            "org.eclipse.elk.spacing.edgeNode": "180",
+            "org.eclipse.elk.spacing.nodeNode": "350",
+            "org.eclipse.elk.partitioning.activate": "true",
         },
         children: nodes.map(node => ({
             id: node.id,

@@ -28,6 +28,13 @@ export function useSpecLoader(token: string | null, spec?: Spec) {
             .filter((metal) => metal.type !== undefined)
             .map((metal) => (metal.type === undefined ? "" : metal.type));
 
+        if (classes.length === 0) {
+            return {
+                nodeTmpls: [],
+                connections: [],
+            };
+        }
+
         return getAllMetalPkgsOfClasses(token, classes).then((metalPkgs) => {
             const nodeTmpls: (MetalNodeProps | undefined)[] = spec.metals
                 .filter((metal) => metal.type !== undefined)
