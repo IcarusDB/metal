@@ -25,6 +25,10 @@ public interface IMetalRepoService {
 
   public Future<JsonObject> get(String userId, String metalId);
 
+  public Future<JsonObject> getOfClass(String userId, String clazz);
+
+  public Future<List<JsonObject>> getAllOfClasses(String userId, List<String> clazzes);
+
   public Future<List<JsonObject>> getAllOfUser(String userId);
 
   public Future<List<JsonObject>> getAllOfUserScope(String userId, String scope);

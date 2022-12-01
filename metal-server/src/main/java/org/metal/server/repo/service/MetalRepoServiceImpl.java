@@ -113,6 +113,23 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
     return MetalRepoDB.get(mongo, userId, metalId);
   }
 
+  @Override
+  public Future<JsonObject> getOfClass(String userId, String clazz) {
+    if (clazz == null || clazz.isBlank()) {
+      return Future.failedFuture("The clazz is invalid.");
+    }
+
+    return MetalRepoDB.getOfClass(mongo, userId, clazz);
+  }
+
+  @Override
+  public Future<List<JsonObject>> getAllOfClasses(String userId, List<String> clazzes) {
+    if (clazzes == null || clazzes.isEmpty()) {
+      return Future.failedFuture("The clazzes is invalid.");
+    }
+    return MetalRepoDB.getAllOfClasses(mongo, userId, clazzes);
+  }
+
   public Future<List<JsonObject>> getAllOfUser(String userId) {
     return ReadStreamCollector.<JsonObject>toList(
         MetalRepoDB.getAllPrivateOfUser(mongo, userId)

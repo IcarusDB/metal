@@ -2981,6 +2981,92 @@
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-52234541-run"
       }
+    },
+    "/api/v1/metalRepo/class/{class}": {
+      "get": {
+        "summary": "按class查看用户所提供的Metal",
+        "x-apifox-folder": "metal-server/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/metal仓库"
+        ],
+        "parameters": [
+          {
+            "name": "class",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-52382028-run"
+      }
+    },
+    "/api/v1/metalRepo/classes": {
+      "post": {
+        "summary": "按class列表查看用户所提供的Metal",
+        "x-apifox-folder": "metal-server/metal仓库",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/metal仓库"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "classes": [
+                  "org.metal.backend.spark.extension.ConsoleMSink",
+                  "org.metal.backend.spark.extension.SqlMMapper"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-52382456-run"
+      }
     }
   },
   "components": {

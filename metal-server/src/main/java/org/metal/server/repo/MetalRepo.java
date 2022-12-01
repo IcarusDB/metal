@@ -10,11 +10,15 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
+import java.util.List;
+import org.metal.server.util.JsonConvertor;
+import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.SendJson;
 import org.metal.server.repo.service.IMetalRepoService;
 import org.metal.server.util.OnFailure;
@@ -285,6 +289,40 @@ public class MetalRepo extends AbstractVerticle {
             SendJson.send(ctx, resp, 200);
           });
     }
+
+    public void getOfClass(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String clazz = ctx.request().params().get("class");
+
+      if (OnFailure.doTry(ctx, ()-> {return clazz == null || clazz.isBlank();}, "The class field in request is invalid", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = metalRepoService.getOfClass(userId, clazz);
+      RestServiceEnd.<JsonObject>end(ctx, result, LOGGER);
+    }
+
+    public void getAllOfClasses(RoutingContext ctx) {
+      JsonObject body = ctx.body().asJsonObject();
+      User user = ctx.user();
+      String userId = user.get("_id");
+      List<String> classes = null;
+      try {
+        JsonArray classArray = body.getJsonArray("classes");
+        classes = JsonConvertor.jsonArrayToList(classArray);
+      } catch (ClassCastException e) {
+        if (OnFailure.doTry(ctx, ()-> {return true;}, "The classes field in request is invalid", 400)) {
+          return;
+        }
+      }
+
+      Future<List<JsonObject>> result = metalRepoService.getAllOfClasses(userId, classes);
+      RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
+    }
+
+
 
     public void addFromManifest(RoutingContext ctx) {
       JsonObject body = ctx.body().asJsonObject();

@@ -135,6 +135,33 @@ public class MetalRepoDB {
         new JsonObject());
   }
 
+  public static Future<JsonObject> getOfClass(MongoClient mongo, String userId, String clazz) {
+    JsonObject userPrivate = new JsonObject().put("userId", userId);
+    JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
+    JsonObject query = new JsonObject()
+        .put("$or", new JsonArray().add(userPrivate).add(publicAccess))
+        .put("class", clazz);
+    return mongo.findOne(
+        DB,
+        query,
+        new JsonObject());
+  }
+
+  public static Future<List<JsonObject>> getAllOfClasses(MongoClient mongo, String userId, List<String> clazzes) {
+    JsonObject userPrivate = new JsonObject().put("userId", userId);
+    JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
+    JsonArray classQuery = new JsonArray();
+    if (clazzes != null) {
+      for (String clazz : clazzes) {
+        classQuery.add(new JsonObject().put("class", clazz));
+      }
+    }
+    JsonObject query = new JsonObject()
+        .put("$or", new JsonArray().add(userPrivate).add(publicAccess))
+        .put("$or", classQuery);
+    return mongo.find(DB, query);
+  }
+
   public static Future<List<JsonObject>> getAllOfPkg(MongoClient mongo, String userId,
       String groupId, Optional<String> artifactId, Optional<String> version) {
     JsonObject userPrivate = new JsonObject().put("userId", userId);
