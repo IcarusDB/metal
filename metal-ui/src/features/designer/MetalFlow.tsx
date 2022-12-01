@@ -1,4 +1,14 @@
-import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import React, {
+    ForwardedRef,
+    forwardRef,
+    MouseEvent as ReactMouseEvent,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
 import { VscDebugStart, VscDebugStop, VscTypeHierarchy } from "react-icons/vsc";
@@ -21,9 +31,11 @@ import {
     useEdgesState,
     MarkerType,
     getRectOfNodes,
+    useReactFlow,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
+import { Mutable } from "../../model/Mutable";
 import { Spec } from "../../model/Spec";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { getAllMetalPkgsOfClasses } from "./explorer/MetalPkgApi";
@@ -31,38 +43,60 @@ import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 
-export interface MetalFlowProps {
-    nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps,
-    flow?: SpecFlow
-}
-
 export interface MetalFlowHandler {
-    inputs: (id: string) => Node<MetalNodeProps>[],
-    outputs: (id: string) => Node<MetalNodeProps>[],
-    updateNodeMetal: (metal: Metal) => void,
-    addNode: (nodeProps: MetalNodeProps) => void,
+    inputs: (id: string) => Node<MetalNodeProps>[];
+    outputs: (id: string) => Node<MetalNodeProps>[];
+    updateNodeMetal: (metal: Metal) => void;
+    addNode: (nodeProps: MetalNodeProps) => void;
 }
 
-export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<MetalFlowHandler>) => {
+export const metalFlowHandlerInitial: MetalFlowHandler = {
+    inputs: (id: string) => [],
+    outputs: (id: string) => [],
+    updateNodeMetal: (metal: Metal) => {},
+    addNode: (nodeProps: MetalNodeProps) => {},
+};
+
+export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implements MetalFlowHandler {
+    inputs(id: string) {
+        return this.get().inputs(id);
+    }
+
+    outputs(id: string) {
+        return this.get().outputs(id);
+    }
+
+    updateNodeMetal(metal: Metal) {
+        this.get().updateNodeMetal(metal);
+    }
+
+    addNode(nodeProps: MetalNodeProps) {
+        this.get().addNode(nodeProps);
+    }
+}
+
+export interface MetalFlowProps {
+    nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps;
+    handler: MutableMetalFlowHandler;
+    flow?: SpecFlow;
+}
+
+export const MetalFlow = (props: MetalFlowProps) => {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
-    const {
-        nodePropsWrap,
-        flow,
-    } = props;
+    const { nodePropsWrap, flow, handler } = props;
 
-    
     const initialNodes: Node<MetalNodeProps>[] = [];
     const initialEdges: Edge<any>[] = [];
+    const flowInstance = useReactFlow();
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const {run} = useAsync<void>();
+    const { run } = useAsync<void>();
     const [needAutoLayout, setNeedAutoLayout] = useState(false);
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
     };
-
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
@@ -73,7 +107,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                 return addEdge(
                     {
                         ...connection,
-                        markerEnd: { 
+                        markerEnd: {
                             type: MarkerType.ArrowClosed,
                             color: "black",
                             width: 18,
@@ -92,7 +126,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
         setEdges((prevEdges: Edge[]) => {
             return prevEdges.filter((prevEdge) => edge.id !== prevEdge.id);
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const inputs = useCallback(
@@ -133,7 +167,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
             });
         });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const addNode = useCallback((nodeTmpl: MetalNodeProps) => {
@@ -160,33 +194,31 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                     });
                 },
             };
-            const nodePropsWrapped = nodePropsWrap(nodeProps)
+            const nodePropsWrapped = nodePropsWrap(nodeProps);
 
-            const rect = getRectOfNodes(prevNodes);
+            const viewport= flowInstance.getViewport();
+            const rect = getRectOfNodes(flowInstance.getNodes());
             return prevNodes.concat({
                 id: nodePropsWrapped.metal.id,
                 data: nodePropsWrapped,
                 type: "metal",
-                position: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
+                position: {x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2},
             });
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const autoLayout = useCallback(() => {
-        run(layout(nodes, edges).then(newNodes => setNodes(newNodes)))
-    }, [edges, nodes, run, setNodes])
+        run(layout(nodes, edges).then((newNodes) => setNodes(newNodes)));
+    }, [edges, nodes, run, setNodes]);
 
-
-
-    useImperativeHandle(ref, ()=>({
-        inputs: inputs,
-        outputs: outputs,
-        updateNodeMetal: updateNodeMetal,
-        addNode: addNode
-    }), [addNode, inputs, outputs, updateNodeMetal])
-    
-    useEffect(()=>{
+    useEffect(() => {
+        handler.set({
+            inputs: inputs,
+            outputs: outputs,
+            updateNodeMetal: updateNodeMetal,
+            addNode: addNode,
+        });
         if (flow === undefined) {
             return;
         }
@@ -211,14 +243,14 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                         });
                     },
                 };
-                const nodePropsWrapped = nodePropsWrap(nodeProps)
+                const nodePropsWrapped = nodePropsWrap(nodeProps);
                 nodes.push({
                     id: nodePropsWrapped.metal.id,
                     data: nodePropsWrapped,
                     type: "metal",
                     position: { x: 5, y: 5 },
                 });
-            })
+            });
             return nodes;
         });
 
@@ -236,14 +268,13 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                         },
                     },
                     ret
-                )
+                );
             });
             return ret;
         });
-            
 
         setNeedAutoLayout(true);
-    }, [flow])
+    }, [flow]);
 
     if (needAutoLayout) {
         autoLayout();
@@ -251,44 +282,42 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     }
 
     return (
-<ReactFlowProvider>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
-                onEdgeDoubleClick={onEdgeDoubleClick}
-                fitView
-                fitViewOptions={fitViewOptions}
-                nodeTypes={nodeTypes}
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onEdgeDoubleClick={onEdgeDoubleClick}
+            fitView
+            fitViewOptions={fitViewOptions}
+            nodeTypes={nodeTypes}
+        >
+            <Controls />
+            <Background />
+            <Controls
+                showZoom={false}
+                showFitView={false}
+                showInteractive={false}
+                position={"top-right"}
             >
-                <Controls />
-                <Background />
-                <Controls
-                    showZoom={false}
-                    showFitView={false}
-                    showInteractive={false}
-                    position={"top-right"}
-                >
-                    <ControlButton>
-                        <AiOutlineDeploymentUnit />
-                    </ControlButton>
-                    <ControlButton>
-                        <CgRadioChecked />
-                    </ControlButton>
-                    <ControlButton>
-                        <VscDebugStart />
-                    </ControlButton>
-                    <ControlButton>
-                        <VscDebugStop />
-                    </ControlButton>
-                    <ControlButton onClick={autoLayout}>
-                        <VscTypeHierarchy/>
-                    </ControlButton>
-                </Controls>
-                <MiniMap></MiniMap>
-            </ReactFlow>
-        </ReactFlowProvider>
+                <ControlButton>
+                    <AiOutlineDeploymentUnit />
+                </ControlButton>
+                <ControlButton>
+                    <CgRadioChecked />
+                </ControlButton>
+                <ControlButton>
+                    <VscDebugStart />
+                </ControlButton>
+                <ControlButton>
+                    <VscDebugStop />
+                </ControlButton>
+                <ControlButton onClick={autoLayout}>
+                    <VscTypeHierarchy />
+                </ControlButton>
+            </Controls>
+            <MiniMap></MiniMap>
+        </ReactFlow>
     );
-})
+};

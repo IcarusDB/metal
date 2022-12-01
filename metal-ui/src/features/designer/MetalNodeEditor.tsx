@@ -29,7 +29,7 @@ import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 
 export interface MetalNodeEditorProps {
-    metalFlowRef: RefObject<MetalFlowHandler>;
+    metalFlowHandler: MetalFlowHandler;
 }
 
 export interface MetalNodeEditorHandler {
@@ -39,16 +39,13 @@ export interface MetalNodeEditorHandler {
 
 export const MetalNodeEditor = forwardRef(
     (props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
-        const metalFlowRef = props.metalFlowRef;
+        const {metalFlowHandler} = props;
         const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
         const [isOpen, setOpen] = useState(false);
         const nameInputRef = useRef<HTMLInputElement>();
 
         const printInputs = () => {
-            if (metalFlowRef === null || metalFlowRef.current === null) {
-                return;
-            }
-            const inputs = metalFlowRef.current.inputs;
+            const inputs = metalFlowHandler.inputs;
             if (metalProps === null) {
                 return;
             }
