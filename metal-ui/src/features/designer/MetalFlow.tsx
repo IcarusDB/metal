@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
 import { VscDebugStart, VscDebugStop, VscTypeHierarchy } from "react-icons/vsc";
@@ -56,6 +56,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const {run} = useAsync<void>();
+    const [needAutoLayout, setNeedAutoLayout] = useState(false);
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
@@ -218,23 +219,33 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
             return nodes;
         });
 
-        flow.connections.forEach(connection => {
-            setEdges((edges) => {
-                return addEdge(
+        setEdges((edges) => {
+            let ret: Edge<any>[] = edges;
+            flow.connections.forEach((connection) => {
+                ret = addEdge(
                     {
                         ...connection,
-                        markerEnd: { 
+                        markerEnd: {
                             type: MarkerType.ArrowClosed,
                             color: "black",
                             width: 18,
                             height: 24,
                         },
                     },
-                    edges
-                );
+                    ret
+                )
             });
+            return ret;
         });
+            
+
+        setNeedAutoLayout(true);
     }, [flow])
+
+    if (needAutoLayout) {
+        autoLayout();
+        setNeedAutoLayout(false);
+    }
 
     return (
 <ReactFlowProvider>
