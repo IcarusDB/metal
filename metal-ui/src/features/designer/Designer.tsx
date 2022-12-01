@@ -17,6 +17,7 @@ import { State } from "../../api/State";
 import { getProjectById } from "../project/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
+import { useSpecLoader } from "./SpecLoader";
 
 export interface DesignerProps {
     id: string,
@@ -24,13 +25,16 @@ export interface DesignerProps {
     mainHandler?: MainHandler
 }
 
+
 export function Designer(props: DesignerProps) {
     const {id} = props;
     const token: string | null = useAppSelector(state => {
         return tokenSelector(state)
     })
     const {run, status, result, error} = useAsync<Project>()
+    
     const project = result === null? undefined: result;
+    const specLoader = useSpecLoader(token, project?.spec);
 
     const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const metalFlowRef = useRef<MetalFlowHandler>(null);
@@ -105,6 +109,7 @@ export function Designer(props: DesignerProps) {
         <div className="panel">
             {isPending() && progress}
             {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
+            {specLoader.status === State.failure && <Alert severity={"error"}>{"Fail to load project spec."}</Alert>}
             <Stack
                 direction="row"
                 justifyContent="center"
@@ -113,7 +118,7 @@ export function Designer(props: DesignerProps) {
                 sx={{ height: "100%", width: "100%" }}
             >
                 <Box component={Paper} sx={{ height: "100%", width: "75%" }}>
-                    <MetalFlow ref={metalFlowRef} nodePropsWrap={nodePropsWrap} />
+                    <MetalFlow flow={specLoader.flow === null? undefined: specLoader.flow} ref={metalFlowRef} nodePropsWrap={nodePropsWrap} />
                 </Box>
                 <Box component={Paper} sx={{ height: "100%", width: "25%" }}>
                     {explorer}

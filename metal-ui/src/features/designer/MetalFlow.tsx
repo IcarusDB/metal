@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useImperativeHandle, useMemo, useRef } from "react";
+import React, { ForwardedRef, forwardRef, MouseEvent as ReactMouseEvent, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
 import { VscDebugStart, VscDebugStop, VscTypeHierarchy } from "react-icons/vsc";
@@ -25,12 +25,14 @@ import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
+import { getAllMetalPkgsOfClasses } from "./explorer/MetalPkgApi";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
+import { SpecFlow } from "./SpecLoader";
 
 export interface MetalFlowProps {
     nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps,
-    spec?: Spec,
+    flow?: SpecFlow
 }
 
 export interface MetalFlowHandler {
@@ -45,7 +47,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const counter = useRef<number>(0);
     const {
         nodePropsWrap,
-        spec,
+        flow,
     } = props;
 
     
@@ -139,6 +141,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
             const nodeProps = {
                 ...nodeTmpl,
                 metal: {
+                    type: nodeTmpl.metalPkg.class,
                     id: nodeId,
                     name: `node-${id}`,
                     props: {},
@@ -170,6 +173,8 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
         run(layout(nodes, edges).then(newNodes => setNodes(newNodes)))
     }, [edges, nodes, run, setNodes])
 
+
+
     useImperativeHandle(ref, ()=>({
         inputs: inputs,
         outputs: outputs,
@@ -177,6 +182,59 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
         addNode: addNode
     }), [addNode, inputs, outputs, updateNodeMetal])
     
+    useEffect(()=>{
+        if (flow === undefined) {
+            return;
+        }
+        setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+            const nodes = [...prevNodes];
+            flow.nodeTmpls.forEach((nodeTmpl: MetalNodeProps | undefined) => {
+                if (nodeTmpl === undefined) {
+                    return;
+                }
+                const nodeId = nodeTmpl.metal.id;
+                const nodeProps = {
+                    ...nodeTmpl,
+                    onUpdate: updateNodeMetal,
+                    onDelete: () => {
+                        setNodes((prevNds: Node<MetalNodeProps>[]) => {
+                            return prevNds.filter((nd) => nd.id !== nodeId);
+                        });
+                        setEdges((prevEdges: Edge[]) => {
+                            return prevEdges.filter(
+                                (edge) => !(edge.source === nodeId || edge.target === nodeId)
+                            );
+                        });
+                    },
+                };
+                const nodePropsWrapped = nodePropsWrap(nodeProps)
+                nodes.push({
+                    id: nodePropsWrapped.metal.id,
+                    data: nodePropsWrapped,
+                    type: "metal",
+                    position: { x: 5, y: 5 },
+                });
+            })
+            return nodes;
+        });
+
+        flow.connections.forEach(connection => {
+            setEdges((edges) => {
+                return addEdge(
+                    {
+                        ...connection,
+                        markerEnd: { 
+                            type: MarkerType.ArrowClosed,
+                            color: "black",
+                            width: 18,
+                            height: 24,
+                        },
+                    },
+                    edges
+                );
+            });
+        });
+    }, [flow])
 
     return (
 <ReactFlowProvider>

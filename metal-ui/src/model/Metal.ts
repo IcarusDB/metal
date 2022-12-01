@@ -20,6 +20,7 @@ export function metalType(type: string): MetalTypes {
 }
 
 export interface Metal {
+    type?: string,
     id: string,
     name: string,
     props: any
