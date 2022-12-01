@@ -20,6 +20,7 @@ import {
     useNodesState,
     useEdgesState,
     MarkerType,
+    getRectOfNodes,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
@@ -160,11 +161,13 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
                 },
             };
             const nodePropsWrapped = nodePropsWrap(nodeProps)
+
+            const rect = getRectOfNodes(prevNodes);
             return prevNodes.concat({
                 id: nodePropsWrapped.metal.id,
                 data: nodePropsWrapped,
                 type: "metal",
-                position: { x: 5, y: 5 },
+                position: { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 },
             });
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
