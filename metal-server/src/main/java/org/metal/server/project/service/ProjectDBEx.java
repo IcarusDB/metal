@@ -366,7 +366,7 @@ public class ProjectDBEx {
     if (pkgs != null) {
       updater.put(pkgsPath(), pkgs);
     }
-    if (platform != null || !platform.isEmpty()) {
+    if (platform != null && !platform.isEmpty()) {
       updater.put(platformPath(), platform);
     }
     if (backendArgs != null) {

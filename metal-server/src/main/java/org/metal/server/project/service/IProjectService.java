@@ -53,12 +53,7 @@ public interface IProjectService {
   public Future<JsonObject> updateProject(
       String userId,
       String id,
-      boolean isUpdateName, boolean isUpdatePkgs, boolean isUpdatePlatform, boolean isUpdateBackendArgs, boolean isUpdateSpec,
-      String name,
-      List<String> pkgs,
-      JsonObject platform,
-      List<String> backendArgs,
-      JsonObject spec
+      JsonObject detail
   );
 
   public Future<JsonObject> updateName(

@@ -104,14 +104,34 @@ public class ProjectServiceImpl implements IProjectService{
   public Future<JsonObject> updateProject(
       String userId,
       String id,
-      boolean isUpdateName, boolean isUpdatePkgs, boolean isUpdatePlatform, boolean isUpdateBackendArgs, boolean isUpdateSpec,
-      String name, List<String> pkgs,
-      JsonObject platform, List<String> backendArgs, JsonObject spec) {
-    name = isUpdateName? name: null;
-    pkgs = isUpdatePkgs? pkgs: null;
-    platform = isUpdatePlatform? platform: null;
-    backendArgs = isUpdateBackendArgs? backendArgs: null;
-    spec = isUpdateSpec? spec: null;
+      JsonObject detail) {
+    String name = null;
+    List<String> pkgs = null;
+    JsonObject platform = null;
+    List<String> backendArgs = null;
+    JsonObject spec = null;
+
+    if (detail == null) {
+      return Future.failedFuture("The detail is null.");
+    }
+    try {
+      name = detail.getString("name");
+      JsonArray pkgArray = detail.getJsonArray("pkgs");
+      if (pkgArray != null) {
+        pkgs = JsonConvertor.jsonArrayToList(pkgArray);
+      }
+
+      platform = detail.getJsonObject("platform");
+
+      JsonArray backendArgArray = detail.getJsonArray("backendArgs");
+      if (backendArgArray != null) {
+        backendArgs = JsonConvertor.jsonArrayToList(backendArgArray);
+      }
+
+      spec = detail.getJsonObject("spec");
+    } catch (ClassCastException e) {
+      return Future.failedFuture(e);
+    }
 
     return ProjectDBEx.updateProject(mongo, userId, id, name, pkgs, platform, backendArgs, spec);
   }

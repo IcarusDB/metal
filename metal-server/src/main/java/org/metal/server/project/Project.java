@@ -48,7 +48,8 @@ public class Project extends AbstractVerticle {
   private IProjectService provider;
   private WorkerExecutor workerExecutor;
 
-  private Project() {}
+  private Project() {
+  }
 
   public static Project create() {
     return new Project();
@@ -67,7 +68,8 @@ public class Project extends AbstractVerticle {
     retriever.getConfig().compose((JsonObject conf) -> {
       JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
       if (mongoConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
       }
 
       mongo = MongoClient.createShared(
@@ -75,33 +77,37 @@ public class Project extends AbstractVerticle {
           mongoConf
       );
 
-
-
       JsonObject projectConf = conf.getJsonObject(PROJECT_CONF);
       if (projectConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", PROJECT_CONF, CONF_METAL_SERVER_PATH));
       }
 
       JsonObject projectServiceConf = projectConf.getJsonObject(PROJECT_SERVICE_CONF);
       if (projectServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", PROJECT_SERVICE_CONF,
+                CONF_METAL_SERVER_PATH + "." + PROJECT_CONF));
       }
 
       String address = projectServiceConf.getString(PROJECT_SERVICE_ADDRESS_CONF);
       if (address == null || address.isBlank()) {
         return Future.failedFuture(String.format("%s is not configured in %s.",
-            PROJECT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
+            PROJECT_SERVICE_ADDRESS_CONF,
+            CONF_METAL_SERVER_PATH + "." + PROJECT_CONF + "." + PROJECT_SERVICE_CONF));
       }
 
       JsonObject execServiceConf = projectConf.getJsonObject(EXEC_SERVICE_CONF);
       String execServiceAddress = execServiceConf.getString(EXEC_SERVICE_ADDRESS_CONF);
       if (execServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF,
+            CONF_METAL_SERVER_PATH));
       }
 
       execService = ExecService.create(vertx, execServiceConf);
       workerExecutor = vertx.createSharedWorkerExecutor("project-worker-executor", 1);
-      provider = IProjectService.createProvider(getVertx(), mongo, workerExecutor, execService, projectServiceConf);
+      provider = IProjectService.createProvider(getVertx(), mongo, workerExecutor, execService,
+          projectServiceConf);
       binder = new ServiceBinder(getVertx());
       binder.setAddress(address);
       consumer = binder.register(IProjectService.class, provider);
@@ -128,6 +134,7 @@ public class Project extends AbstractVerticle {
   }
 
   public static class RestApi {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(RestApi.class);
     private IProjectService service;
 
@@ -146,14 +153,17 @@ public class Project extends AbstractVerticle {
       JsonArray backendArgs = body.getJsonArray("backendArgs");
       JsonObject spec = body.getJsonObject("spec");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found projectName in request.", 400)) {
         return;
       }
 
       List<String> pkgList = JsonConvertor.jsonArrayToList(pkgs);
       List<String> backendArgList = JsonConvertor.jsonArrayToList(backendArgs);
 
-      Future<String> result = service.createProject(userId, name, pkgList, platform, backendArgList, spec);
+      Future<String> result = service.createProject(userId, name, pkgList, platform, backendArgList,
+          spec);
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
@@ -163,7 +173,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = body.getString("name");
       String copyName = body.getString("copyName");
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found projectName in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found projectName in request.", 400)) {
         return;
       }
 
@@ -181,7 +193,9 @@ public class Project extends AbstractVerticle {
       User user = ctx.user();
       String userId = user.get("_id");
       String execId = body.getString("execId");
-      if (OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return execId == null || execId.isBlank();
+      }, "Fail to found exec id in request.", 400)) {
         return;
       }
 
@@ -194,7 +208,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String id = ctx.request().params().get("id");
       if (
-          OnFailure.doTry(ctx, ()->{return id == null || id.isBlank();}, "Fail to found id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return id == null || id.isBlank();
+          }, "Fail to found id in request.", 400)
       ) {
         return;
       }
@@ -208,7 +224,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
       if (
-        OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return name == null || name.isBlank();
+          }, "Fail to found name in request.", 400)
       ) {
         return;
       }
@@ -222,7 +240,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
       if (
-          OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return name == null || name.isBlank();
+          }, "Fail to found name in request.", 400)
       ) {
         return;
       }
@@ -235,11 +255,15 @@ public class Project extends AbstractVerticle {
       String deployId = ctx.request().params().get("deployId");
       String metalId = ctx.request().params().get("metalId");
 
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
-      if (OnFailure.doTry(ctx, ()->{return metalId == null || metalId.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return metalId == null || metalId.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
@@ -249,7 +273,9 @@ public class Project extends AbstractVerticle {
 
     public void getBackendServiceStatusOfDeployId(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
@@ -259,7 +285,9 @@ public class Project extends AbstractVerticle {
 
     public void heartOfDeployId(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
@@ -283,87 +311,93 @@ public class Project extends AbstractVerticle {
       User user = ctx.user();
       String userId = user.get("_id");
       String id = ctx.request().params().get("id");
-      if (OnFailure.doTry(ctx, ()->{return id == null || id.isBlank();}, "Fail to found project id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return id == null || id.isBlank();
+      }, "Fail to found project id in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       String name = body.getString("name");
-      if (OnFailure.doTry(ctx, ()->{return name != null && name.isBlank();}, "The new project name in request is invalid.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name != null && name.isBlank();
+      }, "The new project name in request is invalid.", 400)) {
         return;
       }
-      boolean isUpdateName = name != null && name.isBlank();
 
-      List<String> pkgs = new ArrayList<>();
-      boolean isUpdatePkgs = false;
+      List<String> pkgs = null;
       try {
         JsonArray pkgsArray = body.getJsonArray("pkgs");
         if (pkgsArray != null) {
           pkgs = JsonConvertor.jsonArrayToList(pkgsArray);
-          isUpdatePkgs = true;
         }
       } catch (ClassCastException e) {
-        if (OnFailure.doTry(ctx, ()->{return true;}, "The pkgs in request is invalid.", 400)) {
+        if (OnFailure.doTry(ctx, () -> {
+          return true;
+        }, "The pkgs in request is invalid.", 400)) {
           return;
         }
       }
 
-      JsonObject platform = new JsonObject();
-      boolean isUpdatePlatform = false;
+      JsonObject platform = null;
       try {
         platform = body.getJsonObject("platform");
-        isUpdatePlatform = platform != null && !platform.isEmpty();
       } catch (ClassCastException e) {
-        if (OnFailure.doTry(ctx, ()->{return true;}, "The platform in request is invalid.", 400)) {
+        if (OnFailure.doTry(ctx, () -> {
+          return true;
+        }, "The platform in request is invalid.", 400)) {
           return;
         }
       }
 
-      List<String> backendArgs = new ArrayList<>();
-      boolean isUpdateBackendArgs = false;
+      List<String> backendArgs = null;
       try {
         JsonArray argArray = body.getJsonArray("backendArgs");
         if (argArray != null) {
           backendArgs = JsonConvertor.jsonArrayToList(argArray);
-          isUpdateBackendArgs = true;
         }
       } catch (ClassCastException e) {
-        if (OnFailure.doTry(ctx, ()->{return true;}, "The backendArgs in request is invalid.", 400)) {
+        if (OnFailure.doTry(ctx, () -> {
+          return true;
+        }, "The backendArgs in request is invalid.", 400)) {
           return;
         }
       }
 
       JsonObject spec = null;
-      boolean isUpdateSpec = false;
-        try {
-          spec = body.getJsonObject("spec");
-          if (spec != null) {
-            SpecJson.check(spec);
-            isUpdateSpec = true;
-          } else {
-            spec = new JsonObject();
-          }
-
-        } catch (IllegalArgumentException | ClassCastException e) {
-          if (OnFailure.doTry(ctx, ()->{return true;}, "The spec in request is invalid.", 400)) {
-            return;
-          }
+      try {
+        spec = body.getJsonObject("spec");
+        if (spec != null) {
+          SpecJson.check(spec);
+          ;
+        } else {
+          spec = null;
         }
+      } catch (IllegalArgumentException | ClassCastException e) {
+        if (OnFailure.doTry(ctx, () -> {
+          return true;
+        }, "The spec in request is invalid.", 400)) {
+          return;
+        }
+      }
 
-      Future<JsonObject> result = service.updateProject(
-          userId,
-          id,
-          isUpdateName,
-          isUpdatePkgs,
-          isUpdatePlatform,
-          isUpdateBackendArgs,
-          isUpdateSpec,
-          name,
-          pkgs,
-          platform,
-          backendArgs,
-          spec
-      );
+      JsonObject detail = new JsonObject();
+      if (name != null) {
+        detail.put("name", name);
+      }
+      if (pkgs != null) {
+        detail.put("pkgs", pkgs);
+      }
+      if (platform != null) {
+        detail.put("platform", platform);
+      }
+      if (backendArgs != null) {
+        detail.put("backendArgs", backendArgs);
+      }
+      if (spec != null) {
+        detail.put("spec", spec);
+      }
+      Future<JsonObject> result = service.updateProject(userId, id, detail);
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
@@ -372,18 +406,22 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found project name in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       String newName = body.getString("newName");
-      if (OnFailure.doTry(ctx, ()->{return newName == null || newName.isBlank();}, "Fail to found new project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return newName == null || newName.isBlank();
+      }, "Fail to found new project name in request.", 400)) {
         return;
       }
 
       service.updateName(userId, name, newName)
-          .onSuccess((JsonObject project)-> {
+          .onSuccess((JsonObject project) -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "OK")
                 .put("data", project);
@@ -404,7 +442,9 @@ public class Project extends AbstractVerticle {
       String path = ctx.request().path();
       JsonObject body = ctx.body().asJsonObject();
       JsonObject updateConfs = body.getJsonObject("updateConfs");
-      if (OnFailure.doTry(ctx, ()->{return updateConfs == null || updateConfs.isEmpty();}, "Fail to found legal updateConfs in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return updateConfs == null || updateConfs.isEmpty();
+      }, "Fail to found legal updateConfs in request.", 400)) {
         return;
       }
 
@@ -417,20 +457,26 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found project name in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       JsonObject spec = body.getJsonObject("spec");
-      if (OnFailure.doTry(ctx, ()->{return spec == null || spec.isEmpty();}, "Fail to found legal spec in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return spec == null || spec.isEmpty();
+      }, "Fail to found legal spec in request.", 400)) {
         return;
       }
 
       try {
         SpecJson.check(spec);
       } catch (IllegalArgumentException e) {
-        OnFailure.doTry(ctx, ()->{return true;}, e.getLocalizedMessage(), 400);
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
         return;
       }
 
@@ -455,13 +501,17 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       JsonObject platform = body.getJsonObject("platform");
-      if (OnFailure.doTry(ctx, ()->{return platform == null || platform.isEmpty();}, "Fail to found legal platform in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return platform == null || platform.isEmpty();
+      }, "Fail to found legal platform in request.", 400)) {
         return;
       }
 
@@ -471,7 +521,9 @@ public class Project extends AbstractVerticle {
 
     public void forceKillBackend(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
       Future<JsonObject> result = service.forceKillBackend(deployId);
@@ -481,14 +533,18 @@ public class Project extends AbstractVerticle {
     public void updateBackendArgs(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       JsonArray backendArgs = body.getJsonArray("args");
 
-      if (OnFailure.doTry(ctx, ()->{return backendArgs == null;}, "Fail to found legal backend arguments in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return backendArgs == null;
+      }, "Fail to found legal backend arguments in request.", 400)) {
         return;
       }
       List<String> backendArgList = JsonConvertor.jsonArrayToList(backendArgs);
@@ -499,14 +555,18 @@ public class Project extends AbstractVerticle {
     public void updateBackendStatus(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       JsonObject status = body.getJsonObject("status");
 
-      if (OnFailure.doTry(ctx, ()->{return status == null || status.isEmpty();}, "Fail to found legal backend arguments in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return status == null || status.isEmpty();
+      }, "Fail to found legal backend arguments in request.", 400)) {
         return;
       }
 
@@ -517,7 +577,9 @@ public class Project extends AbstractVerticle {
     public void getBackendStatus(RoutingContext ctx) {
       String deployId = ctx.request().params().get("deployId");
 
-      if (OnFailure.doTry(ctx, ()->{return deployId == null || deployId.isBlank();}, "Fail to found deploy id in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
         return;
       }
 
@@ -529,7 +591,9 @@ public class Project extends AbstractVerticle {
       User user = ctx.user();
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found project name in request.", 400)) {
         return;
       }
 
@@ -557,7 +621,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found project name in request.", 400)) {
         return;
       }
 
@@ -570,7 +636,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found project name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found project name in request.", 400)) {
         return;
       }
 
@@ -583,20 +651,26 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
       JsonObject body = ctx.body().asJsonObject();
       JsonObject spec = body.getJsonObject("spec");
-      if (OnFailure.doTry(ctx, ()->{return spec == null || spec.isEmpty();}, "Fail to found legal spec in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return spec == null || spec.isEmpty();
+      }, "Fail to found legal spec in request.", 400)) {
         return;
       }
 
       try {
         SpecJson.check(spec);
       } catch (IllegalArgumentException e) {
-        OnFailure.doTry(ctx, ()->{return true;}, e.getLocalizedMessage(), 400);
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
         return;
       }
 
@@ -609,7 +683,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
@@ -621,7 +697,9 @@ public class Project extends AbstractVerticle {
         }
         return Future.<JsonObject>succeededFuture(spec);
       }).onFailure(error -> {
-        OnFailure.doTry(ctx, ()->{return true;}, error.getLocalizedMessage(), 400);
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, error.getLocalizedMessage(), 400);
       }).onSuccess((JsonObject spec) -> {
         Future<JsonObject> result = service.analysis(userId, name, spec);
         RestServiceEnd.end(ctx, result, LOGGER);
@@ -633,7 +711,9 @@ public class Project extends AbstractVerticle {
       String userId = user.get("_id");
       String name = ctx.request().params().get("name");
 
-      if (OnFailure.doTry(ctx, ()->{return name == null || name.isBlank();}, "Fail to found name in request.", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return name == null || name.isBlank();
+      }, "Fail to found name in request.", 400)) {
         return;
       }
 
@@ -641,7 +721,6 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
   }
-
 
 
 }
