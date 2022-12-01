@@ -49,14 +49,67 @@ export async function getAllProjectOfUser(token: string): Promise<Project[]> {
     })
 }
 
-export interface CreateProjectParams {
+export async function getProjectById(token: string, id:string) {
+    const url = `/api/v1/projects/id/${id}`;
+    return instance.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data
+            if (!ApiResponse.isSuccess(resp)) {
+                if (resp.msg === undefined) {
+                    throw new Error('Response is failure, and no msg found in response.')
+                }
+                throw new Error(resp.msg)
+            }
+            if (resp.data === undefined) {
+                throw new Error('Response is successful, but no data found in response.')
+            }
+            const project: Project = resp.data;
+            return project;
+        } catch (err) {
+            return Promise.reject(err)
+        }
+    })
+}
+
+
+
+export interface ProjectParams {
     name?: string,
     pkgs?: string[],
     platform?: any;
     backendArgs?: string[],
 }
 
-export async function createProject(token:string, params: CreateProjectParams) {
+export async function updateProjectDetail(token:string, id: string, params: ProjectParams) {
+    const url = `/api/v1/projects/id/${id}`;
+    return instance.put(url, params, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data
+            if (!ApiResponse.isSuccess(resp)) {
+                if (resp.msg === undefined) {
+                    throw new Error('Response is failure, and no msg found in response.')
+                }
+                throw new Error(resp.msg)
+            }
+            if (resp.data === undefined) {
+                throw new Error('Response is successful, but no data found in response.')
+            }
+            return id;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export async function createProject(token:string, params: ProjectParams) {
     const url = "/api/v1/projects";
     return instance.post(url, params, {
         headers: {

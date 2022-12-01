@@ -23,12 +23,14 @@ import {
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
+import { Spec } from "../../model/Spec";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 
 export interface MetalFlowProps {
     nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps,
+    spec?: Spec,
 }
 
 export interface MetalFlowHandler {
@@ -43,6 +45,7 @@ export const MetalFlow = forwardRef((props: MetalFlowProps, ref: ForwardedRef<Me
     const counter = useRef<number>(0);
     const {
         nodePropsWrap,
+        spec,
     } = props;
 
     

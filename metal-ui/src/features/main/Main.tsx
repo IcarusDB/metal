@@ -145,11 +145,11 @@ export function Main() {
     }
 
     const openDesigner = (props: DesignerProps) => {
-        const { project } = props;
+        const { id, name } = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: project?.id,
-            name: project === undefined? "Project[new]": `Project[${project.name}]`,
+            id: id,
+            name: name === undefined? `Project[${id}]`: `Project[${name}]`,
             icon: "designerIcon",
             component: "designer",
             config: props,

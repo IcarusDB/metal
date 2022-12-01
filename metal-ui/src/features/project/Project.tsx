@@ -155,7 +155,8 @@ export function ProjectItem(props: { item: Project, index: number, mainHandler?:
     const {item, mainHandler} = props;
     const onEdit = () => {
         mainHandler?.openDesigner({
-            project: item,
+            id: item.id,
+            name: item.name,
         })
     }
     return (

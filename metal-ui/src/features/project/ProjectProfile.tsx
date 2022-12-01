@@ -47,7 +47,7 @@ import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
-import { createProject, CreateProjectParams } from "./ProjectApi";
+import { createProject, ProjectParams } from "./ProjectApi";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -557,7 +557,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         if (!isChecked) {
             setWarnTip(msg);
         } else {
-            const params: CreateProjectParams = {
+            const params: ProjectParams = {
                 name: profile.basic === null ? undefined : profile.basic.name,
                 pkgs:
                     profile.pkgs === null
