@@ -48,6 +48,7 @@ import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams } from "./ProjectApi";
+import { Mutable } from "../../model/Mutable";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -689,6 +690,20 @@ export interface ProjectProfileProps {
 export interface ProjectProfileHandler {
     open: () => void;
     close: () => void;
+}
+
+export const projectProfileHandlerInitial: ProjectProfileHandler = {
+    open: ()=>{},
+    close: ()=>{},
+}
+
+export class MutableProjectProfileHandler extends Mutable<ProjectProfileHandler> implements ProjectProfileHandler {
+    open() {
+        this.get().open();
+    };
+    close() {
+        this.get().close();
+    };
 }
 
 export interface ProjectProfileValue {
