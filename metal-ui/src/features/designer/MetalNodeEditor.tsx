@@ -22,32 +22,9 @@ import { Metal } from "../../model/Metal";
 import { MetalNodeProps } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { useMetalFlow, useMutableMetalNodeEditor } from "./DesignerProvider";
-import { Mutable } from "../../model/Mutable";
+import { MutableMetalNodeEditorHandler, useMetalFlow, useMutableMetalNodeEditor } from "./DesignerProvider";
 
 export interface MetalNodeEditorProps {}
-
-export interface MetalNodeEditorHandler {
-    load: (props: MetalNodeProps) => void;
-    close: () => void;
-}
-
-export const metalNodeEditorHandlerInitial: MetalNodeEditorHandler = {
-    load: (props: MetalNodeProps) => {},
-    close: () => {},
-};
-
-export class MutableMetalNodeEditorHandler
-    extends Mutable<MetalNodeEditorHandler>
-    implements MetalNodeEditorHandler
-{
-    load(props: MetalNodeProps) {
-        this.get().load(props);
-    }
-    close() {
-        this.get().close();
-    }
-}
 
 export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const metalFlowHandler = useMetalFlow();

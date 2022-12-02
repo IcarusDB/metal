@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
 import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
-import { MetalNodeEditor, MetalNodeEditorHandler } from "./MetalNodeEditor";
+import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
-import { MetalFlow, metalFlowHandlerInitial, MutableMetalFlowHandler } from "./MetalFlow";
+import { MetalFlow } from "./MetalFlow";
 import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
 import { VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
@@ -61,7 +61,7 @@ export function Designer(props: DesignerProps) {
             ...nodeProps,
             editor: nodeEditorHandler,
         }),
-        []
+        [nodeEditorHandler]
     );
 
     const progress = isPending() ? (
@@ -98,7 +98,7 @@ export function Designer(props: DesignerProps) {
                 alignItems="flex-start"
                 spacing={2}
                 sx={{ height: "100%", width: "100%" }}
-            >
+            > 
                 <Box component={Paper} sx={{ height: "100%", width: "75%" }}>
                     <ReactFlowProvider>
                         <MetalFlow

@@ -53,4 +53,4 @@ export async function layout(
             }
         })
     })
-}
+};

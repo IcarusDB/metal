@@ -16,7 +16,7 @@ import {MouseEvent} from "react";
 import {MetalPkg} from "../../model/MetalPkg";
 import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {GraphTopology} from "../../model/GraphTopology";
-import {MetalNodeEditorHandler} from "./MetalNodeEditor";
+import { MetalNodeEditorHandler } from "./DesignerProvider";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload/>,
