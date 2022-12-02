@@ -1,13 +1,9 @@
-import React, {
-    ForwardedRef,
-    forwardRef,
+import {
     MouseEvent as ReactMouseEvent,
     useCallback,
     useEffect,
-    useImperativeHandle,
     useMemo,
     useRef,
-    useState,
 } from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
@@ -17,7 +13,6 @@ import {
     Node,
     Edge,
     ReactFlow,
-    ReactFlowProvider,
     FitViewOptions,
     OnConnect,
     Connection,
@@ -36,9 +31,6 @@ import {
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Mutable } from "../../model/Mutable";
-import { Spec } from "../../model/Spec";
-import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { getAllMetalPkgsOfClasses } from "./explorer/MetalPkgApi";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -46,15 +38,15 @@ import { SpecFlow } from "./SpecLoader";
 export interface MetalFlowHandler {
     inputs: (id: string) => Node<MetalNodeProps>[];
     outputs: (id: string) => Node<MetalNodeProps>[];
-    updateNodeMetal: (metal: Metal) => void;
     addNode: (nodeProps: MetalNodeProps) => void;
+    load: (newFlow: SpecFlow | undefined) => void;
 }
 
 export const metalFlowHandlerInitial: MetalFlowHandler = {
     inputs: (id: string) => [],
     outputs: (id: string) => [],
-    updateNodeMetal: (metal: Metal) => {},
     addNode: (nodeProps: MetalNodeProps) => {},
+    load: (newFlow: SpecFlow | undefined) => {},
 };
 
 export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implements MetalFlowHandler {
@@ -66,13 +58,13 @@ export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implement
         return this.get().outputs(id);
     }
 
-    updateNodeMetal(metal: Metal) {
-        this.get().updateNodeMetal(metal);
-    }
-
     addNode(nodeProps: MetalNodeProps) {
         this.get().addNode(nodeProps);
     }
+
+    load(newFlow: SpecFlow | undefined) {
+        this.get().load(newFlow);
+    };
 }
 
 export interface MetalFlowProps {
@@ -82,17 +74,13 @@ export interface MetalFlowProps {
 }
 
 export const MetalFlow = (props: MetalFlowProps) => {
+    console.log("flow");
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
     const { nodePropsWrap, flow, handler } = props;
-
-    const initialNodes: Node<MetalNodeProps>[] = [];
-    const initialEdges: Edge<any>[] = [];
     const flowInstance = useReactFlow();
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    
     const { run } = useAsync<void>();
-    const [needAutoLayout, setNeedAutoLayout] = useState(false);
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,
@@ -100,10 +88,10 @@ export const MetalFlow = (props: MetalFlowProps) => {
 
     const onConnect: OnConnect = useCallback(
         (connection: Connection) => {
-            if (!onConnectValid(connection, nodes, edges)) {
+            if (!onConnectValid(connection, flowInstance.getNodes(), flowInstance.getEdges())) {
                 return;
             }
-            setEdges((edges) => {
+            flowInstance.setEdges((prevEdges) => {
                 return addEdge(
                     {
                         ...connection,
@@ -114,172 +102,197 @@ export const MetalFlow = (props: MetalFlowProps) => {
                             height: 24,
                         },
                     },
-                    edges
+                    prevEdges
                 );
             });
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [edges, nodes]
+        [flowInstance]
     );
 
+    const deleteEdge = useCallback((edge: Edge)=>{
+        flowInstance.deleteElements({
+            edges: [edge]
+        })
+    }, [flowInstance]);
+
     const onEdgeDoubleClick = useCallback((event: ReactMouseEvent, edge: Edge) => {
-        setEdges((prevEdges: Edge[]) => {
-            return prevEdges.filter((prevEdge) => edge.id !== prevEdge.id);
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        deleteEdge(edge);
+    }, [deleteEdge]);
 
     const inputs = useCallback(
         (id: string) => {
-            return nodes
-                .filter((node: Node<MetalNodeProps>) => node.id === id)
-                .flatMap((node: Node<MetalNodeProps>) =>
-                    getIncomers<MetalNodeProps, MetalNodeProps>(node, nodes, edges)
-                );
+            const node = flowInstance.getNode(id);
+            if (node === undefined) {
+                return [];
+            }
+
+            const inputNodes: Node<MetalNodeProps>[] = getIncomers(node, flowInstance.getNodes(), flowInstance.getEdges());
+            return inputNodes;
         },
-        [edges, nodes]
+        [flowInstance]
     );
 
     const outputs = useCallback(
         (id: string) => {
-            return nodes
-                .filter((node: Node<MetalNodeProps>) => node.id === id)
-                .flatMap((node: Node<MetalNodeProps>) =>
-                    getOutgoers<MetalNodeProps, MetalNodeProps>(node, nodes, edges)
-                );
+            const node = flowInstance.getNode(id);
+            if (node === undefined) {
+                return [];
+            }
+
+            const inputNodes: Node<MetalNodeProps>[] = getOutgoers(node, flowInstance.getNodes(), flowInstance.getEdges());
+            return inputNodes;
         },
-        [edges, nodes]
+        [flowInstance]
     );
 
-    const updateNodeMetal = useCallback((newMetal: Metal) => {
-        setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+    const updateNode = useCallback((id: string, newMetal: Metal)=>{
+        const node = flowInstance.getNode(id);
+        if (node === undefined) {
+            return;
+        }
+
+        const newNode: Node<MetalNodeProps> = {
+            ...node,
+            data: {
+                ...node.data,
+                metal: newMetal
+            }
+        }
+        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             return prevNodes.map((prevNode: Node<MetalNodeProps>) => {
-                if (prevNode.data.metal.id !== newMetal.id) {
+                if (prevNode.id !== id) {
                     return prevNode;
                 }
-                return {
-                    ...prevNode,
-                    data: {
-                        ...prevNode.data,
-                        metal: newMetal,
-                    },
-                };
+                return newNode;
             });
-        });
+        })
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [flowInstance])
+
+    const deleteNode = useCallback((id: string) => {
+        const willDeleteEdges = flowInstance
+            .getEdges()
+            .filter((edge) => edge.source === id || edge.target === id);
+
+        flowInstance.deleteElements({
+            nodes: [{ id: id }],
+            edges: willDeleteEdges,
+        });
+    }, [flowInstance]);
 
     const addNode = useCallback((nodeTmpl: MetalNodeProps) => {
-        setNodes((prevNodes: Node<MetalNodeProps>[]) => {
-            const id = counter.current++;
-            const nodeId = `node-${id}`;
+        const id = counter.current++;
+        const nodeId = `node-${id}`;
+        const nodeProps = {
+            ...nodeTmpl,
+            metal: {
+                type: nodeTmpl.metalPkg.class,
+                id: nodeId,
+                name: `node-${id}`,
+                props: {},
+            },
+            onUpdate: (newMetal: Metal) => {updateNode(nodeId, newMetal);},
+            onDelete: () => {deleteNode(nodeId);},
+        };
+        const nodePropsWrapped = nodePropsWrap(nodeProps);
+
+        const viewport = flowInstance.getViewport();
+        const rect = getRectOfNodes(flowInstance.getNodes());
+        const node: Node<MetalNodeProps> = {
+            id: nodePropsWrapped.metal.id,
+            data: nodePropsWrapped,
+            type: "metal",
+            position: { x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2 },
+        };
+        flowInstance.addNodes(node);
+    }, [deleteNode, flowInstance, nodePropsWrap, updateNode]);
+
+    const autoLayout = useCallback(() => {
+        run(
+            layout(flowInstance.getNodes(), flowInstance.getEdges()).then((newNodes) =>
+                flowInstance.setNodes(newNodes)
+            )
+        );
+    }, [flowInstance, run]);
+
+    
+
+    const loadNodesFromFlow =  useCallback((newFlow: SpecFlow | undefined)=>{
+        console.log("load");
+        if (newFlow === undefined) {
+            return [];
+        }
+        const newNodes: Node<MetalNodeProps>[] = [];
+        newFlow.nodeTmpls.forEach((nodeTmpl: MetalNodeProps | undefined) => {
+            if (nodeTmpl === undefined) {
+                return;
+            }
+            const nodeId = nodeTmpl.metal.id;
             const nodeProps = {
                 ...nodeTmpl,
-                metal: {
-                    type: nodeTmpl.metalPkg.class,
-                    id: nodeId,
-                    name: `node-${id}`,
-                    props: {},
-                },
-                onUpdate: updateNodeMetal,
-                onDelete: () => {
-                    setNodes((prevNds: Node<MetalNodeProps>[]) => {
-                        return prevNds.filter((nd) => nd.id !== nodeId);
-                    });
-                    setEdges((prevEdges: Edge[]) => {
-                        return prevEdges.filter(
-                            (edge) => !(edge.source === nodeId || edge.target === nodeId)
-                        );
-                    });
-                },
+                onUpdate: (newMetal: Metal) => {updateNode(nodeId, newMetal);},
+                onDelete: () => {deleteNode(nodeId);},
             };
             const nodePropsWrapped = nodePropsWrap(nodeProps);
-
-            const viewport= flowInstance.getViewport();
-            const rect = getRectOfNodes(flowInstance.getNodes());
-            return prevNodes.concat({
+            newNodes.push({
                 id: nodePropsWrapped.metal.id,
                 data: nodePropsWrapped,
                 type: "metal",
-                position: {x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2},
+                position: { x: 5, y: 5 },
             });
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        return newNodes;
+    }, [deleteNode, nodePropsWrap, updateNode]);
+
+    const loadEdgesFromFlow = useCallback((newFlow: SpecFlow | undefined)=>{
+        console.log("load");
+        if (newFlow === undefined) {
+            return [];
+        }
+
+        let newEdges: Edge<any>[] = [];
+        newFlow.connections.forEach((connection) => {
+            newEdges = addEdge(
+                {
+                    ...connection,
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: "black",
+                        width: 18,
+                        height: 24,
+                    },
+                },
+                newEdges
+            );
+        });
+        return newEdges;
     }, []);
 
-    const autoLayout = useCallback(() => {
-        run(layout(nodes, edges).then((newNodes) => setNodes(newNodes)));
-    }, [edges, nodes, run, setNodes]);
+    const load = useCallback((newFlow: SpecFlow | undefined)=>{
+        console.log("load");
+        if (newFlow === undefined) {
+            return;
+        }
+        const newNodes = loadNodesFromFlow(newFlow);
+
+        let newEdges = loadEdgesFromFlow(newFlow);
+        flowInstance.setNodes(newNodes);
+        flowInstance.setEdges(newEdges);
+
+    }, [flowInstance, loadEdgesFromFlow, loadNodesFromFlow]);
+
+    const [nodes, setNodes, onNodesChange] = useNodesState(loadNodesFromFlow(flow));
+    const [edges, setEdges, onEdgesChange] = useEdgesState(loadEdgesFromFlow(flow));
 
     useEffect(() => {
         handler.set({
             inputs: inputs,
             outputs: outputs,
-            updateNodeMetal: updateNodeMetal,
             addNode: addNode,
+            load: load,
         });
-        if (flow === undefined) {
-            return;
-        }
-        setNodes((prevNodes: Node<MetalNodeProps>[]) => {
-            const nodes = [...prevNodes];
-            flow.nodeTmpls.forEach((nodeTmpl: MetalNodeProps | undefined) => {
-                if (nodeTmpl === undefined) {
-                    return;
-                }
-                const nodeId = nodeTmpl.metal.id;
-                const nodeProps = {
-                    ...nodeTmpl,
-                    onUpdate: updateNodeMetal,
-                    onDelete: () => {
-                        setNodes((prevNds: Node<MetalNodeProps>[]) => {
-                            return prevNds.filter((nd) => nd.id !== nodeId);
-                        });
-                        setEdges((prevEdges: Edge[]) => {
-                            return prevEdges.filter(
-                                (edge) => !(edge.source === nodeId || edge.target === nodeId)
-                            );
-                        });
-                    },
-                };
-                const nodePropsWrapped = nodePropsWrap(nodeProps);
-                nodes.push({
-                    id: nodePropsWrapped.metal.id,
-                    data: nodePropsWrapped,
-                    type: "metal",
-                    position: { x: 5, y: 5 },
-                });
-            });
-            return nodes;
-        });
-
-        setEdges((edges) => {
-            let ret: Edge<any>[] = edges;
-            flow.connections.forEach((connection) => {
-                ret = addEdge(
-                    {
-                        ...connection,
-                        markerEnd: {
-                            type: MarkerType.ArrowClosed,
-                            color: "black",
-                            width: 18,
-                            height: 24,
-                        },
-                    },
-                    ret
-                );
-            });
-            return ret;
-        });
-
-        setNeedAutoLayout(true);
-    }, [flow]);
-
-    if (needAutoLayout) {
-        autoLayout();
-        setNeedAutoLayout(false);
-    }
+    }, [addNode, flow, handler, inputs, load, outputs]);
 
     return (
         <ReactFlow
