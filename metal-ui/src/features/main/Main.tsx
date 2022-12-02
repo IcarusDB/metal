@@ -19,6 +19,7 @@ import { VscCircuitBoard, VscExtensions } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { useMemo } from "react";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
+import { DesignerProvider } from "../designer/DesignerProvider";
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
@@ -204,7 +205,10 @@ export function Main() {
             case "designer": {
                 const props: DesignerProps = config;
                 return (
-                    <Designer {...props} mainHandler={mainHandler}/>
+                    <DesignerProvider>
+                        <Designer {...props} mainHandler={mainHandler}/>
+                    </DesignerProvider>
+                    
                 );
             }
 

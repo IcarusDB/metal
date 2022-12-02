@@ -34,6 +34,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Mutable } from "../../model/Mutable";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
+import { useAttableMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -79,15 +80,14 @@ export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implement
 
 export interface MetalFlowProps {
     nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps;
-    handler: MutableMetalFlowHandler;
     flow?: SpecFlow;
 }
 
 export const MetalFlow = (props: MetalFlowProps) => {
-    console.log("flow");
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
-    const { nodePropsWrap, flow, handler } = props;
+    const { nodePropsWrap, flow} = props;
+    const handler = useAttableMetalFlow();
     const flowInstance = useReactFlow();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
 

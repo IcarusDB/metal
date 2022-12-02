@@ -17,6 +17,7 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { useSpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
+import { useMetalFlow } from "./DesignerProvider";
 
 export interface DesignerProps {
     id: string;
@@ -36,10 +37,7 @@ export function Designer(props: DesignerProps) {
 
     const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
-
-    const metalFlowHandlerRef = useRef<MutableMetalFlowHandler>(
-        new MutableMetalFlowHandler(metalFlowHandlerInitial)
-    );
+    const metalFlowHandler = useMetalFlow();
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
@@ -50,10 +48,8 @@ export function Designer(props: DesignerProps) {
     }, [id, run, token]);
 
     const onAddNode = useCallback((nodeProps: MetalNodeProps) => {
-        if (metalFlowHandlerRef.current !== null) {
-            metalFlowHandlerRef.current.addNode(nodeProps);
-        }
-    }, []);
+        metalFlowHandler.addNode(nodeProps);
+    }, [metalFlowHandler]);
 
     const explorer = useMemo(() => {
         return <MetalExplorer addNode={onAddNode} />;
@@ -61,7 +57,7 @@ export function Designer(props: DesignerProps) {
 
     const nodeEditor = useMemo(() => {
         return (
-            <MetalNodeEditor ref={nodeEditorRef} metalFlowHandler={metalFlowHandlerRef.current} />
+            <MetalNodeEditor ref={nodeEditorRef} />
         );
     }, []);
 
@@ -123,7 +119,6 @@ export function Designer(props: DesignerProps) {
                     <ReactFlowProvider>
                         <MetalFlow
                             flow={specLoader.flow === null ? undefined : specLoader.flow}
-                            handler={metalFlowHandlerRef.current}
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>

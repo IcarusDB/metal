@@ -1,9 +1,6 @@
 import {
-    FormEvent,
     ForwardedRef,
     forwardRef,
-    MouseEvent,
-    RefObject,
     useImperativeHandle,
     useRef,
     useState,
@@ -23,13 +20,12 @@ import { IChangeEvent } from "@rjsf/core";
 import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import { Metal } from "../../model/Metal";
-import { MetalFlowHandler } from "./MetalFlow";
 import { MetalNodeProps } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
+import { useMetalFlow } from "./DesignerProvider";
 
 export interface MetalNodeEditorProps {
-    metalFlowHandler: MetalFlowHandler;
 }
 
 export interface MetalNodeEditorHandler {
@@ -39,7 +35,7 @@ export interface MetalNodeEditorHandler {
 
 export const MetalNodeEditor = forwardRef(
     (props: MetalNodeEditorProps, ref: ForwardedRef<MetalNodeEditorHandler>) => {
-        const {metalFlowHandler} = props;
+        const metalFlowHandler = useMetalFlow();
         const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
         const [isOpen, setOpen] = useState(false);
         const nameInputRef = useRef<HTMLInputElement>();
