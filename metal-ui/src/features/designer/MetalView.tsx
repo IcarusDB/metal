@@ -12,7 +12,7 @@ import {
     Divider,
     Typography
 } from "@mui/material";
-import {RefObject, MouseEvent} from "react";
+import {MouseEvent} from "react";
 import {MetalPkg} from "../../model/MetalPkg";
 import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {GraphTopology} from "../../model/GraphTopology";
@@ -43,7 +43,7 @@ export interface MetalNodeProps {
     type: MetalTypes,
     onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
-    editorRef?: RefObject<MetalNodeEditorHandler>
+    editor?: MetalNodeEditorHandler;
 }
 
 export interface IMetalNodeView {
@@ -180,15 +180,14 @@ export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProp
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const {metal, metalPkg, type, onDelete, onUpdate} = props.data
-    const editorRef = props.data.editorRef
+    const editor = props.data.editor
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type)
 
     const onEdit = (event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
-        if (editorRef === undefined || editorRef === null || editorRef.current === null) {
+        if (editor === undefined) {
             return
         }
-        const editorHandler: MetalNodeEditorHandler = editorRef.current
-        editorHandler.load(props.data)
+        editor.load(props.data);
     }
 
     return (

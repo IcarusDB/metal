@@ -17,7 +17,7 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { useSpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useMetalFlow } from "./DesignerProvider";
+import { useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
 
 export interface DesignerProps {
     id: string;
@@ -35,9 +35,9 @@ export function Designer(props: DesignerProps) {
     const project = result === null ? undefined : result;
     const specLoader = useSpecLoader(token, project?.spec);
 
-    const nodeEditorRef = useRef<MetalNodeEditorHandler>(null);
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const metalFlowHandler = useMetalFlow();
+    const nodeEditorHandler = useMetalNodeEditor();
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
@@ -55,27 +55,11 @@ export function Designer(props: DesignerProps) {
         return <MetalExplorer addNode={onAddNode} />;
     }, [onAddNode]);
 
-    const nodeEditor = useMemo(() => {
-        return (
-            <MetalNodeEditor ref={nodeEditorRef} />
-        );
-    }, []);
-
-    const projectProfile = useMemo(() => {
-        return (
-            <ProjectProfile
-                open={false}
-                isCreate={false}
-                project={project}
-                ref={projectProfileRef}
-            />
-        );
-    }, [project]);
 
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
             ...nodeProps,
-            editorRef: nodeEditorRef,
+            editor: nodeEditorHandler,
         }),
         []
     );
@@ -145,8 +129,13 @@ export function Designer(props: DesignerProps) {
                     <VscSettingsGear />
                 </IconButton>
             </Paper>
-            {nodeEditor}
-            {projectProfile}
+            <MetalNodeEditor />
+            <ProjectProfile
+                open={false}
+                isCreate={false}
+                project={project}
+                ref={projectProfileRef}
+            />
         </div>
     );
 }

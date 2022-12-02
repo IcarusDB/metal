@@ -1,12 +1,16 @@
 import React, { createContext, ReactNode, useContext } from "react"
 import { MetalFlowHandler, metalFlowHandlerInitial, MutableMetalFlowHandler } from "./MetalFlow"
+import { MetalNodeEditorHandler, metalNodeEditorHandlerInitial, MutableMetalNodeEditorHandler } from "./MetalNodeEditor"
+
 
 interface DesignerHandler {
-    metalFlowHandler: MutableMetalFlowHandler
+    metalFlowHandler: MutableMetalFlowHandler,
+    metalNodeEditorHandler: MutableMetalNodeEditorHandler,
 }
 
-const defaultDesignerHandler = {
-    metalFlowHandler: new MutableMetalFlowHandler(metalFlowHandlerInitial)
+const defaultDesignerHandler: DesignerHandler = {
+    metalFlowHandler: new MutableMetalFlowHandler(metalFlowHandlerInitial),
+    metalNodeEditorHandler: new MutableMetalNodeEditorHandler(metalNodeEditorHandlerInitial),
 }
 
 
@@ -18,9 +22,20 @@ export function useMetalFlow() {
     return handler;
 }
 
-export function useAttableMetalFlow() {
+export function useMutableMetalFlow() {
     const ctx = useContext(DesignerCtx);
     return ctx.metalFlowHandler;
+}
+
+export function useMetalNodeEditor() {
+    const ctx = useContext(DesignerCtx);
+    const handler: MetalNodeEditorHandler = ctx.metalNodeEditorHandler;
+    return handler;
+}
+
+export function useMutableMetalNodeEditor() {
+    const ctx = useContext(DesignerCtx);
+    return ctx.metalNodeEditorHandler;
 }
 
 export interface DesignerProviderProps {
