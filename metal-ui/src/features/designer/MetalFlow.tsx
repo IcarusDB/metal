@@ -179,14 +179,18 @@ export const MetalFlow = (props: MetalFlowProps) => {
 
     const addNode = useCallback(
         (nodeTmpl: MetalNodeProps) => {
-            const id = counter.current++;
-            const nodeId = `node-${id}`;
+            const allNodeIds = new Set(flowInstance.getNodes().map((node) => node.id));
+            let nodeId = `node-${counter.current++}`;
+            while (allNodeIds.has(nodeId)) {
+                nodeId = `node-${counter.current++}`;
+            }
+
             const nodeProps = {
                 ...nodeTmpl,
                 metal: {
                     type: nodeTmpl.metalPkg.class,
                     id: nodeId,
-                    name: `node-${id}`,
+                    name: nodeId,
                     props: {},
                 },
                 onUpdate: (newMetal: Metal) => {
