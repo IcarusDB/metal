@@ -1,9 +1,11 @@
+import { Skeleton, Typography } from "@mui/material";
 import {
     MouseEvent as ReactMouseEvent,
     useCallback,
     useEffect,
     useMemo,
     useRef,
+    useState,
 } from "react";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { CgRadioChecked } from "react-icons/cg";
@@ -31,9 +33,17 @@ import {
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Mutable } from "../../model/Mutable";
+import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
+
+enum LoadState {
+    UNLOAD,
+    LOADING,
+    LAYOUTING,
+    LOADED,
+}
 
 export interface MetalFlowHandler {
     inputs: (id: string) => Node<MetalNodeProps>[];
@@ -64,7 +74,7 @@ export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implement
 
     load(newFlow: SpecFlow | undefined) {
         this.get().load(newFlow);
-    };
+    }
 }
 
 export interface MetalFlowProps {
@@ -79,7 +89,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const counter = useRef<number>(0);
     const { nodePropsWrap, flow, handler } = props;
     const flowInstance = useReactFlow();
-    
+    const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
+
     const { run } = useAsync<void>();
 
     const fitViewOptions: FitViewOptions = {
@@ -109,15 +120,21 @@ export const MetalFlow = (props: MetalFlowProps) => {
         [flowInstance]
     );
 
-    const deleteEdge = useCallback((edge: Edge)=>{
-        flowInstance.deleteElements({
-            edges: [edge]
-        })
-    }, [flowInstance]);
+    const deleteEdge = useCallback(
+        (edge: Edge) => {
+            flowInstance.deleteElements({
+                edges: [edge],
+            });
+        },
+        [flowInstance]
+    );
 
-    const onEdgeDoubleClick = useCallback((event: ReactMouseEvent, edge: Edge) => {
-        deleteEdge(edge);
-    }, [deleteEdge]);
+    const onEdgeDoubleClick = useCallback(
+        (event: ReactMouseEvent, edge: Edge) => {
+            deleteEdge(edge);
+        },
+        [deleteEdge]
+    );
 
     const inputs = useCallback(
         (id: string) => {
@@ -126,7 +143,11 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 return [];
             }
 
-            const inputNodes: Node<MetalNodeProps>[] = getIncomers(node, flowInstance.getNodes(), flowInstance.getEdges());
+            const inputNodes: Node<MetalNodeProps>[] = getIncomers(
+                node,
+                flowInstance.getNodes(),
+                flowInstance.getEdges()
+            );
             return inputNodes;
         },
         [flowInstance]
@@ -139,114 +160,136 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 return [];
             }
 
-            const inputNodes: Node<MetalNodeProps>[] = getOutgoers(node, flowInstance.getNodes(), flowInstance.getEdges());
+            const inputNodes: Node<MetalNodeProps>[] = getOutgoers(
+                node,
+                flowInstance.getNodes(),
+                flowInstance.getEdges()
+            );
             return inputNodes;
         },
         [flowInstance]
     );
 
-    const updateNode = useCallback((id: string, newMetal: Metal)=>{
-        const node = flowInstance.getNode(id);
-        if (node === undefined) {
-            return;
-        }
-
-        const newNode: Node<MetalNodeProps> = {
-            ...node,
-            data: {
-                ...node.data,
-                metal: newMetal
+    const updateNode = useCallback(
+        (id: string, newMetal: Metal) => {
+            const node = flowInstance.getNode(id);
+            if (node === undefined) {
+                return;
             }
-        }
-        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
-            return prevNodes.map((prevNode: Node<MetalNodeProps>) => {
-                if (prevNode.id !== id) {
-                    return prevNode;
-                }
-                return newNode;
+
+            const newNode: Node<MetalNodeProps> = {
+                ...node,
+                data: {
+                    ...node.data,
+                    metal: newMetal,
+                },
+            };
+            flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+                return prevNodes.map((prevNode: Node<MetalNodeProps>) => {
+                    if (prevNode.id !== id) {
+                        return prevNode;
+                    }
+                    return newNode;
+                });
             });
-        })
+        },
+        [flowInstance]
+    );
 
-    }, [flowInstance])
+    const deleteNode = useCallback(
+        (id: string) => {
+            const willDeleteEdges = flowInstance
+                .getEdges()
+                .filter((edge) => edge.source === id || edge.target === id);
 
-    const deleteNode = useCallback((id: string) => {
-        const willDeleteEdges = flowInstance
-            .getEdges()
-            .filter((edge) => edge.source === id || edge.target === id);
+            flowInstance.deleteElements({
+                nodes: [{ id: id }],
+                edges: willDeleteEdges,
+            });
+        },
+        [flowInstance]
+    );
 
-        flowInstance.deleteElements({
-            nodes: [{ id: id }],
-            edges: willDeleteEdges,
-        });
-    }, [flowInstance]);
+    const addNode = useCallback(
+        (nodeTmpl: MetalNodeProps) => {
+            const id = counter.current++;
+            const nodeId = `node-${id}`;
+            const nodeProps = {
+                ...nodeTmpl,
+                metal: {
+                    type: nodeTmpl.metalPkg.class,
+                    id: nodeId,
+                    name: `node-${id}`,
+                    props: {},
+                },
+                onUpdate: (newMetal: Metal) => {
+                    updateNode(nodeId, newMetal);
+                },
+                onDelete: () => {
+                    deleteNode(nodeId);
+                },
+            };
+            const nodePropsWrapped = nodePropsWrap(nodeProps);
 
-    const addNode = useCallback((nodeTmpl: MetalNodeProps) => {
-        const id = counter.current++;
-        const nodeId = `node-${id}`;
-        const nodeProps = {
-            ...nodeTmpl,
-            metal: {
-                type: nodeTmpl.metalPkg.class,
-                id: nodeId,
-                name: `node-${id}`,
-                props: {},
-            },
-            onUpdate: (newMetal: Metal) => {updateNode(nodeId, newMetal);},
-            onDelete: () => {deleteNode(nodeId);},
-        };
-        const nodePropsWrapped = nodePropsWrap(nodeProps);
-
-        const viewport = flowInstance.getViewport();
-        const rect = getRectOfNodes(flowInstance.getNodes());
-        const node: Node<MetalNodeProps> = {
-            id: nodePropsWrapped.metal.id,
-            data: nodePropsWrapped,
-            type: "metal",
-            position: { x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2 },
-        };
-        flowInstance.addNodes(node);
-    }, [deleteNode, flowInstance, nodePropsWrap, updateNode]);
+            const viewport = flowInstance.getViewport();
+            const rect = getRectOfNodes(flowInstance.getNodes());
+            const node: Node<MetalNodeProps> = {
+                id: nodePropsWrapped.metal.id,
+                data: nodePropsWrapped,
+                type: "metal",
+                position: { x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2 },
+            };
+            flowInstance.addNodes(node);
+        },
+        [deleteNode, flowInstance, nodePropsWrap, updateNode]
+    );
 
     const autoLayout = useCallback(() => {
         run(
-            layout(flowInstance.getNodes(), flowInstance.getEdges()).then((newNodes) =>
+            layout(flowInstance.getNodes, flowInstance.getEdges).then((newNodes) =>
                 flowInstance.setNodes(newNodes)
             )
         );
     }, [flowInstance, run]);
 
-    
+    const onLayout = useCallback(() => {
+        setLoadStatus(LoadState.LOADING);
+    }, []);
 
-    const loadNodesFromFlow =  useCallback((newFlow: SpecFlow | undefined)=>{
-        console.log("load");
-        if (newFlow === undefined) {
-            return [];
-        }
-        const newNodes: Node<MetalNodeProps>[] = [];
-        newFlow.nodeTmpls.forEach((nodeTmpl: MetalNodeProps | undefined) => {
-            if (nodeTmpl === undefined) {
-                return;
+    const loadNodesFromFlow = useCallback(
+        (newFlow: SpecFlow | undefined) => {
+            if (newFlow === undefined) {
+                return [];
             }
-            const nodeId = nodeTmpl.metal.id;
-            const nodeProps = {
-                ...nodeTmpl,
-                onUpdate: (newMetal: Metal) => {updateNode(nodeId, newMetal);},
-                onDelete: () => {deleteNode(nodeId);},
-            };
-            const nodePropsWrapped = nodePropsWrap(nodeProps);
-            newNodes.push({
-                id: nodePropsWrapped.metal.id,
-                data: nodePropsWrapped,
-                type: "metal",
-                position: { x: 5, y: 5 },
+            const newNodes: Node<MetalNodeProps>[] = [];
+            newFlow.nodeTmpls.forEach((nodeTmpl: MetalNodeProps | undefined) => {
+                if (nodeTmpl === undefined) {
+                    return;
+                }
+                const nodeId = nodeTmpl.metal.id;
+                const nodeProps = {
+                    ...nodeTmpl,
+                    onUpdate: (newMetal: Metal) => {
+                        updateNode(nodeId, newMetal);
+                    },
+                    onDelete: () => {
+                        deleteNode(nodeId);
+                    },
+                };
+                const nodePropsWrapped = nodePropsWrap(nodeProps);
+                newNodes.push({
+                    id: nodePropsWrapped.metal.id,
+                    data: nodePropsWrapped,
+                    type: "metal",
+                    position: { x: 5, y: 5 },
+                });
             });
-        });
+            return newNodes;
+        },
+        [deleteNode, nodePropsWrap, updateNode]
+    );
 
-        return newNodes;
-    }, [deleteNode, nodePropsWrap, updateNode]);
-
-    const loadEdgesFromFlow = useCallback((newFlow: SpecFlow | undefined)=>{
-        console.log("load");
+    const loadEdgesFromFlow = useCallback((newFlow: SpecFlow | undefined) => {
         if (newFlow === undefined) {
             return [];
         }
@@ -269,30 +312,68 @@ export const MetalFlow = (props: MetalFlowProps) => {
         return newEdges;
     }, []);
 
-    const load = useCallback((newFlow: SpecFlow | undefined)=>{
-        console.log("load");
-        if (newFlow === undefined) {
-            return;
-        }
-        const newNodes = loadNodesFromFlow(newFlow);
+    const loadFlow = useCallback(
+        (newFlow: SpecFlow | undefined) => {
+            if (newFlow === undefined) {
+                return;
+            }
+            const newNodes = loadNodesFromFlow(newFlow);
 
-        let newEdges = loadEdgesFromFlow(newFlow);
-        flowInstance.setNodes(newNodes);
-        flowInstance.setEdges(newEdges);
+            let newEdges = loadEdgesFromFlow(newFlow);
+            flowInstance.setNodes(newNodes);
+            flowInstance.setEdges(newEdges);
+        },
+        [flowInstance, loadEdgesFromFlow, loadNodesFromFlow]
+    );
 
-    }, [flowInstance, loadEdgesFromFlow, loadNodesFromFlow]);
+    const load = useCallback(
+        (newFlow: SpecFlow | undefined) => {
+            if (load === undefined) {
+                return;
+            }
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(loadNodesFromFlow(flow));
-    const [edges, setEdges, onEdgesChange] = useEdgesState(loadEdgesFromFlow(flow));
+            loadFlow(newFlow);
+            setLoadStatus(LoadState.LOADING);
+        },
+        [loadFlow]
+    );
 
-    useEffect(() => {
+    useMemo(() => {
         handler.set({
             inputs: inputs,
             outputs: outputs,
             addNode: addNode,
             load: load,
         });
-    }, [addNode, flow, handler, inputs, load, outputs]);
+    }, [addNode, handler, inputs, load, outputs]);
+
+    const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
+    const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);
+
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    useEffect(() => {
+        switch (loadStatus) {
+            case LoadState.UNLOAD:
+                if (flow !== undefined) {
+                    load(flow);
+                    setLoadStatus(LoadState.LOADING);
+                }
+                break;
+            case LoadState.LOADING:
+                autoLayout();
+                setLoadStatus(LoadState.LAYOUTING);
+                break;
+            case LoadState.LAYOUTING:
+                setLoadStatus(LoadState.LOADED);
+                break;
+        }
+    }, [autoLayout, flow, load, loadStatus]);
+
+    if (flow === undefined) {
+        return <Skeleton></Skeleton>;
+    }
 
     return (
         <ReactFlow
@@ -326,7 +407,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 <ControlButton>
                     <VscDebugStop />
                 </ControlButton>
-                <ControlButton onClick={autoLayout}>
+                <ControlButton onClick={onLayout}>
                     <VscTypeHierarchy />
                 </ControlButton>
             </Controls>

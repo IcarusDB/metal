@@ -2,7 +2,9 @@ import { Node, Edge } from "reactflow";
 import { MetalNodeProps } from "./MetalView";
 import ELK, { ElkNode } from 'elkjs/lib/elk.bundled.js';
 
-export async function layout(nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) {
+export async function layout(
+    nodes: () => Node<MetalNodeProps>[], 
+    edges: ()=> Edge<any>[]) {
     const elk = new ELK()
     const graph = {
         id: "root",
@@ -15,12 +17,12 @@ export async function layout(nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) 
             "org.eclipse.elk.spacing.nodeNode": "350",
             "org.eclipse.elk.partitioning.activate": "true",
         },
-        children: nodes.map(node => ({
+        children: nodes().map(node => ({
             id: node.id,
             width: node.width === null || node.width === undefined? 0: node.width,
             height: node.height === null || node.height === undefined? 0: node.height
         })),
-        edges: edges.map(edge => ({
+        edges: edges().map(edge => ({
             id: edge.id,
             sources: [edge.source],
             targets: [edge.target],
@@ -37,7 +39,7 @@ export async function layout(nodes: Node<MetalNodeProps>[], edges: Edge<any>[]) 
             newNodesMap.set(node.id, node)
         })
 
-        return nodes.map(node => {
+        return nodes().map(node => {
             const newNode = newNodesMap.get(node.id)
             if (newNode === undefined || newNode.x === undefined || newNode.y === undefined) {
                 return node
