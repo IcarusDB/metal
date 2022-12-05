@@ -1,6 +1,6 @@
-import './Project.css';
-import {useAppSelector} from "../../app/hooks";
-import {tokenSelector} from "../user/userSlice";
+import "./Project.css";
+import { useAppSelector } from "../../app/hooks";
+import { tokenSelector } from "../user/userSlice";
 import {
     Box,
     Paper,
@@ -10,16 +10,16 @@ import {
     ListItem,
     ListItemText,
     Tooltip,
-    TableContainer,
-    Table,
-    TableHead,
     TableRow,
-    TableBody,
     TableCell,
-    CircularProgress, Alert, Backdrop, LinearProgress, Container, Button
+    CircularProgress,
+    Alert,
+    LinearProgress,
+    Container,
+    Button,
 } from "@mui/material";
-import Stack from '@mui/material/Stack';
-import {createTheme, ThemeProvider} from '@mui/material/styles';
+import Stack from "@mui/material/Stack";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
     AiOutlineStop,
     AiOutlineApi,
@@ -28,57 +28,66 @@ import {
     AiOutlineQuestionCircle,
     AiOutlineEye,
     AiOutlineEdit,
-    AiOutlineReload
+    AiOutlineReload,
 } from "react-icons/ai";
-import {
-    BsCommand
-} from "react-icons/bs";
-import {HiStop} from "react-icons/hi";
-import {useCallback, useEffect, useRef, useState} from "react";
-import {BackendState, BackendStatus, Deploy, Project} from "../../model/Project";
-import {getAllProjectOfUser} from "./ProjectApi";
-import { State } from '../../api/State';
-import { useAsync } from '../../api/Hooks';
-import { ResizeBackdrop } from '../ui/ResizeBackdrop';
-import { MainHandler } from '../main/Main';
-import { VscAdd } from 'react-icons/vsc';
-
+import { HiStop } from "react-icons/hi";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { BackendState, BackendStatus, Deploy, Project } from "../../model/Project";
+import { getAllProjectOfUser } from "./ProjectApi";
+import { State } from "../../api/State";
+import { useAsync } from "../../api/Hooks";
+import { ResizeBackdrop } from "../ui/ResizeBackdrop";
+import { MainHandler } from "../main/Main";
+import { VscAdd } from "react-icons/vsc";
+import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
 
 function backendStatusTip(backendStatus: BackendStatus) {
-    const upTime = backendStatus.upTime === undefined ? <></> : (
-        <ListItem>
-            <ListItemText>{'Up Time'}</ListItemText>
-            <ListItemText>{backendStatus.upTime}</ListItemText>
-        </ListItem>
-    )
+    const upTime =
+        backendStatus.upTime === undefined ? (
+            <></>
+        ) : (
+            <ListItem>
+                <ListItemText>{"Up Time"}</ListItemText>
+                <ListItemText>{backendStatus.upTime}</ListItemText>
+            </ListItem>
+        );
 
-    const downTime = backendStatus.downTime === undefined ? <></> : (
-        <ListItem>
-            <ListItemText>{'Down Time'}</ListItemText>
-            <ListItemText>{backendStatus.downTime}</ListItemText>
-        </ListItem>
-    )
+    const downTime =
+        backendStatus.downTime === undefined ? (
+            <></>
+        ) : (
+            <ListItem>
+                <ListItemText>{"Down Time"}</ListItemText>
+                <ListItemText>{backendStatus.downTime}</ListItemText>
+            </ListItem>
+        );
 
-    const failureTime = backendStatus.failureTime === undefined ||
-    backendStatus.current !== BackendState.FAILURE ? <></> : (
-        <ListItem>
-            <ListItemText>{'Failure Time'}</ListItemText>
-            <ListItemText>{backendStatus.failureTime}</ListItemText>
-        </ListItem>
-    )
+    const failureTime =
+        backendStatus.failureTime === undefined ||
+        backendStatus.current !== BackendState.FAILURE ? (
+            <></>
+        ) : (
+            <ListItem>
+                <ListItemText>{"Failure Time"}</ListItemText>
+                <ListItemText>{backendStatus.failureTime}</ListItemText>
+            </ListItem>
+        );
 
-    const failureMsg = backendStatus.failureTime === undefined ||
-    backendStatus.current !== BackendState.FAILURE ? <></> : (
-        <ListItem>
-            <ListItemText>{'Failure Message'}</ListItemText>
-            <ListItemText>{backendStatus.failureMsg}</ListItemText>
-        </ListItem>
-    )
+    const failureMsg =
+        backendStatus.failureTime === undefined ||
+        backendStatus.current !== BackendState.FAILURE ? (
+            <></>
+        ) : (
+            <ListItem>
+                <ListItemText>{"Failure Message"}</ListItemText>
+                <ListItemText>{backendStatus.failureMsg}</ListItemText>
+            </ListItem>
+        );
 
     return (
         <List>
             <ListItem>
-                <ListItemText>{'current'}</ListItemText>
+                <ListItemText>{"current"}</ListItemText>
                 <ListItem>{backendStatus.current}</ListItem>
             </ListItem>
             {upTime}
@@ -86,130 +95,196 @@ function backendStatusTip(backendStatus: BackendStatus) {
             {failureTime}
             {failureMsg}
         </List>
-    )
+    );
 }
 
-function backendStatus(deploy: Deploy) {
+function backendStatus(deploy: Deploy | undefined) {
+    if (deploy === undefined) {
+        return "?";
+    }
     if (deploy.backend === undefined || deploy.backend.status === undefined) {
         return (
-            <Tooltip title={'No deployment is set.'}>
+            <Tooltip title={"No deployment is set."}>
                 <IconButton>
-                    <AiOutlineStop/>
+                    <AiOutlineStop />
                 </IconButton>
             </Tooltip>
-        )
+        );
     }
 
     switch (deploy.backend.status.current) {
-        case BackendState.UN_DEPLOY: 
+        case BackendState.UN_DEPLOY:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
-                        <AiOutlineApi/>
+                        <AiOutlineApi />
                     </IconButton>
                 </Tooltip>
-            )
-
-            ;
-        case BackendState.UP: 
+            );
+        case BackendState.UP:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
-                        <AiFillThunderbolt/>
+                        <AiFillThunderbolt />
                     </IconButton>
                 </Tooltip>
-            )
-        
-            ;
-        case BackendState.DOWN: 
+            );
+        case BackendState.DOWN:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
-                        <HiStop/>
+                        <HiStop />
                     </IconButton>
                 </Tooltip>
-            )
-        
-            ;
-        case BackendState.FAILURE: 
+            );
+        case BackendState.FAILURE:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
                     <IconButton>
-                        <AiOutlineWarning/>
+                        <AiOutlineWarning />
                     </IconButton>
                 </Tooltip>
-            )
-        
-            ;
-        default: 
+            );
+        default:
             return (
-                <Tooltip title={'Unknown'}>
-                    <AiOutlineQuestionCircle/>
+                <Tooltip title={"Unknown"}>
+                    <AiOutlineQuestionCircle />
                 </Tooltip>
-            )
-        }
-    
-}
-
-export function ProjectItem(props: { item: Project, index: number, mainHandler?: MainHandler }) {
-    const {item, mainHandler} = props;
-    const onEdit = () => {
-        mainHandler?.openDesigner({
-            id: item.id,
-            name: item.name,
-        })
+            );
     }
-    return (
-        <TableRow key={item.id}>
-            <TableCell>{item.name}</TableCell>
-            <TableCell>{item.user.username}</TableCell>
-            <TableCell>
-                {backendStatus(item.deploy)}
-            </TableCell>
-            <TableCell>
-                <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    divider={<Divider orientation="vertical" flexItem/>}
-                    spacing={0}
-                >
-                    <IconButton><AiOutlineEye/></IconButton>
-                    <IconButton onClick={onEdit}><AiOutlineEdit/></IconButton>
-                </Stack>
-            </TableCell>
-        </TableRow>
-    )
 }
 
-const theme = createTheme()
+const theme = createTheme();
 
 export interface ProjectListProps {
-    mainHandler: MainHandler
+    mainHandler: MainHandler;
+}
+
+interface ProjectAction {
+    onEdit: () => void;
+    onView: () => void;
 }
 
 export function ProjectList(props: ProjectListProps) {
-    const {mainHandler} = props;
+    const { mainHandler } = props;
 
-    const token: string | null = useAppSelector(state => {
-        return tokenSelector(state)
-    })
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
     const starterCounter = useRef(0);
 
-    const {run, status, result, error} = useAsync<Project[]>()
-    const projects = result === null? []: result;
+    const { run, status, result, error } = useAsync<Project[]>();
+    const projects = useMemo(() => (result === null ? [] : result), [result]);
     const isPending = () => {
-        return status === State.pending
-    }
+        return status === State.pending;
+    };
     const isFail = () => {
-        return status === State.failure
-    }
+        return status === State.failure;
+    };
 
     const load = useCallback(() => {
         if (token != null) {
             run(getAllProjectOfUser(token));
         }
-    }, [run, token])
+    }, [run, token]);
+
+    const columns: GridColDef[] = useMemo<GridColDef[]>(
+        () => [
+            { field: "name", headerName: "Name", width: 200, filterable: true },
+            {
+                field: "user",
+                headerName: "User",
+            },
+            {
+                field: "status",
+                headerName: "Status",
+                renderCell: (params: GridRenderCellParams<Deploy>) => {
+                    return backendStatus(params.value);
+                },
+            },
+            {
+                field: "action",
+                headerName: "Action",
+                renderCell: (params: GridRenderCellParams<ProjectAction>) => {
+                    const action =
+                        params.value === undefined
+                            ? {
+                                  onEdit: () => {},
+                                  onView: () => {},
+                              }
+                            : params.value;
+                    return (
+                        <Stack
+                            direction="row"
+                            justifyContent="flex-end"
+                            alignItems="center"
+                            divider={<Divider orientation="vertical" flexItem />}
+                            spacing={0}
+                        >
+                            <IconButton onClick={action.onView}>
+                                <AiOutlineEye />
+                            </IconButton>
+                            <IconButton onClick={action.onEdit}>
+                                <AiOutlineEdit />
+                            </IconButton>
+                        </Stack>
+                    );
+                },
+            },
+        ],
+        []
+    );
+
+    const rows = useMemo(() => {
+        return projects.map((project: Project) => {
+            return {
+                id: project.id,
+                name: project.name,
+                user: project.user.username,
+                status: project.deploy,
+                action: {
+                    onEdit: () => {
+                        mainHandler?.openDesigner({
+                            id: project.id,
+                            name: project.name,
+                        });
+                    },
+                    onView: () => {},
+                },
+            };
+        });
+    }, [mainHandler, projects]);
+
+    const toolbar = () => {
+        return (
+            <GridToolbarContainer sx={{ width: "100%" }}>
+                <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    divider={<Divider orientation="vertical" flexItem />}
+                    spacing={0}
+                    sx={{ width: "100%" }}
+                >
+                    <Button variant="contained" onClick={onAddProject}>
+                        <VscAdd />
+                    </Button>
+
+                    <Container></Container>
+                    <IconButton disabled={isPending()} onClick={load}>
+                        <AiOutlineReload />
+                        {isPending() && (
+                            <CircularProgress
+                                sx={{
+                                    position: "absolute",
+                                }}
+                            />
+                        )}
+                    </IconButton>
+                </Stack>
+            </GridToolbarContainer>
+        );
+    };
 
     const progress = isPending() ? (
         <LinearProgress />
@@ -221,86 +296,36 @@ export function ProjectList(props: ProjectListProps) {
         mainHandler.openProjectStarter({
             id: `starter[${starterCounter.current++}]`,
             mainHandler: mainHandler,
-        })
-    }
+        });
+    };
 
     useEffect(() => {
         load();
-    }, [load])
+    }, [load]);
 
     return (
         <ThemeProvider theme={theme}>
-            <div className={'panel'}
-                 style={{flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start"}}
+            <div
+                className={"panel"}
+                style={{
+                    display: "block",
+                }}
             >
-                
-                <Stack
-                    direction="column"
-                    justifyContent="flex-start"
-                    alignItems="stretch"
-                    spacing={2}
-                    divider={<Divider orientation="horizontal" flexItem/>}
-                >
-                    {isFail() &&
-                        <Alert severity={"error"}>{"Fail to load projects."}</Alert>
-                    }
-                    <Box sx={{width: "100%"}}>
-                        <Paper>
-                            <Stack
-                                direction="row"
-                                justifyContent="flex-end"
-                                alignItems="center"
-                                divider={<Divider orientation="vertical" flexItem/>}
-                                spacing={0}
-                            >
-                                <></>
-                                <IconButton
-                                    disabled={isPending()}
-                                    onClick={load}
-                                >
-                                    <AiOutlineReload/>
-                                    {isPending() &&
-                                        <CircularProgress
-                                            sx={{
-                                                position: 'absolute'
-                                            }}
-                                        />
-                                    }
-                                </IconButton>
-                            </Stack>
-                            {progress}
-                        </Paper>
-                    </Box>
-
-                    <TableContainer component={Paper}>
-                        <Table
-                            sx={{minWidth: 400}}
-                            size={"small"}
-                        >
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>{"Name"}</TableCell>
-                                    <TableCell>{"User"}</TableCell>
-                                    <TableCell>{"Status"}</TableCell>
-                                    <TableCell align={"right"}><BsCommand/></TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {projects.map((item: Project, index: number) => {
-                                    return ProjectItem({item: item, index: index, mainHandler: mainHandler})
-                                })}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                    <Container>
-                        <Button variant='contained' onClick={onAddProject}><VscAdd/></Button>
-                    </Container>
-                </Stack>
+                {progress}
+                {isFail() && <Alert severity={"error"}>{"Fail to load projects."}</Alert>}
+                <Paper sx={{ height: "100%" }}>
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        pageSize={10}
+                        rowsPerPageOptions={[10]}
+                        components={{
+                            Toolbar: toolbar,
+                        }}
+                    />
+                </Paper>
                 <ResizeBackdrop open={isPending()} />
             </div>
         </ThemeProvider>
-    )
-
-
+    );
 }
-

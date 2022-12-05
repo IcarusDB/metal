@@ -1,3 +1,4 @@
+import _ from "lodash";
 import React, { createContext, ReactNode, useContext } from "react"
 import { Node } from "reactflow";
 import { Mutable } from "../../model/Mutable";
@@ -98,8 +99,12 @@ export interface DesignerProviderProps {
 
 export function DesignerProvider(props: DesignerProviderProps) {
     const {children} = props;
+    const designerHandler: DesignerHandler = {
+        metalFlowHandler: new MutableMetalFlowHandler(_.clone(metalFlowHandlerInitial)),
+        metalNodeEditorHandler: new MutableMetalNodeEditorHandler(_.clone(metalNodeEditorHandlerInitial))
+    }
     return (
-        <DesignerCtx.Provider value={{...defaultDesignerHandler}}>
+        <DesignerCtx.Provider value={{...designerHandler}}>
             {children}
         </DesignerCtx.Provider>
     )
