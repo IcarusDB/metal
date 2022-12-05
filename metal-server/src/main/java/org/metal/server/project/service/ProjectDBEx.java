@@ -609,7 +609,7 @@ public class ProjectDBEx {
   }
 
   public static String pkgsPath() {
-    return DEPLOY + "." + DEPLOY_PLATFORM;
+    return DEPLOY + "." + DEPLOY_PKGS;
   }
 
 

@@ -2,7 +2,6 @@ import axios from "axios";
 import {ApiResponse, ApiResponseEntity, timeout} from "../../api/APIs";
 import {Project} from "../../model/Project";
 import _ from "lodash"
-import { ProjectProfileValue } from "./ProjectProfile";
 
 const instance = axios.create({
     headers: {
@@ -10,6 +9,18 @@ const instance = axios.create({
     },
     timeout: timeout()
 })
+
+function projectMap (obj: any): Project {
+    obj.user = _.mapKeys(obj.user, (val, key) => {
+        return key === '_id'? 'id': key
+    })
+
+    obj = _.mapKeys(obj, (val, key) => {
+        return key === '_id'? 'id': key
+    })
+    const proj: Project = obj
+    return proj
+}
 
 export async function getAllProjectOfUser(token: string): Promise<Project[]> {
     const url = '/api/v1/projects'
@@ -29,18 +40,7 @@ export async function getAllProjectOfUser(token: string): Promise<Project[]> {
             if (resp.data === undefined) {
                 throw new Error('Response is successful, but no data found in response.')
             }
-            const result: Project[] = resp.data.map((obj: any) => {
-                obj.user = _.mapKeys(obj.user, (val, key) => {
-                    return key === '_id'? 'id': key
-                })
-
-                obj = _.mapKeys(obj, (val, key) => {
-                    return key === '_id'? 'id': key
-                })
-                const proj: Project = obj
-                return proj
-            })
-
+            const result: Project[] = resp.data.map(projectMap)
             const projects: Project[] = result
             return projects
         } catch (err) {
@@ -67,7 +67,7 @@ export async function getProjectById(token: string, id:string) {
             if (resp.data === undefined) {
                 throw new Error('Response is successful, but no data found in response.')
             }
-            const project: Project = resp.data;
+            const project: Project = projectMap(resp.data);
             return project;
         } catch (err) {
             return Promise.reject(err)
@@ -135,9 +135,9 @@ export async function createProject(token:string, params: ProjectParams) {
     });
 }
 
-export async function updateProject(token:string, profile: ProjectProfileValue) {
-    const url = "/api/v1/projects";
-    return instance.post(url, profile, {
+export async function updateProject(token:string, id: string, params: ProjectParams) {
+    const url = `/api/v1/projects/id/${id}`;
+    return instance.put(url, params, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

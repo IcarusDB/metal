@@ -47,7 +47,7 @@ import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
-import { createProject, ProjectParams } from "./ProjectApi";
+import { createProject, ProjectParams, updateProject } from "./ProjectApi";
 import { Mutable } from "../../model/Mutable";
 
 export interface ProjectBasicProfileValue {
@@ -138,7 +138,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
             ? []
             : result.map((metalPkg: MetalPkg, index: number) => {
                   const pkg: MetalPackage = {
-                      id: index,
+                      id: metalPkg.pkg,
                       groupId: metalPkg.groupId,
                       artifactId: metalPkg.artifactId,
                       version: metalPkg.version,
@@ -152,27 +152,10 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         (pkg) => pkg.groupId + ":" + pkg.artifactId + ":" + pkg.version
     );
 
-    const initialSelectionModel: GridSelectionModel = packagesUniq
-        .filter((pkg) => {
-            if (profile === undefined) {
-                return false;
-            }
-            const equalPkg = profile.packages.find((prevPkg) => {
-                return (
-                    prevPkg.groupId === pkg.groupId &&
-                    prevPkg.artifactId === pkg.artifactId &&
-                    prevPkg.version === pkg.version
-                );
-            });
-
-            if (equalPkg === undefined) {
-                return false;
-            }
-            return true;
-        })
-        .map((pkg) => pkg.id);
+    const initialSelectionModel: GridSelectionModel = profile === undefined? []: profile?.packages.map(pkg => (`${pkg.groupId}:${pkg.artifactId}:${pkg.version}`));
 
     const [selectionModel, setSelectionModel] = useState(initialSelectionModel);
+
 
     const progress =
         status === State.pending ? (
@@ -229,8 +212,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     };
 
     const tbl = () => (
-        (
-            <DataGrid
+        <DataGrid
             rows={packagesUniq}
             columns={columns}
             selectionModel={selectionModel}
@@ -244,7 +226,6 @@ export const PkgSelector = (props: PkgSelectorProps) => {
                 Toolbar: TblToolBar,
             }}
         />
-        )
     );
 
     useEffect(() => {
@@ -289,7 +270,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
                     }}
                 >
                     {progress}
-                    {tbl()}
+                    {result !== null && tbl()}
                     <ResizeBackdrop open={isLoading()} />
                 </Grid>
             </Grid>
@@ -506,9 +487,27 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
 }
 
 export interface ProjectProfileFinishProps {
+    id?: string,
     isCreate: boolean;
     profile: ProjectProfileValue;
     onFinish?: (projectId: string) => void;
+}
+
+function projectParams(profile: ProjectProfileValue): ProjectParams {
+    return {
+        name: profile.basic === null ? undefined : profile.basic.name,
+        pkgs:
+            profile.pkgs === null
+                ? undefined
+                : profile.pkgs.packages.map(
+                      (pkg) => `${pkg.groupId}:${pkg.artifactId}:${pkg.version}`
+                  ),
+        platform:
+            profile.platform === null || profile.platform === undefined
+                ? undefined
+                : profile.platform,
+        backendArgs: profile.backendArgs === null ? undefined : profile.backendArgs,
+    };
 }
 
 export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
@@ -516,7 +515,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         return tokenSelector(state);
     });
 
-    const { isCreate, profile, onFinish } = props;
+    const { id, isCreate, profile, onFinish } = props;
     const { basic, pkgs, platform, backendArgs } = profile;
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
@@ -557,29 +556,8 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         if (!isChecked) {
             setWarnTip(msg);
         } else {
-            const params: ProjectParams = {
-                name: profile.basic === null ? undefined : profile.basic.name,
-                pkgs:
-                    profile.pkgs === null
-                        ? undefined
-                        : profile.pkgs.packages.map(
-                              (pkg) => `${pkg.groupId}:${pkg.artifactId}:${pkg.version}`
-                          ),
-                platform:
-                    profile.platform === null || profile.platform === undefined
-                        ? undefined
-                        : profile.platform,
-                backendArgs: profile.backendArgs === null ? undefined : profile.backendArgs,
-            };
+            const params: ProjectParams = projectParams(profile);
             run(createProject(token, params));
-        }
-    };
-
-    const onOpenProject = () => {
-        if (isSuccess()) {
-            if (onFinish !== undefined && result !== null) {
-                onFinish(result);
-            }
         }
     };
 
@@ -587,12 +565,21 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         if (token === null) {
             setWarnTip("User is not authorized");
             return;
-        }
-        const [isChecked, msg] = check();
-        if (!isChecked) {
-            setWarnTip(msg);
+        } else if (id === undefined) {
+            setWarnTip("No project is related.");
+            return;
         } else {
-            // run(createProject(token, profile));
+            const params: ProjectParams = projectParams(profile);
+            run(updateProject(token, id,  params))
+        }
+        
+    };
+
+    const onOpenProject = () => {
+        if (isSuccess()) {
+            if (onFinish !== undefined && result !== null) {
+                onFinish(result);
+            }
         }
     };
 
@@ -666,7 +653,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                             {"Create"}
                         </Button>
                     )}
-                    {!isCreate && <Button variant={"contained"}>{"Update"}</Button>}
+                    {!isCreate && <Button variant={"contained"} onClick={onUpdate}>{"Update"}</Button>}
                     {isCreate && isSuccess() && (
                         <Button variant={"contained"} onClick={onOpenProject}>
                             {"Open Project"}
@@ -946,6 +933,7 @@ export const ProjectProfile = forwardRef(
                     )}
                     {activeStep === 4 && (
                         <ProjectProfileFinish
+                            id={project?.id}
                             isCreate={isCreate}
                             profile={{
                                 basic: basicProfile,

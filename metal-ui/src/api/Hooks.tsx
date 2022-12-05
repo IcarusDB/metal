@@ -7,7 +7,7 @@ interface AsyncState<R> {
     error: any | null;
 }
 
-export function useAsync<R>() {
+export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
     const [state, setState] = useState<AsyncState<R>>({
         status: State.idle,
         result: null,
