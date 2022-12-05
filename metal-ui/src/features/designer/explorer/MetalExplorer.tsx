@@ -298,7 +298,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const {run, status, result, error} = useAsync<MetalPkg[]>();
+    const [run, status, result, error] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
     const detailRef = useRef<MetalPkgDetailHandler>(null);
 

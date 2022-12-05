@@ -1,35 +1,45 @@
-import {useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { State } from "./State";
 
+interface AsyncState<R> {
+    status: State;
+    result: R | null;
+    error: any | null;
+}
+
 export function useAsync<R>() {
-    const [status, setStatus] = useState<State>(State.idle);
-    const [result, setResult] = useState<R | null>(null);
-    const [error, setError] = useState<any>(null);
-
-
+    const [state, setState] = useState<AsyncState<R>>({
+        status: State.idle,
+        result: null,
+        error: null,
+    });
 
     const run = useCallback(async (promise: Promise<R>) => {
         if (!promise || !promise.then) {
-            throw new Error("parameter promise is null or promise.then is null.")
+            throw new Error("parameter promise is null or promise.then is null.");
         }
-        setStatus(State.pending);
+        setState((prevState) => ({
+            ...prevState,
+            status: State.pending,
+        }));
         try {
             const res = await promise;
-            // setResult(res);
-            //     setStatus(State.success);
-            //     setError(null);
-            setTimeout(()=>{
-                setResult(res);
-                setStatus(State.success);
-                setError(null);
+            setTimeout(() => {
+                setState({
+                    status: State.success,
+                    result: res,
+                    error: null,
+                });
             }, 1000);
         } catch (reason) {
-            setResult(null);
-            setStatus(State.failure);
-            setError(reason);
-            console.log(reason)
+            setState({
+                status: State.failure,
+                result: null,
+                error: reason,
+            });
+            console.log(reason);
         }
-    }, [])
+    }, []);
 
-    return {run, status, result, error}
+    return [run, state.status, state.result, state.error];
 }

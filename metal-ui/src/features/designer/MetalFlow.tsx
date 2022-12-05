@@ -58,7 +58,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const flowInstance = useReactFlow();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
 
-    const { run } = useAsync<void>();
+    const [run] = useAsync<void>();
 
     const fitViewOptions: FitViewOptions = {
         padding: 1,

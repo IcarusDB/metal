@@ -30,7 +30,7 @@ export function Designer(props: DesignerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const { run, status, result, error } = useAsync<Project>();
+    const [run, status, result, error] = useAsync<Project>();
 
     const project = result === null ? undefined : result;
     const specLoader = useSpecLoader(token, project?.spec);

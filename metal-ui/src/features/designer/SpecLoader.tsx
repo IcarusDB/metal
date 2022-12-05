@@ -18,7 +18,7 @@ export interface SpecFlow {
 }
 
 export function useSpecLoader(token: string | null, spec?: Spec) {
-    const { run, status, result, error } = useAsync<SpecFlow>();
+    const [run, status, result, error] = useAsync<SpecFlow>();
 
     const loadSpec = useCallback(async () => {
         if (token === null || spec === undefined) {

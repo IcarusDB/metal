@@ -129,7 +129,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const { run, status, result, error } = useAsync<MetalPkg[]>();
+    const [run, status, result] = useAsync<MetalPkg[]>();
 
     const isLoading = () => status === State.pending;
 
@@ -228,24 +228,23 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         );
     };
 
-    const tbl = useMemo(
-        () => (
+    const tbl = () => (
+        (
             <DataGrid
-                rows={packagesUniq}
-                columns={columns}
-                selectionModel={selectionModel}
-                onSelectionModelChange={(newSelectionModel) => {
-                    setSelectionModel(newSelectionModel);
-                }}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
-                checkboxSelection
-                components={{
-                    Toolbar: TblToolBar,
-                }}
-            />
-        ),
-        [columns, packagesUniq]
+            rows={packagesUniq}
+            columns={columns}
+            selectionModel={selectionModel}
+            onSelectionModelChange={(newSelectionModel) => {
+                setSelectionModel(newSelectionModel);
+            }}
+            pageSize={5}
+            rowsPerPageOptions={[5]}
+            checkboxSelection
+            components={{
+                Toolbar: TblToolBar,
+            }}
+        />
+        )
     );
 
     useEffect(() => {
@@ -290,7 +289,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
                     }}
                 >
                     {progress}
-                    {tbl}
+                    {tbl()}
                     <ResizeBackdrop open={isLoading()} />
                 </Grid>
             </Grid>
@@ -520,7 +519,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const { isCreate, profile, onFinish } = props;
     const { basic, pkgs, platform, backendArgs } = profile;
     const [warnTip, setWarnTip] = useState<string>();
-    const { run, status, error, result } = useAsync<string>();
+    const [run, status, result, error] = useAsync<string>();
 
     const check: () => [boolean, string | undefined] = useCallback(() => {
         if (basic === null || basic.name === "") {
@@ -693,17 +692,20 @@ export interface ProjectProfileHandler {
 }
 
 export const projectProfileHandlerInitial: ProjectProfileHandler = {
-    open: ()=>{},
-    close: ()=>{},
-}
+    open: () => {},
+    close: () => {},
+};
 
-export class MutableProjectProfileHandler extends Mutable<ProjectProfileHandler> implements ProjectProfileHandler {
+export class MutableProjectProfileHandler
+    extends Mutable<ProjectProfileHandler>
+    implements ProjectProfileHandler
+{
     open() {
         this.get().open();
-    };
+    }
     close() {
         this.get().close();
-    };
+    }
 }
 
 export interface ProjectProfileValue {

@@ -173,7 +173,7 @@ export function ProjectList(props: ProjectListProps) {
     });
     const starterCounter = useRef(0);
 
-    const { run, status, result, error } = useAsync<Project[]>();
+    const [run, status, result, error] = useAsync<Project[]>();
     const projects = useMemo(() => (result === null ? [] : result), [result]);
     const isPending = () => {
         return status === State.pending;
