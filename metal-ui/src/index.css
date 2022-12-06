@@ -43,3 +43,30 @@ code {
   ::-webkit-scrollbar-thumb:hover {
     background: #555; 
   }
+
+  .react-flow .react-flow__handle {
+    width: 2vh;
+    height: 1vh;
+  
+    background-color: #aeaeaec4;
+  }
+  
+  .react-flow .react-flow__handle:hover {
+    background-color: #aeaeae;
+  }
+
+  .react-flow .react-flow__handle-top {
+    top: 0vh;
+    border-radius: 0 0 1vh 1vh;
+    
+  }
+  
+  .react-flow .react-flow__handle-bottom {
+    bottom: 0vh;
+    border-radius: 1vh 1vh 0 0;
+  }
+
+  .react-flow .react-flow__edge path,
+.react-flow__connectionline path {
+  stroke-width: 2;
+}
