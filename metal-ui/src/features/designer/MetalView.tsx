@@ -183,7 +183,15 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         <Badge color="secondary" badgeContent={"?"}>
             <div>
                 {nodeView.inputHandle(props.data)}
-                <Paper square>
+                <Paper 
+                    square
+                    variant="outlined"
+                    sx={{
+                        backgroundColor: "#66ffcc",
+                        borderWidth: "5px",
+                    }}
+                
+                >
                     <div
                         style={{
                             display: "flex",
