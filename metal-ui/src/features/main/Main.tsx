@@ -15,7 +15,7 @@ import { Button, Container, Paper, Skeleton, Stack } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaProjectDiagram, FaDrawPolygon } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
-import { VscCircuitBoard, VscExtensions } from "react-icons/vsc";
+import { VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { useMemo } from "react";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
@@ -28,6 +28,10 @@ function iconFatory(node: TabNode) {
             return <FaProjectDiagram />;
         case "designerIcon":
             return <VscCircuitBoard />;
+        case "viewerIcon":
+            return <VscPreview />;
+        case "starterIcon":
+            return <VscHome />;
         case "metalRepoIcon":
             return <VscExtensions />;
         case "deploymentIcon":
@@ -129,9 +133,9 @@ export function Main() {
         const {id} = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: id,
+            id: `Starter[${id}]`,
             name: `Starter[${id}]`,
-            icon: "designerIcon",
+            icon: "starterIcon",
             component: "starter",
             config: props,
         }
@@ -146,12 +150,12 @@ export function Main() {
     }
 
     const openDesigner = (props: DesignerProps) => {
-        const { id, name } = props;
+        const { id, name, isReadOnly } = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: id,
+            id: isReadOnly? `Viewer[${id}]`: `Designer[${id}]`,
             name: name === undefined? `Project[${id}]`: `Project[${name}]`,
-            icon: "designerIcon",
+            icon: isReadOnly? "viewerIcon": "designerIcon",
             component: "designer",
             config: props,
         }

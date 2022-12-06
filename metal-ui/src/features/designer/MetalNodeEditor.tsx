@@ -1,9 +1,4 @@
-import {
-    useCallback,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
     Button,
     Container,
@@ -22,11 +17,17 @@ import { Metal } from "../../model/Metal";
 import { MetalNodeProps } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { MutableMetalNodeEditorHandler, useMetalFlow, useMutableMetalNodeEditor } from "./DesignerProvider";
+import {
+    MutableMetalNodeEditorHandler,
+    useMetalFlow,
+    useMutableMetalNodeEditor,
+} from "./DesignerProvider";
+import { IReadOnly } from "../ui/Commons";
 
-export interface MetalNodeEditorProps {}
+export interface MetalNodeEditorProps extends IReadOnly {}
 
 export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
+    const { isReadOnly } = props;
     const metalFlowHandler = useMetalFlow();
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);
@@ -168,6 +169,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                         label={"name"}
                                         defaultValue={metal.name}
                                         inputRef={nameInputRef}
+                                        disabled={isReadOnly}
                                     />
                                     <Form
                                         schema={schema}
@@ -175,6 +177,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                         validator={validator}
                                         formData={metalProps.metal.props}
                                         onSubmit={onConfirm}
+                                        readonly={isReadOnly}
                                     >
                                         <Stack
                                             direction="row"
@@ -182,11 +185,13 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                             alignItems="center"
                                             spacing={8}
                                         >
-                                            <Button type={"submit"} variant={"contained"}>
+                                            <Button
+                                                type={"submit"}
+                                                variant={"contained"}
+                                                disabled={isReadOnly}
+                                            >
                                                 {"confirm"}
                                             </Button>
-
-                                            <Button onClick={printInputs}>{"inputs"}</Button>
                                         </Stack>
                                     </Form>
                                     <div></div>

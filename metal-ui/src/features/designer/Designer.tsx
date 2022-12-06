@@ -18,15 +18,16 @@ import { tokenSelector } from "../user/userSlice";
 import { useSpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
 import { useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
+import { IReadOnly } from "../ui/Commons";
 
-export interface DesignerProps {
+export interface DesignerProps extends IReadOnly {
     id: string;
     name?: string;
     mainHandler?: MainHandler;
 }
 
 export function Designer(props: DesignerProps) {
-    const { id } = props;
+    const { id, isReadOnly } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -47,14 +48,16 @@ export function Designer(props: DesignerProps) {
         }
     }, [id, run, token]);
 
-    const onAddNode = useCallback((nodeProps: MetalNodeProps) => {
-        metalFlowHandler.addNode(nodeProps);
-    }, [metalFlowHandler]);
+    const onAddNode = useCallback(
+        (nodeProps: MetalNodeProps) => {
+            metalFlowHandler.addNode(nodeProps);
+        },
+        [metalFlowHandler]
+    );
 
     const explorer = useMemo(() => {
         return <MetalExplorer addNode={onAddNode} />;
     }, [onAddNode]);
-
 
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
@@ -98,18 +101,33 @@ export function Designer(props: DesignerProps) {
                 alignItems="flex-start"
                 spacing={2}
                 sx={{ height: "100%", width: "100%" }}
-            > 
-                <Box component={Paper} sx={{ height: "100%", width: "75%" }}>
+            >
+                <Box
+                    component={Paper}
+                    sx={{
+                        height: "100%",
+                        width: isReadOnly ? "100%" : "75%",
+                    }}
+                >
                     <ReactFlowProvider>
                         <MetalFlow
+                            isReadOnly={isReadOnly}
                             flow={specLoader.flow === null ? undefined : specLoader.flow}
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
                 </Box>
-                <Box component={Paper} sx={{ height: "100%", width: "25%" }}>
-                    {explorer}
-                </Box>
+                {!isReadOnly && (
+                    <Box
+                        component={Paper}
+                        sx={{
+                            height: "100%",
+                            width: "25%",
+                        }}
+                    >
+                        {explorer}
+                    </Box>
+                )}
             </Stack>
             <Paper
                 elevation={2}
@@ -129,7 +147,7 @@ export function Designer(props: DesignerProps) {
                     <VscSettingsGear />
                 </IconButton>
             </Paper>
-            <MetalNodeEditor />
+            <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile
                 open={false}
                 isCreate={false}

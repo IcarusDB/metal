@@ -249,7 +249,13 @@ export function ProjectList(props: ProjectListProps) {
                             name: project.name,
                         });
                     },
-                    onView: () => {},
+                    onView: () => {
+                        mainHandler?.openDesigner({
+                            id: project.id,
+                            name: project.name,
+                            isReadOnly: true,
+                        })
+                    },
                 },
             };
         });

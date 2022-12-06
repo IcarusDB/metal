@@ -17,6 +17,7 @@ import {MetalPkg} from "../../model/MetalPkg";
 import {Metal, Metals, MetalTypes} from "../../model/Metal";
 import {GraphTopology} from "../../model/GraphTopology";
 import { MetalNodeEditorHandler } from "./DesignerProvider";
+import { IReadOnly } from "../ui/Commons";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload/>,
@@ -37,7 +38,7 @@ export function metalViewIcon(type: MetalTypes) {
     }
 }
 
-export interface MetalNodeProps {
+export interface MetalNodeProps extends IReadOnly{
     metalPkg: MetalPkg,
     metal: Metal,
     type: MetalTypes,
@@ -179,7 +180,7 @@ export function onConnectValid(connection: Connection, nodes: Node<MetalNodeProp
 
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
-    const {metal, metalPkg, type, onDelete, onUpdate} = props.data
+    const {isReadOnly, metal, metalPkg, type, onDelete, onUpdate} = props.data
     const editor = props.data.editor
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type)
 
@@ -216,8 +217,19 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                             justifyContent="flex-end"
                             alignItems="stretch"
                         >
-                            <Button size="small" sx={{borderTopLeftRadius: 0}} onClick={onEdit}><VscExpandAll/></Button>
-                            <Button size="small" sx={{borderBottomLeftRadius: 0}} onClick={onDelete}><AiOutlineDelete/></Button>
+                            <Button size="small" 
+                                sx={{borderTopLeftRadius: 0}} 
+                                onClick={onEdit}
+                            >
+                                <VscExpandAll/>
+                            </Button>
+                            <Button size="small" 
+                                sx={{borderBottomLeftRadius: 0}} 
+                                onClick={onDelete}
+                                disabled={isReadOnly}
+                            >
+                                <AiOutlineDelete/>
+                            </Button>
                         </Stack>
                     </Stack>
                 </Box>

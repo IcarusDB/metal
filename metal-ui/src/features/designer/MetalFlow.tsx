@@ -32,6 +32,7 @@ import {
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
+import { IReadOnly } from "../ui/Commons";
 import { useMutableMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
@@ -45,7 +46,7 @@ enum LoadState {
 }
 
 
-export interface MetalFlowProps {
+export interface MetalFlowProps extends IReadOnly{
     nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps;
     flow?: SpecFlow;
 }
@@ -53,7 +54,7 @@ export interface MetalFlowProps {
 export const MetalFlow = (props: MetalFlowProps) => {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
-    const { nodePropsWrap, flow} = props;
+    const { isReadOnly, nodePropsWrap, flow} = props;
     const handler = useMutableMetalFlow();
     const flowInstance = useReactFlow();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
@@ -199,6 +200,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 onDelete: () => {
                     deleteNode(nodeId);
                 },
+                isReadOnly: isReadOnly,
             };
             const nodePropsWrapped = nodePropsWrap(nodeProps);
 
@@ -212,7 +214,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             };
             flowInstance.addNodes(node);
         },
-        [deleteNode, flowInstance, nodePropsWrap, updateNode]
+        [deleteNode, flowInstance, isReadOnly, nodePropsWrap, updateNode]
     );
 
     const autoLayout = useCallback(() => {
@@ -246,6 +248,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                     onDelete: () => {
                         deleteNode(nodeId);
                     },
+                    isReadOnly: isReadOnly,
                 };
                 const nodePropsWrapped = nodePropsWrap(nodeProps);
                 newNodes.push({
@@ -257,7 +260,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             });
             return newNodes;
         },
-        [deleteNode, nodePropsWrap, updateNode]
+        [deleteNode, isReadOnly, nodePropsWrap, updateNode]
     );
 
     const loadEdgesFromFlow = useCallback((newFlow: SpecFlow | undefined) => {
@@ -352,8 +355,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onEdgeDoubleClick={onEdgeDoubleClick}
+            onConnect={isReadOnly? undefined: onConnect}
+            onEdgeDoubleClick={isReadOnly? ()=>{}: onEdgeDoubleClick}
             fitView
             fitViewOptions={fitViewOptions}
             nodeTypes={nodeTypes}
