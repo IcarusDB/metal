@@ -583,6 +583,14 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         }
     };
 
+    const onReloadProject = () => {
+        if (isSuccess()) {
+            if (onFinish !== undefined && result !== null) {
+                onFinish(result);
+            }
+        }
+    };
+
     useEffect(() => {
         const [isChecked, msg] = check();
         if (!isChecked) {
@@ -657,6 +665,11 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                     {isCreate && isSuccess() && (
                         <Button variant={"contained"} onClick={onOpenProject}>
                             {"Open Project"}
+                        </Button>
+                    )}
+                    {!isCreate && isSuccess() && (
+                        <Button variant={"contained"} onClick={onReloadProject}>
+                            {"Reload Project"}
                         </Button>
                     )}
                 </Stack>

@@ -12,6 +12,7 @@ export function ProjectStarter(props: ProjectStarterProps) {
     const onCreateFinish = (projectId: string) => {
         if (mainHandler.close !== undefined) {
             mainHandler.close(id);
+            
         }
     }
     return (

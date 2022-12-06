@@ -247,6 +247,7 @@ export function ProjectList(props: ProjectListProps) {
                         mainHandler?.openDesigner({
                             id: project.id,
                             name: project.name,
+                            mainHandler: mainHandler
                         });
                     },
                     onView: () => {

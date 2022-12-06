@@ -291,15 +291,20 @@ function TypeFilter(
 
 interface MetalExplorerProps {
     addNode: (nodeTmpl: MetalNodeProps) => void;
+    restrictPkgs?: string[],
 }
 
 export function MetalExplorer(props: MetalExplorerProps) {
-    const { addNode } = props;
+    const { addNode, restrictPkgs } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
     const [run, status, result, error] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
+
+    const pkgs = result === null ? []: (
+        restrictPkgs === undefined? result: result.filter(pkg => (_.find(restrictPkgs, restrictPkg => (restrictPkg === pkg.pkg)) !== undefined))
+    )
     const detailRef = useRef<MetalPkgDetailHandler>(null);
 
     const isPending = () => status === State.pending;
@@ -417,7 +422,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     )}
 
                     <List sx={{ overflowY: "scroll", height: "100%" }}>
-                        {afterTypeFilter(pkgFilter, result === null ? [] : result).map(
+                        {afterTypeFilter(pkgFilter, pkgs).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
                                     type: metalType(metalPkg.type),

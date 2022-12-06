@@ -45,6 +45,11 @@ function iconFatory(node: TabNode) {
     }
 }
 
+export function designerId(id: string, isReadOnly: boolean | undefined) {
+    return isReadOnly? `viewer[${id}]`: `designer[${id}]`;
+}
+
+
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
@@ -133,8 +138,8 @@ export function Main() {
         const {id} = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: `Starter[${id}]`,
-            name: `Starter[${id}]`,
+            id: id,
+            name: id,
             icon: "starterIcon",
             component: "starter",
             config: props,
@@ -153,7 +158,7 @@ export function Main() {
         const { id, name, isReadOnly } = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: isReadOnly? `Viewer[${id}]`: `Designer[${id}]`,
+            id: designerId(id, isReadOnly),
             name: name === undefined? `Project[${id}]`: `Project[${name}]`,
             icon: isReadOnly? "viewerIcon": "designerIcon",
             component: "designer",
@@ -212,7 +217,6 @@ export function Main() {
                     <DesignerProvider>
                         <Designer {...props} mainHandler={mainHandler}/>
                     </DesignerProvider>
-                    
                 );
             }
 
@@ -230,6 +234,7 @@ export function Main() {
             model={layoutModel}
             factory={factory}
             iconFactory={iconFatory}
+            onAction={action => {console.log(action); return action;}}
         ></FlexLayout.Layout>
     );
 }

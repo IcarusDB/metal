@@ -9,7 +9,7 @@ import { MetalFlow } from "./MetalFlow";
 import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
 import { VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
-import { MainHandler } from "../main/Main";
+import { designerId, MainHandler } from "../main/Main";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { getProjectById } from "../project/ProjectApi";
@@ -27,7 +27,7 @@ export interface DesignerProps extends IReadOnly {
 }
 
 export function Designer(props: DesignerProps) {
-    const { id, isReadOnly } = props;
+    const { id, mainHandler, isReadOnly } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -56,8 +56,8 @@ export function Designer(props: DesignerProps) {
     );
 
     const explorer = useMemo(() => {
-        return <MetalExplorer addNode={onAddNode} />;
-    }, [onAddNode]);
+        return <MetalExplorer addNode={onAddNode} restrictPkgs={project?.deploy.pkgs}/>;
+    }, [onAddNode, project?.deploy.pkgs]);
 
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
@@ -67,11 +67,34 @@ export function Designer(props: DesignerProps) {
         [nodeEditorHandler]
     );
 
+    useMemo(() => {
+        if (mainHandler !== undefined && mainHandler.renameDesigner !== undefined && project !== undefined) {
+            mainHandler.renameDesigner(designerId(id, isReadOnly), project.name);
+        }
+    }, [id, isReadOnly, mainHandler, project])
+
     const progress = isPending() ? (
         <LinearProgress />
     ) : (
         <LinearProgress variant="determinate" value={0} />
     );
+
+    const onReloadProject = (projectId: string) => {
+        projectProfileRef.current?.close();
+        if (mainHandler !== undefined) {
+            if (mainHandler.close !== undefined) {
+                mainHandler.close(designerId(id, isReadOnly))
+                
+                setTimeout(()=>{
+                    mainHandler.openDesigner({
+                        id: id,
+                        isReadOnly: isReadOnly,
+                        mainHandler: mainHandler,
+                    });
+                }, 2000)
+            }
+        }
+    }
 
     useEffect(() => {
         load();
@@ -151,6 +174,7 @@ export function Designer(props: DesignerProps) {
             <ProjectProfile
                 open={false}
                 isCreate={false}
+                onFinish={onReloadProject}
                 project={project}
                 ref={projectProfileRef}
             />
