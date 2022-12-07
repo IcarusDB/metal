@@ -234,7 +234,6 @@ export function Main() {
             model={layoutModel}
             factory={factory}
             iconFactory={iconFatory}
-            onAction={action => {console.log(action); return action;}}
         ></FlexLayout.Layout>
     );
 }

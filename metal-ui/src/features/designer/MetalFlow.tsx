@@ -205,12 +205,11 @@ export const MetalFlow = (props: MetalFlowProps) => {
             const nodePropsWrapped = nodePropsWrap(nodeProps);
 
             const viewport = flowInstance.getViewport();
-            const rect = getRectOfNodes(flowInstance.getNodes());
             const node: Node<MetalNodeProps> = {
                 id: nodePropsWrapped.metal.id,
                 data: nodePropsWrapped,
                 type: "metal",
-                position: { x: viewport.x + rect.width / 2, y: viewport.y + rect.height / 2 },
+                position: { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom },
             };
             flowInstance.addNodes(node);
         },
