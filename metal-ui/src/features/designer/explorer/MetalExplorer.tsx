@@ -2,6 +2,7 @@ import {
     Alert,
     Box,
     Button,
+    Chip,
     Container,
     Divider,
     Grid,
@@ -28,7 +29,13 @@ import React, {
     useState,
 } from "react";
 import { AiOutlineReload } from "react-icons/ai";
-import { VscExpandAll, VscChromeMinimize } from "react-icons/vsc";
+import {
+    VscExpandAll,
+    VscChromeMinimize,
+    VscOrganization,
+    VscProject,
+    VscVersions,
+} from "react-icons/vsc";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
@@ -78,7 +85,9 @@ export function MetalPkgView(props: MetalPkgProps) {
     };
 
     return (
-        <Box
+        <Paper
+            variant="outlined"
+            square
             sx={{
                 flexGrow: 0,
                 display: "flex",
@@ -88,49 +97,109 @@ export function MetalPkgView(props: MetalPkgProps) {
                 paddingRight: "0em",
                 width: "100%",
             }}
-            component={Paper}
         >
-            <Container sx={{ width: "30%" }}>
-                <h1>{metalViewIcon(type)}</h1>
-            </Container>
-
-            <Divider light orientation="vertical" />
-            <Stack
-                direction="column"
-                justifyContent="flex-start"
-                alignItems="flex-start"
-                spacing={2}
-                sx={{ width: "70%" }}
+            <Grid
+                container
+                sx={{
+                    paddingLeft: "1em",
+                    paddingTop: "1em",
+                }}
             >
-                <Typography
-                    sx={{ width: "90%", overflow: "hidden", textOverflow: "ellipsis" }}
-                    variant="h6"
-                    noWrap={false}
+                <Grid
+                    item
+                    xs={3}
+                    sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        justifyContent: "flex-start",
+                    }}
                 >
-                    {className}
-                </Typography>
-                <Stack direction="column" justifyContent="flex-start" alignItems="flex-start">
-                    <Typography variant="caption">{groupId}</Typography>
+                    <div
+                        style={{
+                            fontSize: "2em",
+                        }}
+                    >
+                        {metalViewIcon(type)}
+                    </div>
+                </Grid>
+                <Grid item xs={9}>
+                    <Typography
+                        sx={{ width: "100%", overflow: "hidden", textOverflow: "ellipsis" }}
+                        variant="h6"
+                        noWrap={false}
+                    >
+                        {className}
+                    </Typography>
+                </Grid>
+                <Grid
+                    item
+                    xs={1}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <VscOrganization />
+                </Grid>
+                <Grid item xs={11}>
+                    <Chip label={groupId} size="small" color="primary" variant="outlined"/>
+                </Grid>
+                <Grid
+                    item
+                    xs={1}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <VscProject />
+                </Grid>
+                <Grid item xs={11}>
                     <Typography variant="caption">{artifactId}</Typography>
-                    <Typography variant="caption">{version}</Typography>
-                </Stack>
-                <Stack
-                    direction="row"
-                    justifyContent="flex-end"
-                    alignItems="flex-end"
-                    sx={{ width: "90%" }}
+                </Grid>
+                <Grid
+                    item
+                    xs={1}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
                 >
+                    <VscVersions />
+                </Grid>
+                <Grid item xs={11}>
+                    <Chip size="small" variant="outlined" label={version} color={"info"} />
+                </Grid>
+                <Grid item xs={12}>
+                <Divider orientation="horizontal" flexItem  sx={{
+                    paddingTop: "1vh",
+                }}/>
+                </Grid>
+                <Grid item xs={6}></Grid>
+                <Grid item xs={4}>
                     {type !== MetalTypes.SETUP && (
-                        <Button variant="contained" color="primary" onClick={onAddNode}>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            onClick={onAddNode}
+                            style={{
+                                width: "100%",
+                            }}
+                        >
                             {"Add"}
                         </Button>
                     )}
+                </Grid>
+                <Grid item xs={2}>
                     <IconButton onClick={onDetail}>
                         <VscExpandAll />
                     </IconButton>
-                </Stack>
-            </Stack>
-        </Box>
+                </Grid>
+            </Grid>
+        </Paper>
     );
 }
 
@@ -291,7 +360,7 @@ function TypeFilter(
 
 interface MetalExplorerProps {
     addNode: (nodeTmpl: MetalNodeProps) => void;
-    restrictPkgs?: string[],
+    restrictPkgs?: string[];
 }
 
 export function MetalExplorer(props: MetalExplorerProps) {
@@ -302,9 +371,15 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const [run, status, result, error] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
 
-    const pkgs = result === null ? []: (
-        restrictPkgs === undefined? result: result.filter(pkg => (_.find(restrictPkgs, restrictPkg => (restrictPkg === pkg.pkg)) !== undefined))
-    )
+    const pkgs =
+        result === null
+            ? []
+            : restrictPkgs === undefined
+            ? result
+            : result.filter(
+                  (pkg) =>
+                      _.find(restrictPkgs, (restrictPkg) => restrictPkg === pkg.pkg) !== undefined
+              );
     const detailRef = useRef<MetalPkgDetailHandler>(null);
 
     const isPending = () => status === State.pending;
@@ -355,63 +430,72 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     justifyContent: "space-between",
                 }}
             >
-                <Paper sx={{ width: "auto", height: "auto" }}>
-                    <div style={{
+                <div
+                    style={{
                         display: "flex",
                         flexDirection: "row",
                         alignContent: "center",
                         justifyContent: "space-between",
                         alignItems: "center",
-                    }}>
-                        <Toolbar sx={{ width: "80%" }}>
-                            <IconButton
-                                disabled={isPending()}
-                                color={filters.source.isOn() ? "success" : "secondary"}
-                                onClick={filters.source.onToggle}
-                            >
-                                {MetalViewIcons.SOURCE}
-                            </IconButton>
-                            <IconButton
-                                disabled={isPending()}
-                                color={filters.sink.isOn() ? "success" : "secondary"}
-                                onClick={filters.sink.onToggle}
-                            >
-                                {MetalViewIcons.SINK}
-                            </IconButton>
-                            <IconButton
-                                disabled={isPending()}
-                                color={filters.mapper.isOn() ? "success" : "secondary"}
-                                onClick={filters.mapper.onToggle}
-                            >
-                                {MetalViewIcons.MAPPER}
-                            </IconButton>
-                            <IconButton
-                                disabled={isPending()}
-                                color={filters.fusion.isOn() ? "success" : "secondary"}
-                                onClick={filters.fusion.onToggle}
-                            >
-                                {MetalViewIcons.FUSION}
-                            </IconButton>
-                            <IconButton
-                                disabled={isPending()}
-                                color={filters.setup.isOn() ? "success" : "secondary"}
-                                onClick={filters.setup.onToggle}
-                            >
-                                {MetalViewIcons.SETUP}
-                            </IconButton>
-                        </Toolbar>
-                        <IconButton disabled={isPending()} onClick={load}>
-                                <AiOutlineReload />
+                        height: "8%",
+                    }}
+                >
+                    <Toolbar
+                        sx={{
+                            boxSizing: "border-box",
+                            paddingLeft: "1vw",
+                            width: "80%",
+                            minHeight: "4vh",
+                        }}
+                    >
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.source.isOn() ? "success" : "secondary"}
+                            onClick={filters.source.onToggle}
+                        >
+                            {MetalViewIcons.SOURCE}
                         </IconButton>
-                    </div>
-                    {progress}
-                </Paper>
-                <Box
-                    component={Paper}
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.sink.isOn() ? "success" : "secondary"}
+                            onClick={filters.sink.onToggle}
+                        >
+                            {MetalViewIcons.SINK}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.mapper.isOn() ? "success" : "secondary"}
+                            onClick={filters.mapper.onToggle}
+                        >
+                            {MetalViewIcons.MAPPER}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.fusion.isOn() ? "success" : "secondary"}
+                            onClick={filters.fusion.onToggle}
+                        >
+                            {MetalViewIcons.FUSION}
+                        </IconButton>
+                        <IconButton
+                            disabled={isPending()}
+                            color={filters.setup.isOn() ? "success" : "secondary"}
+                            onClick={filters.setup.onToggle}
+                        >
+                            {MetalViewIcons.SETUP}
+                        </IconButton>
+                    </Toolbar>
+                    <Divider orientation="vertical" flexItem />
+                    <IconButton disabled={isPending()} onClick={load}>
+                        <AiOutlineReload />
+                    </IconButton>
+                </div>
+                {progress}
+                <Paper
+                    square
                     sx={{
                         display: "flex",
                         flexDirection: "column",
-                        height: "90%",
+                        height: "92%",
                         width: "auto",
                         overflow: "hidden",
                         position: "relative",
@@ -440,7 +524,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     </List>
                     <ResizeBackdrop open={isPending()} />
                     <MetalPkgDetail ref={detailRef}></MetalPkgDetail>
-                </Box>
+                </Paper>
             </div>
         </ThemeProvider>
     );

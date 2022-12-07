@@ -3,7 +3,17 @@ import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
 import { VscMerge, VscExpandAll, VscExtensions, VscPackage, VscSymbolClass } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
-import { Box, Button, Paper, Stack, Badge, Divider, Typography, Container, Grid } from "@mui/material";
+import {
+    Box,
+    Button,
+    Paper,
+    Stack,
+    Badge,
+    Divider,
+    Typography,
+    Container,
+    Grid,
+} from "@mui/material";
 import { MouseEvent } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Metal, Metals, MetalTypes } from "../../model/Metal";
@@ -183,14 +193,13 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         <Badge color="secondary" badgeContent={"?"}>
             <div>
                 {nodeView.inputHandle(props.data)}
-                <Paper 
+                <Paper
                     square
                     variant="outlined"
                     sx={{
                         backgroundColor: "#66ffcc",
                         borderWidth: "5px",
                     }}
-                
                 >
                     <div
                         style={{
@@ -290,22 +299,23 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
 
                             <Divider orientation="horizontal" flexItem />
                             <Grid container>
-                                <Grid item xs={1}>
-                                    <div 
-                                        style={{
-                                            fontSize: "1em",
-                                        }}
-                                    >
-                                        <VscSymbolClass/>
-                                    </div>
+                                <Grid
+                                    item
+                                    xs={1}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <VscSymbolClass fontSize={"1em"} />
                                 </Grid>
                                 <Grid item xs={11}>
-                                <Typography variant={"caption"} color={"GrayText"}>
-                                {metalPkg.class}
-                            </Typography>
+                                    <Typography variant={"caption"} color={"GrayText"}>
+                                        {metalPkg.class}
+                                    </Typography>
                                 </Grid>
                             </Grid>
-                            
                         </div>
                     </div>
                 </Paper>
