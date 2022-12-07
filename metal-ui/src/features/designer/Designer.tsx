@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
 import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
@@ -7,7 +7,7 @@ import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow } from "./MetalFlow";
 import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
-import { VscSettingsGear } from "react-icons/vsc";
+import { VscExtensions, VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
 import { useAsync } from "../../api/Hooks";
@@ -31,6 +31,7 @@ export function Designer(props: DesignerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
+    const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly? false: true);
     const [run, status, result, error] = useAsync<Project>();
 
     const project = result === null ? undefined : result;
@@ -42,6 +43,14 @@ export function Designer(props: DesignerProps) {
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
+
+    const onSwitchExplorer = ()=>{
+        if (isReadOnly !== undefined && isReadOnly === false) {
+            return;
+        }
+        setOpenExplorer(!isOpenExplorer);
+    }
+
     const load = useCallback(() => {
         if (token !== null) {
             run(getProjectById(token, id));
@@ -129,7 +138,7 @@ export function Designer(props: DesignerProps) {
                     component={Paper}
                     sx={{
                         height: "100%",
-                        width: isReadOnly ? "100%" : "75%",
+                        width: !isOpenExplorer ? "100%" : "75%",
                     }}
                 >
                     <ReactFlowProvider>
@@ -140,7 +149,7 @@ export function Designer(props: DesignerProps) {
                         />
                     </ReactFlowProvider>
                 </Box>
-                {!isReadOnly && (
+                {isOpenExplorer && (
                     <Box
                         component={Paper}
                         sx={{
@@ -168,6 +177,11 @@ export function Designer(props: DesignerProps) {
                     }}
                 >
                     <VscSettingsGear />
+                </IconButton>
+                <IconButton
+                    onClick={onSwitchExplorer}
+                >
+                    <VscExtensions />
                 </IconButton>
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
