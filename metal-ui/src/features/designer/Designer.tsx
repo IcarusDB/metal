@@ -31,7 +31,7 @@ export function Designer(props: DesignerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly? false: true);
+    const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly ? false : true);
     const [run, status, result, error] = useAsync<Project>();
 
     const project = result === null ? undefined : result;
@@ -44,12 +44,12 @@ export function Designer(props: DesignerProps) {
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
 
-    const onSwitchExplorer = ()=>{
+    const onSwitchExplorer = () => {
         if (isReadOnly !== undefined && isReadOnly === false) {
             return;
         }
         setOpenExplorer(!isOpenExplorer);
-    }
+    };
 
     const load = useCallback(() => {
         if (token !== null) {
@@ -65,7 +65,7 @@ export function Designer(props: DesignerProps) {
     );
 
     const explorer = useMemo(() => {
-        return <MetalExplorer addNode={onAddNode} restrictPkgs={project?.deploy.pkgs}/>;
+        return <MetalExplorer addNode={onAddNode} restrictPkgs={project?.deploy.pkgs} />;
     }, [onAddNode, project?.deploy.pkgs]);
 
     const nodePropsWrap = useCallback(
@@ -77,10 +77,14 @@ export function Designer(props: DesignerProps) {
     );
 
     useMemo(() => {
-        if (mainHandler !== undefined && mainHandler.renameDesigner !== undefined && project !== undefined) {
+        if (
+            mainHandler !== undefined &&
+            mainHandler.renameDesigner !== undefined &&
+            project !== undefined
+        ) {
             mainHandler.renameDesigner(designerId(id, isReadOnly), project.name);
         }
-    }, [id, isReadOnly, mainHandler, project])
+    }, [id, isReadOnly, mainHandler, project]);
 
     const progress = isPending() ? (
         <LinearProgress />
@@ -92,18 +96,18 @@ export function Designer(props: DesignerProps) {
         projectProfileRef.current?.close();
         if (mainHandler !== undefined) {
             if (mainHandler.close !== undefined) {
-                mainHandler.close(designerId(id, isReadOnly))
-                
-                setTimeout(()=>{
+                mainHandler.close(designerId(id, isReadOnly));
+
+                setTimeout(() => {
                     mainHandler.openDesigner({
                         id: id,
                         isReadOnly: isReadOnly,
                         mainHandler: mainHandler,
                     });
-                }, 2000)
+                }, 2000);
             }
         }
-    }
+    };
 
     useEffect(() => {
         load();
@@ -169,20 +173,23 @@ export function Designer(props: DesignerProps) {
                     left: "1vw",
                 }}
             >
-                <IconButton
-                    onClick={() => {
-                        if (projectProfileRef.current !== null) {
-                            projectProfileRef.current.open();
-                        }
-                    }}
-                >
-                    <VscSettingsGear />
-                </IconButton>
-                <IconButton
-                    onClick={onSwitchExplorer}
-                >
-                    <VscExtensions />
-                </IconButton>
+                {!isReadOnly && (
+                    <IconButton
+                        onClick={() => {
+                            if (projectProfileRef.current !== null) {
+                                projectProfileRef.current.open();
+                            }
+                        }}
+                    >
+                        <VscSettingsGear />
+                    </IconButton>
+                )}
+
+                {!isReadOnly && (
+                    <IconButton onClick={onSwitchExplorer}>
+                        <VscExtensions />
+                    </IconButton>
+                )}
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile
