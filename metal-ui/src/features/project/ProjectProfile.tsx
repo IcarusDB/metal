@@ -1,11 +1,15 @@
 import {
     Alert,
     Button,
+    Chip,
     Container,
     Grid,
     IconButton,
     LinearProgress,
+    List,
+    ListItem,
     Paper,
+    Skeleton,
     Stack,
     Step,
     StepLabel,
@@ -13,6 +17,7 @@ import {
     Switch,
     Typography,
 } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
     DataGrid,
     GridColDef,
@@ -35,7 +40,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { VscArrowLeft, VscClose, VscError, VscInfo, VscWarning } from "react-icons/vsc";
+import { VscArrowLeft, VscClose, VscError, VscInfo, VscPackage, VscSymbolParameter, VscWarning } from "react-icons/vsc";
 import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -152,10 +157,12 @@ export const PkgSelector = (props: PkgSelectorProps) => {
         (pkg) => pkg.groupId + ":" + pkg.artifactId + ":" + pkg.version
     );
 
-    const initialSelectionModel: GridSelectionModel = profile === undefined? []: profile?.packages.map(pkg => (`${pkg.groupId}:${pkg.artifactId}:${pkg.version}`));
+    const initialSelectionModel: GridSelectionModel =
+        profile === undefined
+            ? []
+            : profile?.packages.map((pkg) => `${pkg.groupId}:${pkg.artifactId}:${pkg.version}`);
 
     const [selectionModel, setSelectionModel] = useState(initialSelectionModel);
-
 
     const progress =
         status === State.pending ? (
@@ -487,7 +494,7 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
 }
 
 export interface ProjectProfileFinishProps {
-    id?: string,
+    id?: string;
     isCreate: boolean;
     profile: ProjectProfileValue;
     onFinish?: (projectId: string) => void;
@@ -570,9 +577,8 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             return;
         } else {
             const params: ProjectParams = projectParams(profile);
-            run(updateProject(token, id,  params))
+            run(updateProject(token, id, params));
         }
-        
     };
 
     const onOpenProject = () => {
@@ -661,7 +667,11 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                             {"Create"}
                         </Button>
                     )}
-                    {!isCreate && <Button variant={"contained"} onClick={onUpdate}>{"Update"}</Button>}
+                    {!isCreate && (
+                        <Button variant={"contained"} onClick={onUpdate}>
+                            {"Update"}
+                        </Button>
+                    )}
                     {isCreate && isSuccess() && (
                         <Button variant={"contained"} onClick={onOpenProject}>
                             {"Open Project"}
@@ -977,6 +987,194 @@ export const ProjectProfile = forwardRef(
                         </IconButton>
                     </Paper>
                 </div>
+            </ResizeBackdrop>
+        );
+    }
+);
+
+export interface ProjectProfileViewerProps {}
+
+export interface ProjectProfileViewerHandler {
+    open: (project: Project) => void;
+    close: () => void;
+}
+
+const theme = createTheme();
+
+export const ProjectProfileViewer = forwardRef(
+    (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
+        const [project, setProject] = useState<Project>();
+        const [isOpen, setOpen] = useState(false);
+        const onOpen = (project: Project) => {
+            setProject(project);
+            setOpen(true);
+        };
+        const onClose = () => {
+            setOpen(false);
+        };
+        useImperativeHandle(
+            ref,
+            () => ({
+                open: onOpen,
+                close: onClose,
+            }),
+            []
+        );
+
+        if (project === undefined) {
+            return (
+                <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
+                    <Skeleton></Skeleton>
+                </ResizeBackdrop>
+            );
+        }
+
+        const name = project.name;
+        const platformTypes = _.keys(project.deploy.platform);
+        const packages = project.deploy.pkgs;
+        const backendArgs = project.deploy.backend.args;
+        const platformConf = JSON.stringify(project.deploy.platform, null, 2);
+
+        return (
+            <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            <Paper
+                            square
+                            sx={{
+                                width: "100%",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "flex-start",
+                            }}
+                            >
+                            <IconButton onClick={onClose}>
+                                <VscClose />
+                            </IconButton>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={2}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            // backgroundColor: "white",
+                        }}
+                        >
+                            <Typography>{"Name"}</Typography> 
+                        </Grid>
+                        <Grid item xs={10}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                        }}
+                        >
+                            <Typography>{name}</Typography>
+                        </Grid>
+                        <Grid item xs={2}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            backgroundColor: "white",
+                        }}
+                        >
+                             <Typography>{"Platform Type"}</Typography> 
+                        </Grid>
+                        <Grid item xs={10}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            backgroundColor: "white",
+                        }}
+                        >
+                            <Typography>
+                                {platformTypes.length > 0 ? platformTypes[0] : "?"}
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={2}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            // backgroundColor: "white",
+                        }}
+                        >
+                             <Typography>{"Packages"}</Typography> 
+                        </Grid>
+                        <Grid
+                            item
+                            xs={10}
+                            sx={{
+                                maxHeight: "30vh",
+                                overflowY: "hidden",
+                            }}
+                        >
+                            <List
+                                sx={{
+                                    height: "100%",
+                                    overflowY: "scroll",
+                                }}
+                            >
+                                {packages.map((pkg) => (
+                                    <ListItem>
+                                        <Chip label={pkg} icon={<VscPackage />} color={"primary"} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Grid>
+                        <Grid item xs={2}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            backgroundColor: "white",
+                        }}
+                        >
+                           <Typography> {"Backend Arguments"} </Typography> 
+                        </Grid>
+                        <Grid item xs={10}
+                            sx={{
+                                backgroundColor: "white",
+                            }}
+                        >
+                            <List>
+                                {backendArgs.map((arg) => (
+                                    <ListItem>
+                                        <Chip label={arg} icon={<VscSymbolParameter />} variant="outlined" color={"primary"} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Grid>
+                        <Grid item xs={2}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            // backgroundColor: "white",
+                        }}
+                        >
+                           <Typography> {"Platform configuration"} </Typography> 
+                        </Grid>
+                        <Grid item xs={10}>
+                            <Editor
+                                height={"60vh"}
+                                defaultLanguage={"json"}
+                                defaultValue={platformConf}
+                                theme={"vs-dark"}
+                            ></Editor>
+                        </Grid>
+                    </Grid>
             </ResizeBackdrop>
         );
     }

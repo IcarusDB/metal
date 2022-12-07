@@ -6,8 +6,8 @@ import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow } from "./MetalFlow";
-import { ProjectProfile, ProjectProfileHandler } from "../project/ProjectProfile";
-import { VscExtensions, VscSettingsGear } from "react-icons/vsc";
+import { ProjectProfile, ProjectProfileHandler, ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
+import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
 import { useAsync } from "../../api/Hooks";
@@ -38,6 +38,7 @@ export function Designer(props: DesignerProps) {
     const specLoader = useSpecLoader(token, project?.spec);
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
+    const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const metalFlowHandler = useMetalFlow();
     const nodeEditorHandler = useMetalNodeEditor();
 
@@ -185,6 +186,14 @@ export function Designer(props: DesignerProps) {
                     </IconButton>
                 )}
 
+                <IconButton
+                    onClick={()=>{
+                        projectProfileViewerRef.current?.open(project);
+                    }}
+                >
+                    <VscOpenPreview />
+                </IconButton>
+
                 {!isReadOnly && (
                     <IconButton onClick={onSwitchExplorer}>
                         <VscExtensions />
@@ -199,6 +208,7 @@ export function Designer(props: DesignerProps) {
                 project={project}
                 ref={projectProfileRef}
             />
+            <ProjectProfileViewer ref={projectProfileViewerRef}/>
         </div>
     );
 }
