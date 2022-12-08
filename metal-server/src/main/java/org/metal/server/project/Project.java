@@ -644,6 +644,19 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void deployOfId(RoutingContext ctx) {
+      String deployId = ctx.request().params().get("deployId");
+
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.deployOfId(deployId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void reDeploy(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");

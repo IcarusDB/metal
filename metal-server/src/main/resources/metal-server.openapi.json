@@ -1889,6 +1889,59 @@
           }
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-53724447-run"
+      },
+      "post": {
+        "summary": "部署工程根据deploy id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "status": "OK",
+                      "data": {
+                        "action": "CreateSubmissionResponse",
+                        "message": "Driver successfully submitted as driver-20221208082258-0000",
+                        "serverSparkVersion": "3.3.0",
+                        "submissionId": "driver-20221208082258-0000",
+                        "success": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-53818329-run"
       }
     },
     "/api/v1/projects/copy": {
@@ -2007,6 +2060,34 @@
                   "properties": {},
                   "x-apifox-ignore-properties": [],
                   "x-apifox-orders": []
+                },
+                "examples": {
+                  "1": {
+                    "summary": "成功示例",
+                    "value": {
+                      "status": "OK",
+                      "data": {
+                        "action": "KillSubmissionResponse",
+                        "message": "Kill request for driver-20221208082258-0000 submitted",
+                        "serverSparkVersion": "3.3.0",
+                        "submissionId": "driver-20221208082258-0000",
+                        "success": true
+                      }
+                    }
+                  },
+                  "2": {
+                    "summary": "成功示例",
+                    "value": {
+                      "status": "OK",
+                      "data": {
+                        "action": "KillSubmissionResponse",
+                        "message": "Kill request for driver-20221208082258-0000 submitted",
+                        "serverSparkVersion": "3.3.0",
+                        "submissionId": "driver-20221208082258-0000",
+                        "success": true
+                      }
+                    }
+                  }
                 }
               }
             }

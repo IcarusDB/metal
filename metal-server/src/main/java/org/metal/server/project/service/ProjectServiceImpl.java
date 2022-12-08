@@ -307,46 +307,60 @@ public class ProjectServiceImpl implements IProjectService{
   public Future<JsonObject> deploy(String userId, String name) {
     return getOfName(userId, name).compose((JsonObject project) -> {
       JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
-      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
-      if (backendStatus != null && !backendStatus.isEmpty()) {
-        return Future.failedFuture("One backend has been deployed. User can\'t deploy the other new backend before that the deployed backend is cleaned.");
-      }
-
-      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-      int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
-      List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDBEx.DEPLOY_PKGS));
-      JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
-      List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDBEx.DEPLOY_BACKEND_ARGS));
-
-      backendArgs = antiInject(backendArgs);
-      String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
-      List<String> defaultBackendArgs = List.of(
-          "--interactive-mode",
-          "--deploy-id", deployId,
-          "--deploy-epoch", String.valueOf(epoch),
-          "--report-service-address", reportServiceAddress,
-          "--rest-api-port", String.valueOf(18000)
-      );
-
-      List<String> appArgs = new ArrayList<>();
-      appArgs.addAll(defaultBackendArgs);
-      appArgs.addAll(backendArgs);
-
-      if (platform.fieldNames().contains("spark.standalone")) {
-        try {
-          JsonObject sparkStandalone = platform.getJsonObject("spark.standalone");
-          if (sparkStandalone == null || sparkStandalone.isEmpty()) {
-            return Future.failedFuture(String.format("Fail deploy [%s-%d]. No spark.standalone configurations found.", deployId, epoch));
-          }
-          return sparkStandaloneDeploy(deployId, epoch, appArgs, sparkStandalone);
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
-      }
-
-      return Future.failedFuture("Fail to found any legal platform configuration.");
+      return onDeploy(deploy);
     });
+  }
+
+  @Override
+  public Future<JsonObject> deployOfId(String deployId) {
+    return getDeploymentOfDeployId(deployId).compose((JsonObject deploy) -> {
+      return onDeploy(deploy);
+    });
+  }
+
+  private Future<JsonObject> onDeploy(JsonObject deploy) {
+    JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
+    JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+    if (backendStatus != null && !backendStatus.isEmpty()) {
+      return Future.failedFuture(
+          "One backend has been deployed. User can\'t deploy the other new backend before that the deployed backend is cleaned.");
+    }
+
+    String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+    int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+    List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDBEx.DEPLOY_PKGS));
+    JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDBEx.DEPLOY_BACKEND_ARGS));
+
+    backendArgs = antiInject(backendArgs);
+    String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
+    List<String> defaultBackendArgs = List.of(
+        "--interactive-mode",
+        "--deploy-id", deployId,
+        "--deploy-epoch", String.valueOf(epoch),
+        "--report-service-address", reportServiceAddress,
+        "--rest-api-port", String.valueOf(18000)
+    );
+
+    List<String> appArgs = new ArrayList<>();
+    appArgs.addAll(defaultBackendArgs);
+    appArgs.addAll(backendArgs);
+
+    if (platform.fieldNames().contains("spark.standalone")) {
+      try {
+        JsonObject sparkStandalone = platform.getJsonObject("spark.standalone");
+        if (sparkStandalone == null || sparkStandalone.isEmpty()) {
+          return Future.failedFuture(
+              String.format("Fail deploy [%s-%d]. No spark.standalone configurations found.",
+                  deployId, epoch));
+        }
+        return sparkStandaloneDeploy(deployId, epoch, appArgs, sparkStandalone);
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    }
+
+    return Future.failedFuture("Fail to found any legal platform configuration.");
   }
 
   @Override
