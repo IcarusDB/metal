@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
-import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
+import { Alert, Divider, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow } from "./MetalFlow";
-import { ProjectProfile, ProjectProfileHandler, ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
+import {
+    ProjectProfile,
+    ProjectProfileHandler,
+    ProjectProfileViewer,
+    ProjectProfileViewerHandler,
+} from "../project/ProjectProfile";
 import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
 import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
@@ -19,6 +24,7 @@ import { useSpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
 import { useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
+import { BackendPanel, BackendPanelHandler } from "./BackendPanel";
 
 export interface DesignerProps extends IReadOnly {
     id: string;
@@ -39,6 +45,7 @@ export function Designer(props: DesignerProps) {
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
+    const backendPanelRef = useRef<BackendPanelHandler>(null);
     const metalFlowHandler = useMetalFlow();
     const nodeEditorHandler = useMetalNodeEditor();
 
@@ -172,33 +179,52 @@ export function Designer(props: DesignerProps) {
                     position: "absolute",
                     top: "1vh",
                     left: "1vw",
+                    paddingTop: "1em",
+                    paddingBottom: "1em",
+                    paddingLeft: "1em",
+                    paddingRight: "1em",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    justifyContent: "flex-start",
                 }}
             >
-                {!isReadOnly && (
-                    <IconButton
-                        onClick={() => {
-                            if (projectProfileRef.current !== null) {
-                                projectProfileRef.current.open();
-                            }
-                        }}
-                    >
-                        <VscSettingsGear />
-                    </IconButton>
-                )}
-
-                <IconButton
-                    onClick={()=>{
-                        projectProfileViewerRef.current?.open(project);
+                <div
+                    style={{
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
                     }}
                 >
-                    <VscOpenPreview />
-                </IconButton>
+                    {!isReadOnly && (
+                        <IconButton
+                            onClick={() => {
+                                if (projectProfileRef.current !== null) {
+                                    projectProfileRef.current.open();
+                                }
+                            }}
+                        >
+                            <VscSettingsGear />
+                        </IconButton>
+                    )}
 
-                {!isReadOnly && (
-                    <IconButton onClick={onSwitchExplorer}>
-                        <VscExtensions />
+                    <IconButton
+                        onClick={() => {
+                            projectProfileViewerRef.current?.open(project);
+                        }}
+                    >
+                        <VscOpenPreview />
                     </IconButton>
-                )}
+
+                    {!isReadOnly && (
+                        <IconButton onClick={onSwitchExplorer}>
+                            <VscExtensions />
+                        </IconButton>
+                    )}
+                </div>
+                <BackendPanel deployId={project.deploy.id} ref={backendPanelRef}/>
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile
@@ -208,7 +234,7 @@ export function Designer(props: DesignerProps) {
                 project={project}
                 ref={projectProfileRef}
             />
-            <ProjectProfileViewer ref={projectProfileViewerRef}/>
+            <ProjectProfileViewer ref={projectProfileViewerRef} />
         </div>
     );
 }
