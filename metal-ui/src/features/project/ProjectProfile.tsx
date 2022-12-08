@@ -45,14 +45,14 @@ import { platformSchema, platformType, PlatformType, Project } from "../../model
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
 import _ from "lodash";
-import { getAllMetalPkgsOfUserAccess } from "../designer/explorer/MetalPkgApi";
+import { getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { IChangeEvent } from "@rjsf/core";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
-import { createProject, ProjectParams, updateProject } from "./ProjectApi";
+import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
 
 export interface ProjectBasicProfileValue {

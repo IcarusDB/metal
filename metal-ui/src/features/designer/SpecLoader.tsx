@@ -5,7 +5,7 @@ import { useAsync } from "../../api/Hooks";
 import { metalType } from "../../model/Metal";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Spec } from "../../model/Spec";
-import { getAllMetalPkgsOfClasses } from "./explorer/MetalPkgApi";
+import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
 import { MetalNodeProps } from "./MetalView";
 
 export interface SpecLoaderProps {

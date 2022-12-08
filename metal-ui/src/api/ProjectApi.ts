@@ -1,6 +1,6 @@
 import axios from "axios";
-import {ApiResponse, ApiResponseEntity, timeout} from "../../api/APIs";
-import {Project} from "../../model/Project";
+import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
+import {Deploy, Project} from "../model/Project";
 import _ from "lodash"
 
 const instance = axios.create({
@@ -9,6 +9,14 @@ const instance = axios.create({
     },
     timeout: timeout()
 })
+
+function idMap <T> (obj: any): T {
+    obj = _.mapKeys(obj, (val, key) => {
+        return key === '_id'? 'id': key
+    })
+    const target: T = obj
+    return target;
+}
 
 function projectMap (obj: any): Project {
     obj.user = _.mapKeys(obj.user, (val, key) => {
@@ -155,6 +163,24 @@ export async function updateProject(token:string, id: string, params: ProjectPar
             }
             const projectId: string = resp.data;
             return projectId;
+        } catch (err) {
+            return Promise.reject(err)
+        }
+    });
+}
+
+export async function getDeploy(token:string, deployId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}`;
+    return instance.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data
+            ApiResponse.mayBeFailure(resp);
+            const deploy: Deploy = idMap<Deploy>(resp.data);
+            return deploy;
         } catch (err) {
             return Promise.reject(err)
         }

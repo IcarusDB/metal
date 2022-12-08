@@ -44,7 +44,7 @@ import { MetalPkg } from "../../../model/MetalPkg";
 import { ResizeBackdrop } from "../../ui/ResizeBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
-import { getAllMetalPkgsOfUserAccess } from "./MetalPkgApi";
+import { getAllMetalPkgsOfUserAccess } from "../../../api/MetalPkgApi";
 
 const theme = createTheme();
 moment.locale("zh_CN");

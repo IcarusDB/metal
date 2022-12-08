@@ -1,6 +1,6 @@
 import './SignIn.css'
 import React, {useEffect, useRef, useState} from "react";
-import {authenticate, UserBasicCredentials} from "./UserApi";
+import {authenticate, UserBasicCredentials} from "../../api/UserApi";
 import {useAppDispatch, useAppSelector} from "../../app/hooks";
 import {auth, tokenSelector} from "./userSlice";
 import {createTheme, ThemeProvider} from '@mui/material/styles';

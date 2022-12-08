@@ -1,6 +1,6 @@
 import axios, {AxiosBasicCredentials} from "axios";
-import {ApiResponse, ApiResponseEntity, ApiResponseStatus, timeout} from "../../api/APIs";
-import {User} from "../../model/User";
+import {ApiResponse, ApiResponseEntity, ApiResponseStatus, timeout} from "./APIs";
+import {User} from "../model/User";
 
 const instance = axios.create({
     headers: {

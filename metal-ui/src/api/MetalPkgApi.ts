@@ -1,7 +1,7 @@
 import axios from "axios";
 import _ from "lodash";
-import { ApiResponse, ApiResponseEntity, timeout } from "../../../api/APIs";
-import { MetalPkg } from "../../../model/MetalPkg";
+import { ApiResponse, ApiResponseEntity, timeout } from "./APIs";
+import { MetalPkg } from "../model/MetalPkg";
 
 const instance = axios.create({
     headers: {

@@ -17,7 +17,7 @@ import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
-import { getProjectById } from "../project/ProjectApi";
+import { getProjectById } from "../../api/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { useSpecLoader } from "./SpecLoader";

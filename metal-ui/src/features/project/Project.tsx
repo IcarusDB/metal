@@ -33,7 +33,7 @@ import {
 import { HiStop } from "react-icons/hi";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { BackendState, BackendStatus, Deploy, Project } from "../../model/Project";
-import { getAllProjectOfUser } from "./ProjectApi";
+import { getAllProjectOfUser } from "../../api/ProjectApi";
 import { State } from "../../api/State";
 import { useAsync } from "../../api/Hooks";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
