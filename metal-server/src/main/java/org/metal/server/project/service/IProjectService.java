@@ -88,6 +88,7 @@ public interface IProjectService {
 
   public Future<JsonObject> getSpecSchemaOfMetalId(String deployId, String metalId);
 
+  public Future<JsonObject> getDeploymentOfDeployId(String deployId);
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);

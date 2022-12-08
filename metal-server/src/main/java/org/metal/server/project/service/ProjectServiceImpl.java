@@ -203,6 +203,11 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> getDeploymentOfDeployId(String deployId) {
+    return ProjectDBEx.getDeployOfDeployId(mongo, deployId);
+  }
+
+  @Override
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId) {
     return ProjectDBEx.getBackendStatus(mongo, deployId);
   }
