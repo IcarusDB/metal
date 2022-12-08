@@ -55,7 +55,7 @@ export const BackendPanel = forwardRef(
         const token: string | null = useAppSelector((state) => {
             return tokenSelector(state);
         });
-        const { deployId } = props;
+        const { deployId, currentSpec } = props;
         const [fetchDeploy, fetchDeployStatus, deploy, fetchDeployError] = useAsync<Deploy>();
         // const [deployBackend, deployBackendStatus, deployResult, delployBackendError] = useAsync<>();
 
@@ -120,7 +120,7 @@ export const BackendPanel = forwardRef(
                         }}
                     >
                         <Divider variant="middle" orientation="vertical" flexItem />
-                        <IconButton>
+                        <IconButton onClick={()=>{console.log(currentSpec())}}>
                             <VscDebugCoverage />
                         </IconButton>
                         <IconButton>

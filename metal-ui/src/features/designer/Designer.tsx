@@ -59,11 +59,25 @@ export function Designer(props: DesignerProps) {
         setOpenExplorer(!isOpenExplorer);
     };
 
+    const rename = useCallback((newName: string) => {
+        if (
+            mainHandler !== undefined &&
+            mainHandler.renameDesigner !== undefined
+        ) {
+            mainHandler.renameDesigner(designerId(id, isReadOnly), newName);
+        }
+    }, [id, isReadOnly, mainHandler]);
+
     const load = useCallback(() => {
         if (token !== null) {
-            run(getProjectById(token, id));
+            run(getProjectById(token, id)
+            .then(proj => {
+                rename(proj.name);
+                return proj;
+            }
+            ));
         }
-    }, [id, run, token]);
+    }, [id, rename, run, token]);
 
     const onAddNode = useCallback(
         (nodeProps: MetalNodeProps) => {
@@ -84,15 +98,7 @@ export function Designer(props: DesignerProps) {
         [nodeEditorHandler]
     );
 
-    useMemo(() => {
-        if (
-            mainHandler !== undefined &&
-            mainHandler.renameDesigner !== undefined &&
-            project !== undefined
-        ) {
-            mainHandler.renameDesigner(designerId(id, isReadOnly), project.name);
-        }
-    }, [id, isReadOnly, mainHandler, project]);
+    
 
     const progress = isPending() ? (
         <LinearProgress />
@@ -224,7 +230,7 @@ export function Designer(props: DesignerProps) {
                         </IconButton>
                     )}
                 </div>
-                <BackendPanel deployId={project.deploy.id} currentSpec={metalFlowHandler.export} ref={backendPanelRef}/>
+                <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowHandler.export()}} ref={backendPanelRef}/>
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile
