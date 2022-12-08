@@ -224,7 +224,7 @@ export function Designer(props: DesignerProps) {
                         </IconButton>
                     )}
                 </div>
-                <BackendPanel deployId={project.deploy.id} ref={backendPanelRef}/>
+                <BackendPanel deployId={project.deploy.id} currentSpec={metalFlowHandler.export} ref={backendPanelRef}/>
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile

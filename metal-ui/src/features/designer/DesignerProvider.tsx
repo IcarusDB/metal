@@ -2,6 +2,7 @@ import _ from "lodash";
 import React, { createContext, ReactNode, useContext } from "react"
 import { Node } from "reactflow";
 import { Mutable } from "../../model/Mutable";
+import { emptySpec, Spec } from "../../model/Spec";
 import { MetalNodeProps } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 
@@ -11,6 +12,7 @@ export interface MetalFlowHandler {
     outputs: (id: string) => Node<MetalNodeProps>[];
     addNode: (nodeProps: MetalNodeProps) => void;
     load: (newFlow: SpecFlow | undefined) => void;
+    export: () => Spec;
 }
 
 export const metalFlowHandlerInitial: MetalFlowHandler = {
@@ -18,6 +20,7 @@ export const metalFlowHandlerInitial: MetalFlowHandler = {
     outputs: (id: string) => [],
     addNode: (nodeProps: MetalNodeProps) => {},
     load: (newFlow: SpecFlow | undefined) => {},
+    export: () => (emptySpec()),
 };
 
 export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implements MetalFlowHandler {
@@ -35,6 +38,10 @@ export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implement
 
     load(newFlow: SpecFlow | undefined) {
         this.get().load(newFlow);
+    }
+
+    export() {
+        return this.get().export();
     }
 }
 

@@ -13,6 +13,7 @@ import { useAsync } from "../../api/Hooks";
 import { getDeploy } from "../../api/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { BackendState, BackendStatus, Deploy } from "../../model/Project";
+import { Spec } from "../../model/Spec";
 import { tokenSelector } from "../user/userSlice";
 
 export function backendStatusColor(status: BackendState) {
@@ -42,6 +43,7 @@ export function BackendStatusView(props: BackendStatusViewProps) {
 
 export interface BackendPanelProps {
     deployId: string;
+    currentSpec: () => Spec;
 }
 
 export interface BackendPanelHandler {
@@ -54,7 +56,8 @@ export const BackendPanel = forwardRef(
             return tokenSelector(state);
         });
         const { deployId } = props;
-        const [fetchDeploy, deployStatus, deploy, fetchDeployError] = useAsync<Deploy>();
+        const [fetchDeploy, fetchDeployStatus, deploy, fetchDeployError] = useAsync<Deploy>();
+        // const [deployBackend, deployBackendStatus, deployResult, delployBackendError] = useAsync<>();
 
         const onLoad = useCallback(() => {
             if (token === null) {

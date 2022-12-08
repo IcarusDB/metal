@@ -27,11 +27,11 @@ import {
     useNodesState,
     useEdgesState,
     MarkerType,
-    getRectOfNodes,
     useReactFlow,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
+import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
 import { useMutableMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
@@ -311,14 +311,27 @@ export const MetalFlow = (props: MetalFlowProps) => {
         [loadFlow]
     );
 
+    const exportSpec = useCallback(()=>{
+        const nodes: Node<MetalNodeProps>[] = flowInstance.getNodes();
+        const edges: Edge<any>[] = flowInstance.getEdges();
+        const spec: Spec = {
+            version: "1.0",
+            metals: nodes.map(node => node.data.metal),
+            edges: edges.map(edge => ({left: edge.source, right: edge.target})),
+            waitFor: []
+        }
+        return spec;
+    }, [flowInstance]);
+
     useMemo(() => {
         handler.set({
             inputs: inputs,
             outputs: outputs,
             addNode: addNode,
             load: load,
+            export: exportSpec,
         });
-    }, [addNode, handler, inputs, load, outputs]);
+    }, [addNode, exportSpec, handler, inputs, load, outputs]);
 
     const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
     const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);
