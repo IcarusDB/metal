@@ -368,29 +368,44 @@ public class ProjectServiceImpl implements IProjectService{
     return getOfName(userId, name).compose((JsonObject project) -> {
       try {
         JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
-        if (deploy == null || deploy.isEmpty()) {
-          String msg = "Fail to reDeploy, no deploy found.";
-          LOGGER.error(msg);
-          return Future.failedFuture(msg);
-        }
-
-        String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-        if (deployId == null || deployId.isBlank()) {
-          String msg = "Fail to reDeploy, no deploy id found.";
-          LOGGER.error(msg);
-          return Future.failedFuture(msg);
-        }
-
-        return forceKillBackend(deployId).compose((JsonObject ret) -> {
-          return ProjectDBEx.increaseDeployEpoch(mongo, deployId);
-        }).compose((JsonObject ret) -> {
-          return deploy(userId, name);
-        });
+        return reDeploy(deploy);
       } catch (Exception e) {
-        LOGGER.error(e);
         return Future.failedFuture(e);
       }
     });
+  }
+
+  @Override
+  public Future<JsonObject> reDeployOfId(String userId, String deployId) {
+    return getDeploymentOfDeployId(deployId).compose((JsonObject deploy) -> {
+      return reDeploy(deploy);
+    });
+  }
+
+  private Future<JsonObject> reDeploy(JsonObject deploy ) {
+    try {
+      if (deploy == null || deploy.isEmpty()) {
+        String msg = "Fail to reDeploy, no deploy found.";
+        LOGGER.error(msg);
+        return Future.failedFuture(msg);
+      }
+
+      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+      if (deployId == null || deployId.isBlank()) {
+        String msg = "Fail to reDeploy, no deploy id found.";
+        LOGGER.error(msg);
+        return Future.failedFuture(msg);
+      }
+
+      return forceKillBackend(deployId).compose((JsonObject ret) -> {
+        return ProjectDBEx.increaseDeployEpoch(mongo, deployId);
+      }).compose((JsonObject ret) -> {
+        return deployOfId(deployId);
+      });
+    } catch (Exception e) {
+      LOGGER.error(e);
+      return Future.failedFuture(e);
+    }
   }
 
   private Future<JsonObject> sparkStandaloneDeploy(String deployId, int epoch, List<String> appArgs,
@@ -527,39 +542,62 @@ public class ProjectServiceImpl implements IProjectService{
   @Override
   public Future<JsonObject> analysis(String userId, String name, JsonObject spec) {
     return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
-      try {
-        JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
-        checkBackendUp(deploy);
-        JsonObject address = backendAddress(deploy);
-        return ProjectDBEx.updateSpec(mongo, userId, name, spec).compose((JsonObject ret) -> {
-          BackendService backendService = BackendService.create(vertx, address);
-          return backendService.analyse(spec);
-        });
-      } catch (Exception e) {
-        return Future.failedFuture(e);
-      }
+      return analysisSpec(userId, spec, proj);
+    });
+  }
+
+  private Future<JsonObject> analysisSpec(String userId, JsonObject spec, JsonObject proj) {
+    try {
+      String projectName = proj.getString(ProjectDBEx.NAME);
+      JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+      checkBackendUp(deploy);
+      JsonObject address = backendAddress(deploy);
+      return ProjectDBEx.updateSpec(mongo, userId, projectName, spec).compose((JsonObject ret) -> {
+        BackendService backendService = BackendService.create(vertx, address);
+        return backendService.analyse(spec);
+      });
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+  }
+
+  @Override
+  public Future<JsonObject> analysisOfId(String userId, String id, JsonObject spec) {
+    return ProjectDBEx.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      return analysisSpec(userId, proj, spec);
     });
   }
 
   @Override
   public Future<JsonObject> exec(String userId, String name) {
     return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
-      try {
-        JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
-        checkBackendUp(deploy);
-        JsonObject address = backendAddress(deploy);
-        return execService.add(userId, proj).compose((String execId) -> {
-          BackendService backendService = BackendService.create(vertx, address);
-          JsonObject execArgs = new JsonObject();
-          execArgs.put("id", execId);
-          return backendService.exec(execArgs).compose(r -> {
-            return Future.succeededFuture(new JsonObject().put("status", "OK"));
-          });
-        });
-      } catch (Exception e) {
-        return Future.failedFuture(e);
-      }
+      return execProject(userId, proj);
     });
+  }
+
+  @Override
+  public Future<JsonObject> execOfId(String userId, String id) {
+    return ProjectDBEx.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      return execProject(userId, proj);
+    });
+  }
+
+  private Future<JsonObject> execProject(String userId, JsonObject proj) {
+    try {
+      JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+      checkBackendUp(deploy);
+      JsonObject address = backendAddress(deploy);
+      return execService.add(userId, proj).compose((String execId) -> {
+        BackendService backendService = BackendService.create(vertx, address);
+        JsonObject execArgs = new JsonObject();
+        execArgs.put("id", execId);
+        return backendService.exec(execArgs).compose(r -> {
+          return Future.succeededFuture(new JsonObject().put("status", "OK"));
+        });
+      });
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   private Future<JsonObject> sparkStandaloneForceKill(JsonObject tracer, JsonObject restApi) {

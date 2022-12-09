@@ -3186,6 +3186,199 @@
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-52382456-run"
       }
+    },
+    "/api/v1/projects/id/{id}/spec": {
+      "post": {
+        "summary": "提交分析Spec根据id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "spec": {
+                  "version": "1.0",
+                  "metals": [
+                    {
+                      "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "id": "00-00",
+                      "name": "source-00",
+                      "props": {
+                        "schema": "",
+                        "path": "hdfs://namenode.hdfs.metal.org:9000/metal/test.json"
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.SqlMMapper",
+                      "id": "01-00",
+                      "name": "mapper-00",
+                      "props": {
+                        "tableAlias": "source",
+                        "sql": "select * from source where id != \"0001\""
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-00",
+                      "name": "sink-00",
+                      "props": {
+                        "numRows": 10
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-01",
+                      "name": "sink-01",
+                      "props": {
+                        "numRows": 10
+                      }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "left": "00-00",
+                      "right": "01-00"
+                    },
+                    {
+                      "left": "01-00",
+                      "right": "02-00"
+                    },
+                    {
+                      "left": "00-00",
+                      "right": "02-01"
+                    }
+                  ],
+                  "waitFor": [
+                    {
+                      "left": "02-00",
+                      "right": "02-01"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-54023817-run"
+      }
+    },
+    "/api/v1/projects/deploy/{deployId}/epoch": {
+      "put": {
+        "summary": "重新部署后端 根据deploy id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{test_deploy_id}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-54024325-run"
+      }
+    },
+    "/api/v1/projects/id/{id}/spec/current/exec": {
+      "post": {
+        "summary": "执行 根据id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-54029130-run"
+      }
     }
   },
   "components": {

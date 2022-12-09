@@ -115,7 +115,13 @@ public interface IProjectService {
 
   public Future<JsonObject> reDeploy(String userId, String name);
 
+  public Future<JsonObject> reDeployOfId(String userId, String deployId);
+
   public Future<JsonObject> analysis(String userId, String name, JsonObject spec);
 
+  public Future<JsonObject> analysisOfId(String userId, String id, JsonObject spec);
+
   public Future<JsonObject> exec(String userId, String name);
+
+  public Future<JsonObject> execOfId(String userId, String id);
 }

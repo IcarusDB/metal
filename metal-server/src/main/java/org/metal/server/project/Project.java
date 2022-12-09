@@ -672,6 +672,21 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void reDeployOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String deployId = ctx.request().params().get("deployId");
+
+      if (OnFailure.doTry(ctx, () -> {
+        return deployId == null || deployId.isBlank();
+      }, "Fail to found deploy id in request.", 400)) {
+        return;
+      }
+
+      Future<JsonObject> result = service.reDeployOfId(userId, deployId);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void analysis(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
@@ -701,6 +716,39 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.analysis(userId, name, spec);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void analysisOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (
+          OnFailure.doTry(ctx, () -> {
+            return id == null || id.isBlank();
+          }, "Fail to found id in request.", 400)
+      ) {
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      JsonObject spec = body.getJsonObject("spec");
+      if (OnFailure.doTry(ctx, () -> {
+        return spec == null || spec.isEmpty();
+      }, "Fail to found legal spec in request.", 400)) {
+        return;
+      }
+
+      try {
+        SpecJson.check(spec);
+      } catch (IllegalArgumentException e) {
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
+        return;
+      }
+
+      Future<JsonObject> result = service.analysisOfId(userId, id, spec);
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
@@ -744,6 +792,22 @@ public class Project extends AbstractVerticle {
       }
 
       Future<JsonObject> result = service.exec(userId, name);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void execOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (
+          OnFailure.doTry(ctx, () -> {
+            return id == null || id.isBlank();
+          }, "Fail to found id in request.", 400)
+      ) {
+        return;
+      }
+
+      Future<JsonObject> result = service.execOfId(userId, id);
       RestServiceEnd.end(ctx, result, LOGGER);
     }
   }
