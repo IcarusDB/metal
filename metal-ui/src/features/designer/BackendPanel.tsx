@@ -1,4 +1,5 @@
 import { Chip, Divider, Grid, IconButton, Paper, Skeleton, Typography } from "@mui/material";
+import { AxiosError } from "axios";
 import moment from "moment";
 import {
     ForwardedRef,
@@ -9,8 +10,9 @@ import {
     useState,
 } from "react";
 import { VscDebugCoverage, VscDebugStart, VscVmConnect, VscVmOutline } from "react-icons/vsc";
+import { ApiResponse, ApiResponseEntity } from "../../api/APIs";
 import { useAsync } from "../../api/Hooks";
-import { getDeploy } from "../../api/ProjectApi";
+import { deployBackendOfId, DeployResponse, getBackendStatus, getDeploy, undeployBackendOfId, UnDeployResponse } from "../../api/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { BackendState, BackendStatus, Deploy } from "../../model/Project";
 import { Spec } from "../../model/Spec";
@@ -56,31 +58,91 @@ export const BackendPanel = forwardRef(
             return tokenSelector(state);
         });
         const { deployId, currentSpec } = props;
-        const [fetchDeploy, fetchDeployStatus, deploy, fetchDeployError] = useAsync<Deploy>();
-        // const [deployBackend, deployBackendStatus, deployResult, delployBackendError] = useAsync<>();
+        // const [fetchDeploy, fetchDeployStatus, deploy, fetchDeployError] = useAsync<Deploy>();
+        const [fetchBackendStatus, fetchBackendStatusStatus, backendStatus, fetchBackendStatusError] = useAsync<BackendStatus>();
+        const [deployBackend, deployBackendStatus, deployResult, deployBackendError] = useAsync<DeployResponse>();
+        const [undeployBackend, undeployBackendStatus, undeployResult, undeployBackendError] = useAsync<UnDeployResponse>();
 
-        const onLoad = useCallback(() => {
+        const error = useCallback(() => {
+            if (fetchBackendStatusError !== null) {
+                const backendStatusError: AxiosError<ApiResponseEntity> = fetchBackendStatusError;
+                const apiResponseError = ApiResponse.extractErrorMessage(backendStatusError);
+                if (apiResponseError === undefined) {
+                    return "Fail to fetch backend status.";
+                }
+                return apiResponseError;
+                
+            }
+            if (deployBackendError !== null) {
+                const deployError: AxiosError<ApiResponseEntity> = deployBackendError;
+                const apiResponseError = ApiResponse.extractErrorMessage(deployError);
+                if (apiResponseError === undefined) {
+                    return "Fail to deploy backend status.";
+                }
+                return apiResponseError;
+            }
+            if (undeployBackendError !== null) {
+                const undeployError: AxiosError<ApiResponseEntity> = undeployBackendError;
+                const apiResponseError = ApiResponse.extractErrorMessage(undeployError);
+                if (apiResponseError === undefined) {
+                    return "Fail to undeploy backend status.";
+                }
+                return apiResponseError;
+            }
+
+
+        }, [deployBackendError, fetchBackendStatusError, undeployBackendError]);
+        
+        const isDeploySuccess = useCallback(()=>{
+            if (backendStatus === null) {
+                return false;
+            }
+            if (backendStatus.current === BackendState.DOWN || backendStatus.current === BackendState.FAILURE) {
+                return false;
+            }
+            return true;
+        }, [backendStatus]);
+
+        const onLoadBackendStatus = useCallback(() => {
+            if (token === null) {
+                return ;
+            }
+            fetchBackendStatus(getBackendStatus(token, deployId));
+        }, [deployId, fetchBackendStatus, token])
+
+        const onDeploy = useCallback(() => {
             if (token === null) {
                 return;
             }
-            fetchDeploy(getDeploy(token, deployId));
-        }, [deployId, fetchDeploy, token]);
+            deployBackend(deployBackendOfId(token, deployId));
+        }, [deployBackend, deployId, token])
+
+        const onUndeploy = useCallback(() => {
+            if (token === null) {
+                return;
+            }
+            undeployBackend(undeployBackendOfId(token, deployId));
+        }, [deployId, token, undeployBackend]);
 
         useImperativeHandle(
             ref,
             () => ({
-                load: onLoad,
+                load: onLoadBackendStatus,
             }),
-            [onLoad]
+            [onLoadBackendStatus]
         );
 
         useEffect(() => {
-            onLoad();
-        }, [onLoad]);
+            console.log("load status.");
+            onLoadBackendStatus();
+            if (deployResult?.success || backendStatus?.current === BackendState.UN_DEPLOY || backendStatus?.current === BackendState.UP) {
+                const timer = setTimeout(onLoadBackendStatus, 3000);
+                return () => {
+                    clearTimeout(timer);
+                }
+            }
+        }, [backendStatus, deployResult?.success, onLoadBackendStatus]);
 
-        if (deploy === null) {
-            return <Skeleton />;
-        }
         return (
             <Paper
                 square
@@ -102,10 +164,15 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        <IconButton>
+                        <IconButton 
+                            disabled={isDeploySuccess()}
+                            onClick={()=>{onDeploy()}}
+                        >
                             <VscVmConnect />
                         </IconButton>
-                        <IconButton>
+                        <IconButton
+                            onClick={()=>{onUndeploy()}}
+                            >
                             <VscVmOutline />
                         </IconButton>
                     </Grid>
@@ -152,7 +219,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        <Typography>{deploy.id}</Typography>
+                        <Typography>{deployId}</Typography>
                     </Grid>
                     <Grid
                         item
@@ -176,7 +243,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        <Typography>{deploy.epoch}</Typography>
+                        <Typography>{backendStatus?.epoch}</Typography>
                     </Grid>
                     <Grid
                         item
@@ -188,7 +255,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-end",
                         }}
                     >
-                        {deploy.backend.status !== undefined && <Typography>{"Status"}</Typography>}
+                        <Typography>{"Status"}</Typography>
                     </Grid>
                     <Grid
                         item
@@ -200,9 +267,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        {deploy.backend.status !== undefined && (
-                            <BackendStatusView status={deploy.backend.status} />
-                        )}
+                        <BackendStatusView status={backendStatus === null? undefined: backendStatus} />
                     </Grid>
 
                     <Grid
@@ -211,13 +276,11 @@ export const BackendPanel = forwardRef(
                         sx={{
                             display: "flex",
                             flexDirection: "row",
-                            alignItems: "center",
+                            alignItems: "flex-start",
                             justifyContent: "flex-end",
                         }}
                     >
-                        {deploy.backend.status !== undefined && (
-                            <Typography>{"Message"}</Typography>
-                        )}
+                        <Typography>{"Message"}</Typography>
                     </Grid>
                     <Grid
                         item
@@ -229,10 +292,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        {deploy.backend.status !== undefined &&
-                            deploy.backend.status.current === BackendState.FAILURE && (
-                                <Typography>{deploy.backend.status.failureMsg}</Typography>
-                            )}
+                        <Typography>{backendStatus?.failureMsg || error()}</Typography>
                     </Grid>
                     <Grid
                         item
@@ -244,7 +304,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-end",
                         }}
                     >
-                        {deploy.backend.status?.upTime !== undefined && (
+                        {backendStatus?.upTime !== undefined && (
                             <Typography>{"Up Time"}</Typography>
                         )}
                     </Grid>
@@ -258,9 +318,9 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        {deploy.backend.status?.upTime !== undefined && (
+                        {backendStatus?.upTime !== undefined && (
                             <Typography>
-                                {moment(deploy.backend.status.upTime).format("YYYY-MM-DD HH:mm:ss")}
+                                {moment(backendStatus.upTime).format("YYYY-MM-DD HH:mm:ss")}
                             </Typography>
                         )}
                     </Grid>
@@ -274,7 +334,7 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-end",
                         }}
                     >
-                        {deploy.backend.status?.downTime !== undefined && (
+                        {backendStatus?.downTime !== undefined && (
                             <Typography>{"Down Time"}</Typography>
                         )}
                     </Grid>
@@ -288,9 +348,9 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        {deploy.backend.status?.downTime !== undefined && (
+                        {backendStatus?.downTime !== undefined && (
                             <Typography>
-                                {moment(deploy.backend.status.downTime).format(
+                                {moment(backendStatus.downTime).format(
                                     "YYYY-MM-DD HH:mm:ss"
                                 )}
                             </Typography>
@@ -306,8 +366,8 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-end",
                         }}
                     >
-                        {deploy.backend.status?.failureTime !== undefined &&
-                            deploy.backend.status.current === BackendState.FAILURE && (
+                        {backendStatus?.failureTime !== undefined &&
+                            backendStatus.current === BackendState.FAILURE && (
                                 <Typography>{"Failure Time"}</Typography>
                             )}
                     </Grid>
@@ -321,10 +381,10 @@ export const BackendPanel = forwardRef(
                             justifyContent: "flex-start",
                         }}
                     >
-                        {deploy.backend.status?.failureTime !== undefined &&
-                            deploy.backend.status.current === BackendState.FAILURE && (
+                        {backendStatus?.failureTime !== undefined &&
+                            backendStatus.current === BackendState.FAILURE && (
                                 <Typography>
-                                    {moment(deploy.backend.status.failureTime).format(
+                                    {moment(backendStatus?.failureTime).format(
                                         "YYYY-MM-DD HH:mm:ss"
                                     )}
                                 </Typography>

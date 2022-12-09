@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
-import { Alert, Divider, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
+import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";

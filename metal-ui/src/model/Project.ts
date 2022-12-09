@@ -1,35 +1,37 @@
-import {Spec} from "./Spec";
+import { Spec } from "./Spec";
 
 export enum BackendState {
-    UN_DEPLOY= 'UN_DEPLOY',
-    UP = 'UP',
-    DOWN = 'DOWN',
-    FAILURE = 'FAILURE'
+    UN_DEPLOY = "UN_DEPLOY",
+    UP = "UP",
+    DOWN = "DOWN",
+    FAILURE = "FAILURE",
 }
 
 export interface BackendStatus {
-    current: BackendState,
-    upTime?: number,
-    downTime?: number,
-    failureTime?: number,
-    failureMsg?: string,
-    tracer: any
+    current: BackendState;
+    upTime?: number;
+    downTime?: number;
+    failureTime?: number;
+    failureMsg?: string;
+    tracer: any;
+    deployId?: string;
+    epoch?: number
 }
 
 export enum PlatformType {
-    SPARK_STANDALONE = "spark.standalone"
+    SPARK_STANDALONE = "spark.standalone",
 }
 
 export function platformType(type: string) {
     switch (type) {
         case PlatformType.SPARK_STANDALONE: {
             return PlatformType.SPARK_STANDALONE;
-        }    
-        default:{
-            return PlatformType.SPARK_STANDALONE
-        }    }
+        }
+        default: {
+            return PlatformType.SPARK_STANDALONE;
+        }
+    }
 }
-
 
 export function platformSchema(type: PlatformType) {
     switch (type) {
@@ -40,56 +42,56 @@ export function platformSchema(type: PlatformType) {
                     "rest.api": {
                         type: "object",
                         properties: {
-                            "host": {
-                                type: "string"
+                            host: {
+                                type: "string",
                             },
-                            "port": {
-                                type: "string"
+                            port: {
+                                type: "string",
                             },
-                            "requestURI": {
+                            requestURI: {
                                 type: "object",
-                                "create": {
+                                create: {
                                     type: "string",
-                                    default: "/v1/submissions/create"
+                                    default: "/v1/submissions/create",
                                 },
-                                "status": {
+                                status: {
                                     type: "string",
-                                    default: "/v1/submissions/status/{driverId}"
+                                    default: "/v1/submissions/status/{driverId}",
                                 },
-                                "kill": {
+                                kill: {
                                     type: "string",
-                                    default: "/v1/submissions/kill/{driverId}"
-                                }
-                              }
-                        }
+                                    default: "/v1/submissions/kill/{driverId}",
+                                },
+                            },
+                        },
                     },
-                    "conf": {
+                    conf: {
                         type: "object",
-                    }
-                }
-            }
+                    },
+                },
+            };
         }
     }
 }
 
 export interface Deploy {
-    id: string,
-    epoch: number,
-    pkgs: string[],
-    platform: any,
+    id: string;
+    epoch: number;
+    pkgs: string[];
+    platform: any;
     backend: {
-        args: string[],
-        status?: BackendStatus
-    }
+        args: string[];
+        status?: BackendStatus;
+    };
 }
 
 export interface Project {
-    id: string,
-    name: string,
+    id: string;
+    name: string;
     user: {
-        id: string,
-        username: string
-    },
-    deploy: Deploy,
-    spec: Spec
+        id: string;
+        username: string;
+    };
+    deploy: Deploy;
+    spec: Spec;
 }

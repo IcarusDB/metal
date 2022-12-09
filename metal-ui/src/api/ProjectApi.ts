@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
-import {Deploy, Project} from "../model/Project";
+import {BackendStatus, Deploy, Project} from "../model/Project";
 import _ from "lodash"
 
 const instance = axios.create({
@@ -185,4 +185,77 @@ export async function getDeploy(token:string, deployId: string) {
             return Promise.reject(err)
         }
     });
+}
+
+export async function getBackendStatus(token: string, deployId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}/backend/status`;
+    return instance.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const status: BackendStatus= resp.data;
+            return status;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface DeployResponse {
+    success: boolean,
+    submissionId?: string,
+    message?: string,
+}
+
+export async function deployBackendOfId(token: string, deployId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}`;
+    return instance.post(url, undefined, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const deployResp: DeployResponse = resp.data;
+            if (!deployResp.success) {
+                throw new AxiosError(deployResp.message);
+            } else {
+                return deployResp;
+            }
+
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface UnDeployResponse extends DeployResponse {
+}
+
+export async function undeployBackendOfId(token: string, deployId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}/force`;
+    return instance.delete(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const undeployResp: UnDeployResponse = resp.data;
+            if (!undeployResp.success) {
+                throw new AxiosError(undeployResp.message);
+            } else {
+                return undeployResp;
+            }
+
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
 }
