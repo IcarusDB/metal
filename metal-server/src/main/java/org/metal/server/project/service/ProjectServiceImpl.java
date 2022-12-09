@@ -564,7 +564,7 @@ public class ProjectServiceImpl implements IProjectService{
   @Override
   public Future<JsonObject> analysisOfId(String userId, String id, JsonObject spec) {
     return ProjectDBEx.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
-      return analysisSpec(userId, proj, spec);
+      return analysisSpec(userId, spec, proj);
     });
   }
 

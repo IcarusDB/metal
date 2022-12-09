@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
 import {BackendStatus, Deploy, Project} from "../model/Project";
 import _ from "lodash"
+import { Spec } from "../model/Spec";
 
 const instance = axios.create({
     headers: {
@@ -254,6 +255,25 @@ export async function undeployBackendOfId(token: string, deployId: string) {
                 return undeployResp;
             }
 
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export async function analysisOfId(token: string, id: string, spec: Spec) {
+    const url = `/api/v1/projects/id/${id}/spec`;
+    return instance.post(url, {
+        spec: spec
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            
         } catch (err) {
             return Promise.reject(err);
         }
