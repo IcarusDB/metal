@@ -223,17 +223,31 @@ export async function deployBackendOfId(token: string, deployId: string) {
             const resp: ApiResponseEntity = response.data;
             ApiResponse.mayBeFailure(resp);
             const deployResp: DeployResponse = resp.data;
-            if (!deployResp.success) {
-                throw new AxiosError(deployResp.message);
-            } else {
-                return deployResp;
-            }
-
+            return deployResp;
         } catch (err) {
             return Promise.reject(err);
         }
     })
 }
+
+export async function redeployBackendOfId(token: string, deployId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}/epoch`;
+    return instance.put(url, undefined, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const deployResp: DeployResponse = resp.data;
+            return deployResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
 
 export interface UnDeployResponse extends DeployResponse {
 }
@@ -249,16 +263,16 @@ export async function undeployBackendOfId(token: string, deployId: string) {
             const resp: ApiResponseEntity = response.data;
             ApiResponse.mayBeFailure(resp);
             const undeployResp: UnDeployResponse = resp.data;
-            if (!undeployResp.success) {
-                throw new AxiosError(undeployResp.message);
-            } else {
-                return undeployResp;
-            }
-
+            return undeployResp;
         } catch (err) {
             return Promise.reject(err);
         }
     })
+}
+
+export interface AnalysisResponse {
+    analysed: string[],
+    unAnalysed: string[],
 }
 
 export async function analysisOfId(token: string, id: string, spec: Spec) {
@@ -273,7 +287,30 @@ export async function analysisOfId(token: string, id: string, spec: Spec) {
         try {
             const resp: ApiResponseEntity = response.data;
             ApiResponse.mayBeFailure(resp);
-            
+            const analysisResp: AnalysisResponse = resp.data;
+            return analysisResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface ExecResponse {
+    status: string | "OK",
+}
+
+export async function execOfId(token: string, id: string) {
+    const url = `/api/v1/projects/id/${id}/spec/current/exec`;
+    return instance.post(url, undefined, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const execResp: ExecResponse = resp.data;
+            return execResp;
         } catch (err) {
             return Promise.reject(err);
         }
