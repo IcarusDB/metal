@@ -5,10 +5,10 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
+import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecService;
 
 @ProxyGen
@@ -74,11 +74,21 @@ public interface IProjectService {
 
   public Future<JsonObject> updateBackendStatusOnUndeploy(String deployId);
 
+  public Future<JsonObject> updateBackendStatusOnCreated(String deployId);
+
   public Future<JsonObject> updateBackendStatusOnUp(String deployId);
 
   public Future<JsonObject> updateBackendStatusOnDown(String deployId);
 
   public Future<JsonObject> updateBackendStatusOnFailure(String deployId, String failureMsg);
+
+  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch, BackendState current);
+
+  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch, BackendState current);
+
+  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch, BackendState current);
+
+  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch, BackendState current, String failureMsg);
 
   public Future<JsonObject> getOfId(String userId, String projectId);
 
@@ -90,6 +100,9 @@ public interface IProjectService {
 
   public Future<JsonObject> getDeploymentOfDeployId(String deployId);
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
+
+  public Future<JsonObject> getDeploymentOfDeployIdWithEpoch(String deployId, int epoch);
+  public Future<JsonObject> getBackendStatusOfDeployIdWithEpoch(String deployId, int epoch);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);
 

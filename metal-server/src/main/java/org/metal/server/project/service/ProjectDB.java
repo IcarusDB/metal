@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecDB;
@@ -14,7 +15,7 @@ import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
 import org.metal.server.util.SpecJson;
 
-public class ProjectDBEx {
+public class ProjectDB {
   public final static String DB = "project";
   public static final String NAME = "name";
   public static final String CREATE_TIME = "createTime";
@@ -34,6 +35,8 @@ public class ProjectDBEx {
   public static final String USER_REF_ID = "$id";
   public static final String ID = "_id";
   public static final String USER = "user";
+
+  public static final String DEPLOY_BACKEND_STATUS_CREATED_TIME = "createdTime";
   public static final String DEPLOY_BACKEND_STATUS_UP_TIME = "upTime";
   public static final String DEPLOY_BACKEND_STATUS_DOWN_TIME = "downTime";
   public static final String DEPLOY_BACKEND_STATUS_FAILURE_TIME = "failureTime";
@@ -69,10 +72,10 @@ public class ProjectDBEx {
     deploy.put(DEPLOY_PLATFORM, platform);
     deploy.put(DEPLOY_BACKEND, backend);
     backend.put(DEPLOY_BACKEND_ARGS, backendArgs);
-//    When deploy one backend, backend status will be created. When redeploy or close down backend, backend status will be removed.
-//    backend.put(DEPLOY_BACKEND_STATUS,
-//        new JsonObject().put(DEPLOY_BACKEND_STATUS_CURRENT,BackendState.UN_DEPLOY.toString())
-//    );
+    backend.put(DEPLOY_BACKEND_STATUS, new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString())
+        .put(DEPLOY_BACKEND_STATUS_DOWN_TIME, getTime())
+    );
     project.put(SPEC, spec);
 
     return mongo.insert(DB, project);
@@ -106,6 +109,11 @@ public class ProjectDBEx {
 
       JsonObject backend = deploy.getJsonObject(DEPLOY_BACKEND);
       backend.remove(DEPLOY_BACKEND_STATUS);
+      backend.put(DEPLOY_BACKEND_STATUS,
+          new JsonObject()
+              .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString())
+              .put(DEPLOY_BACKEND_STATUS_DOWN_TIME, getTime())
+      );
       return Future.succeededFuture(project);
     }).compose(project -> {
       return mongo.insert(DB, project);
@@ -208,7 +216,7 @@ public class ProjectDBEx {
         .add(project)
         .add(privateProtect);
     return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.aggregate(DB, pipeline), ProjectDBEx::compatJsonOnPlatform
+        mongo.aggregate(DB, pipeline), ProjectDB::compatJsonOnPlatform
     );
   }
 
@@ -254,20 +262,36 @@ public class ProjectDBEx {
   }
 
   public static Future<JsonObject> getBackendStatus(MongoClient mongo, String deployId) {
-    JsonObject matcher = deployIsLock();
+    JsonObject matcher = new JsonObject();
     matcher.put(deployIdPath(), deployId);
     return mongo.findOne(DB, matcher, new JsonObject())
         .compose(proj -> {
-          if (proj == null) {
-            return Future.failedFuture("Backend["+ deployId + "] is not deployed.");
-          }
-          JsonObject deploy = proj.getJsonObject(DEPLOY);
-          JsonObject status = deploy.getJsonObject(DEPLOY_BACKEND)
-              .getJsonObject(DEPLOY_BACKEND_STATUS, new JsonObject());
-          status.put("deployId", deploy.getValue(DEPLOY_ID));
-          status.put("epoch", deploy.getValue(DEPLOY_EPOCH));
-          return Future.succeededFuture(status);
+          return wrapBackendStatus(deployId, Optional.empty(), proj);
         });
+  }
+
+  public static Future<JsonObject> getBackendStatus(MongoClient mongo, String deployId, int epoch) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId)
+        .put(epochPath(), epoch);
+    return mongo.findOne(DB, matcher, new JsonObject())
+        .compose(proj -> {
+          return wrapBackendStatus(deployId, Optional.of(epoch), proj);
+        });
+  }
+
+  private static Future<JsonObject> wrapBackendStatus(String deployId, Optional<Integer> epoch,
+      JsonObject proj) {
+    String epochVal = epoch.isPresent()? epoch.get().toString(): "*";
+    if (proj == null) {
+      return Future.failedFuture("Backend[" + deployId + "-" + epochVal + "] is not deployed.");
+    }
+    JsonObject deploy = proj.getJsonObject(DEPLOY);
+    JsonObject status = deploy.getJsonObject(DEPLOY_BACKEND)
+        .getJsonObject(DEPLOY_BACKEND_STATUS, new JsonObject());
+    status.put("deployId", deploy.getValue(DEPLOY_ID));
+    status.put("epoch", deploy.getValue(DEPLOY_EPOCH));
+    return Future.succeededFuture(status);
   }
 
   public static Future<JsonObject> getBackendTracer(MongoClient mongo, String deployId) {
@@ -288,6 +312,16 @@ public class ProjectDBEx {
         });
   }
 
+  public static Future<JsonObject> getDeployOfDeployIdWithEpoch(MongoClient mongo, String deployId, int epoch) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId)
+        .put(epochPath(), epoch);
+    return getOfMatcher(mongo, matcher)
+        .compose(proj -> {
+          JsonObject deploy = proj.getJsonObject(DEPLOY);
+          return Future.succeededFuture(deploy);
+        });
+  }
   public static Future<JsonObject> getDeployAddress(MongoClient mongo, String deployId) {
     JsonObject matcher = new JsonObject();
     matcher.put(deployIdPath(), deployId);
@@ -335,6 +369,9 @@ public class ProjectDBEx {
   public static Future<JsonObject> update(MongoClient mongo, JsonObject matcher, JsonObject updater) {
     return mongo.updateCollection(DB, matcher, updater)
         .compose(result -> {
+          if (result.getDocMatched() == 0) {
+            return Future.failedFuture(String.format("Fail to match any record. Matcher: %s", matcher.toString()));
+          }
           return Future.succeededFuture(result.toJson());
         });
   }
@@ -449,38 +486,98 @@ public class ProjectDBEx {
     return update(mongo, matcher, updater);
   }
 
+  public static Future<JsonObject> updateBackendStatus(MongoClient mongo, String deployId, int epoch, JsonObject status) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId)
+        .put(epochPath(), epoch);
+    JsonObject updater = new JsonObject()
+        .put("$set", confWithStatusPath(status));
+    return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> updateBackendStatus(MongoClient mongo, String deployId, int epoch, BackendState current, JsonObject status) {
+    JsonObject matcher = new JsonObject();
+    matcher.put(deployIdPath(), deployId)
+        .put(epochPath(), epoch)
+        .put(backendStatusCurrentPath(), current.toString());
+    JsonObject updater = new JsonObject()
+        .put("$set", confWithStatusPath(status));
+    return update(mongo, matcher, updater);
+  }
+
   public static Future<JsonObject> updateBackendStatusOnUndeploy(MongoClient mongo, String deployId) {
     JsonObject undeploy = new JsonObject()
-        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.UN_DEPLOY.toString());
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString());
     return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnCreated(MongoClient mongo, String deployId) {
+    JsonObject newStatus = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.CREATED.toString())
+        .put(DEPLOY_BACKEND_STATUS_CREATED_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, newStatus);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnCreated(MongoClient mongo, String deployId, int epoch, BackendState current) {
+    JsonObject newStatus = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.CREATED.toString())
+        .put(DEPLOY_BACKEND_STATUS_CREATED_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, epoch, current, newStatus);
   }
 
   public static Future<JsonObject> updateBackendStatusOnUp(MongoClient mongo, String deployId) {
-    JsonObject undeploy = new JsonObject()
+    JsonObject newStatus = new JsonObject()
         .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.UP.toString())
         .put(DEPLOY_BACKEND_STATUS_UP_TIME, getTime());
-    return updateBackendStatus(mongo, deployId, undeploy);
+    return updateBackendStatus(mongo, deployId, newStatus);
   }
 
+  public static Future<JsonObject> updateBackendStatusOnUp(MongoClient mongo, String deployId, int epoch, BackendState current) {
+    JsonObject newStatus = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.UP.toString())
+        .put(DEPLOY_BACKEND_STATUS_UP_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, epoch, current, newStatus);
+  }
   public static Future<JsonObject> updateBackendStatusOnDown(MongoClient mongo, String deployId) {
-    JsonObject undeploy = new JsonObject()
+    JsonObject newStatus = new JsonObject()
         .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString())
         .put(DEPLOY_BACKEND_STATUS_DOWN_TIME, getTime());
-    return updateBackendStatus(mongo, deployId, undeploy);
+    return updateBackendStatus(mongo, deployId, newStatus);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnDown(MongoClient mongo, String deployId, int epoch, BackendState current) {
+    JsonObject newStatus = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.DOWN.toString())
+        .put(DEPLOY_BACKEND_STATUS_DOWN_TIME, getTime());
+    return updateBackendStatus(mongo, deployId, epoch, current, newStatus);
   }
 
   public static Future<JsonObject> updateBackendStatusOnFailure(MongoClient mongo, String deployId, String failureMsg) {
-    JsonObject undeploy = new JsonObject()
+    JsonObject newStatus = new JsonObject()
         .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.FAILURE.toString())
         .put(DEPLOY_BACKEND_STATUS_FAILURE_TIME, getTime())
         .put(DEPLOY_BACKEND_STATUS_FAILURE_MSG, failureMsg);
-    return updateBackendStatus(mongo, deployId, undeploy);
+    return updateBackendStatus(mongo, deployId, newStatus);
+  }
+
+  public static Future<JsonObject> updateBackendStatusOnFailure(MongoClient mongo, String deployId, int epoch, BackendState current, String failureMsg) {
+    JsonObject newStatus = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_CURRENT, BackendState.FAILURE.toString())
+        .put(DEPLOY_BACKEND_STATUS_FAILURE_TIME, getTime())
+        .put(DEPLOY_BACKEND_STATUS_FAILURE_MSG, failureMsg);
+    return updateBackendStatus(mongo, deployId, epoch, current, newStatus);
   }
 
   public static Future<JsonObject> updateBackendStatusTracer(MongoClient mongo, String deployId, JsonObject tracer) {
     JsonObject undeploy = new JsonObject()
         .put(DEPLOY_BACKEND_STATUS_TRACER, tracer);
     return updateBackendStatus(mongo, deployId, undeploy);
+  }
+
+  public static Future<JsonObject> updateBackendStatusTracer(MongoClient mongo, String deployId, int epoch, JsonObject tracer) {
+    JsonObject undeploy = new JsonObject()
+        .put(DEPLOY_BACKEND_STATUS_TRACER, tracer);
+    return updateBackendStatus(mongo, deployId, epoch, undeploy);
   }
 
   public static Future<JsonObject> updateDeployConfs(MongoClient mongo, String userId, String name, JsonObject confs) {
@@ -515,6 +612,21 @@ public class ProjectDBEx {
     JsonObject updater = new JsonObject();
     JsonObject confsWithPath = deployConfsWithPath(new JsonObject().put(DEPLOY_EPOCH, 1));
     updater.put("$inc", confsWithPath);
+    return update(mongo, matcher, updater);
+  }
+
+  public static Future<JsonObject> increaseDeployEpoch(MongoClient mongo, String deployId, int epoch, BackendState current) {
+    JsonObject matcher = deployIsUnlock();
+    matcher.put(deployIdPath(), deployId)
+        .put(epochPath(), epoch)
+        .put(backendStatusCurrentPath(), current.toString());
+    JsonObject updater = new JsonObject();
+    JsonObject confsWithPath = deployConfsWithPath(new JsonObject().put(DEPLOY_EPOCH, 1));
+    updater.put("$inc", confsWithPath)
+        .put("$set", new JsonObject()
+          .put(backendStatusCurrentPath(), BackendState.CREATED)
+          .put(backendStatusCreateTimePath(), getTime())
+    );
     return update(mongo, matcher, updater);
   }
 
@@ -573,15 +685,19 @@ public class ProjectDBEx {
 
 
   private static JsonObject deployIsUnlock() {
-    return new JsonObject().put(
-        backendStatusPath(),
-        new JsonObject().put("$exists", false));
+    return new JsonObject().put("$or",
+        new JsonArray()
+            .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.DOWN.toString()))
+            .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.FAILURE.toString()))
+    );
   }
 
   private static JsonObject deployIsLock() {
-    return new JsonObject().put(
-        backendStatusPath(),
-        new JsonObject().put("$exists", true));
+    return new JsonObject().put("$or",
+        new JsonArray()
+            .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.CREATED.toString()))
+            .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.UP.toString()))
+    );
   }
 
   private static long getTime() {
@@ -596,6 +712,10 @@ public class ProjectDBEx {
     return DEPLOY + "." + DEPLOY_ID;
   }
 
+  public static String epochPath() {
+    return DEPLOY + "." + DEPLOY_EPOCH;
+  }
+
   public static String platformPath() {
     return DEPLOY + "." + DEPLOY_PLATFORM;
   }
@@ -608,9 +728,18 @@ public class ProjectDBEx {
     return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS;
   }
 
+  public static String backendStatusCurrentPath() {
+    return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS + "." + DEPLOY_BACKEND_STATUS_CURRENT;
+  }
+
+  public static String backendStatusCreateTimePath() {
+    return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS + "." + DEPLOY_BACKEND_STATUS_CREATED_TIME;
+  }
+
   public static String pkgsPath() {
     return DEPLOY + "." + DEPLOY_PKGS;
   }
+
 
 
 }

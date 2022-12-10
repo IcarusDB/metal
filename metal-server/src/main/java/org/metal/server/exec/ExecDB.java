@@ -3,12 +3,10 @@ package org.metal.server.exec;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import java.util.List;
 import org.metal.server.api.ExecState;
-import org.metal.server.project.service.ProjectDBEx;
+import org.metal.server.project.service.ProjectDB;
 import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
 
@@ -29,21 +27,21 @@ public class ExecDB {
   public final static String FIELD_SPEC = "SPEC";
 
   public static Future<String> add(MongoClient mongo, String userId, JsonObject project) {
-    JsonObject spec = project.getJsonObject(ProjectDBEx.SPEC);
+    JsonObject spec = project.getJsonObject(ProjectDB.SPEC);
     if (spec == null || spec.isEmpty()) {
       return Future.failedFuture("No spec found.");
     }
 
-    String projectId = project.getString(ProjectDBEx.ID);
-    JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
-    JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-    backend.remove(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+    String projectId = project.getString(ProjectDB.ID);
+    JsonObject deploy = project.getJsonObject(ProjectDB.DEPLOY);
+    JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+    backend.remove(ProjectDB.DEPLOY_BACKEND_STATUS);
 
-    JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
     if (platform != null) {
       platform = JsonKeyReplacer.compatBson(platform);
     }
-    deploy.put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+    deploy.put(ProjectDB.DEPLOY_PLATFORM, platform);
 
     JsonObject exec = new JsonObject();
     exec.put(FIELD_USER_ID, userId)
@@ -111,8 +109,8 @@ public class ExecDB {
 
   private static JsonObject noDetail(JsonObject exec) {
     JsonObject deploy = exec.getJsonObject(FIELD_DEPLOY);
-    String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-    int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+    String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
+    int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
     exec.remove(FIELD_SPEC);
     exec.remove(FIELD_DEPLOY);
     exec.put("deployId", deployId);
@@ -121,9 +119,9 @@ public class ExecDB {
   }
 
   private static JsonObject compatJsonOnPlatform(JsonObject exec) {
-    JsonObject platform = exec.getJsonObject(FIELD_DEPLOY).getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    JsonObject platform = exec.getJsonObject(FIELD_DEPLOY).getJsonObject(ProjectDB.DEPLOY_PLATFORM);
     platform = JsonKeyReplacer.compatJson(platform);
-    exec.getJsonObject(FIELD_DEPLOY).put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+    exec.getJsonObject(FIELD_DEPLOY).put(ProjectDB.DEPLOY_PLATFORM, platform);
     return exec;
   }
 

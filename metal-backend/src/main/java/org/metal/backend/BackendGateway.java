@@ -7,11 +7,6 @@ import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.ServiceDiscovery;
-import io.vertx.servicediscovery.ServiceDiscoveryOptions;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.metal.backend.api.BackendService;
@@ -22,7 +17,7 @@ import org.metal.backend.rest.IBackendRestEndApi;
 
 public class BackendGateway extends AbstractVerticle {
 
-  private AtomicInteger state = new AtomicInteger(BackendState.UN_DEPLOY.ordinal());
+  private AtomicInteger state = new AtomicInteger(BackendState.CREATED.ordinal());
   private IBackend backend;
   private HttpServer httpServer;
   private IBackendRestEndApi api;
