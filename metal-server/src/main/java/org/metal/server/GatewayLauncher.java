@@ -9,12 +9,9 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.core.spi.cluster.NodeInfo;
-import io.vertx.core.spi.cluster.NodeListener;
-import io.vertx.servicediscovery.ServiceDiscovery;
-import io.vertx.servicediscovery.ServiceDiscoveryOptions;
 import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 import java.util.List;
+import org.metal.server.detector.Detector;
 import org.metal.server.exec.Exec;
 import org.metal.server.project.Project;
 import org.metal.server.repo.MetalRepo;
@@ -32,6 +29,7 @@ public class GatewayLauncher {
       MetalRepo metalRepo = MetalRepo.create();
       Exec exec = Exec.create();
       Project project = Project.create();
+      Detector detector = Detector.create();
       BackendReport backendReport = BackendReport.create();
       Gateway gateway = Gateway.create();
 
@@ -58,6 +56,15 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
+      Future<String> deployDetector = vertx.deployVerticle(detector, deploymentOptions)
+          .compose(deployID -> {
+            LOGGER.info(String.format("Success to deploy %s:%s.", detector.getClass(), deployID));
+            return Future.succeededFuture();
+          }, t -> {
+            LOGGER.error(String.format("Fail to deploy %s.", detector.getClass()), t);
+            return Future.failedFuture(t);
+          });
+
       Future<String> deployBackendReport = vertx.deployVerticle(backendReport, deploymentOptions)
           .compose(deployID -> {
             LOGGER.info(String.format("Success to deploy %s:%s.", backendReport.getClass(), deployID));
@@ -76,7 +83,7 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
-      CompositeFuture prepared = CompositeFuture.all(List.of(deployMetalRepo, deployProject, deployBackendReport, deployExec));
+      CompositeFuture prepared = CompositeFuture.all(List.of(deployMetalRepo, deployProject, deployDetector, deployBackendReport, deployExec));
       Future<String> deployGateway = prepared.compose(
           ret -> {
             return vertx.deployVerticle(gateway, deploymentOptions);

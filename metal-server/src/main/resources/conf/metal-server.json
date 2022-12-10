@@ -82,5 +82,6 @@
     "execService": {
       "address": "exec.metal.org"
     }
-  }
+  },
+  "detector": {}
 }

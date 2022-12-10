@@ -567,7 +567,7 @@ public class ProjectServiceImpl implements IProjectService{
     }
   }
 
-  private JsonObject backendAddress(JsonObject deploy) {
+  public static JsonObject backendAddress(JsonObject deploy) {
     try {
       JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
       Integer epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);

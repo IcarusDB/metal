@@ -684,7 +684,7 @@ public class ProjectDB {
   }
 
 
-  private static JsonObject deployIsUnlock() {
+  public static JsonObject deployIsUnlock() {
     return new JsonObject().put("$or",
         new JsonArray()
             .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.DOWN.toString()))
@@ -692,7 +692,7 @@ public class ProjectDB {
     );
   }
 
-  private static JsonObject deployIsLock() {
+  public static JsonObject deployIsLock() {
     return new JsonObject().put("$or",
         new JsonArray()
             .add(new JsonObject().put(backendStatusCurrentPath(), BackendState.CREATED.toString()))
@@ -700,7 +700,7 @@ public class ProjectDB {
     );
   }
 
-  private static long getTime() {
+  public static long getTime() {
     return System.currentTimeMillis();
   }
 
@@ -734,6 +734,10 @@ public class ProjectDB {
 
   public static String backendStatusCreateTimePath() {
     return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS + "." + DEPLOY_BACKEND_STATUS_CREATED_TIME;
+  }
+
+  public static String backendStatusUpTimePath() {
+    return DEPLOY + "." + DEPLOY_BACKEND + "." +DEPLOY_BACKEND_STATUS + "." + DEPLOY_BACKEND_STATUS_UP_TIME;
   }
 
   public static String pkgsPath() {
