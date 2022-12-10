@@ -6,17 +6,20 @@ import io.vertx.core.Promise;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.metal.backend.api.BackendService;
+import org.metal.server.api.BackendReportError;
 import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.backend.api.impl.BackendServiceImpl;
 import org.metal.backend.rest.IBackendRestEndApi;
 
 public class BackendGateway extends AbstractVerticle {
-
+  private final static Logger LOGGER = LoggerFactory.getLogger(BackendGateway.class);
   private AtomicInteger state = new AtomicInteger(BackendState.CREATED.ordinal());
   private IBackend backend;
   private HttpServer httpServer;
@@ -27,6 +30,7 @@ public class BackendGateway extends AbstractVerticle {
   private String deployId;
   private int epoch;
   private int port;
+  private long reportDelay = 5000l;
   private String reportAddress;
 
   public BackendGateway(IBackend backend) {
@@ -73,7 +77,33 @@ public class BackendGateway extends AbstractVerticle {
       startPromise.fail(error);
     });
 
-
+    getVertx().setPeriodic(reportDelay, (ID)->{
+      JsonObject upReport = new JsonObject();
+      upReport.put("status", BackendState.UP.toString())
+          .put("epoch", epoch)
+          .put("deployId", deployId)
+          .put("upTime", System.currentTimeMillis());
+      backendReportService.reportBackendUp(upReport)
+          .onSuccess(ret -> {
+            String msg = String.format("Backend[%s-%d] report current is up.", deployId, epoch);
+            LOGGER.info(msg);
+          })
+          .onFailure(error -> {
+            LOGGER.error(error);
+            if (error.getLocalizedMessage().startsWith("[" + BackendReportError.EPOCH_ILLEGAL.toString() + "]") ||
+                error.getLocalizedMessage().startsWith("[" + BackendReportError.MARKED_DOWN.toString() + "]") ||
+                error.getLocalizedMessage().startsWith("[" + BackendReportError.MARKED_FAILURE.toString() + "]")
+            ) {
+              try {
+                this.stop(Promise.promise());
+              } catch (Exception e) {
+                LOGGER.error(e);
+              } finally {
+                System.exit(0);
+              }
+            }
+          });
+    });
   }
 
   @Override
