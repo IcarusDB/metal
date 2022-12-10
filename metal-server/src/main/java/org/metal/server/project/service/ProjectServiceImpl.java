@@ -305,7 +305,9 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> deploy(String userId, String name) {
-    return getOfName(userId, name).compose((JsonObject project) -> {
+    return ProjectDBEx.increaseDeployEpoch(mongo, userId, name).compose(ret -> {
+      return getOfName(userId, name);
+    }).compose((JsonObject project) -> {
       JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
       return onDeploy(deploy);
     });
@@ -313,7 +315,9 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> deployOfId(String deployId) {
-    return getDeploymentOfDeployId(deployId).compose((JsonObject deploy) -> {
+    return ProjectDBEx.increaseDeployEpoch(mongo, deployId).compose(ret -> {
+      return getDeploymentOfDeployId(deployId);
+    }).compose((JsonObject deploy) -> {
       return onDeploy(deploy);
     });
   }

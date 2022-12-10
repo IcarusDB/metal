@@ -8,6 +8,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.ServiceDiscovery;
+import io.vertx.servicediscovery.ServiceDiscoveryOptions;
+import io.vertx.servicediscovery.zookeeper.ZookeeperServiceImporter;
 import io.vertx.serviceproxy.ServiceBinder;
 import org.metal.server.api.BackendReportService;
 import org.metal.server.exec.ExecService;
@@ -26,6 +30,7 @@ public class BackendReport extends AbstractVerticle {
 
   public static final String BACKEND_REPORT_SERVICE_CONF = "backendReportService";
   public static final String BACKEND_REPORT_SERVICE_ADDRESS_CONF = "address";
+
   private ExecService execService;
   private IProjectService projectService;
   private BackendReportService report;
@@ -72,7 +77,8 @@ public class BackendReport extends AbstractVerticle {
       report = new BackendReportServiceImpl(execService, projectService);
       ServiceBinder binder = new ServiceBinder(getVertx());
       binder.setAddress(backendReportServiceAddress);
-      consumer = binder.register(org.metal.server.api.BackendReportService.class, report);
+      consumer = binder.register(BackendReportService.class, report);
+
       return Future.succeededFuture();
     }).onSuccess(ret -> {
       startPromise.complete();
