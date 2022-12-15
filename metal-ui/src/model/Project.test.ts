@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Project} from "./Project";
+import {BackendState, Project} from "./Project";
 
 let proj = {
     "id": "63561855e2b7291d712bd0b3",
@@ -42,7 +42,11 @@ let proj = {
             }
         },
         "backend": {
-            "args": []
+            "args": [],
+            "status": {
+                "current": "DOWN" as BackendState,
+                "downTime": 1666586709997,
+            }
         }
     },
     "spec": {

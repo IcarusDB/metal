@@ -17,6 +17,7 @@ import {
     LinearProgress,
     Container,
     Button,
+    Grid,
 } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -40,69 +41,92 @@ import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { MainHandler } from "../main/Main";
 import { VscAdd } from "react-icons/vsc";
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
+import moment from "moment";
 
 function backendStatusTip(backendStatus: BackendStatus) {
-    const upTime =
-        backendStatus.upTime === undefined ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Up Time"}</ListItemText>
-                <ListItemText>{backendStatus.upTime}</ListItemText>
-            </ListItem>
-        );
-
-    const downTime =
-        backendStatus.downTime === undefined ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Down Time"}</ListItemText>
-                <ListItemText>{backendStatus.downTime}</ListItemText>
-            </ListItem>
-        );
-
-    const failureTime =
-        backendStatus.failureTime === undefined ||
-        backendStatus.current !== BackendState.FAILURE ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Failure Time"}</ListItemText>
-                <ListItemText>{backendStatus.failureTime}</ListItemText>
-            </ListItem>
-        );
-
-    const failureMsg =
-        backendStatus.failureTime === undefined ||
-        backendStatus.current !== BackendState.FAILURE ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Failure Message"}</ListItemText>
-                <ListItemText>{backendStatus.failureMsg}</ListItemText>
-            </ListItem>
-        );
-
-    return (
-        <List>
-            <ListItem>
-                <ListItemText>{"current"}</ListItemText>
-                <ListItem>{backendStatus.current}</ListItem>
-            </ListItem>
-            {upTime}
-            {downTime}
-            {failureTime}
-            {failureMsg}
-        </List>
-    );
+    switch (backendStatus.current) {
+        case BackendState.CREATED:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Created Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.createdTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.UP:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Up Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.upTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.DOWN:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Down Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.downTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.FAILURE:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Failure Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.failureTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Message
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.failureMsg}
+                    </Grid>
+                </Grid>
+            );
+    }
 }
 
 function backendStatus(deploy: Deploy | undefined) {
     if (deploy === undefined) {
         return "?";
     }
-    if (deploy.backend === undefined || deploy.backend.status === undefined) {
+    if (deploy.backend === undefined) {
         return (
             <Tooltip title={"No deployment is set."}>
                 <IconButton>
@@ -113,10 +137,10 @@ function backendStatus(deploy: Deploy | undefined) {
     }
 
     switch (deploy.backend.status.current) {
-        case BackendState.UN_DEPLOY:
+        case BackendState.CREATED:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="primary">
                         <AiOutlineApi />
                     </IconButton>
                 </Tooltip>
@@ -124,7 +148,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.UP:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="success">
                         <AiFillThunderbolt />
                     </IconButton>
                 </Tooltip>
@@ -132,7 +156,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.DOWN:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="info">
                         <HiStop />
                     </IconButton>
                 </Tooltip>
@@ -140,7 +164,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.FAILURE:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="error">
                         <AiOutlineWarning />
                     </IconButton>
                 </Tooltip>
@@ -247,7 +271,7 @@ export function ProjectList(props: ProjectListProps) {
                         mainHandler?.openDesigner({
                             id: project.id,
                             name: project.name,
-                            mainHandler: mainHandler
+                            mainHandler: mainHandler,
                         });
                     },
                     onView: () => {
@@ -255,7 +279,7 @@ export function ProjectList(props: ProjectListProps) {
                             id: project.id,
                             name: project.name,
                             isReadOnly: true,
-                        })
+                        });
                     },
                 },
             };

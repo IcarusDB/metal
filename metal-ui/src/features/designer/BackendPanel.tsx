@@ -20,7 +20,7 @@ import { tokenSelector } from "../user/userSlice";
 
 export function backendStatusColor(status: BackendState) {
     switch (status) {
-        case BackendState.UN_DEPLOY:
+        case BackendState.CREATED:
             return "primary";
         case BackendState.UP:
             return "success";
@@ -135,7 +135,7 @@ export const BackendPanel = forwardRef(
         useEffect(() => {
             console.log("load status.");
             onLoadBackendStatus();
-            if (deployResult?.success || backendStatus?.current === BackendState.UN_DEPLOY || backendStatus?.current === BackendState.UP) {
+            if (deployResult?.success || backendStatus?.current === BackendState.CREATED || backendStatus?.current === BackendState.UP) {
                 const timer = setTimeout(onLoadBackendStatus, 3000);
                 return () => {
                     clearTimeout(timer);
