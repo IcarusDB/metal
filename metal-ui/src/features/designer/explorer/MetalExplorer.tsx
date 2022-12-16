@@ -437,15 +437,19 @@ export function MetalExplorer(props: MetalExplorerProps) {
                         alignContent: "center",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        height: "8%",
+                        height: "6%",
+                        backgroundColor: "#d8c3c366",
                     }}
                 >
-                    <Toolbar
+                    <Paper
+                        square
+                        variant="outlined"
                         sx={{
                             boxSizing: "border-box",
                             paddingLeft: "1vw",
-                            width: "80%",
-                            minHeight: "4vh",
+                            width: "90%",
+                            height: "100%",
+                            minHeight: "2vh",
                         }}
                     >
                         <IconButton
@@ -483,9 +487,12 @@ export function MetalExplorer(props: MetalExplorerProps) {
                         >
                             {MetalViewIcons.SETUP}
                         </IconButton>
-                    </Toolbar>
-                    <Divider orientation="vertical" flexItem />
-                    <IconButton disabled={isPending()} onClick={load}>
+                    </Paper>
+                    {/* <Divider orientation="vertical" flexItem /> */}
+                    <IconButton 
+                        disabled={isPending()} 
+                        onClick={load}
+                    >
                         <AiOutlineReload />
                     </IconButton>
                 </div>
