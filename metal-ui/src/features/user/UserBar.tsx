@@ -86,8 +86,8 @@ export function UserBar(props: UserBarProps) {
             </div>
             <Menu 
                 open={isOpenMenu}
-                onClose={onCloseMenu}
                 onClick={onCloseMenu}
+                onClose={onCloseMenu}
                 anchorEl={anchor}
             >
                 <MenuItem onClick={onLogout}>

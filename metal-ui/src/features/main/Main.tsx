@@ -20,10 +20,13 @@ import { GrTasks } from "react-icons/gr";
 import { useMemo } from "react";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
+import { Home } from "../home/Home";
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
     switch (icon) {
+        case "homeIcon":
+            return <VscHome />;
         case "projectsIcon":
             return <FaProjectDiagram />;
         case "designerIcon":
@@ -61,7 +64,7 @@ export function Main() {
     const home: IJsonTabNode = {
         type: "tab",
         name: "Home",
-        icon: "executionsIcon",
+        icon: "homeIcon",
         component: "home", 
         enableClose: false,
     }
@@ -218,6 +221,12 @@ export function Main() {
                         <Designer {...props} mainHandler={mainHandler}/>
                     </DesignerProvider>
                 );
+            }
+
+            case "home": {
+                return (
+                    <Home />
+                )
             }
 
             default:
