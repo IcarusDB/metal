@@ -39,9 +39,12 @@ export const userSlice = createSlice({
                 ...state,
                 user: user
             }
+        },
+        logout: (state, action) => {
+            return initState;
         }
     }
 })
 
-export const {auth, user} = userSlice.actions
+export const {auth, user, logout} = userSlice.actions
 export default userSlice.reducer

@@ -4,6 +4,7 @@ import {SignIn} from "./features/user/SignIn";
 import {Main} from "./features/main/Main";
 import { Paper } from '@mui/material';
 import { height, width } from '@mui/system';
+import { UserBar } from './features/user/UserBar';
 
 function App() {
     return (
@@ -23,19 +24,19 @@ function App() {
                     variant='outlined'
                     sx={{
                         boxSizing: "border-box",
-                        height: "5vh",
+                        height: "8vh",
                         width: "100%",
                         position: "absolute",
                     }}
                 >
-
+                    <UserBar />
                 </Paper>
                 <div
                     style={{
                         width: "100%",
-                        height: "95vh",
+                        height: "92vh",
                         position: "absolute",
-                        top: "5vh",
+                        top: "8vh",
                     }}
                 >
                     <Main/>
