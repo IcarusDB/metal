@@ -1,16 +1,40 @@
 import { Accordion, AccordionDetails, AccordionSummary, Button, Card, CardContent, Divider, List, ListItem, Skeleton, Stack, Typography } from "@mui/material";
 import { VscChevronDown, VscExtensions, VscFolderOpened, VscMerge, VscNewFolder } from "react-icons/vsc";
 import {MdFlashOn, MdSummarize, MdWarning} from "react-icons/md";
+import {BsHourglassSplit} from "react-icons/bs";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { FaStop } from "react-icons/fa";
 import { ImDownload, ImUpload } from "react-icons/im";
 import { AiOutlineFunction } from "react-icons/ai";
+import { useAsync } from "../../api/Hooks";
+import { useEffect, useRef } from "react";
+import { BackendState, Project } from "../../model/Project";
+import { getAllProjectOfUser } from "../../api/ProjectApi";
+import { MetalPkg } from "../../model/MetalPkg";
+import { metalType, MetalTypes } from "../../model/Metal";
+import { getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
+import { MainHandler } from "../main/Main";
 
-export function Home() {
+export interface HomeProps {
+    mainHandler: MainHandler
+}
+
+
+export function Home(props: HomeProps) {
+    const {mainHandler} = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
+
+    const starterCounter = useRef(0);
+
+    const onNewProject = () => {
+        mainHandler.openProjectStarter({
+            id: `starter[${starterCounter.current++}]`,
+            mainHandler: mainHandler,
+        });
+    }
 
     if (token === null) {
         return <Skeleton />
@@ -35,20 +59,69 @@ export function Home() {
                 disablePadding={true}
             >
                 <ListItem>
-                <Button startIcon={<VscNewFolder />}>New Project</Button>
+                <Button startIcon={<VscNewFolder />} onClick={onNewProject}>New Project</Button>
                 </ListItem>
                 <ListItem>
                 <Button startIcon={<VscFolderOpened />}>Open Project</Button>
                 </ListItem>
             </List>
-            <ProjectSummary />
-            <MetalRepoSummary />
+            <ProjectSummary token={token}/>
+            <MetalRepoSummary token={token}/>
         </div>
     )
 }
 
 const ICON_SIZE = "4vw";
-function ProjectSummary() {
+
+interface ProjectSummaryProps {
+    token: string | null,
+}
+
+interface ProjectSummaryResult {
+    total: number,
+    created: number,
+    up: number,
+    down: number,
+    failure: number,
+}
+
+function useProjectSummary(token: string | null): ProjectSummaryResult {
+    const [run, status, result, error] = useAsync<Project[]>();
+
+    useEffect(()=>{
+        if (token !== null) {
+            run(getAllProjectOfUser(token))
+        }
+        
+    }, [run, token])
+
+    if (result === null) {
+        return {
+            total: -1,
+            created: -1,
+            up: -1,
+            down: -1,
+            failure: -1,
+        }
+    }
+
+    const created = result.filter((proj: Project)=>(proj.deploy.backend.status.current === BackendState.CREATED)).length;
+    const down = result.filter((proj: Project)=>(proj.deploy.backend.status.current === BackendState.DOWN)).length;
+    const up = result.filter((proj: Project)=>(proj.deploy.backend.status.current === BackendState.UP)).length;
+    const failure = result.filter((proj: Project)=>(proj.deploy.backend.status.current === BackendState.FAILURE)).length;
+    return {
+        total: created + down + up + failure,
+        created: created,
+        down: down,
+        up: up,
+        failure: failure
+    }
+}
+
+function ProjectSummary(props: ProjectSummaryProps) {
+    const {token} = props;
+    const {total, created, down, up, failure} = useProjectSummary(token);
+
     return (
         <Accordion
             defaultExpanded={true}
@@ -90,7 +163,7 @@ function ProjectSummary() {
                                 Total
                             </Typography>
                             <Typography variant="h3" color={"text.secondary"}>
-                                30
+                                {total}
                             </Typography>
                             </div>
                             <MdSummarize size={ICON_SIZE} color={"gray"}/>
@@ -112,10 +185,35 @@ function ProjectSummary() {
                         >
                             <div>
                             <Typography variant="h6" color={"text.secondary"}>
+                                Created
+                            </Typography>
+                            <Typography variant="h3" color={"cyan"}>
+                                {created}
+                            </Typography>
+                            </div>
+                            <BsHourglassSplit size={ICON_SIZE} color={"cyan"}/>
+                        </CardContent>
+                    </Card>
+
+                    <Card
+                        sx={{
+                            minWidth: "15vw",
+                        }}
+                    >
+                        <CardContent
+                            sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent:"space-between",
+                            }}
+                        >
+                            <div>
+                            <Typography variant="h6" color={"text.secondary"}>
                                 Down
                             </Typography>
                             <Typography variant="h3" color={"darkblue"}>
-                                10
+                                {down}
                             </Typography>
                             </div>
                             <FaStop size={ICON_SIZE} color={"darkblue"}/>
@@ -140,7 +238,7 @@ function ProjectSummary() {
                                 Up
                             </Typography>
                             <Typography variant="h3" color={"yellowgreen"}>
-                                10
+                                {up}
                             </Typography>
                             </div>
                             <MdFlashOn size={ICON_SIZE} color={"yellowgreen"}/>
@@ -165,7 +263,7 @@ function ProjectSummary() {
                                 Failure
                             </Typography>
                             <Typography variant="h3" color={"red"}>
-                                10
+                                {failure}
                             </Typography>
                             </div>
                             <MdWarning size={ICON_SIZE} color={"red"}/>
@@ -178,7 +276,58 @@ function ProjectSummary() {
     )
 }
 
-function MetalRepoSummary() {
+interface MetalRepoSummaryProps {
+    token: string | null
+}
+
+interface MetalRepoSummaryResult {
+    total: number,
+    setup: number,
+    source: number,
+    sink: number,
+    mapper: number,
+    fusion: number,
+}
+
+function useMetalRepoSummary(token: string | null): MetalRepoSummaryResult {
+    const [run, status, result, error] = useAsync<MetalPkg[]>();
+
+    useEffect(()=>{
+        if (token !== null) {
+            run(getAllMetalPkgsOfUserAccess(token));
+        }
+    }, [run, token]);
+
+    if (result === null) {
+        return {
+            total: -1,
+            setup: -1,
+            source: -1,
+            sink: -1,
+            mapper: -1,
+            fusion: -1,
+        }
+    }
+
+    const setup = result.filter((pkg: MetalPkg)=>(metalType(pkg.type) === MetalTypes.SETUP)).length;
+    const source = result.filter((pkg: MetalPkg)=>(metalType(pkg.type) === MetalTypes.SOURCE)).length;
+    const sink = result.filter((pkg: MetalPkg)=>(metalType(pkg.type) === MetalTypes.SINK)).length;
+    const mapper = result.filter((pkg: MetalPkg)=>(metalType(pkg.type) === MetalTypes.MAPPER)).length;
+    const fusion = result.filter((pkg: MetalPkg)=>(metalType(pkg.type) === MetalTypes.FUSION)).length;
+    return {
+        total: setup + source + sink + mapper + fusion,
+        setup: setup,
+        source: source,
+        sink: sink,
+        mapper: mapper,
+        fusion: fusion,
+    }
+}
+
+function MetalRepoSummary(props: MetalRepoSummaryProps) {
+    const {token} = props;
+    const {total, setup, source, sink, mapper, fusion} = useMetalRepoSummary(token);
+
     return (
         <Accordion
             defaultExpanded={true}
@@ -220,7 +369,7 @@ function MetalRepoSummary() {
                                 Total
                             </Typography>
                             <Typography variant="h3" color={"text.secondary"}>
-                                23
+                                {total}
                             </Typography>
                             </div>
                             <MdSummarize size={ICON_SIZE} color={"gray"}/>
@@ -244,7 +393,7 @@ function MetalRepoSummary() {
                                 Setup
                             </Typography>
                             <Typography variant="h3" color={"text.secondary"}>
-                                3
+                                {setup}
                             </Typography>
                             </div>
                             <VscExtensions size={ICON_SIZE} color={"gray"}/>
@@ -269,7 +418,7 @@ function MetalRepoSummary() {
                                 Source
                             </Typography>
                             <Typography variant="h3" color={"darkblue"}>
-                                2
+                                {source}
                             </Typography>
                             </div>
                             <ImUpload size={ICON_SIZE} color={"darkblue"}/>
@@ -294,7 +443,7 @@ function MetalRepoSummary() {
                                 Sink
                             </Typography>
                             <Typography variant="h3" color={"yellowgreen"}>
-                                10
+                                {sink}
                             </Typography>
                             </div>
                             <ImDownload size={ICON_SIZE} color={"yellowgreen"}/>
@@ -319,7 +468,7 @@ function MetalRepoSummary() {
                                 Mapper
                             </Typography>
                             <Typography variant="h3" color={"cyan"}>
-                                4
+                                {mapper}
                             </Typography>
                             </div>
                             <AiOutlineFunction size={ICON_SIZE} color={"cyan"}/>
@@ -344,7 +493,7 @@ function MetalRepoSummary() {
                                 Fusion
                             </Typography>
                             <Typography variant="h3" color={"orange"}>
-                                4
+                                {fusion}
                             </Typography>
                             </div>
                             <VscMerge size={ICON_SIZE} color={"orange"}/>

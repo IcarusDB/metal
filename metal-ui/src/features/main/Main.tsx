@@ -225,7 +225,7 @@ export function Main() {
 
             case "home": {
                 return (
-                    <Home />
+                    <Home mainHandler={mainHandler}/>
                 )
             }
 
