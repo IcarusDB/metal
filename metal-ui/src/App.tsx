@@ -3,14 +3,12 @@ import React from 'react';
 import {SignIn} from "./features/user/SignIn";
 import {Main} from "./features/main/Main";
 import { Paper } from '@mui/material';
-import { height, width } from '@mui/system';
 import { UserBar } from './features/user/UserBar';
 
 function App() {
     return (
         <div className="App">
             <SignIn></SignIn>
-            {/*<UserNotice/>*/}
             <div
                 style={{
                     display: 'block',

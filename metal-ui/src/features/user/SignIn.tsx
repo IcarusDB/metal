@@ -1,9 +1,9 @@
-import './SignIn.css'
-import React, {useEffect, useRef, useState} from "react";
-import {authenticate, UserBasicCredentials} from "../../api/UserApi";
-import {useAppDispatch, useAppSelector} from "../../app/hooks";
-import {auth, tokenSelector} from "./userSlice";
-import {createTheme, ThemeProvider} from '@mui/material/styles';
+import "./SignIn.css";
+import React, { useEffect, useRef, useState } from "react";
+import { authenticate, UserBasicCredentials } from "../../api/UserApi";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { auth, tokenSelector } from "./userSlice";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
     Alert,
     Avatar,
@@ -17,80 +17,79 @@ import {
     Checkbox,
     Modal,
     CircularProgress,
-    Backdrop
+    Backdrop,
+    Paper,
+    Divider,
 } from "@mui/material";
-import {LockOutlined} from "@mui/icons-material";
+import { LockOutlined } from "@mui/icons-material";
+import { width } from "@mui/system";
 
 enum State {
     idle,
     pending,
     success,
-    fail
+    fail,
 }
 
 const theme = createTheme();
 
 function SignInForm() {
-    const dispatch = useAppDispatch()
-    const [state, setState] = useState(State.idle)
-    const [token, setToken] = useState<string | null>(null)
+    const dispatch = useAppDispatch();
+    const [state, setState] = useState(State.idle);
+    const [token, setToken] = useState<string | null>(null);
     const isPending = () => {
-        return state === State.pending
-    }
+        return state === State.pending;
+    };
     const isFail = () => {
-        return state === State.fail
-    }
+        return state === State.fail;
+    };
 
     const onFinish = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        const usernameEntry = data.get('username') || ""
-        const passwordEntry = data.get('password') || ""
-        const username = (usernameEntry instanceof File) ? "" : usernameEntry;
-        const password = (passwordEntry instanceof File) ? "" : passwordEntry;
+        const usernameEntry = data.get("username") || "";
+        const passwordEntry = data.get("password") || "";
+        const username = usernameEntry instanceof File ? "" : usernameEntry;
+        const password = passwordEntry instanceof File ? "" : passwordEntry;
         const user: UserBasicCredentials = {
             username: username,
-            password: password
-        }
+            password: password,
+        };
 
-        setState(State.pending)
-        authenticate(user).then((_token: string) => {
-            setState(State.success)
-            setToken(_token)
-        }, reason => {
-            setState(State.fail)
-            console.error(reason)
-        })
-    }
+        setState(State.pending);
+        authenticate(user).then(
+            (_token: string) => {
+                setState(State.success);
+                setToken(_token);
+            },
+            (reason) => {
+                setState(State.fail);
+                console.error(reason);
+            }
+        );
+    };
 
     useEffect(() => {
-        dispatch(auth(token))
-    }, [token])
+        dispatch(auth(token));
+    }, [dispatch, token]);
 
     return (
         <Box
             sx={{
                 marginTop: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                minWidth: "30vw",
             }}
         >
-            {
-                isFail() && <Alert severity={"error"}>{"Fail to Sign in."}</Alert>
-            }
-            <Avatar sx={{m: 1, bgcolor: 'secondary.main'}}>
-                <LockOutlined/>
+            {isFail() && <Alert severity={"error"}>{"Fail to Sign in."}</Alert>}
+            <Avatar sx={{ m: 1, bgcolor: "secondary.main" }} src="/images/metal.png">
             </Avatar>
             <Typography component="h1" variant="h5">
                 Sign in
             </Typography>
-            <Box
-                component={'form'}
-                onSubmit={onFinish}
-                noValidate
-                sx={{mt: 1}}
-            >
+            <Box component={"form"} onSubmit={onFinish} noValidate sx={{ mt: 1 }}>
                 <TextField
                     margin={"normal"}
                     required
@@ -110,59 +109,103 @@ function SignInForm() {
                     name={"password"}
                     type={"password"}
                     disabled={isPending()}
-
                 />
                 <FormControlLabel
-                    control={<Checkbox value="remember" color="primary" disabled={state === State.pending}/>}
+                    control={
+                        <Checkbox
+                            value="remember"
+                            color="primary"
+                            disabled={state === State.pending}
+                        />
+                    }
                     label="Remember me"
                 />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        disabled={isPending()}
-                        sx={{mt: 3, mb: 2, alignItems: 'center'}}
-                    >
-                        Sign In
-                        {
-                            isPending() &&
-                            <CircularProgress
-                                sx={{
-                                    position: 'absolute'
-                                }}
-                            />
-                        }
-                    </Button>
+                <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={isPending()}
+                    sx={{ mt: 3, mb: 2, alignItems: "center" }}
+                >
+                    Sign In
+                    {isPending() && (
+                        <CircularProgress
+                            sx={{
+                                position: "absolute",
+                            }}
+                        />
+                    )}
+                </Button>
             </Box>
         </Box>
-    )
+    );
 }
 
-
 export function SignIn() {
-    const token: string | null = useAppSelector(state => {
-        return tokenSelector(state)
-    })
-    const isOn = token == null
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+    const isOn = token == null;
 
     if (!isOn) {
-        return (<></>)
+        return <></>;
     }
-
 
     return (
         <ThemeProvider theme={theme}>
-            <Modal
-                open={isOn}
-                onClose={() => {
-                }}
-            >
-                <Container component={'main'} maxWidth={'xs'} sx={{bgcolor: 'white'}}>
-                    <CssBaseline/>
-                    <SignInForm/>
-                </Container>
+            <Modal open={isOn} onClose={() => {}}>
+                <div
+                    style={{
+                        height: "100%",
+                        width: "100%",
+                        backgroundColor: "white",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "100%",
+                        }}
+                    >
+                        <Paper
+                            elevation={10}
+                            sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                // width: "100%",
+                                maxWidth: "60vw",
+                                minWidth: "50vw",
+                                boxSizing: "border-box",
+                                paddingLeft: "1vw",
+                                paddingRight: "1vw",
+                                paddingTop: "1vh",
+                                paddingBottom: "1vh",
+                                minHeight: "50vh",
+                            }}
+                        >
+                            <img
+                                src="/images/metal_logo.png"
+                                alt="logo"
+                                style={{
+                                    boxSizing: "border-box",
+                                    paddingRight: "3vw",
+                                    paddingLeft: "1vw",
+                                }}
+                            />
+                            <SignInForm />
+                        </Paper>
+                    </div>
+                </div>
             </Modal>
         </ThemeProvider>
-
-    )
+    );
 }
