@@ -72,6 +72,8 @@ export function Home(props: HomeProps) {
 }
 
 const ICON_SIZE = "4vw";
+const CARD_H_PAD = "2vw";
+const CARD_V_PAD = "2vh";
 
 interface ProjectSummaryProps {
     token: string | null,
@@ -135,19 +137,25 @@ function ProjectSummary(props: ProjectSummaryProps) {
             </AccordionSummary>
             <AccordionDetails>
                 <Divider orientation="horizontal" flexItem/>
-                <Stack
-                    sx={{
+                <div
+                    style={{
                         boxSizing: "border-box",
                         paddingTop: "1vh",
+                        flexWrap: "wrap",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent:"flex-start",
                     }}
-                    direction="row"
-                    justifyContent="flex-start"
-                    alignItems="center"
-                    spacing={2}
                 >
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -173,6 +181,11 @@ function ProjectSummary(props: ProjectSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -198,6 +211,11 @@ function ProjectSummary(props: ProjectSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -223,6 +241,11 @@ function ProjectSummary(props: ProjectSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -248,6 +271,11 @@ function ProjectSummary(props: ProjectSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -270,7 +298,7 @@ function ProjectSummary(props: ProjectSummaryProps) {
                         </CardContent>
                     </Card>
 
-                </Stack>
+                </div>
             </AccordionDetails>
         </Accordion>
     )
@@ -341,19 +369,25 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
             </AccordionSummary>
             <AccordionDetails>
                 <Divider orientation="horizontal" flexItem/>
-                <Stack
-                    sx={{
+                <div
+                    style={{
                         boxSizing: "border-box",
                         paddingTop: "1vh",
+                        flexWrap: "wrap",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent:"flex-start",
                     }}
-                    direction="row"
-                    justifyContent="flex-start"
-                    alignItems="center"
-                    spacing={2}
                 >
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -378,6 +412,11 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -403,6 +442,11 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -428,6 +472,11 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -453,6 +502,11 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -478,6 +532,11 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                     <Card
                         sx={{
                             minWidth: "15vw",
+                            boxSizing: "border-box",
+                            marginTop: CARD_V_PAD,
+                            marginBottom: CARD_V_PAD,
+                            marginLeft: CARD_H_PAD,
+                            marignRight: CARD_H_PAD,
                         }}
                     >
                         <CardContent
@@ -499,8 +558,7 @@ function MetalRepoSummary(props: MetalRepoSummaryProps) {
                             <VscMerge size={ICON_SIZE} color={"orange"}/>
                         </CardContent>
                     </Card>
-
-                </Stack>
+                </div>
             </AccordionDetails>
         </Accordion>
     )
