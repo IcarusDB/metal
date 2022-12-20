@@ -1,15 +1,30 @@
-import { Accordion, AccordionDetails, AccordionSummary, Button, Divider, Typography } from "@mui/material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
+    Button,
+    Divider,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+    Typography,
+} from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { VscChevronDown, VscCloudUpload } from "react-icons/vsc";
 import { useAsync } from "../../api/Hooks";
-import { getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
+import { addMetalPkgsFromManifest, getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
 import { useAppSelector } from "../../app/hooks";
-import { MetalPkg } from "../../model/MetalPkg";
+import { MetalManifest, MetalPkg, Scope, validMainfest } from "../../model/MetalPkg";
 import { tokenSelector } from "../user/userSlice";
 import { Mutable } from "../../model/Mutable";
+import { State } from "../../api/State";
+import Ajv, { JSONSchemaType } from "ajv";
 
 export interface MetalRepoProps {}
 
@@ -65,42 +80,94 @@ function MetalRepoViewer(props: MetalRepoViewerProps) {
     return (
         <Accordion defaultExpanded>
             <AccordionSummary expandIcon={<VscChevronDown size={"2em"} />}>
-                <Typography variant="h5">
-                    Repository Explorer
-                </Typography>
+                <Typography variant="h5">Repository Explorer</Typography>
             </AccordionSummary>
             <AccordionDetails>
-                <DataGrid
-                    columns={columns}
-                    rows={pkgs === null ? [] : pkgs}
-                    pageSize={10}
-                    rowsPerPageOptions={[10]}
-                    autoHeight={true}
-                />
+                <Divider flexItem orientation="horizontal" />
+                <div
+                    style={{
+                        boxSizing: "border-box",
+                        paddingTop: "1vh",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <DataGrid
+                        columns={columns}
+                        rows={pkgs === null ? [] : pkgs}
+                        pageSize={10}
+                        rowsPerPageOptions={[10]}
+                        autoHeight={true}
+                    />
+                </div>
             </AccordionDetails>
         </Accordion>
     );
 }
 
-interface MetalRepoMaintainProps {
+function useMetalPkgsUpload(
     token: string | null
+): [(scope: Scope, manifest: MetalManifest) => void, State, any] {
+    const [run, status, result, error] = useAsync<void>();
+    const upload = useCallback(
+        (scope: Scope, manifest: MetalManifest) => {
+            if (token !== null) {
+                run(addMetalPkgsFromManifest(token, scope, manifest));
+            }
+        },
+        [run, token]
+    );
+
+    return [upload, status, error];
+}
+
+interface MetalRepoMaintainProps {
+    token: string | null;
 }
 
 interface TextValue {
-    value: () => string
+    value: () => string;
 }
 
-class MutableTextValue extends Mutable<TextValue> implements TextValue{
+class MutableTextValue extends Mutable<TextValue> implements TextValue {
     value() {
         return this.get().value();
     }
 }
 
+function uploadTip(status: State) {
+    if (status === State.failure) {
+        return (
+            <Alert severity="error" variant="outlined">
+                <Typography color={"text.secondary"}>Fail to upload new metals.</Typography>
+            </Alert>
+        );
+    }
+    if (status === State.success) {
+        return (
+            <Alert severity="success" variant="outlined">
+                <Typography color={"text.secondary"}>Success to upload new metals.</Typography>
+            </Alert>
+        );
+    }
+    return <></>;
+}
+
+
+
 function MetalRepoMaintain(props: MetalRepoMaintainProps) {
-    const {token} = props;
-    const manifestRef = useRef<MutableTextValue>(new MutableTextValue({
-        value: ()=>("")
-    }))
+    const { token } = props;
+    const [upload, uploadStatus, uploadError] = useMetalPkgsUpload(token);
+    const [scope, setScope] = useState<Scope>(Scope.PRIVATE);
+    const [error, setError] = useState<string | null>(null);
+    const manifestRef = useRef<MutableTextValue>(
+        new MutableTextValue({
+            value: () => "",
+        })
+    );
 
     const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor, monaco: Monaco) => {
         manifestRef.current.set({
@@ -111,19 +178,39 @@ function MetalRepoMaintain(props: MetalRepoMaintainProps) {
                 } else {
                     return model.getValue();
                 }
-            }
-        })
+            },
+        });
+    };
+
+    const onScopeChange = (event: SelectChangeEvent) => {
+        const scope = event.target.value as Scope;
+        setScope(scope);
     }
 
-    
+    const onUploadNewMetals = () => {
+        const manifestValue = manifestRef.current.value();
+        if (manifestValue.trim() === "") {
+            return;
+        }
+
+        const manifest: MetalManifest = JSON.parse(manifestValue);
+        console.log(validMainfest(manifest))
+        
+        if (!validMainfest(manifest)) {
+            setError("Your input manifest is not passed validated!");
+            return;
+        } else {
+            setError(null);
+        }
+        upload(scope, manifest);
+    };
 
     return (
         <Accordion defaultExpanded>
             <AccordionSummary expandIcon={<VscChevronDown size={"2em"} />}>
-                <Typography variant="h5">
-                    Maintain
-                </Typography>
+                <Typography variant="h5">Maintain</Typography>
             </AccordionSummary>
+
             <AccordionDetails
                 sx={{
                     display: "flex",
@@ -132,38 +219,94 @@ function MetalRepoMaintain(props: MetalRepoMaintainProps) {
                     justifyContent: "center",
                 }}
             >
-            <Editor
-                height={"60vh"}
-                defaultLanguage={"json"}
-                theme={"vs-dark"}
-                onMount={handleDidMount}
-            />
-            <Divider 
-                flexItem 
-                orientation="horizontal" 
-                sx={{
-                    paddingTop: "1vh",
-                }}
-            />
-            <div 
-                style={{
-                    boxSizing: "border-box",
-                    paddingTop: "1vh",
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                }}
-            >
-                <Button 
-                    startIcon={<VscCloudUpload />} 
-                    variant="contained"
+                <Divider flexItem orientation="horizontal" />
+                <div
+                    style={{
+                        boxSizing: "border-box",
+                        paddingBottom: "1vh",
+                        paddingTop: "1vh",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
                 >
-                    Upload New Metal
-                </Button>
-            </div>
+                    <Alert severity="info" variant="outlined">
+                        <Typography color={"text.secondary"}>
+                            Please input manifest about metals, which can be copied from manifest
+                            file generated by Metal Maven Tool.
+                        </Typography>
+                    </Alert>
+                    {error !== null && (
+                        <Alert severity="warning" variant="outlined">
+                        <Typography color={"text.secondary"}>
+                            {error}
+                        </Typography>
+                    </Alert>
+                    )}
+                    {uploadTip(uploadStatus)}
+                </div>
+
+                <Editor
+                    height={"40vh"}
+                    defaultLanguage={"json"}
+                    theme={"vs-dark"}
+                    onMount={handleDidMount}
+                />
+
+                <div
+                    style={{
+                        boxSizing: "border-box",
+                        paddingTop: "2vh",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                    }}
+                >
+                    <FormControl
+                        sx={{
+                            width: "100%",
+                        }}
+                    >
+                        <InputLabel>Scope</InputLabel>
+                        <Select value={scope} label="Scope" onChange={onScopeChange}>
+                            <MenuItem value={Scope.PUBLIC}>{Scope.PUBLIC}</MenuItem>
+                            <MenuItem value={Scope.PRIVATE}>{Scope.PRIVATE}</MenuItem>
+                        </Select>
+                    </FormControl>
+                </div>
+
+                <Divider
+                    flexItem
+                    orientation="horizontal"
+                    sx={{
+                        paddingTop: "1vh",
+                    }}
+                />
+
+                <div
+                    style={{
+                        boxSizing: "border-box",
+                        paddingTop: "1vh",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <Button
+                        startIcon={<VscCloudUpload />}
+                        variant="contained"
+                        onClick={onUploadNewMetals}
+                    >
+                        Upload New Metal
+                    </Button>
+                </div>
             </AccordionDetails>
         </Accordion>
-    )
+    );
 }

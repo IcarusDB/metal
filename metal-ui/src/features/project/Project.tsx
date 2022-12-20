@@ -2,21 +2,13 @@ import "./Project.css";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import {
-    Box,
     Paper,
     Divider,
     IconButton,
-    List,
-    ListItem,
-    ListItemText,
     Tooltip,
-    TableRow,
-    TableCell,
     CircularProgress,
     Alert,
     LinearProgress,
-    Container,
-    Button,
     Grid,
 } from "@mui/material";
 import Stack from "@mui/material/Stack";
@@ -32,14 +24,13 @@ import {
     AiOutlineReload,
 } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { BackendState, BackendStatus, Deploy, Project } from "../../model/Project";
 import { getAllProjectOfUser } from "../../api/ProjectApi";
 import { State } from "../../api/State";
 import { useAsync } from "../../api/Hooks";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { MainHandler } from "../main/Main";
-import { VscAdd } from "react-icons/vsc";
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
 import moment from "moment";
 

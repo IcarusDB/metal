@@ -1,7 +1,7 @@
 import axios from "axios";
 import _ from "lodash";
 import { ApiResponse, ApiResponseEntity, timeout } from "./APIs";
-import { MetalPkg } from "../model/MetalPkg";
+import { MetalManifest, MetalPkg, Scope } from "../model/MetalPkg";
 
 const instance = axios.create({
     headers: {
@@ -61,4 +61,22 @@ export async function getAllMetalPkgsOfClasses(token: string, classes: string[])
         }
     })
     
+}
+
+export async function addMetalPkgsFromManifest(token: string, scope: Scope, manifest: MetalManifest): Promise<void> {    
+    const url = `api/v1/metalRepo/scope/${scope}`
+    return instance.post(url, {
+        "manifest": manifest
+    }, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data
+            ApiResponse.mayBeFailure(resp)
+        } catch (err) {
+            return Promise.reject(err)
+        }
+    })
 }
