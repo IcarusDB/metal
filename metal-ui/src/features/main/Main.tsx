@@ -11,16 +11,16 @@ import {
     TabNode,
 } from "flexlayout-react";
 import { Designer, DesignerProps } from "../designer/Designer";
-import { Button, Container, Paper, Skeleton, Stack } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
-import { FaProjectDiagram, FaDrawPolygon } from "react-icons/fa";
+import { FaProjectDiagram } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
 import { VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
-import { useMemo } from "react";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
 import { Home } from "../home/Home";
+import { MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
@@ -56,6 +56,7 @@ export function designerId(id: string, isReadOnly: boolean | undefined) {
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
+    openMetalRepo: (props: MetalRepoProps) => void;
     select: (id: string) => void;
     close?: (id: string) => void;
     renameDesigner?: (id: string, newName: string) => void;
@@ -197,9 +198,27 @@ export function Main() {
         layoutModel.doAction(action);
     }
 
+    const openMetalRepo = (props: MetalRepoProps) => {
+        const tab: IJsonTabNode = {
+            type: "tab",
+            name: "Repository",
+            icon: "metalRepoIcon",
+            component: "metalRepo",
+            config: props,
+        }
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        layoutModel.doAction(action);
+    }
+
     const mainHandler: MainHandler = {
         openProjectStarter: openProjectStarter,
         openDesigner: openDesigner,
+        openMetalRepo: openMetalRepo,
         select: select,
         close: close,
         renameDesigner: renameDesigner,
@@ -232,6 +251,13 @@ export function Main() {
                         <Designer {...props} mainHandler={mainHandler}/>
                     </DesignerProvider>
                 );
+            }
+
+            case "metalRepo": {
+                const props: MetalRepoProps = config;
+                return (
+                    <MetalRepo {...props} />
+                )
             }
 
             case "home": {
