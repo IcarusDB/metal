@@ -36,6 +36,10 @@ export function Home(props: HomeProps) {
         });
     }
 
+    const onOpenProject = () => {
+        mainHandler.select("projects_tab");
+    }
+
     if (token === null) {
         return <Skeleton />
     }
@@ -62,7 +66,7 @@ export function Home(props: HomeProps) {
                 <Button startIcon={<VscNewFolder />} onClick={onNewProject}>New Project</Button>
                 </ListItem>
                 <ListItem>
-                <Button startIcon={<VscFolderOpened />}>Open Project</Button>
+                <Button startIcon={<VscFolderOpened />} onClick={onOpenProject}>Open Project</Button>
                 </ListItem>
             </List>
             <ProjectSummary token={token}/>

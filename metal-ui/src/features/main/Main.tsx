@@ -56,6 +56,7 @@ export function designerId(id: string, isReadOnly: boolean | undefined) {
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
+    select: (id: string) => void;
     close?: (id: string) => void;
     renameDesigner?: (id: string, newName: string) => void;
 }
@@ -88,6 +89,7 @@ export function Main() {
                 children: [
                     {
                         type: "tab",
+                        id: "projects_tab",
                         name: "Projects",
                         enableDrag: false,
                         enableClose: false,
@@ -100,6 +102,7 @@ export function Main() {
                     },
                     {
                         type: "tab",
+                        id: "metal_repo_tab",
                         name: "Metal Repo",
                         enableDrag: false,
                         enableClose: false,
@@ -109,6 +112,7 @@ export function Main() {
                     },
                     {
                         type: "tab",
+                        id: "deployment_tab",
                         name: "Deployment",
                         enableDrag: false,
                         enableClose: false,
@@ -118,6 +122,7 @@ export function Main() {
                     },
                     {
                         type: "tab",
+                        id: "executions_tab",
                         name: "Executions",
                         enableDrag: false,
                         enableClose: false,
@@ -187,9 +192,15 @@ export function Main() {
         layoutModel.doAction(action);
     }
 
+    const select = (id: string) => {
+        const action: Action = Actions.selectTab(id);
+        layoutModel.doAction(action);
+    }
+
     const mainHandler: MainHandler = {
         openProjectStarter: openProjectStarter,
         openDesigner: openDesigner,
+        select: select,
         close: close,
         renameDesigner: renameDesigner,
     }

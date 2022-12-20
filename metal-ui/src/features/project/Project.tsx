@@ -195,7 +195,6 @@ export function ProjectList(props: ProjectListProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const starterCounter = useRef(0);
 
     const [run, status, result, error] = useAsync<Project[]>();
     const projects = useMemo(() => (result === null ? [] : result), [result]);
@@ -291,17 +290,12 @@ export function ProjectList(props: ProjectListProps) {
             <GridToolbarContainer sx={{ width: "100%" }}>
                 <Stack
                     direction="row"
-                    justifyContent="space-between"
+                    justifyContent="flex-end"
                     alignItems="center"
-                    divider={<Divider orientation="vertical" flexItem />}
                     spacing={0}
                     sx={{ width: "100%" }}
                 >
-                    <Button variant="contained" onClick={onAddProject}>
-                        <VscAdd />
-                    </Button>
-
-                    <Container></Container>
+                    <Divider orientation="vertical" flexItem />
                     <IconButton disabled={isPending()} onClick={load}>
                         <AiOutlineReload />
                         {isPending() && (
@@ -322,13 +316,6 @@ export function ProjectList(props: ProjectListProps) {
     ) : (
         <LinearProgress variant="determinate" value={0} />
     );
-
-    const onAddProject = () => {
-        mainHandler.openProjectStarter({
-            id: `starter[${starterCounter.current++}]`,
-            mainHandler: mainHandler,
-        });
-    };
 
     useEffect(() => {
         load();
