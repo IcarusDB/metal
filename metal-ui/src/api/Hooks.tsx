@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useNotice } from "../features/notice/Notice";
 import { State } from "./State";
 
 interface AsyncState<R> {
@@ -8,6 +9,7 @@ interface AsyncState<R> {
 }
 
 export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
+    const notice = useNotice((state) => (state.error));
     const [state, setState] = useState<AsyncState<R>>({
         status: State.idle,
         result: null,
@@ -38,8 +40,9 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                 error: reason,
             });
             console.log(reason);
+            notice(JSON.stringify(reason));
         }
-    }, []);
+    }, [notice]);
 
     return [run, state.status, state.result, state.error];
 }

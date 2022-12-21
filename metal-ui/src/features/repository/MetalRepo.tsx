@@ -27,7 +27,7 @@ import { tokenSelector } from "../user/userSlice";
 import { Mutable } from "../../model/Mutable";
 import { State } from "../../api/State";
 import Ajv, { JSONSchemaType } from "ajv";
-import { useNotice } from "../notice/Notice";
+import { Logger, loggerSelector, useNotice } from "../notice/Notice";
 
 export interface MetalRepoProps {}
 
@@ -160,7 +160,7 @@ function uploadTip(status: State) {
 }
 
 function MetalRepoMaintain(props: MetalRepoMaintainProps) {
-    const notice = useNotice((state) =>(state.put));
+    const notice = useNotice<Logger>(loggerSelector);
     const { token } = props;
     const [upload, uploadStatus, uploadError] = useMetalPkgsUpload(token);
     const [scope, setScope] = useState<Scope>(Scope.PRIVATE);
@@ -194,7 +194,7 @@ function MetalRepoMaintain(props: MetalRepoMaintainProps) {
         if (manifestValue.trim() === "") {
             const msg = "Your input manifest is empty!";
             setError(msg);
-            notice(msg);
+            notice.warning(msg);
             return;
         }
         try {
@@ -202,7 +202,7 @@ function MetalRepoMaintain(props: MetalRepoMaintainProps) {
             if (!validMainfest(manifest)) {
                 const msg = "Your input manifest is not passed validated!"
                 setError(msg);
-                notice(msg);
+                notice.warning(msg);
                 return;
             } else {
                 setError(null);
@@ -212,7 +212,7 @@ function MetalRepoMaintain(props: MetalRepoMaintainProps) {
             console.error(err);
             const msg = "Fail to parse your input manifest!";
             setError(msg);
-            notice(msg);
+            notice.error(msg);
         }
         
     };

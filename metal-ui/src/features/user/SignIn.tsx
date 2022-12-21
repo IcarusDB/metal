@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { LockOutlined } from "@mui/icons-material";
 import { width } from "@mui/system";
+import { useNotice } from "../notice/Notice";
 
 enum State {
     idle,
