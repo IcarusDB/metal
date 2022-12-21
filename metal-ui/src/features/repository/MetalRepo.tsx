@@ -3,7 +3,6 @@ import {
     AccordionDetails,
     AccordionSummary,
     Alert,
-    Button,
     Divider,
     FormControl,
     InputLabel,
@@ -26,9 +25,7 @@ import { MetalManifest, MetalPkg, Scope, validMainfest } from "../../model/Metal
 import { tokenSelector } from "../user/userSlice";
 import { Mutable } from "../../model/Mutable";
 import { State } from "../../api/State";
-import Ajv, { JSONSchemaType } from "ajv";
 import { Logger, loggerSelector, useNotice } from "../notice/Notice";
-
 export interface MetalRepoProps {}
 
 export function MetalRepo(props: MetalRepoProps) {

@@ -4,12 +4,11 @@ import {
     IconButton,
     List,
     ListItem,
-    Paper,
     Popover,
     Typography,
 } from "@mui/material";
 import moment from "moment";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { VscBell, VscBellDot, VscClearAll } from "react-icons/vsc";
 import create from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";

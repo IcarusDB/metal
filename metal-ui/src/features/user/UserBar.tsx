@@ -1,6 +1,5 @@
 import { Logout } from "@mui/icons-material";
-import { Avatar, Divider, IconButton, ListItem, ListItemIcon, Menu, MenuItem, Typography } from "@mui/material";
-import { height } from "@mui/system";
+import { Avatar, Divider, IconButton, ListItemIcon, Menu, MenuItem, Typography } from "@mui/material";
 import jwtDecode from "jwt-decode";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";

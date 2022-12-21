@@ -1,5 +1,5 @@
 import "./SignIn.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { authenticate, UserBasicCredentials } from "../../api/UserApi";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { auth, tokenSelector } from "./userSlice";
@@ -9,21 +9,14 @@ import {
     Avatar,
     Box,
     Button,
-    Container,
-    CssBaseline,
     Typography,
     TextField,
     FormControlLabel,
     Checkbox,
     Modal,
     CircularProgress,
-    Backdrop,
     Paper,
-    Divider,
 } from "@mui/material";
-import { LockOutlined } from "@mui/icons-material";
-import { width } from "@mui/system";
-import { useNotice } from "../notice/Notice";
 
 enum State {
     idle,
