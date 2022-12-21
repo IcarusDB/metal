@@ -4,6 +4,7 @@ import { height } from "@mui/system";
 import jwtDecode from "jwt-decode";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { Notice } from "../notice/Notice";
 import { logout, tokenSelector } from "./userSlice";
 
 interface TokenUser {
@@ -69,6 +70,7 @@ export function UserBar(props: UserBarProps) {
                     height: "100%",
                 }}
             >
+                <Notice />
                 <Divider orientation="vertical" />
                 <Typography variant="h6" sx={{ 
                         width: "100%", 
