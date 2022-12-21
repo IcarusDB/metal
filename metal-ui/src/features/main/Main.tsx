@@ -106,16 +106,6 @@ export function Main() {
                     },
                     {
                         type: "tab",
-                        id: "metal_repo_tab",
-                        name: "Metal Repo",
-                        enableDrag: false,
-                        enableClose: false,
-                        enableFloat: false,
-                        icon: "metalRepoIcon",
-                        component: "empty",
-                    },
-                    {
-                        type: "tab",
                         id: "deployment_tab",
                         name: "Deployment",
                         enableDrag: false,
