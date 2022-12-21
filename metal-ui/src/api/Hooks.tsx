@@ -30,7 +30,7 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                     result: res,
                     error: null,
                 });
-            }, 1000);
+            }, 2000);
         } catch (reason) {
             setState({
                 status: State.failure,

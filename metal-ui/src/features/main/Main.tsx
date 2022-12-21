@@ -68,6 +68,9 @@ export function Main() {
         name: "Home",
         icon: "homeIcon",
         component: "home", 
+        enableDrag: false,
+        enableFloat: false,
+        enableRename: false,
         enableClose: false,
     }
     
