@@ -196,7 +196,17 @@ export function Main() {
             DockLocation.CENTER,
             1
         );
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+        
     }
 
     const openDesigner = (props: DesignerProps) => {
@@ -216,26 +226,48 @@ export function Main() {
             DockLocation.CENTER,
             1
         );
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
     };
 
     const close = (id: string) => {
         const action: Action = Actions.deleteTab(id);
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
     }
 
     const renameDesigner = (id: string, newName: string) => {
         const action: Action = Actions.renameTab(id, newName);
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
     }
 
     const select = (id: string) => {
         const action: Action = Actions.selectTab(id);
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
     }
 
     const openMetalRepo = (props: MetalRepoProps) => {
         const tab: IJsonTabNode = {
+            id: "metal-repository",
             type: "tab",
             name: "Repository",
             icon: "metalRepoIcon",
@@ -248,7 +280,16 @@ export function Main() {
             DockLocation.CENTER,
             1
         );
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
     }
 
     const mainHandler: MainHandler = {
