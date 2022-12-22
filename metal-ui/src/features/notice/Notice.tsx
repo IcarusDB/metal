@@ -54,7 +54,7 @@ export function loggerSelector(store: NoticeStore): Logger {
 }
 
 export const useNotice = create<NoticeStore>()(
-    subscribeWithSelector((set) => ({
+    subscribeWithSelector((set, get) => ({
         messages: [],
         put: (message: string | JSX.Element) => {
             set((prev) => ({

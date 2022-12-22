@@ -19,8 +19,50 @@ import { VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons
 import { GrTasks } from "react-icons/gr";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
-import { Home } from "../home/Home";
+import { Home, HomeProps } from "../home/Home";
 import { MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
+import create from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import _ from "lodash";
+
+interface Component {
+    type: string,
+    props: any,
+    instance: JSX.Element,
+}
+
+interface ComponentFactory {
+    // projects: ProjectListProps[],
+    // starter: ProjectStarterProps[],
+    // designer: DesignerProps[],
+    // metalRepo: MetalRepoProps[],
+    // home: HomeProps[],
+    components: Component[],
+    memorize: (type: string, props: any, factory: () => JSX.Element) => JSX.Element,
+}
+
+const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((set, get) => ({
+    components: [],
+    memorize: (type, props, factory) => {
+        const mCmps = get().components.filter(component => {
+            if (component.type !== type) {
+                return false;
+            }
+
+            return _.isEqualWith(props, component.props);
+        });
+        if (mCmps.length === 0) {
+            const newCmp = factory();
+            set((prev) => ({
+                components: [{ type: type, props: props, instance: newCmp }, ...prev.components]
+            }));
+            return newCmp;
+        } else {
+            return mCmps[0].instance;
+        }
+    },
+})));
+
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
@@ -63,6 +105,7 @@ export interface MainHandler {
 }
 
 export function Main() {
+    const memorizeCmps = useComponentFactory(state => state.memorize);
     const home: IJsonTabNode = {
         type: "tab",
         name: "Home",
@@ -226,7 +269,7 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return <ProjectList {...props}/>;
+                return memorizeCmps(component, props, ()=>(<ProjectList {...props}/>))
             }
 
             case "starter": {
@@ -234,29 +277,33 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return <ProjectStarter {...props}/>;
+                return memorizeCmps(component, props, ()=>(<ProjectStarter {...props}/>))
             }
                 
             case "designer": {
                 const props: DesignerProps = config;
-                return (
+                return memorizeCmps(component, props, ()=>(
                     <DesignerProvider>
                         <Designer {...props} mainHandler={mainHandler}/>
                     </DesignerProvider>
-                );
+                ));
             }
 
             case "metalRepo": {
                 const props: MetalRepoProps = config;
-                return (
+                return memorizeCmps(component, props, ()=>(
                     <MetalRepo {...props} />
-                )
+                ));
             }
 
             case "home": {
-                return (
-                    <Home mainHandler={mainHandler}/>
-                )
+                const props: HomeProps = {
+                    ...config,
+                    mainHandler: mainHandler,
+                }
+                return memorizeCmps(component, props, ()=>(
+                    <Home {...props}/>
+                ))
             }
 
             default:
