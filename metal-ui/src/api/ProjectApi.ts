@@ -3,6 +3,7 @@ import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
 import {BackendStatus, Deploy, Project} from "../model/Project";
 import _ from "lodash"
 import { Spec } from "../model/Spec";
+import { idMap } from "./IdMap";
 
 const instance = axios.create({
     headers: {
@@ -10,14 +11,6 @@ const instance = axios.create({
     },
     timeout: timeout()
 })
-
-function idMap <T> (obj: any): T {
-    obj = _.mapKeys(obj, (val, key) => {
-        return key === '_id'? 'id': key
-    })
-    const target: T = obj
-    return target;
-}
 
 function projectMap (obj: any): Project {
     obj.user = _.mapKeys(obj.user, (val, key) => {

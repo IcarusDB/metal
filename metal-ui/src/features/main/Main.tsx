@@ -24,6 +24,7 @@ import { MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
 import create from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import _ from "lodash";
+import { Executions, ExecutionsProps } from "../execution/Executions";
 
 interface Component {
     type: string,
@@ -165,7 +166,10 @@ export function Main() {
                         enableClose: false,
                         enableFloat: false,
                         icon: "executionsIcon",
-                        component: "empty",
+                        component: "executions",
+                        config: {
+                            mainHandler: null
+                        }
                     },
                 ],
             },
@@ -335,6 +339,16 @@ export function Main() {
                 return memorizeCmps(component, props, ()=>(
                     <MetalRepo {...props} />
                 ));
+            }
+
+            case "executions": {
+                const props: ExecutionsProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <Executions {...props} />
+                ))
             }
 
             case "home": {
