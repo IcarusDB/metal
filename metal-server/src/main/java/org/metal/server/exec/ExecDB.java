@@ -125,13 +125,69 @@ public class ExecDB {
     return exec;
   }
 
+  public static Future<List<JsonObject>> getAllOfMatcher(MongoClient mongo, JsonObject matcher) {
+    JsonObject match = new JsonObject();
+    JsonObject lookup = new JsonObject();
+    JsonObject project = new JsonObject();
+    JsonObject reduceProject = new JsonObject();
+
+    match.put("$match", matcher);
+    lookup.put("$lookup",
+        new JsonObject()
+            .put("from", ProjectDB.DB)
+            .put("localField", ExecDB.FIELD_FROM_PROJECT)
+            .put("foreignField", ProjectDB.ID)
+            .put("as", "fromProjectCopy")
+    );
+
+    project.put("$project",
+        new JsonObject()
+            .put(FIELD_ID, true)
+            .put(FIELD_USER_ID, true)
+            .put(FIELD_SPEC, true)
+            .put(FIELD_DEPLOY, true)
+            .put(FIELD_STATUS, true)
+            .put(FIELD_CREATE_TIME, true)
+            .put(FIELD_SUBMIT_TIME, true)
+            .put(FIELD_BEAT_TIME, true)
+            .put(FIELD_FINISH_TIME, true)
+            .put(FIELD_TERMINATE_TIME, true)
+            .put(FIELD_FROM_PROJECT, true)
+            .put("fromProjectDetail", new JsonObject().put("$arrayElemAt", new JsonArray().add("$fromProjectCopy").add(0)))
+    );
+
+
+    reduceProject.put("$project",
+        new JsonObject()
+            .put(FIELD_ID, true)
+            .put(FIELD_USER_ID, true)
+            .put(FIELD_SPEC, true)
+            .put(FIELD_DEPLOY, true)
+            .put(FIELD_STATUS, true)
+            .put(FIELD_CREATE_TIME, true)
+            .put(FIELD_SUBMIT_TIME, true)
+            .put(FIELD_BEAT_TIME, true)
+            .put(FIELD_FINISH_TIME, true)
+            .put(FIELD_TERMINATE_TIME, true)
+            .put(FIELD_FROM_PROJECT, true)
+            .put("fromProjectDetail", new JsonObject().put(ProjectDB.NAME, true))
+    );
+
+    JsonArray pipeline = new JsonArray()
+        .add(match)
+        .add(lookup)
+        .add(project)
+        .add(reduceProject);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.aggregate(DB, pipeline), ExecDB::compatJsonOnPlatform
+    );
+  }
+
   public static Future<List<JsonObject>> getAllOfUser(MongoClient mongo, String userId) {
     JsonObject matcher = new JsonObject();
     matcher.put(FIELD_USER_ID, userId);
-
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllOfUserNoDetail(MongoClient mongo, String userId) {
@@ -147,9 +203,7 @@ public class ExecDB {
   public static Future<List<JsonObject>> getAll(MongoClient mongo) {
     JsonObject matcher = new JsonObject();
 
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllNoDetail(MongoClient mongo) {
@@ -165,9 +219,7 @@ public class ExecDB {
     JsonObject matcher = new JsonObject();
     matcher.put(FIELD_FROM_PROJECT, projectId);
 
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllOfProjectNoDetail(MongoClient mongo, String projectId) {
