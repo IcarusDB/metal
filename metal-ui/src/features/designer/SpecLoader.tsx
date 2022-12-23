@@ -20,9 +20,9 @@ export interface SpecFlow {
 export function useSpecLoader(token: string | null, spec?: Spec) {
     const [run, status, result, error] = useAsync<SpecFlow>();
 
-    const loadSpec = useCallback(async () => {
+    const load = useCallback(() => {
         if (token === null || spec === undefined) {
-            return Promise.reject("Fail to load spec.");
+            return;
         }
         const classes = spec.metals
             .filter((metal) => metal.type !== undefined)
@@ -35,7 +35,8 @@ export function useSpecLoader(token: string | null, spec?: Spec) {
             };
         }
 
-        return getAllMetalPkgsOfClasses(token, classes).then((metalPkgs) => {
+        const task = getAllMetalPkgsOfClasses(token, classes)
+        .then((metalPkgs) => {
             const nodeTmpls: (MetalNodeProps | undefined)[] = spec.metals
                 .filter((metal) => metal.type !== undefined)
                 .map((metal) => {
@@ -82,11 +83,8 @@ export function useSpecLoader(token: string | null, spec?: Spec) {
             };
             return flow;
         });
-    }, [spec, token]);
-
-    const load = useCallback(()=>{
-        run(loadSpec())
-    }, [loadSpec, run])
+        run(task);
+    }, [run, spec, token]);
 
     useEffect(() => {
        load()

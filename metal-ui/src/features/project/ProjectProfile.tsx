@@ -54,6 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
+import { useBackendArgs, useName, usePkgs, usePlatform } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -527,6 +528,12 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
+    const [, setName] = useName();
+    const [, setPkgs] = usePkgs();
+    const [, setPlatform] = usePlatform();
+    const [, setBackendArgs] = useBackendArgs();
+
+
     const check: () => [boolean, string | undefined] = useCallback(() => {
         if (basic === null || basic.name === "") {
             return [false, "The project basic profile is not configured."];
@@ -577,7 +584,23 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             return;
         } else {
             const params: ProjectParams = projectParams(profile);
-            run(updateProject(token, id, params));
+            run(
+                updateProject(token, id, params).then(ret => {
+                    if (params.name !== undefined) {
+                        setName(params.name);
+                    }
+                    if (params.pkgs !== undefined) {
+                        setPkgs(params.pkgs);
+                    }
+                    if (params.platform !== undefined) {
+                        setPlatform(params.platform);
+                    }
+                    if (params.backendArgs !== undefined) {
+                        setBackendArgs(params.backendArgs);
+                    }
+                    return ret;
+                })
+            );
         }
     };
 
@@ -692,7 +715,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 export interface ProjectProfileProps {
     open: boolean;
     isCreate: boolean;
-    project?: Project;
+    id?: string;
     onFinish?: (projectId: string) => void;
 }
 
@@ -727,55 +750,61 @@ export interface ProjectProfileValue {
 
 const STEP_SIZE = 5;
 
+function extractPlatformType(platform: any): PlatformType{
+    const types = _.keys(platform);
+    if (types.length === 0) {
+        return  PlatformType.SPARK_STANDALONE;
+    }
+    return platformType(types[0]);
+}
+
 function extractBasicProfile(project: Project | undefined): ProjectBasicProfileValue | null {
     if (project === undefined || project === null) {
         return null;
     }
-    const platforms = _.keys(project.deploy.platform);
-    if (platforms.length === 0) {
-        return {
-            name: project.name,
-            platform: PlatformType.SPARK_STANDALONE,
-        };
-    }
-
     return {
         name: project.name,
-        platform: platformType(platforms[0]),
+        platform: extractPlatformType(project.deploy.platform),
     };
+}
+
+function mapToPkgProfile(pkgs: string[]): PkgProfileValue {
+    return {
+        packages: pkgs.filter((pkg) => {
+            return pkg.split(":").length === 3;
+        }).map((pkg) => {
+            const sub = pkg.split(":");
+            return {
+                id: pkg,
+                groupId: sub[0],
+                artifactId: sub[1],
+                version: sub[2],
+                scope: "PRIVATE",
+            };
+        })
+    }
 }
 
 function extractPkgProfile(project: Project | undefined): PkgProfileValue | null {
     if (project === undefined || project === null) {
         return null;
     }
-    return {
-        packages: project.deploy.pkgs
-            .filter((pkg) => {
-                return pkg.split(":").length === 3;
-            })
-            .map((pkg) => {
-                const sub = pkg.split(":");
-                return {
-                    id: pkg,
-                    groupId: sub[0],
-                    artifactId: sub[1],
-                    version: sub[2],
-                    scope: "PRIVATE",
-                };
-            }),
-    };
+    return mapToPkgProfile(project.deploy.pkgs);
+}
+
+function mapToPlatformProfile(type: PlatformType, platformWithType: any) : any {
+    if (_.hasIn(platformWithType, type)) {
+        return platformWithType[type];
+    } else {
+        return null;
+    }
 }
 
 function extractPlatformProfile(type: PlatformType, project: Project | undefined): any {
     if (project === undefined || project === null) {
         return null;
     }
-    if (_.hasIn(project.deploy.platform, type)) {
-        return project.deploy.platform[type];
-    } else {
-        return null;
-    }
+    return mapToPlatformProfile(type, project.deploy.platform);
 }
 
 function extractBackendArgumentsProfile(project: Project | undefined): string[] | null {
@@ -787,26 +816,35 @@ function extractBackendArgumentsProfile(project: Project | undefined): string[] 
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
-        const { open, isCreate, project, onFinish } = props;
+        const { open, isCreate, id, onFinish } = props;
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(() =>
-            extractBasicProfile(project)
+        const[platform] = usePlatform();
+        const[backendArgs] = useBackendArgs();
+        const[pkgs] = usePkgs();
+        const[name] = useName();
+
+        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(
+            () => ({
+                name: name === undefined? "": name,
+                platform: extractPlatformType(platform)
+        }));
+
+        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(
+            () => (mapToPkgProfile(pkgs))
         );
-        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(() =>
-            extractPkgProfile(project)
-        );
+
         const [platformProfile, setPlatformProfile] = useState<any>(() =>
-            extractPlatformProfile(
+            mapToPlatformProfile(
                 basicProfile === null
                     ? PlatformType.SPARK_STANDALONE
                     : platformType(basicProfile.platform),
-                project
+                platform
             )
         );
-        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(() =>
-            extractBackendArgumentsProfile(project)
+        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(
+            () => (backendArgs)
         );
 
         const close = () => {
@@ -956,7 +994,7 @@ export const ProjectProfile = forwardRef(
                     )}
                     {activeStep === 4 && (
                         <ProjectProfileFinish
-                            id={project?.id}
+                            id={id}
                             isCreate={isCreate}
                             profile={{
                                 basic: basicProfile,
@@ -995,7 +1033,7 @@ export const ProjectProfile = forwardRef(
 export interface ProjectProfileViewerProps {}
 
 export interface ProjectProfileViewerHandler {
-    open: (project: Project) => void;
+    open: (id: string) => void;
     close: () => void;
 }
 
@@ -1003,10 +1041,15 @@ const theme = createTheme();
 
 export const ProjectProfileViewer = forwardRef(
     (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
-        const [project, setProject] = useState<Project>();
+        const [id, setId] = useState<string>();
         const [isOpen, setOpen] = useState(false);
-        const onOpen = (project: Project) => {
-            setProject(project);
+        const [name] = useName();
+        const [pkgs] = usePkgs();
+        const [platform] = usePlatform();
+        const [backendArgs] = useBackendArgs();
+
+        const onOpen = (id: string) => {
+            setId(id);
             setOpen(true);
         };
         const onClose = () => {
@@ -1021,7 +1064,7 @@ export const ProjectProfileViewer = forwardRef(
             []
         );
 
-        if (project === undefined) {
+        if (id === undefined) {
             return (
                 <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
                     <Skeleton></Skeleton>
@@ -1029,11 +1072,9 @@ export const ProjectProfileViewer = forwardRef(
             );
         }
 
-        const name = project.name;
-        const platformTypes = _.keys(project.deploy.platform);
-        const packages = project.deploy.pkgs;
-        const backendArgs = project.deploy.backend.args;
-        const platformConf = JSON.stringify(project.deploy.platform, null, 2);
+        const platformTypes = _.keys(platform);
+        const packages = pkgs;
+        const platformConf = JSON.stringify(platform, null, 2);
 
         return (
             <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>

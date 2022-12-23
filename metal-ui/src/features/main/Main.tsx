@@ -214,11 +214,11 @@ export function Main() {
     }
 
     const openDesigner = (props: DesignerProps) => {
-        const { id, name, isReadOnly } = props;
+        const { id, isReadOnly } = props;
         const tab: IJsonTabNode = {
             type: "tab",
             id: designerId(id, isReadOnly),
-            name: name === undefined? `Project[${id}]`: `Project[${name}]`,
+            name: `Designer[${id}]`,
             icon: isReadOnly? "viewerIcon": "designerIcon",
             component: "designer",
             config: props,

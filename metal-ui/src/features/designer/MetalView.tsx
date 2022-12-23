@@ -15,7 +15,7 @@ import { MouseEvent } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
-import { MetalNodeEditorAction } from "./DesignerProvider";
+import { MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
 
 export const MetalViewIcons = {

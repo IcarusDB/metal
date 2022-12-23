@@ -260,14 +260,12 @@ export function ProjectList(props: ProjectListProps) {
                     onEdit: () => {
                         mainHandler?.openDesigner({
                             id: project.id,
-                            name: project.name,
                             mainHandler: mainHandler,
                         });
                     },
                     onView: () => {
                         mainHandler?.openDesigner({
                             id: project.id,
-                            name: project.name,
                             isReadOnly: true,
                         });
                     },

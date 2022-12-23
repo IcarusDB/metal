@@ -1,60 +1,16 @@
 import { createContext, ReactNode, useContext } from "react"
-import { Node } from "reactflow";
-import { emptySpec, Spec } from "../../model/Spec";
-import { MetalNodeProps } from "./MetalView";
-import { SpecFlow } from "./SpecLoader";
 import { createStore, useStore} from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { SpecSlice, createSpecSlice } from "./SpecSlice";
+import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction } from "./DesignerActionSlice";
+import { Spec } from "../../model/Spec";
 
-export interface MetalFlowAction {
-    inputs: (id: string) => Node<MetalNodeProps>[];
-    outputs: (id: string) => Node<MetalNodeProps>[];
-    addNode: (nodeProps: MetalNodeProps) => void;
-    load: (newFlow: SpecFlow | undefined) => void;
-    export: () => Spec;
-}
+declare type DesingerStore = DesignerActionSlice & SpecSlice;
 
-export const initialMetalFlowAction: MetalFlowAction = {
-    inputs: (id: string) => [],
-    outputs: (id: string) => [],
-    addNode: (nodeProps: MetalNodeProps) => {},
-    load: (newFlow: SpecFlow | undefined) => {},
-    export: () => (emptySpec()),
-};
-
-export interface MetalNodeEditorAction {
-    load: (props: MetalNodeProps) => void;
-    close: () => void;
-}
-
-export const initialMetalNodeEditorAction: MetalNodeEditorAction = {
-    load: (props: MetalNodeProps) => {},
-    close: () => {},
-};
-
-interface DesignerAction {
-    metalFlowAction: MetalFlowAction,
-    metalNodeEditorAction: MetalNodeEditorAction,
-    bindMetalFlowAction: (action: MetalFlowAction) => void,
-    bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => void,
-}
-
-const store = createStore<DesignerAction>()(
+const store = createStore<DesingerStore>()(
     subscribeWithSelector((set, get) => ({
-        metalFlowAction: initialMetalFlowAction,
-        metalNodeEditorAction: initialMetalNodeEditorAction,
-        bindMetalFlowAction: (action: MetalFlowAction) => {
-            set((prev) => ({
-                ...prev,
-                metalFlowAction: action,
-            }))
-        },
-        bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => {
-            set((prev) => ({
-                ...prev,
-                metalNodeEditorAction: action,
-            }))
-        },
+        ...createDesignerActionSlice(set, get),
+        ...createSpecSlice(set, get),
     }))
 )
 
@@ -70,6 +26,63 @@ export function useMetalNodeEditor(): [MetalNodeEditorAction, (action: MetalNode
     const store = useContext(DesignerStoreContext);
     const [action, setAction] = useStore(store, (state)=>([state.metalNodeEditorAction, state.bindMetalNodeEditorAction]));
     return [action, setAction];
+}
+
+export function useName(): [
+    string | undefined, 
+    (name: string) => void,
+    (listener: (name: string | undefined, prev: string | undefined) => void) => void
+] {
+    const store = useContext(DesignerStoreContext);
+    const subscribe = (listener: (name: string | undefined, prev: string | undefined) => void ) => {
+        store.subscribe(
+            state => state.name,
+            listener
+        );
+    }
+    return useStore(
+        store,
+        (state) => ([
+            state.name, 
+            state.bindName,
+            subscribe,
+        ])
+    );
+}
+
+export function usePkgs(): [string[], (pkgs: string[]) => void]{
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.pkgs,
+            state.bindPkgs
+        ])
+    );
+}
+
+export function useSpec(): [Spec | undefined, (spec: Spec) => void] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([state.spec, state.bindSpec])
+    );
+}
+
+export function usePlatform(): [any | undefined, (platform: any) => void] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([state.platform, state.bindPlatform])
+    );
+}
+
+export function useBackendArgs(): [string[], (args: string[]) => void] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([state.backendArgs, state.bindBackendArgs])
+    );
 }
 
 export interface DesignerProviderProps {
