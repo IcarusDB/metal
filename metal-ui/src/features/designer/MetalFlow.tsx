@@ -33,7 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useMutableMetalFlow } from "./DesignerProvider";
+import { useMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -55,7 +55,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
     const { isReadOnly, nodePropsWrap, flow} = props;
-    const handler = useMutableMetalFlow();
+    const [, setMetalFlowAction] = useMetalFlow();
     const flowInstance = useReactFlow();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
 
@@ -324,14 +324,14 @@ export const MetalFlow = (props: MetalFlowProps) => {
     }, [flowInstance]);
 
     useMemo(() => {
-        handler.set({
+        setMetalFlowAction({
             inputs: inputs,
             outputs: outputs,
             addNode: addNode,
             load: load,
             export: exportSpec,
         });
-    }, [addNode, exportSpec, handler, inputs, load, outputs]);
+    }, [addNode, exportSpec, inputs, load, outputs, setMetalFlowAction]);
 
     const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
     const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);

@@ -1,13 +1,12 @@
-import _ from "lodash";
-import React, { createContext, ReactNode, useContext } from "react"
+import { createContext, ReactNode, useContext } from "react"
 import { Node } from "reactflow";
-import { Mutable } from "../../model/Mutable";
 import { emptySpec, Spec } from "../../model/Spec";
 import { MetalNodeProps } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
+import { createStore, useStore} from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 
-
-export interface MetalFlowHandler {
+export interface MetalFlowAction {
     inputs: (id: string) => Node<MetalNodeProps>[];
     outputs: (id: string) => Node<MetalNodeProps>[];
     addNode: (nodeProps: MetalNodeProps) => void;
@@ -15,7 +14,7 @@ export interface MetalFlowHandler {
     export: () => Spec;
 }
 
-export const metalFlowHandlerInitial: MetalFlowHandler = {
+export const initialMetalFlowAction: MetalFlowAction = {
     inputs: (id: string) => [],
     outputs: (id: string) => [],
     addNode: (nodeProps: MetalNodeProps) => {},
@@ -23,81 +22,54 @@ export const metalFlowHandlerInitial: MetalFlowHandler = {
     export: () => (emptySpec()),
 };
 
-export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implements MetalFlowHandler {
-    inputs(id: string) {
-        return this.get().inputs(id);
-    }
-
-    outputs(id: string) {
-        return this.get().outputs(id);
-    }
-
-    addNode(nodeProps: MetalNodeProps) {
-        this.get().addNode(nodeProps);
-    }
-
-    load(newFlow: SpecFlow | undefined) {
-        this.get().load(newFlow);
-    }
-
-    export() {
-        return this.get().export();
-    }
-}
-
-export interface MetalNodeEditorHandler {
+export interface MetalNodeEditorAction {
     load: (props: MetalNodeProps) => void;
     close: () => void;
 }
 
-export const metalNodeEditorHandlerInitial: MetalNodeEditorHandler = {
+export const initialMetalNodeEditorAction: MetalNodeEditorAction = {
     load: (props: MetalNodeProps) => {},
     close: () => {},
 };
 
-export class MutableMetalNodeEditorHandler extends Mutable<MetalNodeEditorHandler> implements MetalNodeEditorHandler {
-    load(props: MetalNodeProps) {
-        this.get().load(props);
-    }
-    
-    close() {
-        this.get().close();
-    }
+interface DesignerAction {
+    metalFlowAction: MetalFlowAction,
+    metalNodeEditorAction: MetalNodeEditorAction,
+    bindMetalFlowAction: (action: MetalFlowAction) => void,
+    bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => void,
 }
 
-export interface DesignerHandler {
-    metalFlowHandler: MutableMetalFlowHandler,
-    metalNodeEditorHandler: MutableMetalNodeEditorHandler,
+const store = createStore<DesignerAction>()(
+    subscribeWithSelector((set, get) => ({
+        metalFlowAction: initialMetalFlowAction,
+        metalNodeEditorAction: initialMetalNodeEditorAction,
+        bindMetalFlowAction: (action: MetalFlowAction) => {
+            set((prev) => ({
+                ...prev,
+                metalFlowAction: action,
+            }))
+        },
+        bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => {
+            set((prev) => ({
+                ...prev,
+                metalNodeEditorAction: action,
+            }))
+        },
+    }))
+)
+
+export const DesignerStoreContext = createContext(store);
+
+export function useMetalFlow(): [MetalFlowAction, (action: MetalFlowAction) => void] {
+    const store = useContext(DesignerStoreContext);
+    const [action, setAction] = useStore(store, (state)=>([state.metalFlowAction, state.bindMetalFlowAction]));
+    return [action, setAction];
 }
 
-export const defaultDesignerHandler: DesignerHandler = {
-    metalFlowHandler: new MutableMetalFlowHandler(metalFlowHandlerInitial),
-    metalNodeEditorHandler: new MutableMetalNodeEditorHandler(metalNodeEditorHandlerInitial),
-}
- 
-
-export const DesignerCtx: React.Context<DesignerHandler> = createContext<DesignerHandler>(defaultDesignerHandler)
-
-export function useMetalFlow() {
-    const ctx = useContext(DesignerCtx);
-    const handler: MetalFlowHandler = ctx.metalFlowHandler;
-    return handler;
-}
-
-export function useMutableMetalFlow() {
-    const ctx = useContext(DesignerCtx);
-    return ctx.metalFlowHandler;
-}
-
-export function useMetalNodeEditor() {
-    const ctx = useContext(DesignerCtx);
-    const handler: MetalNodeEditorHandler = ctx.metalNodeEditorHandler;
-    return handler;
-}
-
-export function useMutableMetalNodeEditor() {
-    const ctx = useContext(DesignerCtx);
-    return ctx.metalNodeEditorHandler;
+export function useMetalNodeEditor(): [MetalNodeEditorAction, (action: MetalNodeEditorAction) => void] {
+    const store = useContext(DesignerStoreContext);
+    const [action, setAction] = useStore(store, (state)=>([state.metalNodeEditorAction, state.bindMetalNodeEditorAction]));
+    return [action, setAction];
 }
 
 export interface DesignerProviderProps {
@@ -106,13 +78,9 @@ export interface DesignerProviderProps {
 
 export function DesignerProvider(props: DesignerProviderProps) {
     const {children} = props;
-    const designerHandler: DesignerHandler = {
-        metalFlowHandler: new MutableMetalFlowHandler(_.clone(metalFlowHandlerInitial)),
-        metalNodeEditorHandler: new MutableMetalNodeEditorHandler(_.clone(metalNodeEditorHandlerInitial))
-    }
     return (
-        <DesignerCtx.Provider value={{...designerHandler}}>
+        <DesignerStoreContext.Provider value={store}>
             {children}
-        </DesignerCtx.Provider>
+        </DesignerStoreContext.Provider>
     )
 }

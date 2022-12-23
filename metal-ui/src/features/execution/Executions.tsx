@@ -23,6 +23,7 @@ function useExecutions(token: string | null): [() => void, State, Exec[] | null]
 
 const columns: GridColDef[] = [
     {field: "fromProject", headerName: "From Project", filterable: true},
+    {field: "projectName", headerName: "Project Name", filterable: true},
     {field: "status", headerName: "Status", filterable: true},
     {field: "createTime", headerName: "Create Time", filterable: true},
 ]
@@ -47,7 +48,7 @@ export function Executions(props: ExecutionsProps) {
     return (
         <DataGrid 
             columns={columns}
-            rows={execs === null ? [] : execs}
+            rows={execs === null ? [] : execs.map(exec => ({...exec, projectName: exec.fromProjectDetail.name}))}
             pageSize={10}
             rowsPerPageOptions={[10]}
             autoHeight={true}

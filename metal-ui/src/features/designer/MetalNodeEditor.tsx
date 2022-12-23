@@ -18,9 +18,8 @@ import { MetalNodeProps } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import {
-    MutableMetalNodeEditorHandler,
     useMetalFlow,
-    useMutableMetalNodeEditor,
+    useMetalNodeEditor,
 } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
 
@@ -28,14 +27,14 @@ export interface MetalNodeEditorProps extends IReadOnly {}
 
 export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const { isReadOnly } = props;
-    const metalFlowHandler = useMetalFlow();
+    const [metalFlowAction] = useMetalFlow();
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>();
-    const handler: MutableMetalNodeEditorHandler = useMutableMetalNodeEditor();
+    const [, setNodeEditorAction] = useMetalNodeEditor();
 
     const printInputs = () => {
-        const inputs = metalFlowHandler.inputs;
+        const inputs = metalFlowAction.inputs;
         if (metalProps === null) {
             return;
         }
@@ -53,11 +52,11 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     }, []);
 
     useMemo(() => {
-        handler.set({
+        setNodeEditorAction({
             load: load,
             close: close,
         });
-    }, [close, handler, load]);
+    }, [close, setNodeEditorAction, load]);
 
     if (metalProps == null) {
         return <Skeleton></Skeleton>;

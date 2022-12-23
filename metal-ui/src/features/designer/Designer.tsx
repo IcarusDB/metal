@@ -46,8 +46,8 @@ export function Designer(props: DesignerProps) {
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const backendPanelRef = useRef<BackendPanelHandler>(null);
-    const metalFlowHandler = useMetalFlow();
-    const nodeEditorHandler = useMetalNodeEditor();
+    const [metalFlowAction] = useMetalFlow();
+    const [nodeEditorAction] = useMetalNodeEditor();
 
     const isPending = () => status === State.pending;
     const isFailure = () => status === State.failure;
@@ -81,9 +81,9 @@ export function Designer(props: DesignerProps) {
 
     const onAddNode = useCallback(
         (nodeProps: MetalNodeProps) => {
-            metalFlowHandler.addNode(nodeProps);
+            metalFlowAction.addNode(nodeProps);
         },
-        [metalFlowHandler]
+        [metalFlowAction]
     );
 
     const explorer = useMemo(() => {
@@ -93,9 +93,9 @@ export function Designer(props: DesignerProps) {
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
             ...nodeProps,
-            editor: nodeEditorHandler,
+            editor: nodeEditorAction,
         }),
-        [nodeEditorHandler]
+        [nodeEditorAction]
     );
 
     
@@ -230,7 +230,7 @@ export function Designer(props: DesignerProps) {
                         </IconButton>
                     )}
                 </div>
-                <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowHandler.export()}} ref={backendPanelRef}/>
+                <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowAction.export()}} ref={backendPanelRef}/>
             </Paper>
             <MetalNodeEditor isReadOnly={isReadOnly} />
             <ProjectProfile

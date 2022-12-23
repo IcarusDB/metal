@@ -1,24 +1,21 @@
 import { ImUpload, ImDownload } from "react-icons/im";
 import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
-import { VscMerge, VscExpandAll, VscExtensions, VscPackage, VscSymbolClass } from "react-icons/vsc";
+import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
 import {
-    Box,
     Button,
     Paper,
-    Stack,
     Badge,
     Divider,
     Typography,
-    Container,
     Grid,
 } from "@mui/material";
 import { MouseEvent } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
-import { MetalNodeEditorHandler } from "./DesignerProvider";
+import { MetalNodeEditorAction } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
 
 export const MetalViewIcons = {
@@ -50,7 +47,7 @@ export interface MetalNodeProps extends IReadOnly {
     type: MetalTypes;
     onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
-    editor?: MetalNodeEditorHandler;
+    editor?: MetalNodeEditorAction;
 }
 
 export interface IMetalNodeView {

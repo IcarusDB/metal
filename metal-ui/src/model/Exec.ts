@@ -23,6 +23,9 @@ export interface Exec {
     userId: string,
     deploy: ExecDeploy,
     fromProject: string,
+    fromProjectDetail: {
+        name: string
+    },
     SPEC: Spec,
     status: ExecState,
     createTime: number,
