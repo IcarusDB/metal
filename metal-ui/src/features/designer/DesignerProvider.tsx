@@ -7,14 +7,14 @@ import { Spec } from "../../model/Spec";
 
 declare type DesingerStore = DesignerActionSlice & SpecSlice;
 
-const store = createStore<DesingerStore>()(
+const defaultStore = createStore<DesingerStore>()(
     subscribeWithSelector((set, get) => ({
         ...createDesignerActionSlice(set, get),
         ...createSpecSlice(set, get),
     }))
 )
 
-export const DesignerStoreContext = createContext(store);
+export const DesignerStoreContext = createContext(defaultStore);
 
 export function useMetalFlow(): [MetalFlowAction, (action: MetalFlowAction) => void] {
     const store = useContext(DesignerStoreContext);
@@ -91,6 +91,12 @@ export interface DesignerProviderProps {
 
 export function DesignerProvider(props: DesignerProviderProps) {
     const {children} = props;
+    const store = createStore<DesingerStore>()(
+        subscribeWithSelector((set, get) => ({
+            ...createDesignerActionSlice(set, get),
+            ...createSpecSlice(set, get),
+        }))
+    )
     return (
         <DesignerStoreContext.Provider value={store}>
             {children}
