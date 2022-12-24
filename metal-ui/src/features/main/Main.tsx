@@ -25,6 +25,7 @@ import create from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import _ from "lodash";
 import { Executions, ExecutionsProps } from "../execution/Executions";
+import { Viewer, ViewerProps } from "../designer/Viewer";
 
 interface Component {
     id: string,
@@ -93,14 +94,15 @@ function iconFatory(node: TabNode) {
     }
 }
 
-export function designerId(id: string, isReadOnly: boolean | undefined) {
-    return isReadOnly? `viewer[${id}]`: `designer[${id}]`;
+export function designerId(id: string) {
+    return `designer[${id}]`;
 }
 
 
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
+    openViewer: (props: ViewerProps) => void;
     openMetalRepo: (props: MetalRepoProps) => void;
     select: (id: string) => void;
     close?: (id: string) => void;
@@ -217,12 +219,12 @@ export function Main() {
     }
 
     const openDesigner = (props: DesignerProps) => {
-        const { id, isReadOnly } = props;
+        const { id } = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: designerId(id, isReadOnly),
+            id: designerId(id),
             name: `Designer[${id}]`,
-            icon: isReadOnly? "viewerIcon": "designerIcon",
+            icon: "designerIcon",
             component: "designer",
             config: props,
         }
@@ -244,6 +246,37 @@ export function Main() {
             } 
         }
     };
+
+    const openViewer = (props: ViewerProps) => {
+        const {id} = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: `viewer[${id}]`,
+            name: `Viewer[${id}]`,
+            icon: "viewerIcon",
+            component: "viewer",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
+
 
     const close = (id: string) => {
         const action: Action = Actions.deleteTab(id);
@@ -302,6 +335,7 @@ export function Main() {
     const mainHandler: MainHandler = {
         openProjectStarter: openProjectStarter,
         openDesigner: openDesigner,
+        openViewer: openViewer,
         openMetalRepo: openMetalRepo,
         select: select,
         close: close,
@@ -330,10 +364,25 @@ export function Main() {
             }
                 
             case "designer": {
-                const props: DesignerProps = config;
+                const props: DesignerProps =  {
+                    ...config,
+                    mainHandler: mainHandler
+                };
                 return memorizeCmps(component, props, ()=>(
                     <DesignerProvider>
-                        <Designer {...props} mainHandler={mainHandler}/>
+                        <Designer {...props}/>
+                    </DesignerProvider>
+                ), id);
+            }
+
+            case "viewer": {
+                const props: ViewerProps =  {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <DesignerProvider>
+                        <Viewer {...props} />
                     </DesignerProvider>
                 ), id);
             }

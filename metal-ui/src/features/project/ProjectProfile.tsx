@@ -1018,23 +1018,16 @@ export const ProjectProfile = forwardRef(
 export interface ProjectProfileViewerProps {}
 
 export interface ProjectProfileViewerHandler {
-    open: (id: string) => void;
+    open: () => void;
     close: () => void;
 }
 
-const theme = createTheme();
-
 export const ProjectProfileViewer = forwardRef(
     (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
-        const [id, setId] = useState<string>();
         const [isOpen, setOpen] = useState(false);
-        const [name] = useName();
-        const [pkgs] = usePkgs();
-        const [platform] = usePlatform();
-        const [backendArgs] = useBackendArgs();
+        const [{name, pkgs, platform, backendArgs}] = useProfile();
 
-        const onOpen = (id: string) => {
-            setId(id);
+        const onOpen = () => {;
             setOpen(true);
         };
         const onClose = () => {
@@ -1048,14 +1041,6 @@ export const ProjectProfileViewer = forwardRef(
             }),
             []
         );
-
-        if (id === undefined) {
-            return (
-                <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
-                    <Skeleton></Skeleton>
-                </ResizeBackdrop>
-            );
-        }
 
         const platformTypes = _.keys(platform);
         const packages = pkgs;
@@ -1193,12 +1178,15 @@ export const ProjectProfileViewer = forwardRef(
                            <Typography> {"Platform configuration"} </Typography> 
                         </Grid>
                         <Grid item xs={10}>
-                            <Editor
+                            {/* <Editor
                                 height={"60vh"}
                                 defaultLanguage={"json"}
                                 defaultValue={platformConf}
                                 theme={"vs-dark"}
-                            ></Editor>
+                            ></Editor> */}
+                            <Typography>
+                                {platformConf}
+                            </Typography>
                         </Grid>
                     </Grid>
             </ResizeBackdrop>

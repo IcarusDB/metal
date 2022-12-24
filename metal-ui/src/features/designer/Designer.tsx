@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
-import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
+import { Alert, IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
@@ -13,83 +13,27 @@ import {
     ProjectProfileViewerHandler,
 } from "../project/ProjectProfile";
 import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
-import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
-import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
-import { getProjectById } from "../../api/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { useSpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useBackendArgs, useMetalFlow, useMetalNodeEditor, useName, usePkgs, usePlatform, useSpec } from "./DesignerProvider";
-import { IReadOnly } from "../ui/Commons";
-import { BackendPanel, BackendPanelHandler } from "./BackendPanel";
+import { useMetalFlow, useMetalNodeEditor, useName, usePkgs, useSpec } from "./DesignerProvider";
+import { BackendPanelHandler } from "./BackendPanel";
+import { ProjectLoader } from "./ProjectLoader";
 
-function useProjectLoader(token: string | null, id: string) {
-    const [run, status, result, error] = useAsync<Project>();
-    const [, setName] = useName();
-    const [, setPkgs] = usePkgs();
-    const [, setSpec] = useSpec();
-    const [, setPlatform] = usePlatform();
-    const [, setBackendArgs] = useBackendArgs();
-
-    useEffect(() => {
-        if (token === null || id.trim() === "")  {
-            return;
-        }
-        run(
-            getProjectById(token, id).then(proj => {
-                setSpec(proj.spec);
-                setPkgs(proj.deploy.pkgs);
-                setName(proj.name);
-                setBackendArgs(proj.deploy.backend.args);
-                setPlatform(proj.deploy.platform);
-                return proj;
-            })
-        );
-    }, [id, run, setBackendArgs, setName, setPkgs, setPlatform, setSpec, token])
-
-    return [status, error]
-}
-
-export interface ProjectLoaderProps {
-    token: string | null,
-    id: string
-}
-
-export function ProjectLoader(props: ProjectLoaderProps) {
-    const {token, id} = props;
-    const [loadStatus, loadError] = useProjectLoader(token, id);
-
-    const isPending = () => loadStatus === State.pending;
-    const isFailure = () => loadStatus === State.failure;
-
-    const progress = isPending() ? (
-        <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
-
-    return (
-        <>
-            {isPending() && progress}
-            {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
-        </>
-    )
-}
-
-export interface DesignerProps extends IReadOnly {
+export interface DesignerProps {
     id: string;
     mainHandler?: MainHandler;
 }
 
 export function Designer(props: DesignerProps) {
-    const { id, mainHandler, isReadOnly } = props;
+    const { id, mainHandler } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly ? false : true);
+    const [isOpenExplorer, setOpenExplorer] = useState(true);
 
     const [,, onNameChange] = useName();
     const [spec] = useSpec();
@@ -103,15 +47,12 @@ export function Designer(props: DesignerProps) {
     const [nodeEditorAction] = useMetalNodeEditor();
 
     const onSwitchExplorer = () => {
-        if (isReadOnly !== undefined && isReadOnly === false) {
-            return;
-        }
         setOpenExplorer(!isOpenExplorer);
     };
 
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.renameDesigner !== undefined) {
-            mainHandler.renameDesigner(designerId(id, isReadOnly), name === undefined? "?": name);
+            mainHandler.renameDesigner(designerId(id), name === undefined? "?": name);
         }
     })
 
@@ -121,10 +62,6 @@ export function Designer(props: DesignerProps) {
         },
         [metalFlowAction]
     );
-
-    const explorer = useMemo(() => {
-        return <MetalExplorer addNode={onAddNode} restrictPkgs={pkgs} />;
-    }, [onAddNode, pkgs]);
 
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
@@ -136,19 +73,6 @@ export function Designer(props: DesignerProps) {
 
     const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
-        // if (mainHandler !== undefined) {
-        //     if (mainHandler.close !== undefined) {
-        //         mainHandler.close(designerId(id, isReadOnly));
-
-        //         setTimeout(() => {
-        //             mainHandler.openDesigner({
-        //                 id: id,
-        //                 isReadOnly: isReadOnly,
-        //                 mainHandler: mainHandler,
-        //             });
-        //         }, 2000);
-        //     }
-        // }
     };
 
 
@@ -174,7 +98,6 @@ export function Designer(props: DesignerProps) {
                 >
                     <ReactFlowProvider>
                         <MetalFlow
-                            isReadOnly={isReadOnly}
                             flow={specLoader.flow === null ? undefined : specLoader.flow}
                             nodePropsWrap={nodePropsWrap}
                         />
@@ -188,7 +111,7 @@ export function Designer(props: DesignerProps) {
                             width: "25%",
                         }}
                     >
-                        {explorer}
+                        <MetalExplorer addNode={onAddNode} restrictPkgs={pkgs} />
                     </Box>
                 )}
             </Stack>
@@ -217,35 +140,32 @@ export function Designer(props: DesignerProps) {
                         justifyContent: "flex-start",
                     }}
                 >
-                    {!isReadOnly && (
-                        <IconButton
+                    <IconButton
                             onClick={() => {
                                 if (projectProfileRef.current !== null) {
                                     projectProfileRef.current.open();
                                 }
                             }}
                         >
-                            <VscSettingsGear />
-                        </IconButton>
-                    )}
+                        <VscSettingsGear />
+                    </IconButton>
+                  
 
                     <IconButton
                         onClick={() => {
-                            projectProfileViewerRef.current?.open(id);
+                            projectProfileViewerRef.current?.open();
                         }}
                     >
                         <VscOpenPreview />
                     </IconButton>
 
-                    {!isReadOnly && (
-                        <IconButton onClick={onSwitchExplorer}>
-                            <VscExtensions />
-                        </IconButton>
-                    )}
+                    <IconButton onClick={onSwitchExplorer}>
+                         <VscExtensions />
+                    </IconButton>
                 </div>
                 {/* <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowAction.export()}} ref={backendPanelRef}/> */}
             </Paper>
-            <MetalNodeEditor isReadOnly={isReadOnly} />
+            {<MetalNodeEditor />}
             <ProjectProfile
                 open={false}
                 isCreate={false}

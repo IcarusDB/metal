@@ -33,6 +33,7 @@ import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { MainHandler } from "../main/Main";
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
 import moment from "moment";
+import { ProjectLoader } from "../designer/ProjectLoader";
 
 function backendStatusTip(backendStatus: BackendStatus) {
     switch (backendStatus.current) {
@@ -264,15 +265,15 @@ export function ProjectList(props: ProjectListProps) {
                         });
                     },
                     onView: () => {
-                        mainHandler?.openDesigner({
+                        mainHandler?.openViewer({
                             id: project.id,
-                            isReadOnly: true,
+                            children: (<ProjectLoader token={token} id={project.id} />)
                         });
                     },
                 },
             };
         });
-    }, [mainHandler, projects]);
+    }, [mainHandler, projects, token]);
 
     const toolbar = () => {
         return (
