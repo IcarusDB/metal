@@ -9,7 +9,6 @@ import {
     List,
     ListItem,
     Paper,
-    Skeleton,
     Stack,
     Step,
     StepLabel,
@@ -17,7 +16,6 @@ import {
     Switch,
     Typography,
 } from "@mui/material";
-import { createTheme } from "@mui/material/styles";
 import {
     DataGrid,
     GridColDef,
@@ -56,7 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
-import { useBackendArgs, useName, usePkgs, usePlatform, useProfile } from "../designer/DesignerProvider";
+import { useProfile } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -144,7 +142,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     const packages: MetalPackage[] =
         result === null
             ? []
-            : result.map((metalPkg: MetalPkg, index: number) => {
+            : result.map((metalPkg: MetalPkg) => {
                   const pkg: MetalPackage = {
                       id: metalPkg.pkg,
                       groupId: metalPkg.groupId,
@@ -338,7 +336,7 @@ export function PlatformProfile(props: PlatformProfileProps) {
         });
     };
 
-    const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor) => {
         const handler: PlatformProfileHandler = handlerRef.current;
         handler.update({
             value: () => {
@@ -524,9 +522,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-
     const { id, isCreate, profile, onFinish } = props;
-    const { basic, pkgs, platform, backendArgs } = profile;
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
@@ -534,6 +530,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 
 
     const check: () => [boolean, string | undefined] = useCallback(() => {
+        const { basic, pkgs, platform} = profile;
         if (basic === null || basic.name === "") {
             return [false, "The project basic profile is not configured."];
         }
@@ -548,7 +545,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             }
         }
         return [true, undefined];
-    }, [basic, pkgs, platform]);
+    }, [profile]);
 
     const isPending = () => status === State.pending;
     const isSuccess = () => status === State.success;
@@ -746,15 +743,6 @@ function extractPlatformType(platform: any): PlatformType{
     return platformType(types[0]);
 }
 
-function extractBasicProfile(project: Project | undefined): ProjectBasicProfileValue | null {
-    if (project === undefined || project === null) {
-        return null;
-    }
-    return {
-        name: project.name,
-        platform: extractPlatformType(project.deploy.platform),
-    };
-}
 
 function mapToPkgProfile(pkgs: string[]): PkgProfileValue {
     return {
@@ -773,12 +761,6 @@ function mapToPkgProfile(pkgs: string[]): PkgProfileValue {
     }
 }
 
-function extractPkgProfile(project: Project | undefined): PkgProfileValue | null {
-    if (project === undefined || project === null) {
-        return null;
-    }
-    return mapToPkgProfile(project.deploy.pkgs);
-}
 
 function mapToPlatformProfile(type: PlatformType, platformWithType: any) : any {
     if (_.hasIn(platformWithType, type)) {
@@ -788,19 +770,7 @@ function mapToPlatformProfile(type: PlatformType, platformWithType: any) : any {
     }
 }
 
-function extractPlatformProfile(type: PlatformType, project: Project | undefined): any {
-    if (project === undefined || project === null) {
-        return null;
-    }
-    return mapToPlatformProfile(type, project.deploy.platform);
-}
 
-function extractBackendArgumentsProfile(project: Project | undefined): string[] | null {
-    if (project === undefined || project === null) {
-        return null;
-    }
-    return project.deploy.backend.args;
-}
 
 function platformWithType (platformProfile: any | null, basicProfile: ProjectBasicProfileValue | null) {
     if (platformProfile === null || platformProfile === undefined) {

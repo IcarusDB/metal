@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
 import { Alert, IconButton, Paper, Stack } from "@mui/material";
@@ -38,7 +38,7 @@ export function Designer(props: DesignerProps) {
     const [,, onNameChange] = useName();
     const [spec] = useSpec();
     const specLoader = useSpecLoader(token, spec);
-    const [pkgs, setPkgs] = usePkgs();
+    const [pkgs] = usePkgs();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);

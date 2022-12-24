@@ -39,15 +39,9 @@ export function ProjectLoader(props: ProjectLoaderProps) {
     const isPending = () => loadStatus === State.pending;
     const isFailure = () => loadStatus === State.failure;
 
-    const progress = isPending() ? (
-        <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
-
     return (
         <div>
-            {isPending() && progress}
+            {isPending() && <LinearProgress />}
             {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
         </div>
     );
