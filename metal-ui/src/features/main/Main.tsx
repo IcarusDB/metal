@@ -27,24 +27,21 @@ import _ from "lodash";
 import { Executions, ExecutionsProps } from "../execution/Executions";
 
 interface Component {
+    id?: string,
     type: string,
     props: any,
     instance: JSX.Element,
 }
 
 interface ComponentFactory {
-    // projects: ProjectListProps[],
-    // starter: ProjectStarterProps[],
-    // designer: DesignerProps[],
-    // metalRepo: MetalRepoProps[],
-    // home: HomeProps[],
     components: Component[],
-    memorize: (type: string, props: any, factory: () => JSX.Element) => JSX.Element,
+    memorize: (type: string, props: any, factory: () => JSX.Element, id?: string) => JSX.Element,
+    destory: (equal: (cmp: Component) => boolean) => void,
 }
 
 const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((set, get) => ({
     components: [],
-    memorize: (type, props, factory) => {
+    memorize: (type, props, factory, id) => {
         const mCmps = get().components.filter(component => {
             if (component.type !== type) {
                 return false;
@@ -55,13 +52,18 @@ const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((se
         if (mCmps.length === 0) {
             const newCmp = factory();
             set((prev) => ({
-                components: [{ type: type, props: props, instance: newCmp }, ...prev.components]
+                components: [{ id: id, type: type, props: props, instance: newCmp }, ...prev.components]
             }));
             return newCmp;
         } else {
             return mCmps[0].instance;
         }
     },
+    destory: (equal: (cmp: Component) => boolean) => {
+        set((prev) => ({
+            components: _.dropWhile(prev.components, equal)
+        }));
+    }
 })));
 
 
@@ -106,7 +108,7 @@ export interface MainHandler {
 }
 
 export function Main() {
-    const memorizeCmps = useComponentFactory(state => state.memorize);
+    const [memorizeCmps, destoryCmp] = useComponentFactory(state => [state.memorize, state.destory]);
     const home: IJsonTabNode = {
         type: "tab",
         name: "Home",
@@ -306,6 +308,7 @@ export function Main() {
     }
 
     const factory = (node: TabNode) => {
+        const id = node.getId();
         const component = node.getComponent();
         const config = node.getConfig();
         switch (component) {
@@ -314,7 +317,7 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return memorizeCmps(component, props, ()=>(<ProjectList {...props}/>))
+                return memorizeCmps(component, props, ()=>(<ProjectList {...props}/>), id)
             }
 
             case "starter": {
@@ -322,7 +325,7 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return memorizeCmps(component, props, ()=>(<ProjectStarter {...props}/>))
+                return memorizeCmps(component, props, ()=>(<ProjectStarter {...props}/>), id)
             }
                 
             case "designer": {
@@ -331,14 +334,14 @@ export function Main() {
                     <DesignerProvider>
                         <Designer {...props} mainHandler={mainHandler}/>
                     </DesignerProvider>
-                ));
+                ), id);
             }
 
             case "metalRepo": {
                 const props: MetalRepoProps = config;
                 return memorizeCmps(component, props, ()=>(
                     <MetalRepo {...props} />
-                ));
+                ), id);
             }
 
             case "executions": {
@@ -348,7 +351,7 @@ export function Main() {
                 };
                 return memorizeCmps(component, props, ()=>(
                     <Executions {...props} />
-                ))
+                ), id)
             }
 
             case "home": {
@@ -358,7 +361,7 @@ export function Main() {
                 }
                 return memorizeCmps(component, props, ()=>(
                     <Home {...props}/>
-                ))
+                ), id)
             }
 
             default:
@@ -370,11 +373,20 @@ export function Main() {
         }
     };
 
+    const onRecycle = (action: FlexLayout.Action) => {
+        if (action.type === FlexLayout.Actions.DELETE_TAB) {
+            const id: string = action.data['node'];
+            destoryCmp((cmp: Component) => (cmp.id === id));
+        }
+        return action;
+    }
+
     return (
         <FlexLayout.Layout
             model={layoutModel}
             factory={factory}
             iconFactory={iconFatory}
+            // onAction={onRecycle}
         ></FlexLayout.Layout>
     );
 }
