@@ -85,6 +85,25 @@ export function useBackendArgs(): [string[], (args: string[]) => void] {
     );
 }
 
+export function useProfile(): [
+    {name: string | undefined, pkgs: string[], platform: any | undefined, backendArgs: string[]},
+    (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            {
+                name: state.name,
+                pkgs: state.pkgs,
+                platform: state.platform,
+                backendArgs: state.backendArgs,
+            },
+            state.bindProfile
+        ])
+    )
+}
+
 export interface DesignerProviderProps {
     children?: ReactNode
 }

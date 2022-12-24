@@ -54,7 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
-import { useBackendArgs, useName, usePkgs, usePlatform } from "../designer/DesignerProvider";
+import { useBackendArgs, useName, usePkgs, usePlatform, useProfile } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -528,10 +528,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
-    const [, setName] = useName();
-    const [, setPkgs] = usePkgs();
-    const [, setPlatform] = usePlatform();
-    const [, setBackendArgs] = useBackendArgs();
+    const [, setProfile] = useProfile();
 
 
     const check: () => [boolean, string | undefined] = useCallback(() => {
@@ -586,18 +583,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             const params: ProjectParams = projectParams(profile);
             run(
                 updateProject(token, id, params).then(ret => {
-                    if (params.name !== undefined) {
-                        setName(params.name);
-                    }
-                    if (params.pkgs !== undefined) {
-                        setPkgs(params.pkgs);
-                    }
-                    if (params.platform !== undefined) {
-                        setPlatform(params.platform);
-                    }
-                    if (params.backendArgs !== undefined) {
-                        setBackendArgs(params.backendArgs);
-                    }
+                    setProfile(params.name, params.pkgs, params.platform, params.backendArgs);
                     return ret;
                 })
             );
@@ -820,10 +806,12 @@ export const ProjectProfile = forwardRef(
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        const[platform] = usePlatform();
-        const[backendArgs] = useBackendArgs();
-        const[pkgs] = usePkgs();
-        const[name] = useName();
+        // const[platform] = usePlatform();
+        // const[backendArgs] = useBackendArgs();
+        // const[pkgs] = usePkgs();
+        // const[name] = useName();
+
+        const [{name, pkgs, platform, backendArgs}] = useProfile();
 
         const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(
             () => ({

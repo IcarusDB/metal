@@ -43,6 +43,7 @@ export interface DesignerActionSlice {
     bindPlatform: (platform: any) => void;
     backendArgs: string[],
     bindBackendArgs: (args: string[]) => void;
+    bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void;
 }
 export const createDesignerActionSlice = (
     set: StoreApi<DesignerActionSlice>["setState"],
@@ -82,6 +83,14 @@ export const createDesignerActionSlice = (
     bindBackendArgs: (args: string[]) => {
         set((prev) => ({
             backendArgs: args
+        }));
+    },
+    bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => {
+        set((prev) => ({
+            name,
+            pkgs,
+            platform,
+            backendArgs,
         }));
     }
 });
