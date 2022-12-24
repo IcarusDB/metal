@@ -28,3 +28,21 @@ export async function getAllExecsOfUser(token: string): Promise<Exec[]> {
         }
     });
 }
+
+export async function getExecOfId(token: string, id: string): Promise<Exec> {
+    const url = `/api/v1/execs/id/${id}/detail`;
+    return instance.get(url, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data
+            ApiResponse.mayBeFailure(resp);
+            const exec: Exec = idMap<Exec>(resp.data);
+            return exec;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    });
+}
