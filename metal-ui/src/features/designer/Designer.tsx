@@ -36,8 +36,8 @@ export function Designer(props: DesignerProps) {
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
     const [,, onNameChange] = useName();
-    const [spec] = useSpec();
-    const specLoader = useSpecLoader(token, spec);
+    
+    const specLoader = useSpecLoader(token);
     const [pkgs] = usePkgs();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);

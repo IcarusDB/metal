@@ -25,8 +25,7 @@ export function Viewer(props: ViewerProps) {
         return tokenSelector(state);
     });
 
-    const [spec] = useSpec();
-    const specLoader = useSpecLoader(token, spec);
+    const specLoader = useSpecLoader(token);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const [nodeEditorAction] = useMetalNodeEditor();
 

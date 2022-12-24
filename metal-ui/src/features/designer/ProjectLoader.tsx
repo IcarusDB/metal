@@ -7,7 +7,7 @@ import { getProjectById } from "../../api/ProjectApi";
 import { useProfile, useSpec } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
-    const [run, status, result, error] = useAsync<Project>();
+    const [run, status, project, error] = useAsync<Project>();
     const [, setSpec] = useSpec();
     const [, setProfile] = useProfile();
 
@@ -15,14 +15,17 @@ function useProjectLoader(token: string | null, id: string) {
         if (token === null || id.trim() === "") {
             return;
         }
-        run(
-            getProjectById(token, id).then(proj => {
-                setSpec(proj.spec);
-                setProfile(proj.name, proj.deploy.pkgs, proj.deploy.platform, proj.deploy.backend.args);
-                return proj;
-            })
-        );
-    }, [id, run, setProfile, setSpec, token]);
+        if (status === State.success) {  
+            if (project !== null) {
+                setSpec(project.spec);
+                setProfile(project.name, project.deploy.pkgs, project.deploy.platform, project.deploy.backend.args);
+            }
+        }
+        if (status === State.idle) {
+            run(getProjectById(token, id));       
+        }
+        
+    }, [id, project, run, setProfile, setSpec, status, token]);
 
     return [status, error];
 }

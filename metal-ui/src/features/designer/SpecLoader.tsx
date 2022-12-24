@@ -7,6 +7,7 @@ import { MetalPkg } from "../../model/MetalPkg";
 import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
 import { MetalNodeProps } from "./MetalView";
+import { useSpec } from "./DesignerProvider";
 
 export interface SpecLoaderProps {
     spec?: Spec;
@@ -17,7 +18,8 @@ export interface SpecFlow {
     connections: Connection[]
 }
 
-export function useSpecLoader(token: string | null, spec?: Spec) {
+export function useSpecLoader(token: string | null) {
+    const [spec] = useSpec();
     const [run, status, result, error] = useAsync<SpecFlow>();
 
     const load = useCallback(() => {
