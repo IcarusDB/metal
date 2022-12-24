@@ -41,6 +41,8 @@ import {
     useState,
 } from "react";
 import { VscArrowLeft, VscClose, VscError, VscInfo, VscPackage, VscSymbolParameter, VscWarning } from "react-icons/vsc";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -1175,18 +1177,15 @@ export const ProjectProfileViewer = forwardRef(
                             // backgroundColor: "white",
                         }}
                         >
-                           <Typography> {"Platform configuration"} </Typography> 
+                            <Typography> {"Platform Configuration"} </Typography> 
                         </Grid>
-                        <Grid item xs={10}>
-                            {/* <Editor
-                                height={"60vh"}
-                                defaultLanguage={"json"}
-                                defaultValue={platformConf}
-                                theme={"vs-dark"}
-                            ></Editor> */}
-                            <Typography>
+                        <Grid item xs={10} sx={{
+                            maxHeight: "60vh",
+                            overflow: "auto",
+                        }}>
+                            <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
                                 {platformConf}
-                            </Typography>
+                            </SyntaxHighlighter>
                         </Grid>
                     </Grid>
             </ResizeBackdrop>
