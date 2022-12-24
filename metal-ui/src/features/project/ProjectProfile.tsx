@@ -583,7 +583,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             const params: ProjectParams = projectParams(profile);
             run(
                 updateProject(token, id, params).then(ret => {
-                    setProfile(params.name, params.pkgs, params.platform, params.backendArgs);
+                    setProfile(params.name, params.pkgs, params.platform === null? undefined: params.platform, params.backendArgs);
                     return ret;
                 })
             );
@@ -598,7 +598,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         }
     };
 
-    const onReloadProject = () => {
+    const onClose = () => {
         if (isSuccess()) {
             if (onFinish !== undefined && result !== null) {
                 onFinish(result);
@@ -687,8 +687,8 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                         </Button>
                     )}
                     {!isCreate && isSuccess() && (
-                        <Button variant={"contained"} onClick={onReloadProject}>
-                            {"Reload Project"}
+                        <Button variant={"contained"} onClick={onClose}>
+                            {"Close"}
                         </Button>
                     )}
                 </Stack>
@@ -800,6 +800,18 @@ function extractBackendArgumentsProfile(project: Project | undefined): string[] 
     return project.deploy.backend.args;
 }
 
+function platformWithType (platformProfile: any | null, basicProfile: ProjectBasicProfileValue | null) {
+    if (platformProfile === null || platformProfile === undefined) {
+        return null;
+    }
+    if (basicProfile === null) {
+        return null;
+    }
+    const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
+
+    return JSON.parse(withType);
+};
+
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
         const { open, isCreate, id, onFinish } = props;
@@ -812,28 +824,25 @@ export const ProjectProfile = forwardRef(
         // const[name] = useName();
 
         const [{name, pkgs, platform, backendArgs}] = useProfile();
+        const basicProfile = {
+            name: name === undefined? "": name,
+            platform: extractPlatformType(platform)
+        };
+        const pkgProfile = mapToPkgProfile(pkgs);
 
-        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(
-            () => ({
-                name: name === undefined? "": name,
-                platform: extractPlatformType(platform)
-        }));
-
-        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(
-            () => (mapToPkgProfile(pkgs))
+        const platformProfile = mapToPlatformProfile(
+            basicProfile === null
+                ? PlatformType.SPARK_STANDALONE
+                : platformType(basicProfile.platform),
+            platform
         );
 
-        const [platformProfile, setPlatformProfile] = useState<any>(() =>
-            mapToPlatformProfile(
-                basicProfile === null
-                    ? PlatformType.SPARK_STANDALONE
-                    : platformType(basicProfile.platform),
-                platform
-            )
-        );
-        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(
-            () => (backendArgs)
-        );
+        const backendArgsProfile = backendArgs;
+
+        const [newBasicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(basicProfile);
+        const [newPkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(pkgProfile);
+        const [newPlatformProfile, setPlatformProfile] = useState<any>(platformProfile);
+        const [newBackendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(backendArgs);
 
         const close = () => {
             setOpen(false);
@@ -865,18 +874,6 @@ export const ProjectProfile = forwardRef(
         const onBackendArgsProfileFinish = (newProfile: string[]) => {
             setBackendArgsProfile(newProfile);
             handleNextStep();
-        };
-
-        const platformWithType = () => {
-            if (platformProfile === null || platformProfile === undefined) {
-                return null;
-            }
-            if (basicProfile === null) {
-                return null;
-            }
-            const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
-
-            return JSON.parse(withType);
         };
 
         useImperativeHandle(
@@ -943,7 +940,7 @@ export const ProjectProfile = forwardRef(
                                 <StepLabel>{"Platform profile."}</StepLabel>
                             </Step>
                             <Step key={"Backend arguments profile."} completed={false}>
-                                <StepLabel>{"Platform profile."}</StepLabel>
+                                <StepLabel>{"Backend arguments profile."}</StepLabel>
                             </Step>
                             <Step key={"Profile Finish."} completed={false}>
                                 <StepLabel>{"Profile Finish."}</StepLabel>
@@ -985,10 +982,10 @@ export const ProjectProfile = forwardRef(
                             id={id}
                             isCreate={isCreate}
                             profile={{
-                                basic: basicProfile,
-                                pkgs: pkgProfile,
-                                platform: platformWithType(),
-                                backendArgs: backendArgsProfile,
+                                basic: newBasicProfile,
+                                pkgs: newPkgProfile,
+                                platform: platformWithType(newPlatformProfile, newBasicProfile),
+                                backendArgs: newBackendArgsProfile,
                             }}
                             onFinish={onFinish}
                         />

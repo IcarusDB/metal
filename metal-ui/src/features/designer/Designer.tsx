@@ -53,6 +53,32 @@ function useProjectLoader(token: string | null, id: string) {
     return [status, error]
 }
 
+export interface ProjectLoaderProps {
+    token: string | null,
+    id: string
+}
+
+export function ProjectLoader(props: ProjectLoaderProps) {
+    const {token, id} = props;
+    const [loadStatus, loadError] = useProjectLoader(token, id);
+
+    const isPending = () => loadStatus === State.pending;
+    const isFailure = () => loadStatus === State.failure;
+
+    const progress = isPending() ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
+
+    return (
+        <>
+            {isPending() && progress}
+            {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
+        </>
+    )
+}
+
 export interface DesignerProps extends IReadOnly {
     id: string;
     mainHandler?: MainHandler;
@@ -64,7 +90,6 @@ export function Designer(props: DesignerProps) {
         return tokenSelector(state);
     });
     const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly ? false : true);
-    const [loadStatus, loadError] = useProjectLoader(token, id);
 
     const [,, onNameChange] = useName();
     const [spec] = useSpec();
@@ -76,9 +101,6 @@ export function Designer(props: DesignerProps) {
     const backendPanelRef = useRef<BackendPanelHandler>(null);
     const [metalFlowAction] = useMetalFlow();
     const [nodeEditorAction] = useMetalNodeEditor();
-
-    const isPending = () => loadStatus === State.pending;
-    const isFailure = () => loadStatus === State.failure;
 
     const onSwitchExplorer = () => {
         if (isReadOnly !== undefined && isReadOnly === false) {
@@ -112,50 +134,27 @@ export function Designer(props: DesignerProps) {
         [nodeEditorAction]
     );
 
-    
-
-    const progress = isPending() ? (
-        <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
-
-    const onReloadProject = (projectId: string) => {
+    const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
-        if (mainHandler !== undefined) {
-            if (mainHandler.close !== undefined) {
-                mainHandler.close(designerId(id, isReadOnly));
+        // if (mainHandler !== undefined) {
+        //     if (mainHandler.close !== undefined) {
+        //         mainHandler.close(designerId(id, isReadOnly));
 
-                setTimeout(() => {
-                    mainHandler.openDesigner({
-                        id: id,
-                        isReadOnly: isReadOnly,
-                        mainHandler: mainHandler,
-                    });
-                }, 2000);
-            }
-        }
+        //         setTimeout(() => {
+        //             mainHandler.openDesigner({
+        //                 id: id,
+        //                 isReadOnly: isReadOnly,
+        //                 mainHandler: mainHandler,
+        //             });
+        //         }, 2000);
+        //     }
+        // }
     };
 
-    // useEffect(() => {
-    //     load();
-    // }, [load]);
-
-    if (spec === undefined) {
-        return (
-            <>
-                {isPending() && progress}
-                <Skeleton>
-                    {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
-                </Skeleton>
-            </>
-        );
-    }
 
     return (
         <div className="panel">
-            {isPending() && progress}
-            {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
+            <ProjectLoader token={token} id={id}/>
             {specLoader.status === State.failure && (
                 <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
             )}
@@ -250,7 +249,7 @@ export function Designer(props: DesignerProps) {
             <ProjectProfile
                 open={false}
                 isCreate={false}
-                onFinish={onReloadProject}
+                onFinish={onProfileFinish}
                 id={id}
                 ref={projectProfileRef}
             />
