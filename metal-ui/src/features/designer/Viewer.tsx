@@ -13,20 +13,18 @@ import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalNodeProps } from "./MetalView";
 import { useSpecLoader } from "./SpecLoader";
 
-
-
 export interface ViewerProps {
-    id: string,
+    id: string;
     mainHandler?: MainHandler;
-    children?: ReactNode
+    children?: ReactNode;
 }
 
 export function Viewer(props: ViewerProps) {
-    const {children} = props;
+    const { children } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    
+
     const [spec] = useSpec();
     const specLoader = useSpecLoader(token, spec);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
@@ -39,6 +37,7 @@ export function Viewer(props: ViewerProps) {
         }),
         [nodeEditorAction]
     );
+    
 
     return (
         <div className="panel">
@@ -57,7 +56,7 @@ export function Viewer(props: ViewerProps) {
                     component={Paper}
                     sx={{
                         height: "100%",
-                        width:  "100%",
+                        width: "100%",
                     }}
                 >
                     <ReactFlowProvider>

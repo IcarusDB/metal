@@ -1051,7 +1051,7 @@ export const ProjectProfileViewer = forwardRef(
         return (
             <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
                     <Grid container spacing={1}>
-                        <Grid item xs={12}>
+                        <Grid key={0} item xs={12}>
                             <Paper
                             square
                             sx={{
@@ -1067,7 +1067,7 @@ export const ProjectProfileViewer = forwardRef(
                             </IconButton>
                             </Paper>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={1} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1078,7 +1078,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                             <Typography>{"Name"}</Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={2} item xs={10}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1088,7 +1088,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                             <Typography>{name}</Typography>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={3} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1099,7 +1099,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                              <Typography>{"Platform Type"}</Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={4} item xs={10}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1112,7 +1112,7 @@ export const ProjectProfileViewer = forwardRef(
                                 {platformTypes.length > 0 ? platformTypes[0] : "?"}
                             </Typography>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={5} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1124,6 +1124,7 @@ export const ProjectProfileViewer = forwardRef(
                              <Typography>{"Packages"}</Typography> 
                         </Grid>
                         <Grid
+                            key={6}
                             item
                             xs={10}
                             sx={{
@@ -1137,14 +1138,14 @@ export const ProjectProfileViewer = forwardRef(
                                     overflowY: "scroll",
                                 }}
                             >
-                                {packages.map((pkg) => (
-                                    <ListItem>
+                                {packages.map((pkg, index) => (
+                                    <ListItem key={index}>
                                         <Chip label={pkg} icon={<VscPackage />} color={"primary"} />
                                     </ListItem>
                                 ))}
                             </List>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={7} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1155,20 +1156,20 @@ export const ProjectProfileViewer = forwardRef(
                         >
                            <Typography> {"Backend Arguments"} </Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={8} item xs={10}
                             sx={{
                                 backgroundColor: "white",
                             }}
                         >
                             <List>
-                                {backendArgs.map((arg) => (
-                                    <ListItem>
+                                {backendArgs.map((arg, index) => (
+                                    <ListItem key={index}>
                                         <Chip label={arg} icon={<VscSymbolParameter />} variant="outlined" color={"primary"} />
                                     </ListItem>
                                 ))}
                             </List>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={9} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1179,7 +1180,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                             <Typography> {"Platform Configuration"} </Typography> 
                         </Grid>
-                        <Grid item xs={10} sx={{
+                        <Grid key={10} item xs={10} sx={{
                             maxHeight: "60vh",
                             overflow: "auto",
                         }}>

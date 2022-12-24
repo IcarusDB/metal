@@ -214,8 +214,7 @@ export function Main() {
                 tab.id !== undefined) {
                 select(tab.id);
             } 
-        }
-        
+        }  
     }
 
     const openDesigner = (props: DesignerProps) => {

@@ -79,17 +79,17 @@ export function Home(props: HomeProps) {
                 Starter
             </Typography>
             <List dense disablePadding={true}>
-                <ListItem>
+                <ListItem key="newProject" >
                     <Button startIcon={<VscNewFolder />} onClick={onNewProject}>
                         New Project
                     </Button>
                 </ListItem>
-                <ListItem>
+                <ListItem key="openProject">
                     <Button startIcon={<VscFolderOpened />} onClick={onOpenProject}>
                         Open Project
                     </Button>
                 </ListItem>
-                <ListItem>
+                <ListItem key="metalRepository">
                     <Button startIcon={<VscExtensions />} onClick={onOpenMetalRepo}>
                         Metal Repository
                     </Button>
