@@ -27,7 +27,7 @@ import _ from "lodash";
 import { Executions, ExecutionsProps } from "../execution/Executions";
 
 interface Component {
-    id?: string,
+    id: string,
     type: string,
     props: any,
     instance: JSX.Element,
@@ -35,13 +35,13 @@ interface Component {
 
 interface ComponentFactory {
     components: Component[],
-    memorize: (type: string, props: any, factory: () => JSX.Element, id?: string) => JSX.Element,
+    memorize: (type: string, props: any, cmpFactory: () => JSX.Element, id: string) => JSX.Element,
     destory: (equal: (cmp: Component) => boolean) => void,
 }
 
 const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((set, get) => ({
     components: [],
-    memorize: (type, props, factory, id) => {
+    memorize: (type, props, cmpFactory, id) => {
         const mCmps = get().components.filter(component => {
             if (component.type !== type) {
                 return false;
@@ -50,7 +50,7 @@ const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((se
             return _.isEqualWith(props, component.props);
         });
         if (mCmps.length === 0) {
-            const newCmp = factory();
+            const newCmp = cmpFactory();
             set((prev) => ({
                 components: [{ id: id, type: type, props: props, instance: newCmp }, ...prev.components]
             }));
@@ -108,7 +108,8 @@ export interface MainHandler {
 }
 
 export function Main() {
-    const [memorizeCmps, destoryCmp] = useComponentFactory(state => [state.memorize, state.destory]);
+    const memorizeCmps = useComponentFactory(state => state.memorize);
+    const destoryCmp = useComponentFactory(state => state.destory);
     const home: IJsonTabNode = {
         type: "tab",
         name: "Home",
@@ -386,7 +387,7 @@ export function Main() {
             model={layoutModel}
             factory={factory}
             iconFactory={iconFatory}
-            // onAction={onRecycle}
+            onAction={onRecycle}
         ></FlexLayout.Layout>
     );
 }
