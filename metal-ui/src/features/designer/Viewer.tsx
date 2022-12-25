@@ -28,10 +28,10 @@ export function Viewer(props: ViewerProps) {
     const specLoader = useSpecLoader(token);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const [nodeEditorAction] = useMetalNodeEditor();
-    const [,, onNameChange] = useName();
+    const [, , onNameChange] = useName();
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.rename !== undefined) {
-            mainHandler.rename(viewerId(id), name === undefined? "?": name);
+            mainHandler.rename(viewerId(id), name === undefined ? "?" : name);
         }
     });
 
@@ -42,7 +42,6 @@ export function Viewer(props: ViewerProps) {
         }),
         [nodeEditorAction]
     );
-    
 
     return (
         <div className="panel">
@@ -79,33 +78,24 @@ export function Viewer(props: ViewerProps) {
                     position: "absolute",
                     top: "1vh",
                     left: "1vw",
-                    paddingTop: "1em",
-                    paddingBottom: "1em",
-                    paddingLeft: "1em",
-                    paddingRight: "1em",
+                    padding: "0.5em",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     alignItems: "flex-start",
                     justifyContent: "flex-start",
                 }}
             >
-                <div
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "flex-start",
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={() => {
+                        projectProfileViewerRef.current?.open();
                     }}
                 >
-                    <IconButton
-                        onClick={() => {
-                            projectProfileViewerRef.current?.open();
-                        }}
-                    >
-                        <VscOpenPreview />
-                    </IconButton>
-                </div>
+                    <VscOpenPreview />
+                </IconButton>
             </Paper>
             <MetalNodeEditor isReadOnly={true} />
             <ProjectProfileViewer ref={projectProfileViewerRef} />

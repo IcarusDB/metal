@@ -102,7 +102,6 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
             >
                 <Paper
                     square
-                    variant="outlined"
                     sx={{
                         boxSizing: "border-box",
                         margin: "0px",

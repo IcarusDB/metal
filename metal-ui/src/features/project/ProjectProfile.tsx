@@ -790,11 +790,6 @@ export const ProjectProfile = forwardRef(
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        // const[platform] = usePlatform();
-        // const[backendArgs] = useBackendArgs();
-        // const[pkgs] = usePkgs();
-        // const[name] = useName();
-
         const [{name, pkgs, platform, backendArgs}] = useProfile();
         const basicProfile = {
             name: name === undefined? "": name,
@@ -877,7 +872,6 @@ export const ProjectProfile = forwardRef(
                     {!isCreate && (
                         <Paper
                             square
-                            variant="outlined"
                             sx={{
                                 boxSizing: "border-box",
                                 margin: "0px",

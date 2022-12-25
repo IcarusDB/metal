@@ -103,7 +103,6 @@ export function Executions(props: ExecutionsProps) {
             rows={rows}
             pageSize={10}
             rowsPerPageOptions={[10]}
-            autoHeight={true}
         />
     )
 }
