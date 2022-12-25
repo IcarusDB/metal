@@ -140,7 +140,7 @@ export function MetalPkgView(props: MetalPkgProps) {
                     <VscOrganization />
                 </Grid>
                 <Grid item xs={11}>
-                    <Chip label={groupId} size="small" color="primary" variant="outlined"/>
+                    <Chip label={groupId} size="small" color="primary" variant="outlined" />
                 </Grid>
                 <Grid
                     item
@@ -171,16 +171,20 @@ export function MetalPkgView(props: MetalPkgProps) {
                     <Chip size="small" variant="outlined" label={version} color={"info"} />
                 </Grid>
                 <Grid item xs={12}>
-                <Divider orientation="horizontal" flexItem  sx={{
-                    paddingTop: "1vh",
-                }}/>
+                    <Divider
+                        orientation="horizontal"
+                        flexItem
+                        sx={{
+                            paddingTop: "1vh",
+                        }}
+                    />
                 </Grid>
                 <Grid item xs={6}></Grid>
                 <Grid item xs={4}>
                     {type !== MetalTypes.SETUP && (
-                        <Button 
-                            variant="contained" 
-                            color="primary" 
+                        <Button
+                            variant="contained"
+                            color="primary"
                             onClick={onAddNode}
                             style={{
                                 width: "100%",
@@ -427,26 +431,27 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     justifyContent: "space-between",
                 }}
             >
-                <div
-                    style={{
+                <Paper
+                    square
+                    variant="outlined"
+                    sx={{
+                        boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "row",
-                        alignContent: "center",
                         justifyContent: "space-between",
                         alignItems: "center",
                         height: "6%",
-                        backgroundColor: "#d8c3c366",
+                        // backgroundColor: "#d8c3c366",
                     }}
                 >
-                    <Paper
-                        square
-                        variant="outlined"
-                        sx={{
+                    <div
+                        style={{
                             boxSizing: "border-box",
-                            paddingLeft: "1vw",
-                            width: "90%",
-                            height: "100%",
-                            minHeight: "2vh",
+                            padding: "0.5em",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
                         }}
                     >
                         <IconButton
@@ -456,6 +461,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             sx={{
                                 borderRadius: "0px",
                             }}
+                            size="small"
                         >
                             {MetalViewIcons.SOURCE}
                         </IconButton>
@@ -466,6 +472,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             sx={{
                                 borderRadius: "0px",
                             }}
+                            size="small"
                         >
                             {MetalViewIcons.SINK}
                         </IconButton>
@@ -476,6 +483,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             sx={{
                                 borderRadius: "0px",
                             }}
+                            size="small"
                         >
                             {MetalViewIcons.MAPPER}
                         </IconButton>
@@ -486,6 +494,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             sx={{
                                 borderRadius: "0px",
                             }}
+                            size="small"
                         >
                             {MetalViewIcons.FUSION}
                         </IconButton>
@@ -496,13 +505,13 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             sx={{
                                 borderRadius: "0px",
                             }}
+                            size="small"
                         >
                             {MetalViewIcons.SETUP}
                         </IconButton>
-                    </Paper>
-                    {/* <Divider orientation="vertical" flexItem /> */}
-                    <IconButton 
-                        disabled={isPending()} 
+                    </div>
+                    <IconButton
+                        disabled={isPending()}
                         onClick={load}
                         sx={{
                             borderRadius: "0px",
@@ -510,7 +519,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     >
                         <AiOutlineReload />
                     </IconButton>
-                </div>
+                </Paper>
                 {progress}
                 <Paper
                     square

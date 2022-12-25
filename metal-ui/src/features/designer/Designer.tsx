@@ -36,8 +36,8 @@ export function Designer(props: DesignerProps) {
     });
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
-    const [,, onNameChange] = useName();
-    
+    const [, , onNameChange] = useName();
+
     const specLoader = useSpecLoader(token);
     const [pkgs] = usePkgs();
 
@@ -53,9 +53,9 @@ export function Designer(props: DesignerProps) {
 
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.rename !== undefined) {
-            mainHandler.rename(designerId(id), name === undefined? "?": name);
+            mainHandler.rename(designerId(id), name === undefined ? "?" : name);
         }
-    })
+    });
 
     const onAddNode = useCallback(
         (nodeProps: MetalNodeProps) => {
@@ -76,10 +76,9 @@ export function Designer(props: DesignerProps) {
         projectProfileRef.current?.close();
     };
 
-
     return (
         <div className="panel">
-            <ProjectLoader token={token} id={id}/>
+            <ProjectLoader token={token} id={id} />
             {specLoader.status === State.failure && (
                 <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
             )}
@@ -126,49 +125,48 @@ export function Designer(props: DesignerProps) {
                     position: "absolute",
                     top: "1vh",
                     left: "1vw",
-                    paddingTop: "1em",
-                    paddingBottom: "1em",
-                    paddingLeft: "1em",
-                    paddingRight: "1em",
+                    padding: "0.5em",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     alignItems: "flex-start",
                     justifyContent: "flex-start",
                 }}
             >
-                <div
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "flex-start",
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={() => {
+                        if (projectProfileRef.current !== null) {
+                            projectProfileRef.current.open();
+                        }
                     }}
                 >
-                    <IconButton
-                            onClick={() => {
-                                if (projectProfileRef.current !== null) {
-                                    projectProfileRef.current.open();
-                                }
-                            }}
-                        >
-                        <VscSettingsGear />
-                    </IconButton>
-                  
+                    <VscSettingsGear />
+                </IconButton>
 
-                    <IconButton
-                        onClick={() => {
-                            projectProfileViewerRef.current?.open();
-                        }}
-                    >
-                        <VscOpenPreview />
-                    </IconButton>
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={() => {
+                        projectProfileViewerRef.current?.open();
+                    }}
+                >
+                    <VscOpenPreview />
+                </IconButton>
 
-                    <IconButton onClick={onSwitchExplorer}>
-                         <VscExtensions />
-                    </IconButton>
-                </div>
-                {/* <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowAction.export()}} ref={backendPanelRef}/> */}
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={onSwitchExplorer}
+                >
+                    <VscExtensions />
+                </IconButton>
             </Paper>
             {<MetalNodeEditor />}
             <ProjectProfile

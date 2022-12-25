@@ -373,27 +373,17 @@ export const MetalFlow = (props: MetalFlowProps) => {
             fitViewOptions={fitViewOptions}
             nodeTypes={nodeTypes}
         >
-            <Controls />
             <Background />
             <Controls
-                showZoom={false}
-                showFitView={false}
-                showInteractive={false}
+                showZoom={true}
+                showFitView={true}
+                showInteractive={true}
                 position={"top-right"}
             >
-                <ControlButton>
-                    <AiOutlineDeploymentUnit />
-                </ControlButton>
-                <ControlButton>
-                    <CgRadioChecked />
-                </ControlButton>
-                <ControlButton>
-                    <VscDebugStart />
-                </ControlButton>
-                <ControlButton>
-                    <VscDebugStop />
-                </ControlButton>
-                <ControlButton onClick={onLayout}>
+                <ControlButton 
+                    onClick={onLayout}
+                    title={"Layout"}
+                >
                     <VscTypeHierarchy />
                 </ControlButton>
             </Controls>

@@ -6,7 +6,11 @@ import { HiStop } from "react-icons/hi";
 import {
     VscBookmark,
     VscComment,
+    VscDebugAll,
+    VscDebugAltSmall,
+    VscDebugStart,
     VscFlame,
+    VscGripper,
     VscRemote,
     VscWarning,
     VscWorkspaceUnknown,
@@ -44,6 +48,7 @@ export function BackendBar() {
                 ></Button>
                 <DeployBrief />
                 <BackendStatusBrief />
+                <ExecuteBar />
             </Stack>
             <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
                 <BackendNotice />
@@ -263,4 +268,43 @@ function BackendNotice() {
             </Popover>
         </>
     );
+}
+
+function ExecuteBar() {
+    const [backendStatus] = useBackendStatus();
+    const isBackendUp = backendStatus?.current === BackendState.UP;
+    const isDebugEnable = isBackendUp;
+    const isExecEnable = isBackendUp;
+
+    return (
+        <Stack 
+            direction="row" 
+            justifyContent="flex-start" 
+            alignItems="center" 
+            spacing={1}
+            sx={{
+                backgroundColor: "cyan"
+            }}
+        >
+            <VscGripper />
+            <IconButton
+                sx={{
+                    borderRadius: "0px",
+                }}
+                size="small"
+                disabled={!isDebugEnable}
+            >
+                <VscDebugAltSmall />
+            </IconButton>
+            <IconButton
+                sx={{
+                    borderRadius: "0px",
+                }}
+                size="small"
+                disabled={!isExecEnable}
+            >
+                <VscDebugStart />
+            </IconButton>
+        </Stack>
+    )
 }
