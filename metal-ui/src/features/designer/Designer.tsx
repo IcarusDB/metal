@@ -51,8 +51,8 @@ export function Designer(props: DesignerProps) {
     };
 
     onNameChange((name: string | undefined, prev: string | undefined) => {
-        if (mainHandler !== undefined && mainHandler.renameDesigner !== undefined) {
-            mainHandler.renameDesigner(designerId(id), name === undefined? "?": name);
+        if (mainHandler !== undefined && mainHandler.rename !== undefined) {
+            mainHandler.rename(designerId(id), name === undefined? "?": name);
         }
     })
 

@@ -4,10 +4,10 @@ import { VscOpenPreview } from "react-icons/vsc";
 import { ReactFlowProvider } from "reactflow";
 import { State } from "../../api/State";
 import { useAppSelector } from "../../app/hooks";
-import { MainHandler } from "../main/Main";
+import { MainHandler, viewerId } from "../main/Main";
 import { ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
 import { tokenSelector } from "../user/userSlice";
-import { useMetalNodeEditor, useSpec } from "./DesignerProvider";
+import { useMetalNodeEditor, useName, useSpec } from "./DesignerProvider";
 import { MetalFlow } from "./MetalFlow";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalNodeProps } from "./MetalView";
@@ -20,7 +20,7 @@ export interface ViewerProps {
 }
 
 export function Viewer(props: ViewerProps) {
-    const { children } = props;
+    const { id, mainHandler, children } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -28,6 +28,12 @@ export function Viewer(props: ViewerProps) {
     const specLoader = useSpecLoader(token);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const [nodeEditorAction] = useMetalNodeEditor();
+    const [,, onNameChange] = useName();
+    onNameChange((name: string | undefined, prev: string | undefined) => {
+        if (mainHandler !== undefined && mainHandler.rename !== undefined) {
+            mainHandler.rename(viewerId(id), name === undefined? "?": name);
+        }
+    });
 
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({

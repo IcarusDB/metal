@@ -98,6 +98,10 @@ export function designerId(id: string) {
     return `designer[${id}]`;
 }
 
+export function viewerId(id: string) {
+  return `viewer[${id}]`;
+}
+
 
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
@@ -106,7 +110,7 @@ export interface MainHandler {
     openMetalRepo: (props: MetalRepoProps) => void;
     select: (id: string) => void;
     close?: (id: string) => void;
-    renameDesigner?: (id: string, newName: string) => void;
+    rename?: (id: string, newName: string) => void;
 }
 
 export function Main() {
@@ -250,7 +254,7 @@ export function Main() {
         const {id} = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: `viewer[${id}]`,
+            id: viewerId(id),
             name: `Viewer[${id}]`,
             icon: "viewerIcon",
             component: "viewer",
@@ -286,7 +290,7 @@ export function Main() {
         }
     }
 
-    const renameDesigner = (id: string, newName: string) => {
+    const rename = (id: string, newName: string) => {
         const action: Action = Actions.renameTab(id, newName);
         try{
             layoutModel.doAction(action);
@@ -338,7 +342,7 @@ export function Main() {
         openMetalRepo: openMetalRepo,
         select: select,
         close: close,
-        renameDesigner: renameDesigner,
+        rename: rename,
     }
 
     const factory = (node: TabNode) => {

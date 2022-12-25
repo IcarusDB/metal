@@ -82,7 +82,10 @@ export function Executions(props: ExecutionsProps) {
                         mainHandler.openViewer({
                             id: exec.id,
                             mainHandler: mainHandler,
-                            children: <ExecLoader token={token} id={exec.id} />
+                            children: <ExecLoader 
+                                token={token} 
+                                id={exec.id} 
+                                name={exec.fromProjectDetail.name} />
                         })
                     }
                 }

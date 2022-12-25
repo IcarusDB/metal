@@ -9,7 +9,7 @@ import { useProfile, useSpec } from "../designer/DesignerProvider";
 import { MainHandler } from "../main/Main";
 import { tokenSelector } from "../user/userSlice";
 
-function useExecLoader(token: string | null, id: string): [State, any] {
+function useExecLoader(token: string | null, id: string, name?: string): [State, any] {
     const [, setSpec] = useSpec();
     const [, setProfile] = useProfile();
     const [run, status, exec, error] = useAsync<Exec>();
@@ -26,7 +26,7 @@ function useExecLoader(token: string | null, id: string): [State, any] {
         if (status === State.success && exec !== null) {
             setSpec(exec.SPEC);
             setProfile(
-                `Project[${exec.fromProject}]-${exec.id}`,
+                name === undefined? `Project[${name}]-${exec.id}`: `Project[${exec.fromProject}]-${exec.id}`,
                 exec.deploy.pkgs,
                 exec.deploy.platform,
                 exec.deploy.backend.args
@@ -41,10 +41,11 @@ export interface ExecLoaderProps {
     id: string,
     token: string | null,
     mainHandler?: MainHandler,
+    name?: string,
 }
 
 export function ExecLoader(props: ExecLoaderProps) {
-    const {id, token, mainHandler} = props;
+    const {id, token, mainHandler, name} = props;
 
     const [loadStatus, loadError] = useExecLoader(token, id);
     const isPending = () => (loadStatus === State.pending);
