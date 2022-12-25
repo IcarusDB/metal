@@ -4,13 +4,14 @@ import { Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { getProjectById } from "../../api/ProjectApi";
-import { useDeploy, useProfile, useSpec } from "./DesignerProvider";
+import { useBackendStatus, useDeploy, useProfile, useSpec } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
     const [run, status, project, error] = useAsync<Project>();
     const [, setSpec] = useSpec();
     const [, setProfile] = useProfile();
     const [, setDeploy] = useDeploy();
+    const [, setBackendStatus] = useBackendStatus();
 
     useEffect(() => {
         if (token === null || id.trim() === "") {
@@ -21,6 +22,7 @@ function useProjectLoader(token: string | null, id: string) {
                 setSpec(project.spec);
                 setProfile(project.name, project.deploy.pkgs, project.deploy.platform, project.deploy.backend.args);
                 setDeploy(project.deploy.id, project.deploy.epoch);
+                setBackendStatus(project.deploy.backend.status);
             }
         }
         if (status === State.idle) {

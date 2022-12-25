@@ -5,6 +5,7 @@ import { SpecSlice, createSpecSlice } from "./SpecSlice";
 import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction } from "./DesignerActionSlice";
 import { Spec } from "../../model/Spec";
 import { createDeploySlice, DeploySlice } from "./DeploySlice";
+import { BackendStatus } from "../../model/Project";
 
 declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
 
@@ -132,6 +133,20 @@ export function useEpoch(): [
             state.bindEpoch
         ])
     )
+}
+
+export function useBackendStatus(): [
+    BackendStatus | undefined,
+    (status: BackendStatus) => void
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.backendStatus,
+            state.bindBackendStatus
+        ])
+    );
 }
 
 export function useDeploy(): [

@@ -453,6 +453,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.source.isOn() ? "success" : "secondary"}
                             onClick={filters.source.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
                         >
                             {MetalViewIcons.SOURCE}
                         </IconButton>
@@ -460,6 +463,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.sink.isOn() ? "success" : "secondary"}
                             onClick={filters.sink.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
                         >
                             {MetalViewIcons.SINK}
                         </IconButton>
@@ -467,6 +473,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.mapper.isOn() ? "success" : "secondary"}
                             onClick={filters.mapper.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
                         >
                             {MetalViewIcons.MAPPER}
                         </IconButton>
@@ -474,6 +483,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.fusion.isOn() ? "success" : "secondary"}
                             onClick={filters.fusion.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
                         >
                             {MetalViewIcons.FUSION}
                         </IconButton>
@@ -481,6 +493,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.setup.isOn() ? "success" : "secondary"}
                             onClick={filters.setup.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
                         >
                             {MetalViewIcons.SETUP}
                         </IconButton>
@@ -489,6 +504,9 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     <IconButton 
                         disabled={isPending()} 
                         onClick={load}
+                        sx={{
+                            borderRadius: "0px",
+                        }}
                     >
                         <AiOutlineReload />
                     </IconButton>

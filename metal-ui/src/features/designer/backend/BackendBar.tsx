@@ -1,7 +1,18 @@
-import { Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
+import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
+import moment from "moment";
 import { useState } from "react";
-import { VscBookmark, VscComment, VscRemote } from "react-icons/vsc";
-import { useDeploy } from "../DesignerProvider";
+import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
+import { HiStop } from "react-icons/hi";
+import {
+    VscBookmark,
+    VscComment,
+    VscFlame,
+    VscRemote,
+    VscWarning,
+    VscWorkspaceUnknown,
+} from "react-icons/vsc";
+import { BackendState, BackendStatus } from "../../../model/Project";
+import { useBackendStatus, useDeploy } from "../DesignerProvider";
 
 export interface BackendBarProps {}
 
@@ -32,16 +43,10 @@ export function BackendBar() {
                     }}
                 ></Button>
                 <DeployBrief />
+                <BackendStatusBrief />
             </Stack>
             <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
-                <IconButton
-                    size="small"
-                    sx={{
-                        borderRadius: "0px",
-                    }}
-                >
-                    <VscComment />
-                </IconButton>
+                <BackendNotice />
             </Stack>
         </Paper>
     );
@@ -86,75 +91,175 @@ export function DeployBrief() {
                     variant: "outlined",
                     sx: {
                         boxSizing: "border-box",
-                        padding: "0.5em" ,
-                    }
+                        padding: "0.5em",
+                    },
                 }}
-                
             >
                 <Grid container>
-                        <Grid
-                            item
-                            xs={3}
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "flex-start",
-                            }}
-                        >
-                            Deploy Id
-                        </Grid>
-                        <Grid
-                            item
-                            xs={9}
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "flex-start",
-                            }}
-                        >
-                            <Typography variant="body1" color={"text.secondary"}>
-                                {deployId === undefined ? "?" : deployId}
-                            </Typography>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={3}
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "flex-start",
-                            }}
-                        >
-                            Epoch
-                        </Grid>
-                        <Grid
-                            item
-                            xs={9}
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "flex-start",
-                                alignItems: "flex-start",
-                            }}
-                        >
-                            <Typography variant="body1" color={"text.secondary"}>
-                                {epoch === undefined ? "?" : epoch}
-                            </Typography>
-                        </Grid>
+                    <Grid
+                        item
+                        xs={3}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        Deploy Id
                     </Grid>
-                {/* <Paper
-                    square
-                    variant="outlined"
-                    sx={{
+                    <Grid
+                        item
+                        xs={9}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <Typography variant="body1" color={"text.secondary"}>
+                            {deployId === undefined ? "?" : deployId}
+                        </Typography>
+                    </Grid>
+                    <Grid
+                        item
+                        xs={3}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        Epoch
+                    </Grid>
+                    <Grid
+                        item
+                        xs={9}
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <Typography variant="body1" color={"text.secondary"}>
+                            {epoch === undefined ? "?" : epoch}
+                        </Typography>
+                    </Grid>
+                </Grid>
+            </Popover>
+        </>
+    );
+}
+
+function statusIcon(status: BackendState, color?: string) {
+    switch (status) {
+        case BackendState.CREATED:
+            return <AiOutlineApi color={color} />;
+        case BackendState.DOWN:
+            return <HiStop color={color} />;
+        case BackendState.UP:
+            return <AiFillThunderbolt color={color} />;
+        case BackendState.FAILURE:
+            return <AiOutlineWarning color={color} />;
+    }
+}
+
+function statusInfo(status: BackendStatus) {
+    switch (status.current) {
+        case BackendState.CREATED:
+            return `Create at ${moment(status.createdTime).format("YYYY-MM-DD HH:mm:ss")}`;
+        case BackendState.DOWN:
+            return `Down at ${moment(status.downTime).format("YYYY-MM-DD HH:mm:ss")}`;
+        case BackendState.UP:
+            return `Up at ${moment(status.upTime).format("YYYY-MM-DD HH:mm:ss")}`;
+        case BackendState.FAILURE:
+            return `Fail at ${moment(status.failureTime).format("YYYY-MM-DD HH:mm:ss")}`;
+    }
+}
+
+function BackendStatusBrief() {
+    const [status] = useBackendStatus();
+    const icon =
+        status === undefined ? (
+            <VscWorkspaceUnknown color={"grey"} />
+        ) : (
+            statusIcon(status?.current, "grey")
+        );
+
+    const tip = status === undefined ? "?" : statusInfo(status);
+
+    return (
+        <Button
+            size="small"
+            startIcon={icon}
+            sx={{
+                borderRadius: "0px",
+            }}
+        >
+            {tip}
+        </Button>
+    );
+}
+
+function BackendNotice() {
+    const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+    const [status] = useBackendStatus();
+    const isFailure = status?.current === BackendState.FAILURE;
+    const icon = isFailure ? <VscWarning /> : <VscComment />;
+
+    const onClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchor(event.currentTarget);
+    };
+
+    const onClose = () => {
+        setAnchor(null);
+    };
+
+    const msg = isFailure ? (
+        <Alert severity="error" variant="outlined">
+            {status.failureMsg}
+        </Alert>
+    ) : (
+        <Alert severity="info" variant="outlined"></Alert>
+    );
+
+    return (
+        <>
+            <IconButton
+                size="small"
+                onClick={onClick}
+                sx={{
+                    borderRadius: "0px",
+                }}
+            >
+                {icon}
+            </IconButton>
+            <Popover
+                open={anchor !== null}
+                onClose={onClose}
+                anchorEl={anchor}
+                anchorOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                }}
+                transformOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                }}
+                PaperProps={{
+                    square: true,
+                    variant: "outlined",
+                    sx: {
                         boxSizing: "border-box",
-                        margin: "0.5em",
-                    }}
-                >
-                    
-                </Paper> */}
+                        padding: "0.5em",
+                        minWidth: "10vw",
+                    },
+                }}
+            >
+                {msg}
             </Popover>
         </>
     );
