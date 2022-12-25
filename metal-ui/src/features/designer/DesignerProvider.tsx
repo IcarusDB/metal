@@ -4,13 +4,15 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { SpecSlice, createSpecSlice } from "./SpecSlice";
 import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction } from "./DesignerActionSlice";
 import { Spec } from "../../model/Spec";
+import { createDeploySlice, DeploySlice } from "./DeploySlice";
 
-declare type DesingerStore = DesignerActionSlice & SpecSlice;
+declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
 
 const defaultStore = createStore<DesingerStore>()(
     subscribeWithSelector((set, get) => ({
         ...createDesignerActionSlice(set, get),
         ...createSpecSlice(set, get),
+        ...createDeploySlice(set, get),
     }))
 )
 
@@ -104,6 +106,53 @@ export function useProfile(): [
     )
 }
 
+export function useDeployId(): [
+    string | undefined,
+    (id: string) => void,
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.deployId,
+            state.bindDeployId
+        ])
+    )
+}
+
+export function useEpoch(): [
+    number | undefined,
+    (epoch: number) => void,
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.epoch,
+            state.bindEpoch
+        ])
+    )
+}
+
+export function useDeploy(): [
+    {deployId: string | undefined, epoch: number | undefined},
+    (deployId?: string, epoch?: number) => void,
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            {
+                deployId: state.deployId,
+                epoch: state.epoch
+            },
+            state.bindDeploy
+        ])
+    )
+}
+
+
+
 export interface DesignerProviderProps {
     children?: ReactNode
 }
@@ -114,6 +163,7 @@ export function DesignerProvider(props: DesignerProviderProps) {
         subscribeWithSelector((set, get) => ({
             ...createDesignerActionSlice(set, get),
             ...createSpecSlice(set, get),
+            ...createDeploySlice(set, get),
         }))
     )
     return (

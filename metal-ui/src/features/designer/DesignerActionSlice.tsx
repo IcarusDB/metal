@@ -47,7 +47,7 @@ export interface DesignerActionSlice {
 }
 export const createDesignerActionSlice = (
     set: StoreApi<DesignerActionSlice>["setState"],
-    get: StoreApi<DesignerActionSlice>["setState"]
+    get: StoreApi<DesignerActionSlice>["getState"]
 ): DesignerActionSlice => ({
     metalFlowAction: initialMetalFlowAction,
     metalNodeEditorAction: initialMetalNodeEditorAction,

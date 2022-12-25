@@ -22,6 +22,7 @@ import { ReactFlowProvider } from "reactflow";
 import { useMetalFlow, useMetalNodeEditor, useName, usePkgs, useSpec } from "./DesignerProvider";
 import { BackendPanelHandler } from "./BackendPanel";
 import { ProjectLoader } from "./ProjectLoader";
+import { BackendBar } from "./backend/BackendBar";
 
 export interface DesignerProps {
     id: string;
@@ -94,6 +95,9 @@ export function Designer(props: DesignerProps) {
                     sx={{
                         height: "100%",
                         width: !isOpenExplorer ? "100%" : "75%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                     }}
                 >
                     <ReactFlowProvider>
@@ -102,6 +106,7 @@ export function Designer(props: DesignerProps) {
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
+                    <BackendBar />
                 </Box>
                 {isOpenExplorer && (
                     <Box
