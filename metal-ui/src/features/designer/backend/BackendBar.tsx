@@ -1,6 +1,6 @@
 import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
-import { useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
 import {
@@ -12,15 +12,26 @@ import {
     VscFlame,
     VscGripper,
     VscRemote,
+    VscSync,
     VscWarning,
     VscWorkspaceUnknown,
 } from "react-icons/vsc";
+import { RingLoader } from "react-spinners";
+import { useAsync } from "../../../api/Hooks";
+import { getBackendStatus } from "../../../api/ProjectApi";
+import { State } from "../../../api/State";
+import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
-import { useBackendStatus, useDeploy } from "../DesignerProvider";
+import { tokenSelector } from "../../user/userSlice";
+import { useBackendStatus, useDeploy, useDeployId } from "../DesignerProvider";
 
 export interface BackendBarProps {}
 
 export function BackendBar() {
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+
     return (
         <Paper
             square
@@ -46,6 +57,7 @@ export function BackendBar() {
                         borderRadius: "0px",
                     }}
                 ></Button>
+                <SyncBackendStatus token={token} />
                 <DeployBrief />
                 <BackendStatusBrief />
                 <ExecuteBar />
@@ -156,6 +168,78 @@ export function DeployBrief() {
                 </Grid>
             </Popover>
         </>
+    );
+}
+
+function useSyncBackendStatus(token: string | null): [
+    boolean,
+    () => void,
+] {
+    const [deployId, ] = useDeployId();
+    const [backendStatus, setBackendStatus] = useBackendStatus();
+    const [isPending, startTransition] = useTransition();
+
+    const sync = useCallback(() => {
+        if (token !== null && deployId !== undefined) {
+            startTransition(()=>{getBackendStatus(token, deployId)
+                .then((status: BackendStatus) => {
+                    setBackendStatus(status);        
+                    return status;
+                })});
+        }
+    }, [deployId, setBackendStatus, token]);
+
+    useEffect(()=>{
+        if (token === null || deployId === undefined) {
+            return ;
+        }
+        if (backendStatus?.current === BackendState.CREATED || backendStatus?.current === BackendState.UP) {
+            const timer = setTimeout(
+                () => {
+                    sync();
+                },
+                5000
+            );
+            return () => {
+                clearTimeout(timer);
+            }
+        }
+    }, [backendStatus, deployId, sync, token])
+
+    return [isPending , sync]
+}
+
+interface SyncBackendStatusProps {
+    token: string | null,
+}
+
+function SyncBackendStatus(props: SyncBackendStatusProps) {
+    const { token } = props;
+    const [isPending, sync] = useSyncBackendStatus(token);
+    const onSync = () => {
+        sync();
+    };
+    return (
+        <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
+            {!isPending && (
+                <IconButton
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    size="small"
+                    onClick={onSync}
+                >
+                    <VscSync />
+                </IconButton>
+            )}
+
+            <RingLoader size="1em" loading={isPending}/>
+            {isPending && (
+                <Typography variant="body1" color={"text.secondary"}>
+                    Syncing Backend status...
+                </Typography>
+            )}
+        </Stack>
     );
 }
 
@@ -277,13 +361,13 @@ function ExecuteBar() {
     const isExecEnable = isBackendUp;
 
     return (
-        <Stack 
-            direction="row" 
-            justifyContent="flex-start" 
-            alignItems="center" 
+        <Stack
+            direction="row"
+            justifyContent="flex-start"
+            alignItems="center"
             spacing={1}
             sx={{
-                backgroundColor: "cyan"
+                backgroundColor: "cyan",
             }}
         >
             <VscGripper />
@@ -306,5 +390,5 @@ function ExecuteBar() {
                 <VscDebugStart />
             </IconButton>
         </Stack>
-    )
+    );
 }
