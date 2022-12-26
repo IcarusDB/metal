@@ -735,7 +735,7 @@ export interface ProjectProfileValue {
 
 const STEP_SIZE = 5;
 
-function extractPlatformType(platform: any): PlatformType{
+export function extractPlatformType(platform: any): PlatformType{
     const types = _.keys(platform);
     if (types.length === 0) {
         return  PlatformType.SPARK_STANDALONE;

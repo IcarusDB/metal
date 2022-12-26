@@ -6,24 +6,23 @@ import { HiStop } from "react-icons/hi";
 import {
     VscBookmark,
     VscComment,
-    VscDebugAll,
     VscDebugAltSmall,
+    VscDebugDisconnect,
     VscDebugStart,
-    VscFlame,
     VscGripper,
     VscRemote,
     VscSync,
     VscWarning,
     VscWorkspaceUnknown,
 } from "react-icons/vsc";
+import { DiSpark } from "react-icons/di";
 import { RingLoader } from "react-spinners";
-import { useAsync } from "../../../api/Hooks";
 import { getBackendStatus } from "../../../api/ProjectApi";
-import { State } from "../../../api/State";
 import { useAppSelector } from "../../../app/hooks";
-import { BackendState, BackendStatus } from "../../../model/Project";
+import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
+import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, usePlatform } from "../DesignerProvider";
 
 export interface BackendBarProps {}
 
@@ -47,16 +46,7 @@ export function BackendBar() {
             }}
         >
             <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
-                <Button
-                    size="small"
-                    variant="contained"
-                    disableElevation={true}
-                    startIcon={<VscRemote color="white" />}
-                    sx={{
-                        backgroundColor: "orangered",
-                        borderRadius: "0px",
-                    }}
-                ></Button>
+                <BackendControl token={token} />
                 <SyncBackendStatus token={token} />
                 <DeployBrief />
                 <BackendStatusBrief />
@@ -66,6 +56,40 @@ export function BackendBar() {
                 <BackendNotice />
             </Stack>
         </Paper>
+    );
+}
+
+function PlatformIcon(type: PlatformType, color?: string) {
+    switch (type) {
+        case PlatformType.SPARK_STANDALONE:
+            return <DiSpark color={color} />
+    }
+}
+
+interface BackendControlProps {
+    token: string | null;
+}
+
+function BackendControl(props: BackendControlProps) {
+    const { token } = props;
+    const [backendStatus] = useBackendStatus();
+    const [platform] = usePlatform();
+    const isCanUnDeploy = backendStatus?.current === BackendState.CREATED || backendStatus?.current === BackendState.UP;
+    const platformType = extractPlatformType(platform);
+    
+    return (
+        <Button
+            size="small"
+            variant="contained"
+            disableElevation={true}
+            startIcon={ isCanUnDeploy? <VscDebugDisconnect color="white"/>:<VscRemote color="white" />}
+            sx={{
+                backgroundColor: "orangered",
+                borderRadius: "0px",
+            }}
+        >
+            {platformType}
+        </Button>
     );
 }
 
@@ -171,46 +195,44 @@ export function DeployBrief() {
     );
 }
 
-function useSyncBackendStatus(token: string | null): [
-    boolean,
-    () => void,
-] {
-    const [deployId, ] = useDeployId();
+function useSyncBackendStatus(token: string | null): [boolean, () => void] {
+    const [deployId] = useDeployId();
     const [backendStatus, setBackendStatus] = useBackendStatus();
     const [isPending, startTransition] = useTransition();
 
     const sync = useCallback(() => {
         if (token !== null && deployId !== undefined) {
-            startTransition(()=>{getBackendStatus(token, deployId)
-                .then((status: BackendStatus) => {
-                    setBackendStatus(status);        
+            startTransition(() => {
+                getBackendStatus(token, deployId).then((status: BackendStatus) => {
+                    setBackendStatus(status);
                     return status;
-                })});
+                });
+            });
         }
     }, [deployId, setBackendStatus, token]);
 
-    useEffect(()=>{
+    useEffect(() => {
         if (token === null || deployId === undefined) {
-            return ;
+            return;
         }
-        if (backendStatus?.current === BackendState.CREATED || backendStatus?.current === BackendState.UP) {
-            const timer = setTimeout(
-                () => {
-                    sync();
-                },
-                5000
-            );
+        if (
+            backendStatus?.current === BackendState.CREATED ||
+            backendStatus?.current === BackendState.UP
+        ) {
+            const timer = setTimeout(() => {
+                sync();
+            }, 5000);
             return () => {
                 clearTimeout(timer);
-            }
+            };
         }
-    }, [backendStatus, deployId, sync, token])
+    }, [backendStatus, deployId, sync, token]);
 
-    return [isPending , sync]
+    return [isPending, sync];
 }
 
 interface SyncBackendStatusProps {
-    token: string | null,
+    token: string | null;
 }
 
 function SyncBackendStatus(props: SyncBackendStatusProps) {
@@ -233,7 +255,7 @@ function SyncBackendStatus(props: SyncBackendStatusProps) {
                 </IconButton>
             )}
 
-            <RingLoader size="1em" loading={isPending}/>
+            <RingLoader size="1em" loading={isPending} />
             {isPending && (
                 <Typography variant="body1" color={"text.secondary"}>
                     Syncing Backend status...
