@@ -34,13 +34,18 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                 });
             }, 2000);
         } catch (reason) {
-            setState({
-                status: State.failure,
-                result: null,
-                error: reason,
-            });
-            console.log(reason);
-            notice(JSON.stringify(reason));
+            setTimeout(
+                () => {
+                    setState({
+                        status: State.failure,
+                        result: null,
+                        error: reason,
+                    });
+                    console.log(reason);
+                    notice(JSON.stringify(reason));
+                }, 2000
+            )
+            
         }
     }, [notice]);
 

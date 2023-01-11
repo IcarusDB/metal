@@ -17,12 +17,15 @@ import {
 } from "react-icons/vsc";
 import { DiSpark } from "react-icons/di";
 import { RingLoader } from "react-spinners";
-import { getBackendStatus } from "../../../api/ProjectApi";
+import { deployBackendOfId, DeployResponse, getBackendStatus, undeployBackendOfId, UnDeployResponse } from "../../../api/ProjectApi";
 import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, usePlatform } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, usePlatform } from "../DesignerProvider";
+import { useAsync } from "../../../api/Hooks";
+import { State } from "../../../api/State";
+import { TimelapseTwoTone } from "@mui/icons-material";
 
 export interface BackendBarProps {}
 
@@ -70,31 +73,113 @@ interface BackendControlProps {
     token: string | null;
 }
 
+function useBackendDeploy(token: string | null, deployId?: string | null): [() => void, State] {
+    const [run, status] = useAsync<void>();
+    const [, setBackendStatus] = useBackendStatus();
+    const [, setEpoch] = useEpoch();
+    const deploy = () => {
+        if (token === null) {
+            return;
+        }
+        if (deployId !== undefined && deployId !== null) {
+            run(deployBackendOfId(token, deployId).then(resp => {
+                return getBackendStatus(token, deployId);
+            }).then(status => {
+                setBackendStatus(status);
+                if (status.epoch !== undefined) {
+                    setEpoch(status.epoch);
+                }
+            }));
+        }
+    }
+
+    return [deploy, status];
+}
+
+function useBackendUndeploy(token: string | null, deployId?: string | null): [() => void, State] {
+    const [run, status] = useAsync<void>();
+    const [, setBackendStatus] = useBackendStatus();
+    const [, setEpoch] = useEpoch();
+    const undeploy = () => {
+        if (token === null) {
+            return;
+        }
+        if (deployId !== undefined && deployId !== null) {
+            run(undeployBackendOfId(token, deployId).then(resp => {
+                return getBackendStatus(token, deployId);
+            }).then(status => {
+                setBackendStatus(status);
+                if (status.epoch !== undefined) {
+                    setEpoch(status.epoch);
+                }
+            }));
+        }
+    }
+
+    return [undeploy, status];
+}
+
+
 function BackendControl(props: BackendControlProps) {
     const { token } = props;
     const [backendStatus] = useBackendStatus();
+    const [deployId] = useDeployId();
     const [platform] = usePlatform();
     const isCanUnDeploy = backendStatus?.current === BackendState.CREATED || backendStatus?.current === BackendState.UP;
     const platformType = extractPlatformType(platform);
+
+    const [deploy, deployStatus] = useBackendDeploy(token, deployId);
+    const [undeploy, undeployStatus] = useBackendUndeploy(token, deployId);
+
+    const isPending = deployStatus === State.pending || undeployStatus === State.pending;
+
+    const deployTip = () => {
+        switch (deployStatus) {
+            case State.failure:
+                return "Fail to deploy";
+            case State.pending:
+                return (
+                    <RingLoader size="1em" loading={true}/>
+                )
+            default:
+                return platformType;
+        }
+    }
+
+    const undeployTip = () => {
+        switch (undeployStatus) {
+            case State.failure:
+                return "Fail to undeploy";
+            case State.pending:
+                return (
+                    <RingLoader size="1em" loading={true}/>
+                )
+            default:
+                return platformType;
+        }
+    }
     
     return (
         <Button
             size="small"
             variant="contained"
             disableElevation={true}
+            disabled={isPending}
             startIcon={ isCanUnDeploy? <VscDebugDisconnect color="white"/>:<VscRemote color="white" />}
             sx={{
                 backgroundColor: "orangered",
                 borderRadius: "0px",
             }}
+            onClick={isCanUnDeploy? undeploy: deploy}
         >
-            {platformType}
+            {isCanUnDeploy? undeployTip(): deployTip()}
         </Button>
     );
 }
 
 export function DeployBrief() {
-    const [{ deployId, epoch }] = useDeploy();
+    const [deployId] = useDeployId();
+    const [epoch] = useEpoch();
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const onClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchor(event.currentTarget);
@@ -197,6 +282,7 @@ export function DeployBrief() {
 
 function useSyncBackendStatus(token: string | null): [boolean, () => void] {
     const [deployId] = useDeployId();
+    const [, setEpoch] = useEpoch();
     const [backendStatus, setBackendStatus] = useBackendStatus();
     const [isPending, startTransition] = useTransition();
 
@@ -205,11 +291,14 @@ function useSyncBackendStatus(token: string | null): [boolean, () => void] {
             startTransition(() => {
                 getBackendStatus(token, deployId).then((status: BackendStatus) => {
                     setBackendStatus(status);
+                    if (status.epoch !== undefined) {
+                        setEpoch(status.epoch);
+                    }
                     return status;
                 });
             });
         }
-    }, [deployId, setBackendStatus, token]);
+    }, [deployId, setBackendStatus, setEpoch, token]);
 
     useEffect(() => {
         if (token === null || deployId === undefined) {
