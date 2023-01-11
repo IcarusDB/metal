@@ -32,7 +32,7 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                     result: res,
                     error: null,
                 });
-            }, 2000);
+            }, 1000);
         } catch (reason) {
             setTimeout(
                 () => {
@@ -43,7 +43,7 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                     });
                     console.log(reason);
                     notice(JSON.stringify(reason));
-                }, 2000
+                }, 1000
             )
             
         }

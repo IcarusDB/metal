@@ -17,19 +17,22 @@ import {
 } from "react-icons/vsc";
 import { DiSpark } from "react-icons/di";
 import { RingLoader } from "react-spinners";
-import { deployBackendOfId, DeployResponse, getBackendStatus, undeployBackendOfId, UnDeployResponse } from "../../../api/ProjectApi";
+import { analysisOfId, AnalysisResponse, deployBackendOfId, DeployResponse, execOfId, ExecResponse, getBackendStatus, undeployBackendOfId, UnDeployResponse } from "../../../api/ProjectApi";
 import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, usePlatform } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useMetalFlow, usePlatform } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
-import { TimelapseTwoTone } from "@mui/icons-material";
+import { AxiosError } from "axios";
 
-export interface BackendBarProps {}
+export interface BackendBarProps {
+    id: string
+}
 
-export function BackendBar() {
+export function BackendBar(props: BackendBarProps) {
+    const {id} = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -53,7 +56,7 @@ export function BackendBar() {
                 <SyncBackendStatus token={token} />
                 <DeployBrief />
                 <BackendStatusBrief />
-                <ExecuteBar />
+                <ExecuteBar id={id} token={token}/>
             </Stack>
             <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
                 <BackendNotice />
@@ -465,11 +468,90 @@ function BackendNotice() {
     );
 }
 
-function ExecuteBar() {
+function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
+    const [flowAction] = useMetalFlow();
+    const [run, status, result] = useAsync<AnalysisResponse>();
+
+    const analysis = () => {
+        if (token === null) {
+            return;
+        }
+        const spec = flowAction.export();
+        run(analysisOfId(token, id, spec));
+    }
+
+    return [analysis, status, result]
+}
+
+function useExec(token: string | null, id: string): [()=>void, State] {
+    const [run, status] = useAsync<void>();
+
+    const exec = () => {
+        if (token === null) {
+            return;
+        }
+        run(execOfId(token, id).then(resp => {
+            if (resp.status !== "OK") {
+                throw new AxiosError("Fail to execute.");
+            }
+        }));
+    }
+
+    return [exec, status]
+}
+
+interface ExecuteBarProps {
+    id: string,
+    token: string | null,
+}
+
+function ExecuteBar(props: ExecuteBarProps) {
+    const {id, token} = props;
     const [backendStatus] = useBackendStatus();
+    const [mode, setMode] = useState<"ANALYSIS" | "EXEC">("ANALYSIS");
+    
+    const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
+    const [exec, execStatus] = useExec(token, id);
     const isBackendUp = backendStatus?.current === BackendState.UP;
-    const isDebugEnable = isBackendUp;
-    const isExecEnable = isBackendUp;
+    const isPending = analysisStatus === State.pending;
+    const isDebugEnable = isBackendUp && !isPending;
+    const isExecEnable = isBackendUp && analysisStatus === State.success && !isPending;
+
+    const analysisTip = () => {
+        switch (analysisStatus) {
+            case State.failure:
+                return "Fail to analysis spec."
+            case State.pending:
+                return "Analysising spec..."
+            case State.success:
+                return "Success to analysis spec."
+            default:
+                return "";
+        }
+    }
+
+    const execTip = () => {
+        switch (execStatus) {
+            case State.failure:
+                return "Fail to exec spec.";
+            case State.pending:
+                return "Submitting spec...";
+            case State.success:
+                return "Success to submit spec execution.";
+            default:
+                return "";
+        }
+    }
+
+    const onAnalysis = () => {
+        setMode("ANALYSIS");
+        analysis();
+    }
+
+    const onExec = () => {
+        setMode("EXEC");
+        exec();
+    }
 
     return (
         <Stack
@@ -480,14 +562,24 @@ function ExecuteBar() {
             sx={{
                 backgroundColor: "cyan",
             }}
-        >
-            <VscGripper />
+        >            
+            <Button
+                size="small"
+                startIcon={<VscGripper />}
+                sx={{
+                    borderRadius: "0px",
+                }}
+            >
+                {mode === "EXEC"? execTip(): analysisTip()}
+            </Button>
+            <RingLoader size="1em" loading={isPending} />
             <IconButton
                 sx={{
                     borderRadius: "0px",
                 }}
                 size="small"
                 disabled={!isDebugEnable}
+                onClick={onAnalysis}
             >
                 <VscDebugAltSmall />
             </IconButton>
@@ -497,6 +589,7 @@ function ExecuteBar() {
                 }}
                 size="small"
                 disabled={!isExecEnable}
+                onClick={onExec}
             >
                 <VscDebugStart />
             </IconButton>

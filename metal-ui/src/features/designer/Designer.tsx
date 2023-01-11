@@ -105,7 +105,7 @@ export function Designer(props: DesignerProps) {
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
-                    <BackendBar />
+                    <BackendBar id={id}/>
                 </Box>
                 {isOpenExplorer && (
                     <Box
