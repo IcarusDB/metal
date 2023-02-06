@@ -14,7 +14,7 @@ import { IChangeEvent } from "@rjsf/core";
 import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import { Metal } from "../../model/Metal";
-import { MetalNodeProps } from "./MetalView";
+import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import {
@@ -33,6 +33,9 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const nameInputRef = useRef<HTMLInputElement>();
     const [, setNodeEditorAction] = useMetalNodeEditor();
 
+    const readOnly = () => {
+        return isReadOnly || metalProps?.status === MetalNodeState.PENDING;
+    }
     const printInputs = () => {
         const inputs = metalFlowAction.inputs;
         if (metalProps === null) {
@@ -167,7 +170,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                         label={"name"}
                                         defaultValue={metal.name}
                                         inputRef={nameInputRef}
-                                        disabled={isReadOnly}
+                                        disabled={readOnly()}
                                     />
                                     <Form
                                         schema={schema}
@@ -175,7 +178,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                         validator={validator}
                                         formData={metalProps.metal.props}
                                         onSubmit={onConfirm}
-                                        readonly={isReadOnly}
+                                        readonly={readOnly()}
                                     >
                                         <Stack
                                             direction="row"
@@ -186,7 +189,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                             <Button
                                                 type={"submit"}
                                                 variant={"contained"}
-                                                disabled={isReadOnly}
+                                                disabled={readOnly()}
                                             >
                                                 {"confirm"}
                                             </Button>

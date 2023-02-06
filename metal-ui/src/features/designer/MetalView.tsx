@@ -1,6 +1,6 @@
 import { ImUpload, ImDownload } from "react-icons/im";
 import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
-import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass } from "react-icons/vsc";
+import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscWorkspaceUnknown, VscWorkspaceTrusted, VscWorkspaceUntrusted } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
 import {
@@ -10,6 +10,7 @@ import {
     Divider,
     Typography,
     Grid,
+    IconButton,
 } from "@mui/material";
 import { MouseEvent } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
@@ -17,6 +18,7 @@ import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
 import { MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
+import { RingLoader, ScaleLoader } from "react-spinners";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -41,6 +43,13 @@ export function metalViewIcon(type: MetalTypes) {
     }
 }
 
+export enum MetalNodeState {
+    UNANALYSIS = "UNANALYSIS",
+    ANALYSIS = "ANALYSIS",
+    PENDING = "PENDING",
+    ERROR = "ERROR",
+}
+
 export interface MetalNodeProps extends IReadOnly {
     metalPkg: MetalPkg;
     metal: Metal;
@@ -48,6 +57,7 @@ export interface MetalNodeProps extends IReadOnly {
     onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
     editor?: MetalNodeEditorAction;
+    status?: MetalNodeState;
 }
 
 export interface IMetalNodeView {
@@ -131,6 +141,56 @@ export const MetalNodeViews = {
     },
 };
 
+export interface MetalNodeStateTipProps {
+    status: MetalNodeState
+}
+
+function metalNodeStateView(status: MetalNodeState) {
+    switch (status) {
+        case MetalNodeState.UNANALYSIS:
+            return (
+                <VscWorkspaceUnknown />
+            );
+        case MetalNodeState.ANALYSIS:
+            return (
+                <VscWorkspaceTrusted />
+            );
+        case MetalNodeState.PENDING:
+            return (
+                <ScaleLoader color="#36d7b7" />
+            );
+        case MetalNodeState.ERROR:
+            return (
+                <VscWorkspaceUntrusted />
+            );
+    }
+}
+
+export function MetalNodeStateTip(props: MetalNodeStateTipProps) {
+    const {status} = props;
+    const color = status === MetalNodeState.ERROR? "error": "info";
+    return (
+        <Paper sx={{
+            width: "4em",
+            height: "4em",
+            display: "flex",
+            alignContent: "center",
+            justifyContent: "center",
+            alignItems: "center"
+        }}
+            square
+            variant="outlined"
+        >
+            <IconButton 
+                color={color}
+            >
+                {metalNodeStateView(status)}
+            </IconButton>
+        </Paper>
+        
+    )
+};
+
 export function onConnectValid(
     connection: Connection,
     nodes: Node<MetalNodeProps>[],
@@ -175,7 +235,9 @@ export function onConnectValid(
 }
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
-    const { isReadOnly, metal, metalPkg, type, onDelete, onUpdate } = props.data;
+    const { metal, metalPkg, type, onDelete, onUpdate} = props.data;
+    const status = props.data.status === undefined? MetalNodeState.UNANALYSIS: props.data.status;
+    const isReadOnly = props.data.isReadOnly || status === MetalNodeState.PENDING;
     const editor = props.data.editor;
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type);
 
@@ -186,8 +248,12 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         editor.load(props.data);
     };
 
+    const badgeContent = (
+        <MetalNodeStateTip status={status} />
+    )
+
     return (
-        <Badge color="secondary" badgeContent={"?"}>
+        <Badge color="default" badgeContent={badgeContent}>
             <div>
                 {nodeView.inputHandle(props.data)}
                 <Paper

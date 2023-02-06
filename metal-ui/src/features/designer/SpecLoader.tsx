@@ -6,7 +6,7 @@ import { metalType } from "../../model/Metal";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
-import { MetalNodeProps } from "./MetalView";
+import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { useSpec } from "./DesignerProvider";
 
 export interface SpecLoaderProps {
@@ -52,6 +52,7 @@ export function useSpecLoader(token: string | null) {
                         type: metalType(pkg.type),
                         onUpdate: () => {},
                         onDelete: () => {},
+                        // status: MetalNodeState.PENDING,
                     };
                     return nodeTmpl;
                 });
