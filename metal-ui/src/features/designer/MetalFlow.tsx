@@ -35,7 +35,7 @@ import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
 import { useMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
-import { MetalNodeProps, MetalNodeTypes, onConnectValid } from "./MetalView";
+import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 
 enum LoadState {
@@ -103,6 +103,13 @@ export const MetalFlow = (props: MetalFlowProps) => {
         },
         [deleteEdge]
     );
+
+    const allNodes: () => Node<MetalNodeProps>[] = useCallback(() => (
+        flowInstance.getNodes().map(nd => {
+            const ndm: Node<MetalNodeProps> = nd;
+            return ndm;
+        })
+    ), [flowInstance])
 
     const inputs = useCallback(
         (id: string) => {
@@ -312,7 +319,10 @@ export const MetalFlow = (props: MetalFlowProps) => {
     );
 
     const exportSpec = useCallback(()=>{
-        const nodes: Node<MetalNodeProps>[] = flowInstance.getNodes();
+        const nodes: Node<MetalNodeProps>[] = flowInstance.getNodes().map(nd => {
+            const ndm: Node<MetalNodeProps> = nd;
+            return ndm;
+        });
         const edges: Edge<any>[] = flowInstance.getEdges();
         const spec: Spec = {
             version: "1.0",
@@ -323,15 +333,80 @@ export const MetalFlow = (props: MetalFlowProps) => {
         return spec;
     }, [flowInstance]);
 
+    const setNodeStatus = useCallback((nodes: string[], status: MetalNodeState) => {
+        const nds = new Set(nodes);
+        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) =>
+            prevNodes.map((prevNode) =>
+                nds.has(prevNode.id)? {
+                    ...prevNode,
+                    data: {
+                        ...prevNode.data,
+                        status: status,
+                    },
+                }: prevNode
+            )
+        );
+    }, [flowInstance]);
+
+    const broadCastNodeStatus = useCallback((nodes: string[], status: MetalNodeState)=>{
+        const nds: Node<MetalNodeProps>[] = flowInstance.getNodes();
+        const edges: Edge<any>[] = flowInstance.getEdges();
+        const queue = new Array<Node<MetalNodeProps>>();
+        const visited = new Set<Node<MetalNodeProps>>();
+
+        nodes.forEach((node: string) => {
+            const nd: Node<MetalNodeProps> | undefined = flowInstance.getNode(node);
+            if (nd !== undefined) {
+                queue.push(nd);
+            }
+        });
+
+        while(queue.length > 0) {
+            const nd = queue.pop();
+            if (nd === undefined) {
+                break;
+            }
+
+            visited.add(nd);
+            const nexts: Node<MetalNodeProps>[] = getOutgoers(nd, nds, edges);
+            nexts.forEach(nd => {
+                queue.push(nd);
+            })
+        }
+
+        setNodeStatus(Array.from(visited).map(nd => nd.id), status);
+    }, [flowInstance, setNodeStatus]);
+
+    
+
+    const updateNodeStatus = useCallback((nodes: string[], status: MetalNodeState) => {
+        switch (status) {
+            case MetalNodeState.UNANALYSIS:
+                broadCastNodeStatus(nodes, status);
+                break;
+            case MetalNodeState.ANALYSIS:
+                setNodeStatus(nodes, status);
+                break;
+            case MetalNodeState.PENDING:
+                setNodeStatus(nodes, status);
+                break;
+            case MetalNodeState.ERROR:
+                setNodeStatus(nodes, status);
+                break;
+        }
+    }, [broadCastNodeStatus, setNodeStatus]);
+
     useMemo(() => {
         setMetalFlowAction({
+            allNodes: allNodes,
             inputs: inputs,
             outputs: outputs,
             addNode: addNode,
+            updateNodeStatus: updateNodeStatus,
             load: load,
             export: exportSpec,
         });
-    }, [addNode, exportSpec, inputs, load, outputs, setMetalFlowAction]);
+    }, [addNode, allNodes, exportSpec, inputs, load, outputs, setMetalFlowAction, updateNodeStatus]);
 
     const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
     const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);

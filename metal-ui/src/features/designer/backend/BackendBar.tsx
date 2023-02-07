@@ -1,6 +1,6 @@
 import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
 import {
@@ -26,6 +26,7 @@ import { useBackendStatus, useDeploy, useDeployId, useEpoch, useMetalFlow, usePl
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
+import { MetalNodeState } from "../MetalView";
 
 export interface BackendBarProps {
     id: string
@@ -480,7 +481,7 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
         run(analysisOfId(token, id, spec));
     }
 
-    return [analysis, status, result]
+    return [analysis, status, result];
 }
 
 function useExec(token: string | null, id: string): [()=>void, State] {
@@ -516,6 +517,8 @@ function ExecuteBar(props: ExecuteBarProps) {
     const isPending = analysisStatus === State.pending;
     const isDebugEnable = isBackendUp && !isPending;
     const isExecEnable = isBackendUp && analysisStatus === State.success && !isPending;
+
+   
 
     const analysisTip = () => {
         switch (analysisStatus) {
