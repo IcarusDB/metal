@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
 import { Alert, IconButton, Paper, Stack } from "@mui/material";
@@ -51,11 +51,7 @@ export function Designer(props: DesignerProps) {
         setOpenExplorer(!isOpenExplorer);
     };
 
-    onNameChange((name: string | undefined, prev: string | undefined) => {
-        if (mainHandler !== undefined && mainHandler.rename !== undefined) {
-            mainHandler.rename(designerId(id), name === undefined ? "?" : name);
-        }
-    });
+    
 
     const onAddNode = useCallback(
         (nodeProps: MetalNodeProps) => {
@@ -75,6 +71,15 @@ export function Designer(props: DesignerProps) {
     const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
     };
+
+    useEffect(() => {
+        const unsub = onNameChange((name: string | undefined, prev: string | undefined) => {
+            if (mainHandler !== undefined && mainHandler.rename !== undefined) {
+                mainHandler.rename(designerId(id), name === undefined ? "?" : name);
+            }
+        });
+        return unsub;
+    }, [id, mainHandler, onNameChange]);
 
     return (
         <div className="panel">

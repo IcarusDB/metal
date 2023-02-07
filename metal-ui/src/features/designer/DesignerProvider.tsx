@@ -6,6 +6,8 @@ import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalN
 import { Spec } from "../../model/Spec";
 import { createDeploySlice, DeploySlice } from "./DeploySlice";
 import { BackendStatus } from "../../model/Project";
+import { AnalysisResponse } from "../../api/ProjectApi";
+import { MetalNodeState } from "./MetalView";
 
 declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
 
@@ -34,11 +36,11 @@ export function useMetalNodeEditor(): [MetalNodeEditorAction, (action: MetalNode
 export function useName(): [
     string | undefined, 
     (name: string) => void,
-    (listener: (name: string | undefined, prev: string | undefined) => void) => void
+    (listener: (name: string | undefined, prev: string | undefined) => void) => () => void
 ] {
     const store = useContext(DesignerStoreContext);
     const subscribe = (listener: (name: string | undefined, prev: string | undefined) => void ) => {
-        store.subscribe(
+        return store.subscribe(
             state => state.name,
             listener
         );
@@ -103,6 +105,28 @@ export function useProfile(): [
                 backendArgs: state.backendArgs,
             },
             state.bindProfile
+        ])
+    )
+}
+
+export function useHotNodes(): [
+    [string, MetalNodeState][],
+    (hotNodes: [string, MetalNodeState][]) => void,
+    (listener: (hotNodes: [string, MetalNodeState][] | undefined, prev: [string, MetalNodeState][] | undefined) => void) => () => void,
+] {
+    const store = useContext(DesignerStoreContext);
+    const subscribe = (listener:  (hotNodes: [string, MetalNodeState][] | undefined, prev: [string, MetalNodeState][] | undefined) => void) => {
+        return store.subscribe(
+            state => state.hotNodes,
+            listener
+        )
+    } 
+    return useStore(
+        store,
+        (state) => ([
+            state.hotNodes,
+            state.bindHotNodes,
+            subscribe
         ])
     )
 }

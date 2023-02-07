@@ -33,7 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useMetalFlow } from "./DesignerProvider";
+import { useHotNodes, useMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -56,6 +56,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const counter = useRef<number>(0);
     const { isReadOnly, nodePropsWrap, flow} = props;
     const [, setMetalFlowAction] = useMetalFlow();
+    const [, setHotNodes, onHotNodesChange] = useHotNodes();
     const flowInstance = useReactFlow();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
 
@@ -396,6 +397,24 @@ export const MetalFlow = (props: MetalFlowProps) => {
         }
     }, [broadCastNodeStatus, setNodeStatus]);
 
+    const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
+        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+            return prevNodes.map(node => {
+                const ndes = nds.filter(nde => nde[0] === node.id);
+                if (ndes.length === 0) {
+                    return node;
+                }
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        status: ndes[0][1]
+                    }
+                }
+            })
+        })
+    }, [flowInstance]);
+
     useMemo(() => {
         setMetalFlowAction({
             allNodes: allNodes,
@@ -430,7 +449,41 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 setLoadStatus(LoadState.LOADED);
                 break;
         }
-    }, [autoLayout, flow, load, loadStatus]);
+
+        const unsub = onHotNodesChange((hotNodes, prev) => {
+            console.log(hotNodes);
+            if (hotNodes === undefined) {
+                return;
+            }
+            setNodesStatus(hotNodes);
+            // const pendingNds = hotNodes.filter(nde => {
+            //     const [, status] = nde;
+            //     return status === MetalNodeState.PENDING;
+            // }).map(nde => nde[0]);
+    
+            // const analysisNds = hotNodes.filter(nde => {
+            //     const [, status] = nde;
+            //     return status === MetalNodeState.ANALYSIS;
+            // }).map(nde => nde[0]);
+    
+            // const unAnalysisNds = hotNodes.filter(nde => {
+            //     const [, status] = nde;
+            //     return status === MetalNodeState.UNANALYSIS;
+            // }).map(nde => nde[0]);
+    
+            // const errorNds = hotNodes.filter(nde => {
+            //     const [, status] = nde;
+            //     return status === MetalNodeState.ERROR;
+            // }).map(nde => nde[0]);
+    
+            // setNodeStatus(pendingNds, MetalNodeState.PENDING);
+            // setNodeStatus(analysisNds, MetalNodeState.ANALYSIS);
+            // broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
+            // setNodeStatus(errorNds, MetalNodeState.ERROR);
+            
+        })
+        return unsub;
+    }, [autoLayout, flow, load, loadStatus, onHotNodesChange, setNodesStatus]);
 
     if (flow === undefined) {
         return <Skeleton></Skeleton>;

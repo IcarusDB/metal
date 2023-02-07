@@ -48,7 +48,10 @@ export interface DesignerActionSlice {
     backendArgs: string[],
     bindBackendArgs: (args: string[]) => void;
     bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void;
+    hotNodes: [string, MetalNodeState][],
+    bindHotNodes: (hotNodes: [string, MetalNodeState][]) => void;
 }
+
 export const createDesignerActionSlice = (
     set: StoreApi<DesignerActionSlice>["setState"],
     get: StoreApi<DesignerActionSlice>["getState"]
@@ -96,5 +99,11 @@ export const createDesignerActionSlice = (
             platform,
             backendArgs,
         }));
-    }
+    },
+    hotNodes: [],
+    bindHotNodes: (hotNodes: [string, MetalNodeState][]) => {
+        set((prev) => ({
+            hotNodes
+        }))
+    },
 });

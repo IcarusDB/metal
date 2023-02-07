@@ -1,4 +1,5 @@
 import { StoreApi } from "zustand";
+import { AnalysisResponse } from "../../api/ProjectApi";
 import { BackendStatus } from "../../model/Project";
 
 export interface DeploySlice {
@@ -35,5 +36,5 @@ export const createDeploySlice = (
             deployId: id,
             epoch: epoch
         }));
-    }
+    },
 })

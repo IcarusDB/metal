@@ -1,4 +1,4 @@
-import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
+import { Alert, breadcrumbsClasses, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
@@ -22,7 +22,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useMetalFlow, usePlatform } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useHotNodes, useMetalFlow, usePlatform } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
@@ -471,6 +471,7 @@ function BackendNotice() {
 
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
+    const [, setHotNodes] = useHotNodes();
     const [run, status, result] = useAsync<AnalysisResponse>();
 
     const analysis = () => {
@@ -478,8 +479,49 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
             return;
         }
         const spec = flowAction.export();
-        run(analysisOfId(token, id, spec));
+        run(analysisOfId(token, id, spec).then( rt => {
+            const analysed = rt.analysed.map(ide => {
+                const r: [string, MetalNodeState] = [ide, MetalNodeState.ANALYSIS];
+                return r;
+            });
+            const unAnalysed = rt.unAnalysed.map(ide => {
+                const r: [string, MetalNodeState] = [ide, MetalNodeState.UNANALYSIS];
+                return r;
+            });
+            setHotNodes([
+                ...analysed,
+                ...unAnalysed,
+            ])
+            return rt;
+        }));
     }
+
+    // if (status === State.pending) {
+    //     setHotNodes(
+    //         flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+    //     );
+    // }
+
+    // if (status === State.failure) {
+    //     setHotNodes(
+    //         flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+    //     );
+    // }
+
+    useEffect(()=> {
+        switch (status) {
+            case State.pending:
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+                    );
+                    break;
+            case State.failure:
+                setHotNodes(
+                    flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+                );
+                break;   
+        }
+    }, [flowAction, setHotNodes, status]);
 
     return [analysis, status, result];
 }
@@ -510,15 +552,13 @@ function ExecuteBar(props: ExecuteBarProps) {
     const {id, token} = props;
     const [backendStatus] = useBackendStatus();
     const [mode, setMode] = useState<"ANALYSIS" | "EXEC">("ANALYSIS");
-    
+    const [flow] = useMetalFlow();
     const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
     const [exec, execStatus] = useExec(token, id);
     const isBackendUp = backendStatus?.current === BackendState.UP;
     const isPending = analysisStatus === State.pending;
     const isDebugEnable = isBackendUp && !isPending;
     const isExecEnable = isBackendUp && analysisStatus === State.success && !isPending;
-
-   
 
     const analysisTip = () => {
         switch (analysisStatus) {
