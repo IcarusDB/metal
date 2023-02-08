@@ -375,45 +375,34 @@ export const MetalFlow = (props: MetalFlowProps) => {
             })
         }
 
-        setNodeStatus(Array.from(visited).map(nd => nd.id), status);
-    }, [flowInstance, setNodeStatus]);
-
-    
-
-    const updateNodeStatus = useCallback((nodes: string[], status: MetalNodeState) => {
-        switch (status) {
-            case MetalNodeState.UNANALYSIS:
-                broadCastNodeStatus(nodes, status);
-                break;
-            case MetalNodeState.ANALYSIS:
-                setNodeStatus(nodes, status);
-                break;
-            case MetalNodeState.PENDING:
-                setNodeStatus(nodes, status);
-                break;
-            case MetalNodeState.ERROR:
-                setNodeStatus(nodes, status);
-                break;
-        }
-    }, [broadCastNodeStatus, setNodeStatus]);
+        return Array.from(visited).map(nd => {
+            const nde: [string, MetalNodeState] = [nd.id, status]
+            return nde;
+        });
+    }, [flowInstance]);
 
     const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
+        const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
+        const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
+        const mixNds = nds.map(nd => {
+            const [nodeId] = nd;
+            const cover = unAnalysised.find(nde => nde[0] === nodeId);
+            return cover === undefined? nd: cover;
+        })
+
         flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             return prevNodes.map(node => {
-                const ndes = nds.filter(nde => nde[0] === node.id);
-                if (ndes.length === 0) {
-                    return node;
-                }
-                return {
+                const nd = mixNds.find(nde => nde[0] === node.id);
+                return nd === undefined? node: {
                     ...node,
                     data: {
                         ...node.data,
-                        status: ndes[0][1]
+                        status: nd[1]
                     }
                 }
             })
         })
-    }, [flowInstance]);
+    }, [broadCastNodeStatus, flowInstance]);
 
     useMemo(() => {
         setMetalFlowAction({
@@ -421,11 +410,10 @@ export const MetalFlow = (props: MetalFlowProps) => {
             inputs: inputs,
             outputs: outputs,
             addNode: addNode,
-            updateNodeStatus: updateNodeStatus,
             load: load,
             export: exportSpec,
         });
-    }, [addNode, allNodes, exportSpec, inputs, load, outputs, setMetalFlowAction, updateNodeStatus]);
+    }, [addNode, allNodes, exportSpec, inputs, load, outputs, setMetalFlowAction]);
 
     const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
     const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);
@@ -455,32 +443,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             if (hotNodes === undefined) {
                 return;
             }
-            setNodesStatus(hotNodes);
-            // const pendingNds = hotNodes.filter(nde => {
-            //     const [, status] = nde;
-            //     return status === MetalNodeState.PENDING;
-            // }).map(nde => nde[0]);
-    
-            // const analysisNds = hotNodes.filter(nde => {
-            //     const [, status] = nde;
-            //     return status === MetalNodeState.ANALYSIS;
-            // }).map(nde => nde[0]);
-    
-            // const unAnalysisNds = hotNodes.filter(nde => {
-            //     const [, status] = nde;
-            //     return status === MetalNodeState.UNANALYSIS;
-            // }).map(nde => nde[0]);
-    
-            // const errorNds = hotNodes.filter(nde => {
-            //     const [, status] = nde;
-            //     return status === MetalNodeState.ERROR;
-            // }).map(nde => nde[0]);
-    
-            // setNodeStatus(pendingNds, MetalNodeState.PENDING);
-            // setNodeStatus(analysisNds, MetalNodeState.ANALYSIS);
-            // broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
-            // setNodeStatus(errorNds, MetalNodeState.ERROR);
-            
+            setNodesStatus(hotNodes);   
         })
         return unsub;
     }, [autoLayout, flow, load, loadStatus, onHotNodesChange, setNodesStatus]);

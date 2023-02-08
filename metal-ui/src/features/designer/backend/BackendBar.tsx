@@ -472,19 +472,13 @@ function BackendNotice() {
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
     const [, setHotNodes] = useHotNodes();
-    const [run, status, result] = useAsync<AnalysisResponse>();
-
-    const analysis = () => {
-        if (token === null) {
-            return;
-        }
-        const spec = flowAction.export();
-        run(analysisOfId(token, id, spec).then( rt => {
-            const analysed = rt.analysed.map(ide => {
-                const r: [string, MetalNodeState] = [ide, MetalNodeState.ANALYSIS];
+    const [run, status, result] = useAsync<AnalysisResponse>({
+        onSuccess: (result) => {
+            const analysed = result.analysed.map(ide => {
+                const r: [string, MetalNodeState] = [ide, MetalNodeState.ANALYSISED];
                 return r;
             });
-            const unAnalysed = rt.unAnalysed.map(ide => {
+            const unAnalysed = result.unAnalysed.map(ide => {
                 const r: [string, MetalNodeState] = [ide, MetalNodeState.UNANALYSIS];
                 return r;
             });
@@ -492,36 +486,26 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
                 ...analysed,
                 ...unAnalysed,
             ])
-            return rt;
-        }));
-    }
-
-    // if (status === State.pending) {
-    //     setHotNodes(
-    //         flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
-    //     );
-    // }
-
-    // if (status === State.failure) {
-    //     setHotNodes(
-    //         flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
-    //     );
-    // }
-
-    useEffect(()=> {
-        switch (status) {
-            case State.pending:
-                    setHotNodes(
-                        flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
-                    );
-                    break;
-            case State.failure:
-                setHotNodes(
-                    flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
-                );
-                break;   
+        },
+        onPending: () => {
+            setHotNodes(
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+            );
+        },
+        onError: (reason) => {
+            setHotNodes(
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+            );
         }
-    }, [flowAction, setHotNodes, status]);
+    });
+
+    const analysis = () => {
+        if (token === null) {
+            return;
+        }
+        const spec = flowAction.export();
+        run(analysisOfId(token, id, spec));
+    }
 
     return [analysis, status, result];
 }
@@ -552,7 +536,6 @@ function ExecuteBar(props: ExecuteBarProps) {
     const {id, token} = props;
     const [backendStatus] = useBackendStatus();
     const [mode, setMode] = useState<"ANALYSIS" | "EXEC">("ANALYSIS");
-    const [flow] = useMetalFlow();
     const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
     const [exec, execStatus] = useExec(token, id);
     const isBackendUp = backendStatus?.current === BackendState.UP;

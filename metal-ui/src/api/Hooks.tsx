@@ -8,7 +8,13 @@ interface AsyncState<R> {
     error: any | null;
 }
 
-export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
+interface IAsyncCallback<R> {
+    onPending?: () => void;
+    onSuccess?: (result: R) => void;
+    onError?: (reason: any) => void;
+}
+
+export function useAsync<R>(callback?: IAsyncCallback<R>): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
     const notice = useNotice((state) => (state.error));
     const [state, setState] = useState<AsyncState<R>>({
         status: State.idle,
@@ -24,6 +30,11 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
             ...prevState,
             status: State.pending,
         }));
+
+        if (callback?.onPending) {
+            callback.onPending();
+        }
+
         try {
             const res = await promise;
             setTimeout(() => {
@@ -32,6 +43,10 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                     result: res,
                     error: null,
                 });
+
+                if (callback?.onSuccess) {
+                    callback.onSuccess(res);
+                }
             }, 1000);
         } catch (reason) {
             setTimeout(
@@ -41,13 +56,15 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
                         result: null,
                         error: reason,
                     });
-                    console.log(reason);
+                    if (callback?.onError) {
+                        callback.onError(reason);
+                    }
                     notice(JSON.stringify(reason));
                 }, 1000
             )
             
         }
-    }, [notice]);
+    }, [callback, notice]);
 
     return [run, state.status, state.result, state.error];
 }

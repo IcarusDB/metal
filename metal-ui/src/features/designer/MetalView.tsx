@@ -1,6 +1,6 @@
 import { ImUpload, ImDownload } from "react-icons/im";
 import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
-import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscWorkspaceUnknown, VscWorkspaceTrusted, VscWorkspaceUntrusted } from "react-icons/vsc";
+import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscWorkspaceUnknown, VscWorkspaceTrusted, VscWorkspaceUntrusted, VscRunErrors } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
 import {
@@ -19,6 +19,7 @@ import { GraphTopology } from "../../model/GraphTopology";
 import { MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
 import { RingLoader, ScaleLoader } from "react-spinners";
+import { MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -45,7 +46,8 @@ export function metalViewIcon(type: MetalTypes) {
 
 export enum MetalNodeState {
     UNANALYSIS = "UNANALYSIS",
-    ANALYSIS = "ANALYSIS",
+    ANALYSISED = "ANALYSISED",
+    EXECED = "EXECED",
     PENDING = "PENDING",
     ERROR = "ERROR",
 }
@@ -149,11 +151,15 @@ function metalNodeStateView(status: MetalNodeState) {
     switch (status) {
         case MetalNodeState.UNANALYSIS:
             return (
-                <VscWorkspaceUnknown />
+                <MdRadioButtonUnchecked />
             );
-        case MetalNodeState.ANALYSIS:
+        case MetalNodeState.ANALYSISED:
             return (
-                <VscWorkspaceTrusted />
+                <MdRadioButtonChecked />
+            );
+        case MetalNodeState.EXECED:
+            return (
+                <MdOutlineCheckCircle />
             );
         case MetalNodeState.PENDING:
             return (
@@ -161,7 +167,7 @@ function metalNodeStateView(status: MetalNodeState) {
             );
         case MetalNodeState.ERROR:
             return (
-                <VscWorkspaceUntrusted />
+                <VscRunErrors />
             );
     }
 }

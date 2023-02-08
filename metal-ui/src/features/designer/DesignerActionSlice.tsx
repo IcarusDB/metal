@@ -10,7 +10,6 @@ export interface MetalFlowAction {
     inputs: (id: string) => Node<MetalNodeProps>[];
     outputs: (id: string) => Node<MetalNodeProps>[];
     addNode: (nodeProps: MetalNodeProps) => void;
-    updateNodeStatus: (nodes: string[], status: MetalNodeState) => void;
     load: (newFlow: SpecFlow | undefined) => void;
     export: () => Spec;
 }
@@ -20,7 +19,6 @@ export const initialMetalFlowAction: MetalFlowAction = {
     inputs: (id: string) => [],
     outputs: (id: string) => [],
     addNode: (nodeProps: MetalNodeProps) => { },
-    updateNodeStatus: (nodes: string[]) => { },
     load: (newFlow: SpecFlow | undefined) => { },
     export: () => (emptySpec()),
 };
