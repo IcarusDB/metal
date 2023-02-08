@@ -1,4 +1,5 @@
 import { Skeleton } from "@mui/material";
+import _ from "lodash";
 import {
     MouseEvent as ReactMouseEvent,
     useCallback,
@@ -105,6 +106,38 @@ export const MetalFlow = (props: MetalFlowProps) => {
         [deleteEdge]
     );
 
+    const broadCastNodeStatus = useCallback((nodes: string[], status: MetalNodeState)=>{
+        const nds: Node<MetalNodeProps>[] = flowInstance.getNodes();
+        const edges: Edge<any>[] = flowInstance.getEdges();
+        const queue = new Array<Node<MetalNodeProps>>();
+        const visited = new Set<Node<MetalNodeProps>>();
+
+        nodes.forEach((node: string) => {
+            const nd: Node<MetalNodeProps> | undefined = flowInstance.getNode(node);
+            if (nd !== undefined) {
+                queue.push(nd);
+            }
+        });
+
+        while(queue.length > 0) {
+            const nd = queue.pop();
+            if (nd === undefined) {
+                break;
+            }
+
+            visited.add(nd);
+            const nexts: Node<MetalNodeProps>[] = getOutgoers(nd, nds, edges);
+            nexts.forEach(nd => {
+                queue.push(nd);
+            })
+        }
+
+        return Array.from(visited).map(nd => {
+            const nde: [string, MetalNodeState] = [nd.id, status]
+            return nde;
+        });
+    }, [flowInstance]);
+
     const allNodes: () => Node<MetalNodeProps>[] = useCallback(() => (
         flowInstance.getNodes().map(nd => {
             const ndm: Node<MetalNodeProps> = nd;
@@ -153,23 +186,35 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 return;
             }
 
+            const unAnalysed = new Set(broadCastNodeStatus([id], MetalNodeState.UNANALYSIS).map((nde) => (nde[0])));
+
             const newNode: Node<MetalNodeProps> = {
                 ...node,
                 data: {
                     ...node.data,
                     metal: newMetal,
+                    status: MetalNodeState.UNANALYSIS,
                 },
             };
             flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
                 return prevNodes.map((prevNode: Node<MetalNodeProps>) => {
                     if (prevNode.id !== id) {
+                        if (unAnalysed.has(prevNode.id)) {
+                            return {
+                                ...prevNode,
+                                data: {
+                                    ...prevNode.data,
+                                    status: MetalNodeState.UNANALYSIS
+                                }
+                            }
+                        }
                         return prevNode;
                     }
                     return newNode;
                 });
             });
         },
-        [flowInstance]
+        [broadCastNodeStatus, flowInstance]
     );
 
     const deleteNode = useCallback(
@@ -334,61 +379,13 @@ export const MetalFlow = (props: MetalFlowProps) => {
         return spec;
     }, [flowInstance]);
 
-    const setNodeStatus = useCallback((nodes: string[], status: MetalNodeState) => {
-        const nds = new Set(nodes);
-        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) =>
-            prevNodes.map((prevNode) =>
-                nds.has(prevNode.id)? {
-                    ...prevNode,
-                    data: {
-                        ...prevNode.data,
-                        status: status,
-                    },
-                }: prevNode
-            )
-        );
-    }, [flowInstance]);
 
-    const broadCastNodeStatus = useCallback((nodes: string[], status: MetalNodeState)=>{
-        const nds: Node<MetalNodeProps>[] = flowInstance.getNodes();
-        const edges: Edge<any>[] = flowInstance.getEdges();
-        const queue = new Array<Node<MetalNodeProps>>();
-        const visited = new Set<Node<MetalNodeProps>>();
-
-        nodes.forEach((node: string) => {
-            const nd: Node<MetalNodeProps> | undefined = flowInstance.getNode(node);
-            if (nd !== undefined) {
-                queue.push(nd);
-            }
-        });
-
-        while(queue.length > 0) {
-            const nd = queue.pop();
-            if (nd === undefined) {
-                break;
-            }
-
-            visited.add(nd);
-            const nexts: Node<MetalNodeProps>[] = getOutgoers(nd, nds, edges);
-            nexts.forEach(nd => {
-                queue.push(nd);
-            })
-        }
-
-        return Array.from(visited).map(nd => {
-            const nde: [string, MetalNodeState] = [nd.id, status]
-            return nde;
-        });
-    }, [flowInstance]);
+    
 
     const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
         const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
         const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
-        const mixNds = nds.map(nd => {
-            const [nodeId] = nd;
-            const cover = unAnalysised.find(nde => nde[0] === nodeId);
-            return cover === undefined? nd: cover;
-        })
+        const mixNds = _.unionWith(unAnalysised, nds, (n0, n1) => (n0[0] === n1[0]));
 
         flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             return prevNodes.map(node => {
@@ -438,7 +435,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 break;
         }
 
-        const unsub = onHotNodesChange((hotNodes, prev) => {
+        const unsub = onHotNodesChange((hotNodes) => {
             console.log(hotNodes);
             if (hotNodes === undefined) {
                 return;

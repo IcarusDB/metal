@@ -8,6 +8,7 @@ import { createDeploySlice, DeploySlice } from "./DeploySlice";
 import { BackendStatus } from "../../model/Project";
 import { AnalysisResponse } from "../../api/ProjectApi";
 import { MetalNodeState } from "./MetalView";
+import { Exec } from "../../model/Exec";
 
 declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
 
@@ -186,6 +187,20 @@ export function useDeploy(): [
                 epoch: state.epoch
             },
             state.bindDeploy
+        ])
+    )
+}
+
+export function useExecInfo(): [
+    Exec | undefined,
+    (exec: Exec | undefined) => void,
+] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.exec,
+            state.bindExec
         ])
     )
 }

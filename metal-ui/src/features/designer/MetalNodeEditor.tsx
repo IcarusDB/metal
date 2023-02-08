@@ -18,6 +18,7 @@ import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import {
+    useHotNodes,
     useMetalFlow,
     useMetalNodeEditor,
 } from "./DesignerProvider";
@@ -32,6 +33,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const [isOpen, setOpen] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>();
     const [, setNodeEditorAction] = useMetalNodeEditor();
+    const [, setHotNodes] = useHotNodes();
 
     const readOnly = () => {
         return isReadOnly || metalProps?.status === MetalNodeState.PENDING;

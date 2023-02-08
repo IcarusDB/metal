@@ -22,11 +22,16 @@ import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useHotNodes, useMetalFlow, usePlatform } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useHotNodes, useMetalFlow, usePlatform, useProfile } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
 import { MetalNodeState } from "../MetalView";
+import { getRecentExecOfProject } from "../../../api/ExecApi";
+import { Exec, ExecState } from "../../../model/Exec";
+import { snakeCase } from "lodash";
+import { GrTask, GrTasks } from "react-icons/gr";
+import _ from "lodash";
 
 export interface BackendBarProps {
     id: string
@@ -511,7 +516,20 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
 }
 
 function useExec(token: string | null, id: string): [()=>void, State] {
-    const [run, status] = useAsync<void>();
+    const [flowAction] = useMetalFlow();
+    const [, setHotNodes] = useHotNodes();
+    const [run, status] = useAsync<void>({
+        onPending: () => {
+            setHotNodes(
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+            );
+        },
+        onError: (reason) => {
+            setHotNodes(
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+            );
+        }
+    });
 
     const exec = () => {
         if (token === null) {
@@ -525,6 +543,117 @@ function useExec(token: string | null, id: string): [()=>void, State] {
     }
 
     return [exec, status]
+}
+
+
+function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
+    const [exec, setExec] = useExecInfo();
+    const [deploy] = useDeploy();
+    const [profile] = useProfile();
+    const [flowAction] = useMetalFlow();
+    const [, setHotNodes] = useHotNodes();
+    const [run, status] = useAsync<Exec | undefined>({
+        onSuccess: (recent) => {
+            if (recent === undefined || deploy === undefined || profile === undefined) {
+                setExec(undefined);
+                return;
+            } 
+            const isChecked =
+                deploy.deployId === recent.deploy.id &&
+                deploy.epoch === recent.deploy.epoch &&
+                _.isEqual(profile.pkgs.sort(), recent.deploy.pkgs.sort()) &&
+                _.isEqual(profile.platform, recent.deploy.platform) &&
+                _.isEqual(profile.backendArgs.sort(), recent.deploy.backend.args.sort()) &&
+                _.isEqual(flowAction.export(), recent.SPEC);
+
+            if (!isChecked) {
+                setExec(undefined);
+                return;
+            }
+
+            setExec(recent);
+            if (exec?.status === ExecState.FINISH) {
+                setHotNodes(flowAction.allNodes().map(nd => {
+                    const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.EXECED];
+                    return rt;
+                }));
+            }
+            if (exec?.status === ExecState.FAILURE) {
+                setHotNodes(flowAction.allNodes().map(nd => {
+                    const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
+                    return rt;
+                }));
+            }
+        },
+        onError: (reason) => {
+            setHotNodes(flowAction.allNodes().map(nd => {
+                const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
+                return rt;
+            }));
+        },
+    });
+
+    const sync = useCallback(() => {
+        if (token === null) {
+            return;
+        }
+        run(getRecentExecOfProject(token, id));
+        
+    }, [id, run, token]);
+
+    return [status === State.pending, sync];
+}
+
+interface SyncExecInfoProps {
+    token: string | null;
+    id: string;
+}
+
+function SyncExecInfo(props: SyncExecInfoProps) {
+    const { token, id } = props;
+    const [isPending, sync] = useSyncExecInfo(token, id);
+    const [exec] = useExecInfo();
+    const onSync = () => {
+        sync();
+    };
+
+    return (
+        <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
+            {!isPending && (
+                <IconButton
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    size="small"
+                    onClick={onSync}
+                >
+                    <VscSync />
+                </IconButton>
+            )}
+
+            <RingLoader size="1em" loading={isPending} />
+            {isPending && (
+                <Typography variant="body1" color={"text.secondary"}>
+                    Syncing Execution status...
+                </Typography>
+            )}
+            {!isPending && exec && (
+                <Button
+                    size="small"
+                    variant="contained"
+                    disableElevation={true}
+                    disabled={isPending}
+                    startIcon={<GrTasks color="white" />}
+                    sx={{
+                        backgroundColor: "orangered",
+                        borderRadius: "0px",
+                    }}
+                >
+                    {exec.status}
+                </Button>
+            )}
+        </Stack>
+    );
 }
 
 interface ExecuteBarProps {
@@ -619,6 +748,7 @@ function ExecuteBar(props: ExecuteBarProps) {
             >
                 <VscDebugStart />
             </IconButton>
+            { isBackendUp && <SyncExecInfo token={token} id={id} />}
         </Stack>
     );
 }
