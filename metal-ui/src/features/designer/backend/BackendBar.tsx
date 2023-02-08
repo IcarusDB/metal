@@ -547,7 +547,7 @@ function useExec(token: string | null, id: string): [()=>void, State] {
 
 
 function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
-    const [exec, setExec] = useExecInfo();
+    const [, setExec] = useExecInfo();
     const [deploy] = useDeploy();
     const [profile] = useProfile();
     const [flowAction] = useMetalFlow();
@@ -572,13 +572,13 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
             }
 
             setExec(recent);
-            if (exec?.status === ExecState.FINISH) {
+            if (recent?.status === ExecState.FINISH) {
                 setHotNodes(flowAction.allNodes().map(nd => {
                     const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.EXECED];
                     return rt;
                 }));
             }
-            if (exec?.status === ExecState.FAILURE) {
+            if (recent?.status === ExecState.FAILURE) {
                 setHotNodes(flowAction.allNodes().map(nd => {
                     const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
                     return rt;
