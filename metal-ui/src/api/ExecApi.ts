@@ -48,7 +48,7 @@ export async function getExecOfId(token: string, id: string): Promise<Exec> {
     });
 }
 
-export async function getRecentExecOfProject(token: string, id: string): Promise<Exec | undefined> {
+export async function getRecentExecOfProject(token: string, id: string, deployId?: string, epoch?: number): Promise<Exec | undefined> {
     const url = `/api/v1/execs/project/${id}/detail`;
     return instance.get(url, {
         headers: {
@@ -59,7 +59,13 @@ export async function getRecentExecOfProject(token: string, id: string): Promise
             const resp: ApiResponseEntity = response.data
             ApiResponse.mayBeFailure(resp);
             const execs: Exec[] = resp.data.map(idMap<Exec>);
-            const exec = _.maxBy(execs, (exec) => exec.createTime);
+            if (deployId === undefined || epoch === undefined) {
+                return _.maxBy(execs, (exec) => exec.createTime);
+            }
+            const exec = _.maxBy(execs.filter(
+                (exec) => (exec.deploy.id === deployId && exec.deploy.epoch === epoch)), 
+                (exec) => exec.createTime
+            );
             return exec;
         } catch (err) {
             return Promise.reject(err);

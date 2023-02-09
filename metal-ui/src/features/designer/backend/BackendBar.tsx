@@ -354,11 +354,11 @@ function SyncBackendStatus(props: SyncBackendStatusProps) {
             )}
 
             <RingLoader size="1em" loading={isPending} />
-            {isPending && (
+            {/* {isPending && (
                 <Typography variant="body1" color={"text.secondary"}>
                     Syncing Backend status...
                 </Typography>
-            )}
+            )} */}
         </Stack>
     );
 }
@@ -518,8 +518,11 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
 function useExec(token: string | null, id: string): [()=>void, State] {
     const [flowAction] = useMetalFlow();
     const [, setHotNodes] = useHotNodes();
+    const [,sync] = useSyncExecInfo(token, id);
+    const [, setExec] = useExecInfo();
     const [run, status] = useAsync<void>({
         onPending: () => {
+            setExec(undefined);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
             );
@@ -528,6 +531,9 @@ function useExec(token: string | null, id: string): [()=>void, State] {
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
             );
+        },
+        onSuccess: () => {
+            sync();
         }
     });
 
@@ -552,6 +558,9 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
     const [profile] = useProfile();
     const [flowAction] = useMetalFlow();
     const [, setHotNodes] = useHotNodes();
+    const deployId = deploy.deployId;
+    const epoch = deploy.epoch;
+
     const [run, status] = useAsync<Exec | undefined>({
         onSuccess: (recent) => {
             if (recent === undefined || deploy === undefined || profile === undefined) {
@@ -597,11 +606,15 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
         if (token === null) {
             return;
         }
-        run(getRecentExecOfProject(token, id));
+        run(getRecentExecOfProject(token, id, deployId, epoch));
         
-    }, [id, run, token]);
+    }, [deployId, epoch, id, run, token]);
 
     return [status === State.pending, sync];
+}
+
+function isExecing(exec: Exec | undefined) {
+    return exec?.status === ExecState.CREATE || exec?.status === ExecState.SUBMIT || exec?.status === ExecState.RUNNING;
 }
 
 interface SyncExecInfoProps {
@@ -616,6 +629,20 @@ function SyncExecInfo(props: SyncExecInfoProps) {
     const onSync = () => {
         sync();
     };
+
+    useEffect(() => {
+        if (isExecing(exec)) {
+            const timer = setTimeout(
+                () => {
+                    sync();
+                },
+                5000
+            );
+            return () => {
+                clearTimeout(timer);
+            }
+        }
+    }, [exec, sync]);
 
     return (
         <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
@@ -667,8 +694,12 @@ function ExecuteBar(props: ExecuteBarProps) {
     const [mode, setMode] = useState<"ANALYSIS" | "EXEC">("ANALYSIS");
     const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
     const [exec, execStatus] = useExec(token, id);
+    const [recent] = useExecInfo();
     const isBackendUp = backendStatus?.current === BackendState.UP;
-    const isPending = analysisStatus === State.pending;
+    const isAnalysising = analysisStatus === State.pending;
+    const isSubmittingExec = execStatus === State.pending;
+    const isExecPending = isExecing(recent);
+    const isPending = isAnalysising || isSubmittingExec || isExecPending;
     const isDebugEnable = isBackendUp && !isPending;
     const isExecEnable = isBackendUp && analysisStatus === State.success && !isPending;
 
@@ -708,6 +739,8 @@ function ExecuteBar(props: ExecuteBarProps) {
         exec();
     }
 
+    const syncExecInfo = useMemo(()=>(<SyncExecInfo token={token} id={id} />), [id, token]);
+
     return (
         <Stack
             direction="row"
@@ -725,7 +758,7 @@ function ExecuteBar(props: ExecuteBarProps) {
                     borderRadius: "0px",
                 }}
             >
-                {mode === "EXEC"? execTip(): analysisTip()}
+                {isBackendUp? (mode === "EXEC"? execTip(): analysisTip()): ""}
             </Button>
             <RingLoader size="1em" loading={isPending} />
             <IconButton
@@ -748,7 +781,7 @@ function ExecuteBar(props: ExecuteBarProps) {
             >
                 <VscDebugStart />
             </IconButton>
-            { isBackendUp && <SyncExecInfo token={token} id={id} />}
+            {isBackendUp && syncExecInfo}
         </Stack>
     );
 }
