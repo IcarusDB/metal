@@ -33,6 +33,25 @@ export function useFlowPending(): [boolean, (value: boolean) => void] {
     )
 }
 
+export function useModify(): [boolean, (isModify: boolean)=>void, (listener: (status: boolean, prev: boolean) => void) => () => void] {
+    const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: boolean, prev: boolean) => void) => {
+        return store.subscribe(
+            state => state.isModify,
+            listener
+        )
+    };
+
+    return useStore(
+        store,
+        (state) => ([
+            state.isModify,
+            state.bindModify,
+            sub
+        ])
+    )
+}
+
 export function useMetalFlow(): [MetalFlowAction, (action: MetalFlowAction) => void] {
     const store = useContext(DesignerStoreContext);
     const [action, setAction] = useStore(store, (state)=>([state.metalFlowAction, state.bindMetalFlowAction]));

@@ -33,7 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useFlowPending, useHotNodes, useMetalFlow } from "./DesignerProvider";
+import { useFlowPending, useHotNodes, useMetalFlow, useModify } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -57,6 +57,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const { isReadOnly, nodePropsWrap, flow} = props;
     const [, setMetalFlowAction] = useMetalFlow();
     const [,, onHotNodesChange] = useHotNodes();
+    const [, modify,] = useModify();
     const flowInstance = useReactFlow();
     const [isPending,] = useFlowPending();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
@@ -125,6 +126,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             }
             if (connection.target !== null) {
                 setNodesStatus([[connection.target, MetalNodeState.UNANALYSIS]]);
+                modify(true);
             }
             
             flowInstance.setEdges((prevEdges) => {
@@ -142,7 +144,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 );
             });
         },
-        [flowInstance, setNodesStatus]
+        [flowInstance, modify, setNodesStatus]
     );
 
     const deleteEdge = useCallback(
@@ -151,8 +153,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 edges: [edge],
             });
             setNodesStatus([[edge.target, MetalNodeState.UNANALYSIS]])
+            modify(true);
         },
-        [flowInstance, setNodesStatus]
+        [flowInstance, modify, setNodesStatus]
     );
 
     const onEdgeDoubleClick = useCallback(
@@ -237,8 +240,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
                     return newNode;
                 });
             });
+            modify(true);
         },
-        [broadCastNodeStatus, flowInstance]
+        [broadCastNodeStatus, flowInstance, modify]
     );
 
     const deleteNode = useCallback(
@@ -252,12 +256,14 @@ export const MetalFlow = (props: MetalFlowProps) => {
                                         .map((edge) => [edge.target, MetalNodeState.UNANALYSIS]);
             
             setNodesStatus(hotNodes);
+            
             flowInstance.deleteElements({
                 nodes: [{ id: id }],
                 edges: willDeleteEdges,
             });
+            modify(true);
         },
-        [flowInstance, setNodesStatus]
+        [flowInstance, modify, setNodesStatus]
     );
 
     const addNode = useCallback(
@@ -294,8 +300,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 position: { x: -viewport.x / viewport.zoom, y: -viewport.y / viewport.zoom },
             };
             flowInstance.addNodes(node);
+            modify(true);
         },
-        [deleteNode, flowInstance, isReadOnly, nodePropsWrap, updateNode]
+        [deleteNode, flowInstance, isReadOnly, modify, nodePropsWrap, updateNode]
     );
 
     const autoLayout = useCallback(() => {

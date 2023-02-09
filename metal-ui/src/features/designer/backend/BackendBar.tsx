@@ -21,7 +21,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, usePlatform, useProfile } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, useModify, usePlatform, useProfile } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
@@ -470,6 +470,7 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
     const [flowAction] = useMetalFlow();
     const [, setFlowPending] = useFlowPending();
     const [, setHotNodes] = useHotNodes();
+    const [, modify,] = useModify();
     const [run, status, result] = useAsync<AnalysisResponse>({
         onSuccess: (result) => {
             const analysed = result.analysed.map(ide => {
@@ -481,6 +482,7 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
                 return r;
             });
            setFlowPending(false);
+           modify(false);
             setHotNodes([
                 ...analysed,
                 ...unAnalysed,
@@ -494,6 +496,7 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
         },
         onError: () => {
             setFlowPending(false);
+            modify(true);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
             );
@@ -708,13 +711,15 @@ function ExecuteBar(props: ExecuteBarProps) {
     const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
     const [exec, execStatus] = useExec(token, id);
     const [recent] = useExecInfo();
+    const [isModify] = useModify();
     const isBackendUp = backendStatus?.current === BackendState.UP;
     const isAnalysising = analysisStatus === State.pending;
     const isSubmittingExec = execStatus === State.pending;
     const isExecPending = isExecing(recent);
     const isPending = isAnalysising || isSubmittingExec || isExecPending;
     const isDebugEnable = isBackendUp && !isPending;
-    const isExecEnable = isBackendUp && analysisStatus === State.success && !isPending;
+    const isExecEnable = isDebugEnable && !isModify;
+  
 
     const analysisTip = () => {
         switch (analysisStatus) {

@@ -34,9 +34,11 @@ export const initialMetalNodeEditorAction: MetalNodeEditorAction = {
 };
 export interface DesignerActionSlice {
     isFlowPending: boolean;
+    isModify: boolean;
     metalFlowAction: MetalFlowAction;
     metalNodeEditorAction: MetalNodeEditorAction;
     bindFlowPending: (value: boolean) => void;
+    bindModify: (isModify: boolean) => void;
     bindMetalFlowAction: (action: MetalFlowAction) => void;
     bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => void;
     name?: string,
@@ -57,6 +59,7 @@ export const createDesignerActionSlice = (
     get: StoreApi<DesignerActionSlice>["getState"]
 ): DesignerActionSlice => ({
     isFlowPending: false,
+    isModify: true,
     metalFlowAction: initialMetalFlowAction,
     metalNodeEditorAction: initialMetalNodeEditorAction,
     bindFlowPending: (value: boolean) => {
@@ -64,6 +67,12 @@ export const createDesignerActionSlice = (
             ...prev,
             isFlowPending: value,
         }));
+    },
+    bindModify: (isModify: boolean) => {
+        set((prev) => ({
+            ...prev,
+            isModify: isModify,
+        }))
     },
     bindMetalFlowAction: (action: MetalFlowAction) => {
         set((prev) => ({
