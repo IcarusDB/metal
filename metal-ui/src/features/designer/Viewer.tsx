@@ -7,7 +7,7 @@ import { useAppSelector } from "../../app/hooks";
 import { MainHandler, viewerId } from "../main/Main";
 import { ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
 import { tokenSelector } from "../user/userSlice";
-import { useMetalNodeEditor, useName, useSpec } from "./DesignerProvider";
+import { useMetalNodeEditor, useName } from "./DesignerProvider";
 import { MetalFlow } from "./MetalFlow";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalNodeProps } from "./MetalView";

@@ -43,7 +43,7 @@ export function Designer(props: DesignerProps) {
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
-    const backendPanelRef = useRef<BackendPanelHandler>(null);
+    
     const [metalFlowAction] = useMetalFlow();
     const [nodeEditorAction] = useMetalNodeEditor();
 

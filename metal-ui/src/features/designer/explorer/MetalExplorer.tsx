@@ -42,11 +42,13 @@ import { ResizeBackdrop } from "../../ui/ResizeBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "../../../api/MetalPkgApi";
+import { useFlowPending } from "../DesignerProvider";
 
 const theme = createTheme();
 moment.locale("zh_CN");
 
 export interface MetalPkgProps {
+    isReadOnly?: boolean;
     type: MetalTypes;
     metalPkg: MetalPkg;
     addNode: (nodeTmpl: MetalNodeProps) => void;
@@ -54,7 +56,7 @@ export interface MetalPkgProps {
 }
 
 export function MetalPkgView(props: MetalPkgProps) {
-    const { type, metalPkg, addNode, openDetail } = props;
+    const {isReadOnly, type, metalPkg, addNode, openDetail } = props;
     const classSubs = metalPkg.class.split(".");
     const className = classSubs.length > 0 ? classSubs[classSubs.length - 1] : "?";
     const pkgSubs = metalPkg.pkg.split(":");
@@ -183,6 +185,7 @@ export function MetalPkgView(props: MetalPkgProps) {
                 <Grid item xs={4}>
                     {type !== MetalTypes.SETUP && (
                         <Button
+                            disabled={isReadOnly}
                             variant="contained"
                             color="primary"
                             onClick={onAddNode}
@@ -366,6 +369,7 @@ interface MetalExplorerProps {
 
 export function MetalExplorer(props: MetalExplorerProps) {
     const { addNode, restrictPkgs } = props;
+    const [isFlowPending] = useFlowPending();
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -540,6 +544,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                         {afterTypeFilter(pkgFilter, pkgs).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
+                                    isReadOnly: isFlowPending,
                                     type: metalType(metalPkg.type),
                                     metalPkg: metalPkg,
                                     addNode: addNode,

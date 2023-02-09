@@ -1,4 +1,4 @@
-import { Alert, breadcrumbsClasses, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
+import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
@@ -15,22 +15,20 @@ import {
     VscWarning,
     VscWorkspaceUnknown,
 } from "react-icons/vsc";
-import { DiSpark } from "react-icons/di";
 import { RingLoader } from "react-spinners";
-import { analysisOfId, AnalysisResponse, deployBackendOfId, DeployResponse, execOfId, ExecResponse, getBackendStatus, undeployBackendOfId, UnDeployResponse } from "../../../api/ProjectApi";
+import { analysisOfId, AnalysisResponse, deployBackendOfId, execOfId, getBackendStatus, undeployBackendOfId } from "../../../api/ProjectApi";
 import { useAppSelector } from "../../../app/hooks";
-import { BackendState, BackendStatus, PlatformType } from "../../../model/Project";
+import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useHotNodes, useMetalFlow, usePlatform, useProfile } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, usePlatform, useProfile } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
 import { MetalNodeState } from "../MetalView";
 import { getRecentExecOfProject } from "../../../api/ExecApi";
 import { Exec, ExecState } from "../../../model/Exec";
-import { snakeCase } from "lodash";
-import { GrTask, GrTasks } from "react-icons/gr";
+import { GrTasks } from "react-icons/gr";
 import _ from "lodash";
 
 export interface BackendBarProps {
@@ -71,12 +69,6 @@ export function BackendBar(props: BackendBarProps) {
     );
 }
 
-function PlatformIcon(type: PlatformType, color?: string) {
-    switch (type) {
-        case PlatformType.SPARK_STANDALONE:
-            return <DiSpark color={color} />
-    }
-}
 
 interface BackendControlProps {
     token: string | null;
@@ -91,7 +83,7 @@ function useBackendDeploy(token: string | null, deployId?: string | null): [() =
             return;
         }
         if (deployId !== undefined && deployId !== null) {
-            run(deployBackendOfId(token, deployId).then(resp => {
+            run(deployBackendOfId(token, deployId).then(() => {
                 return getBackendStatus(token, deployId);
             }).then(status => {
                 setBackendStatus(status);
@@ -114,7 +106,7 @@ function useBackendUndeploy(token: string | null, deployId?: string | null): [()
             return;
         }
         if (deployId !== undefined && deployId !== null) {
-            run(undeployBackendOfId(token, deployId).then(resp => {
+            run(undeployBackendOfId(token, deployId).then(() => {
                 return getBackendStatus(token, deployId);
             }).then(status => {
                 setBackendStatus(status);
@@ -476,6 +468,7 @@ function BackendNotice() {
 
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
+    const [, setFlowPending] = useFlowPending();
     const [, setHotNodes] = useHotNodes();
     const [run, status, result] = useAsync<AnalysisResponse>({
         onSuccess: (result) => {
@@ -487,17 +480,20 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
                 const r: [string, MetalNodeState] = [ide, MetalNodeState.UNANALYSIS];
                 return r;
             });
+           setFlowPending(false);
             setHotNodes([
                 ...analysed,
                 ...unAnalysed,
             ])
         },
         onPending: () => {
+            setFlowPending(true);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
             );
         },
-        onError: (reason) => {
+        onError: () => {
+            setFlowPending(false);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
             );
@@ -517,17 +513,20 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
 
 function useExec(token: string | null, id: string): [()=>void, State] {
     const [flowAction] = useMetalFlow();
+    const [, setFlowPending] = useFlowPending();
     const [, setHotNodes] = useHotNodes();
     const [,sync] = useSyncExecInfo(token, id);
     const [, setExec] = useExecInfo();
     const [run, status] = useAsync<void>({
         onPending: () => {
             setExec(undefined);
+            setFlowPending(true);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
             );
         },
-        onError: (reason) => {
+        onError: () => {
+            setFlowPending(false);
             setHotNodes(
                 flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
             );
@@ -557,6 +556,7 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
     const [deploy] = useDeploy();
     const [profile] = useProfile();
     const [flowAction] = useMetalFlow();
+    const [, setFlowPending] = useFlowPending();
     const [, setHotNodes] = useHotNodes();
     const deployId = deploy.deployId;
     const epoch = deploy.epoch;
@@ -577,24 +577,27 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
 
             if (!isChecked) {
                 setExec(undefined);
+                setFlowPending(false);
                 return;
             }
 
             setExec(recent);
             if (recent?.status === ExecState.FINISH) {
+                setFlowPending(false);
                 setHotNodes(flowAction.allNodes().map(nd => {
                     const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.EXECED];
                     return rt;
                 }));
             }
             if (recent?.status === ExecState.FAILURE) {
+                setFlowPending(false);
                 setHotNodes(flowAction.allNodes().map(nd => {
                     const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
                     return rt;
                 }));
             }
         },
-        onError: (reason) => {
+        onError: () => {
             setHotNodes(flowAction.allNodes().map(nd => {
                 const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
                 return rt;
@@ -626,6 +629,7 @@ function SyncExecInfo(props: SyncExecInfoProps) {
     const { token, id } = props;
     const [isPending, sync] = useSyncExecInfo(token, id);
     const [exec] = useExecInfo();
+    const [,, onBackendStatusChange] = useBackendStatus();
     const onSync = () => {
         sync();
     };
@@ -642,7 +646,16 @@ function SyncExecInfo(props: SyncExecInfoProps) {
                 clearTimeout(timer);
             }
         }
-    }, [exec, sync]);
+
+        return onBackendStatusChange((status, prev) => {
+            if (status === undefined) {
+                return;
+            }
+            if (status.current === BackendState.UP && status.current !== prev?.current) {
+                sync();
+            }
+        });
+    }, [exec, onBackendStatusChange, sync]);
 
     return (
         <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>

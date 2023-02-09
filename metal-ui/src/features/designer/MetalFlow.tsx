@@ -8,9 +8,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { AiOutlineDeploymentUnit } from "react-icons/ai";
-import { CgRadioChecked } from "react-icons/cg";
-import { VscDebugStart, VscDebugStop, VscTypeHierarchy } from "react-icons/vsc";
+import { VscTypeHierarchy } from "react-icons/vsc";
 import {
     addEdge,
     Node,
@@ -29,12 +27,13 @@ import {
     useEdgesState,
     MarkerType,
     useReactFlow,
+    BackgroundVariant,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { Metal } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useHotNodes, useMetalFlow } from "./DesignerProvider";
+import { useFlowPending, useHotNodes, useMetalFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -57,8 +56,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const counter = useRef<number>(0);
     const { isReadOnly, nodePropsWrap, flow} = props;
     const [, setMetalFlowAction] = useMetalFlow();
-    const [, setHotNodes, onHotNodesChange] = useHotNodes();
+    const [,, onHotNodesChange] = useHotNodes();
     const flowInstance = useReactFlow();
+    const [isPending,] = useFlowPending();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
 
     const [run] = useAsync<void>();
@@ -408,8 +408,6 @@ export const MetalFlow = (props: MetalFlowProps) => {
         return spec;
     }, [flowInstance]); 
 
-    
-
     useMemo(() => {
         setMetalFlowAction({
             allNodes: allNodes,
@@ -465,12 +463,12 @@ export const MetalFlow = (props: MetalFlowProps) => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={isReadOnly? undefined: onConnect}
-            onEdgeDoubleClick={isReadOnly? ()=>{}: onEdgeDoubleClick}
+            onEdgeDoubleClick={isReadOnly || isPending? ()=>{}: onEdgeDoubleClick}
             fitView
             fitViewOptions={fitViewOptions}
             nodeTypes={nodeTypes}
         >
-            <Background />
+            <Background variant={isPending? BackgroundVariant.Lines: BackgroundVariant.Dots}/>
             <Controls
                 showZoom={true}
                 showFitView={true}

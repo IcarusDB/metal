@@ -22,6 +22,17 @@ const defaultStore = createStore<DesingerStore>()(
 
 export const DesignerStoreContext = createContext(defaultStore);
 
+export function useFlowPending(): [boolean, (value: boolean) => void] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([
+            state.isFlowPending,
+            state.bindFlowPending,
+        ])
+    )
+}
+
 export function useMetalFlow(): [MetalFlowAction, (action: MetalFlowAction) => void] {
     const store = useContext(DesignerStoreContext);
     const [action, setAction] = useStore(store, (state)=>([state.metalFlowAction, state.bindMetalFlowAction]));
@@ -162,14 +173,23 @@ export function useEpoch(): [
 
 export function useBackendStatus(): [
     BackendStatus | undefined,
-    (status: BackendStatus) => void
+    (status: BackendStatus) => void,
+    (listener: (status: BackendStatus | undefined, prev: BackendStatus | undefined) => void) => () => void
 ] {
     const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: BackendStatus | undefined, prev: BackendStatus | undefined) => void) => {
+        return store.subscribe(
+            state => state.backendStatus,
+            listener
+        );
+    }
+    
     return useStore(
         store,
         (state) => ([
             state.backendStatus,
-            state.bindBackendStatus
+            state.bindBackendStatus,
+            sub
         ])
     );
 }

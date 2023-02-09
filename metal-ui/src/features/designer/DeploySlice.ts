@@ -1,5 +1,4 @@
 import { StoreApi } from "zustand";
-import { AnalysisResponse } from "../../api/ProjectApi";
 import { Exec } from "../../model/Exec";
 import { BackendStatus } from "../../model/Project";
 
