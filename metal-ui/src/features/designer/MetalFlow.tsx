@@ -67,45 +67,6 @@ export const MetalFlow = (props: MetalFlowProps) => {
         padding: 1,
     };
 
-    const onConnect: OnConnect = useCallback(
-        (connection: Connection) => {
-            if (!onConnectValid(connection, flowInstance.getNodes(), flowInstance.getEdges())) {
-                return;
-            }
-            flowInstance.setEdges((prevEdges) => {
-                return addEdge(
-                    {
-                        ...connection,
-                        markerEnd: {
-                            type: MarkerType.ArrowClosed,
-                            color: "black",
-                            width: 18,
-                            height: 24,
-                        },
-                    },
-                    prevEdges
-                );
-            });
-        },
-        [flowInstance]
-    );
-
-    const deleteEdge = useCallback(
-        (edge: Edge) => {
-            flowInstance.deleteElements({
-                edges: [edge],
-            });
-        },
-        [flowInstance]
-    );
-
-    const onEdgeDoubleClick = useCallback(
-        (event: ReactMouseEvent, edge: Edge) => {
-            deleteEdge(edge);
-        },
-        [deleteEdge]
-    );
-
     const broadCastNodeStatus = useCallback((nodes: string[], status: MetalNodeState)=>{
         const nds: Node<MetalNodeProps>[] = flowInstance.getNodes();
         const edges: Edge<any>[] = flowInstance.getEdges();
@@ -137,6 +98,69 @@ export const MetalFlow = (props: MetalFlowProps) => {
             return nde;
         });
     }, [flowInstance]);
+
+    const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
+        const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
+        const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
+        const mixNds = _.unionWith(unAnalysised, nds, (n0, n1) => (n0[0] === n1[0]));
+
+        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
+            return prevNodes.map(node => {
+                const nd = mixNds.find(nde => nde[0] === node.id);
+                return nd === undefined? node: {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        status: nd[1]
+                    }
+                }
+            })
+        })
+    }, [broadCastNodeStatus, flowInstance]);
+
+    const onConnect: OnConnect = useCallback(
+        (connection: Connection) => {
+            if (!onConnectValid(connection, flowInstance.getNodes(), flowInstance.getEdges())) {
+                return;
+            }
+            if (connection.target !== null) {
+                setNodesStatus([[connection.target, MetalNodeState.UNANALYSIS]]);
+            }
+            
+            flowInstance.setEdges((prevEdges) => {
+                return addEdge(
+                    {
+                        ...connection,
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            color: "black",
+                            width: 18,
+                            height: 24,
+                        },
+                    },
+                    prevEdges
+                );
+            });
+        },
+        [flowInstance, setNodesStatus]
+    );
+
+    const deleteEdge = useCallback(
+        (edge: Edge) => {
+            flowInstance.deleteElements({
+                edges: [edge],
+            });
+            setNodesStatus([[edge.target, MetalNodeState.UNANALYSIS]])
+        },
+        [flowInstance, setNodesStatus]
+    );
+
+    const onEdgeDoubleClick = useCallback(
+        (event: ReactMouseEvent, edge: Edge) => {
+            deleteEdge(edge);
+        },
+        [deleteEdge]
+    );
 
     const allNodes: () => Node<MetalNodeProps>[] = useCallback(() => (
         flowInstance.getNodes().map(nd => {
@@ -223,12 +247,17 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 .getEdges()
                 .filter((edge) => edge.source === id || edge.target === id);
 
+            const hotNodes: [string, MetalNodeState][] = flowInstance.getEdges()
+                                        .filter((edge) => edge.source === id)
+                                        .map((edge) => [edge.target, MetalNodeState.UNANALYSIS]);
+            
+            setNodesStatus(hotNodes);
             flowInstance.deleteElements({
                 nodes: [{ id: id }],
                 edges: willDeleteEdges,
             });
         },
-        [flowInstance]
+        [flowInstance, setNodesStatus]
     );
 
     const addNode = useCallback(
@@ -377,29 +406,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
             waitFor: []
         }
         return spec;
-    }, [flowInstance]);
-
+    }, [flowInstance]); 
 
     
-
-    const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
-        const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
-        const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
-        const mixNds = _.unionWith(unAnalysised, nds, (n0, n1) => (n0[0] === n1[0]));
-
-        flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
-            return prevNodes.map(node => {
-                const nd = mixNds.find(nde => nde[0] === node.id);
-                return nd === undefined? node: {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        status: nd[1]
-                    }
-                }
-            })
-        })
-    }, [broadCastNodeStatus, flowInstance]);
 
     useMemo(() => {
         setMetalFlowAction({
