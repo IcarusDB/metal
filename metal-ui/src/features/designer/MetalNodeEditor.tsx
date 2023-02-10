@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Button,
     Container,
     Grid,
     IconButton,
+    LinearProgress,
+    List,
+    ListItem,
     Paper,
     Skeleton,
     Stack,
     TextField,
+    Typography,
 } from "@mui/material";
 import { RJSFSchema } from "@rjsf/utils";
 import { IChangeEvent } from "@rjsf/core";
@@ -15,7 +23,7 @@ import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
 import { Metal, MetalTypes } from "../../model/Metal";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
-import { VscArrowLeft } from "react-icons/vsc";
+import { VscArrowLeft, VscExpandAll, VscRefresh, VscTable } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { useDeployId, useHotNodes, useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
@@ -27,6 +35,7 @@ import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { ClockLoader, SyncLoader } from "react-spinners";
 
 function useSchema(
     token: string | null,
@@ -46,10 +55,11 @@ function useSchema(
 
 export interface MetalNodeSchemaProps {
     id: string;
+    name?: string;
 }
 
 export function MetalNodeSchema(props: MetalNodeSchemaProps) {
-    const { id } = props;
+    const { id, name } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -59,16 +69,76 @@ export function MetalNodeSchema(props: MetalNodeSchemaProps) {
         deployId === undefined ? null : deployId,
         id
     );
-    console.log(JSON.stringify(result));
 
+    const isPending = schemaStatus === State.pending;
+    const progress = isPending ? (
+        <LinearProgress />
+    ) : (
+        <LinearProgress variant="determinate" value={0} />
+    );
     useEffect(() => {
         schema();
     }, [schema]);
 
     return (
-        <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
-                {JSON.stringify(result, null, 2)}
-        </SyntaxHighlighter>
+        <Accordion
+            sx={{
+                width: "100%",
+            }}
+        >
+            <AccordionSummary id={`${id}-header`} expandIcon={<VscExpandAll />}>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        alignContent: "center",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
+                >
+                    <IconButton>
+                        <VscTable />
+                    </IconButton>
+                    <Typography>{name === undefined ? id : name}</Typography>
+                </div>
+            </AccordionSummary>
+            <AccordionDetails>
+                <div
+                    style={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                        overflow: "hidden",
+                    }}
+                >
+                    <Button
+                        sx={{ width: "100%" }}
+                        onClick={schema}
+                        variant={"outlined"}
+                        startIcon={<VscRefresh />}
+                        disabled={isPending}
+                    >
+                        {isPending ? "Syncing" : "Sync"}
+                    </Button>
+                    {progress}
+                    <div
+                        style={{
+                            position: "relative",
+                            maxHeight: "30vh",
+                            width: "100%",
+                            overflow: "auto",
+                        }}
+                    >
+                        <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
+                            {JSON.stringify(result, null, 2)}
+                        </SyntaxHighlighter>
+                        <ResizeBackdrop open={isPending} />
+                    </div>
+                </div>
+            </AccordionDetails>
+        </Accordion>
     );
 }
 
@@ -195,36 +265,61 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                 >
                     <Grid item xs={3}>
                         <Paper
+                            square
+                            variant="outlined"
                             sx={{
-                                height: "100%",
-                                width: "100%",
+                                boxSizing: "border-box",
+                                padding: "1em",
                             }}
                         >
-                            {!isReadOnly && (
-                                <Stack
-                                    direction="column"
-                                    justifyContent="flex-start"
-                                    alignItems="flex-start"
-                                    spacing={1}
+                            <Typography>Inputs Schemas</Typography>
+                        </Paper>
+                        <Paper
+                            square
+                            sx={{
+                                boxSizing: "border-box",
+                                height: "90%",
+                                width: "100%",
+                                padding: "1em",
+                            }}
+                        >
+                            {isReadOnly && (
+                                <Alert variant="outlined" severity="info">
+                                    {`Now is In readonly mode.`}
+                                </Alert>
+                            )}
+                            {!isReadOnly && hasNoInputs() && (
+                                <Alert variant="outlined" severity="info">
+                                    {`Inputs Schemas [Node is ${metalProps.type} and hasn't any inputs.]`}
+                                </Alert>
+                            )}
+                            {!isReadOnly && !hasNoInputs() && id && (
+                                <div
+                                    style={{
+                                        position: "relative",
+                                        width: "100%",
+                                        height: "100%",
+                                        overflow: "hidden",
+                                    }}
                                 >
-                                    {hasNoInputs()
-                                        ? `Inputs Schemas [Node is ${metalProps.type} and hasn't any inputs.]`
-                                        : `Inputs Schemas [${
-                                              id === undefined
-                                                  ? "?"
-                                                  : _.join(
-                                                        inputs(id).map((nd) => nd.data.metal.name),
-                                                        ","
-                                                    )
-                                          }]`}
-                                    {!hasNoInputs() &&
-                                        id &&inputs(id)
-                                            .filter(nd => isAnalysised(nd.data))
-                                            .map((nd) => nd.id)
-                                            .map((metalId) => {
-                                                return <MetalNodeSchema id={metalId} />;
-                                            })}
-                                </Stack>
+                                    <List
+                                        sx={{
+                                            position: "relative",
+                                            width: "100%",
+                                            maxHeight: "50vh",
+                                            overflow: "auto",
+                                        }}
+                                    >
+                                        {inputs(id)
+                                            .filter((nd) => isAnalysised(nd.data))
+                                            .map((nd) => (
+                                                <MetalNodeSchema
+                                                    id={nd.id}
+                                                    name={nd.data.metal.name}
+                                                />
+                                            ))}
+                                    </List>
+                                </div>
                             )}
                         </Paper>
                     </Grid>
