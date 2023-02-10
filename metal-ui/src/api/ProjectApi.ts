@@ -288,6 +288,31 @@ export async function analysisOfId(token: string, id: string, spec: Spec) {
     })
 }
 
+export interface SchemaResponse {
+    id: string,
+    schema: {
+        fields: any[]
+    }
+}
+
+export async function schemaOfId(token: string, deployId: string, metalId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}/spec/metals/${metalId}`;
+    return instance.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const schemaResp: SchemaResponse = resp.data;
+            return schemaResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
 export interface ExecResponse {
     status: string | "OK",
 }

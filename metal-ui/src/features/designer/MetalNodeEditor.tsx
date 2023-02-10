@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Button,
     Container,
@@ -13,16 +13,64 @@ import { RJSFSchema } from "@rjsf/utils";
 import { IChangeEvent } from "@rjsf/core";
 import { Form } from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
-import { Metal } from "../../model/Metal";
+import { Metal, MetalTypes } from "../../model/Metal";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { VscArrowLeft } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import {
-    useHotNodes,
-    useMetalFlow,
-    useMetalNodeEditor,
-} from "./DesignerProvider";
+import { useDeployId, useHotNodes, useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
+import _ from "lodash";
+import { useAsync } from "../../api/Hooks";
+import { schemaOfId, SchemaResponse } from "../../api/ProjectApi";
+import { useAppSelector } from "../../app/hooks";
+import { tokenSelector } from "../user/userSlice";
+import { State } from "../../api/State";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+
+function useSchema(
+    token: string | null,
+    deployId: string | null,
+    metalId: string
+): [() => void, State, SchemaResponse | null] {
+    const [run, status, result] = useAsync<SchemaResponse>();
+    const schema = useCallback(() => {
+        if (token === null || deployId === null) {
+            return;
+        }
+        run(schemaOfId(token, deployId, metalId));
+    }, [deployId, metalId, run, token]);
+
+    return [schema, status, result];
+}
+
+export interface MetalNodeSchemaProps {
+    id: string;
+}
+
+export function MetalNodeSchema(props: MetalNodeSchemaProps) {
+    const { id } = props;
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+    const [deployId] = useDeployId();
+    const [schema, schemaStatus, result] = useSchema(
+        token,
+        deployId === undefined ? null : deployId,
+        id
+    );
+    console.log(JSON.stringify(result));
+
+    useEffect(() => {
+        schema();
+    }, [schema]);
+
+    return (
+        <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
+                {JSON.stringify(result, null, 2)}
+        </SyntaxHighlighter>
+    );
+}
 
 export interface MetalNodeEditorProps extends IReadOnly {}
 
@@ -34,10 +82,12 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const nameInputRef = useRef<HTMLInputElement>();
     const [, setNodeEditorAction] = useMetalNodeEditor();
     const [, setHotNodes] = useHotNodes();
+    const id = metalProps?.metal.id;
+    const inputs = metalProps === null ? (id: string) => [] : metalProps.inputs;
 
     const readOnly = () => {
         return isReadOnly || metalProps?.status === MetalNodeState.PENDING;
-    }
+    };
     const printInputs = () => {
         const inputs = metalFlowAction.inputs;
         if (metalProps === null) {
@@ -88,6 +138,14 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const onCancel = () => {
         setMetalProps(null);
         setOpen(false);
+    };
+
+    const hasNoInputs = () =>
+        metalProps.type === MetalTypes.SOURCE || metalProps.type === MetalTypes.SETUP;
+    const isAnalysised = (nodeProps: MetalNodeProps) => {
+        const metalStatus: MetalNodeState =
+            nodeProps.status === undefined ? MetalNodeState.UNANALYSIS : nodeProps.status;
+        return metalStatus === MetalNodeState.ANALYSISED;
     };
 
     return (
@@ -141,7 +199,34 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                 height: "100%",
                                 width: "100%",
                             }}
-                        ></Paper>
+                        >
+                            {!isReadOnly && (
+                                <Stack
+                                    direction="column"
+                                    justifyContent="flex-start"
+                                    alignItems="flex-start"
+                                    spacing={1}
+                                >
+                                    {hasNoInputs()
+                                        ? `Inputs Schemas [Node is ${metalProps.type} and hasn't any inputs.]`
+                                        : `Inputs Schemas [${
+                                              id === undefined
+                                                  ? "?"
+                                                  : _.join(
+                                                        inputs(id).map((nd) => nd.data.metal.name),
+                                                        ","
+                                                    )
+                                          }]`}
+                                    {!hasNoInputs() &&
+                                        id &&inputs(id)
+                                            .filter(nd => isAnalysised(nd.data))
+                                            .map((nd) => nd.id)
+                                            .map((metalId) => {
+                                                return <MetalNodeSchema id={metalId} />;
+                                            })}
+                                </Stack>
+                            )}
+                        </Paper>
                     </Grid>
                     <Grid item xs={9}>
                         <Paper
