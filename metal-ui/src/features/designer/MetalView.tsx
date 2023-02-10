@@ -19,7 +19,9 @@ import { GraphTopology } from "../../model/GraphTopology";
 import { MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
 import { RingLoader, ScaleLoader } from "react-spinners";
-import { MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
+import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
+import { GrDocumentConfig, GrTip } from "react-icons/gr";
+import _ from "lodash";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -58,6 +60,8 @@ export interface MetalNodeProps extends IReadOnly {
     type: MetalTypes;
     onUpdate: (newMetal: Metal) => void;
     onDelete: () => void;
+    inputs: (id: string) => Node<MetalNodeProps>[];
+    outputs: (id: string) => Node<MetalNodeProps>[];
     editor?: MetalNodeEditorAction;
     status?: MetalNodeState;
 }
@@ -241,7 +245,8 @@ export function onConnectValid(
 }
 
 export function MetalNode(props: NodeProps<MetalNodeProps>) {
-    const { metal, metalPkg, type, onDelete, onUpdate} = props.data;
+    const {id} = props;
+    const { metal, metalPkg, type, onDelete, onUpdate, inputs, outputs} = props.data;
     const status = props.data.status === undefined? MetalNodeState.UNANALYSIS: props.data.status;
     const isReadOnly = props.data.isReadOnly || status === MetalNodeState.PENDING;
     const editor = props.data.editor;
@@ -381,7 +386,66 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                 </Grid>
                                 <Grid item xs={11}>
                                     <Typography variant={"caption"} color={"GrayText"}>
-                                        {metalPkg.class}
+                                        {metalPkg.class}   
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+                            <Divider orientation="horizontal" flexItem />
+                            <Grid container
+                                sx={{
+                                    backgroundColor: "white"
+                                }}
+                            >
+                                <Grid
+                                    item
+                                    xs={1}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <GrDocumentConfig fontSize={"1em"} />
+                                </Grid>
+                                <Grid item xs={11}>
+                                    <Typography variant={"caption"} color={"GrayText"}>
+                                        {_.isEmpty(metal.props)? "Undefined": "Defined"}
+                                    </Typography>
+                                </Grid>
+                                <Grid
+                                    item
+                                    xs={1}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <MdInput fontSize={"1em"} />
+                                </Grid>
+                                <Grid item xs={11}>
+                                    <Typography variant={"caption"} color={"GrayText"}>
+                                        {   
+                                            type === MetalTypes.SOURCE || type === MetalTypes.SETUP? 
+                                                "Ready": 
+                                                inputs(id).length === 0? "Unready": "Ready"
+                                        }
+                                    </Typography>
+                                </Grid>
+                                <Grid
+                                    item
+                                    xs={1}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <GrTip fontSize={"1em"} />
+                                </Grid>
+                                <Grid item xs={11}>
+                                    <Typography variant={"caption"} color={"GrayText"}>
+                                        {status}
                                     </Typography>
                                 </Grid>
                             </Grid>

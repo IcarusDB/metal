@@ -69,6 +69,8 @@ export function MetalPkgView(props: MetalPkgProps) {
             type: type,
             onDelete: () => {},
             onUpdate: () => {},
+            inputs: (id: string) => ([]),
+            outputs: (id: string) => ([]),
             metal: {
                 id: "node-0",
                 name: "node-0",

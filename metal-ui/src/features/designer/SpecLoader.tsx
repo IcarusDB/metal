@@ -52,6 +52,8 @@ export function useSpecLoader(token: string | null) {
                         type: metalType(pkg.type),
                         onUpdate: () => {},
                         onDelete: () => {},
+                        inputs: (id: string) => ([]),
+                        outputs: (id: string) => ([]),
                         // status: MetalNodeState.PENDING,
                     };
                     return nodeTmpl;

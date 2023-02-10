@@ -30,7 +30,7 @@ import {
     BackgroundVariant,
 } from "reactflow";
 import { useAsync } from "../../api/Hooks";
-import { Metal } from "../../model/Metal";
+import { Metal, MetalTypes } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
 import { useFlowPending, useHotNodes, useMetalFlow, useModify } from "./DesignerProvider";
@@ -288,6 +288,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 onDelete: () => {
                     deleteNode(nodeId);
                 },
+                inputs: nodeTmpl.type === MetalTypes.SOURCE || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): inputs,
+                outputs: nodeTmpl.type === MetalTypes.SINK || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): outputs,    
                 isReadOnly: isReadOnly,
             };
             const nodePropsWrapped = nodePropsWrap(nodeProps);
@@ -302,7 +304,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             flowInstance.addNodes(node);
             modify(true);
         },
-        [deleteNode, flowInstance, isReadOnly, modify, nodePropsWrap, updateNode]
+        [deleteNode, flowInstance, inputs, isReadOnly, modify, nodePropsWrap, outputs, updateNode]
     );
 
     const autoLayout = useCallback(() => {
@@ -336,6 +338,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
                     onDelete: () => {
                         deleteNode(nodeId);
                     },
+                    inputs: nodeTmpl.type === MetalTypes.SOURCE || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): inputs,
+                    outputs: nodeTmpl.type === MetalTypes.SINK || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): outputs,
                     isReadOnly: isReadOnly,
                 };
                 const nodePropsWrapped = nodePropsWrap(nodeProps);
@@ -348,7 +352,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             });
             return newNodes;
         },
-        [deleteNode, isReadOnly, nodePropsWrap, updateNode]
+        [deleteNode, inputs, isReadOnly, nodePropsWrap, outputs, updateNode]
     );
 
     const loadEdgesFromFlow = useCallback((newFlow: SpecFlow | undefined) => {
