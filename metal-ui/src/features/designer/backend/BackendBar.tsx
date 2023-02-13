@@ -21,7 +21,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, useModify, usePlatform, useProfile } from "../DesignerProvider";
+import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, useModify, useName, usePlatform, useProfile } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
@@ -285,21 +285,22 @@ function useSyncBackendStatus(token: string | null): [boolean, () => void] {
     const [deployId] = useDeployId();
     const [, setEpoch] = useEpoch();
     const [backendStatus, setBackendStatus] = useBackendStatus();
-    const [isPending, startTransition] = useTransition();
+    const [run, syncStatus,] = useAsync<BackendStatus>({
+        onSuccess: (status: BackendStatus) => {
+            setBackendStatus(status);
+            if (status.epoch !== undefined) {
+                setEpoch(status.epoch);
+            }
+        }
+    });
+
+    const isPending = syncStatus === State.pending;
 
     const sync = useCallback(() => {
         if (token !== null && deployId !== undefined) {
-            startTransition(() => {
-                getBackendStatus(token, deployId).then((status: BackendStatus) => {
-                    setBackendStatus(status);
-                    if (status.epoch !== undefined) {
-                        setEpoch(status.epoch);
-                    }
-                    return status;
-                });
-            });
+            run(getBackendStatus(token, deployId))
         }
-    }, [deployId, setBackendStatus, setEpoch, token]);
+    }, [deployId, run, token]);
 
     useEffect(() => {
         if (token === null || deployId === undefined) {

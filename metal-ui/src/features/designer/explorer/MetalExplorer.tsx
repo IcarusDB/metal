@@ -42,7 +42,7 @@ import { ResizeBackdrop } from "../../ui/ResizeBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "../../../api/MetalPkgApi";
-import { useFlowPending } from "../DesignerProvider";
+import { useFlowPending, useMetalFlow, usePkgs } from "../DesignerProvider";
 
 const theme = createTheme();
 moment.locale("zh_CN");
@@ -571,4 +571,19 @@ function afterTypeFilter(pkgFilter: Set<MetalTypes>, pkgs: MetalPkg[]) {
     return pkgFilter.size > 0
         ? pkgs.filter((pkg: MetalPkg) => pkgFilter.has(metalType(pkg.type)))
         : pkgs;
+}
+
+export function MetalExplorerWrapper() {
+    const [pkgs] = usePkgs();
+    const [metalFlowAction] = useMetalFlow();
+    const onAddNode = useCallback(
+        (nodeProps: MetalNodeProps) => {
+            metalFlowAction.addNode(nodeProps);
+        },
+        [metalFlowAction]
+    );
+
+    return (
+        <MetalExplorer addNode={onAddNode} restrictPkgs={pkgs} />
+    )
 }

@@ -145,25 +145,17 @@ export function MetalNodeSchema(props: MetalNodeSchemaProps) {
 export interface MetalNodeEditorProps extends IReadOnly {}
 
 export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
+    console.log("Editor");
     const { isReadOnly } = props;
-    const [metalFlowAction] = useMetalFlow();
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>();
     const [, setNodeEditorAction] = useMetalNodeEditor();
-    const [, setHotNodes] = useHotNodes();
     const id = metalProps?.metal.id;
     const inputs = metalProps === null ? (id: string) => [] : metalProps.inputs;
 
     const readOnly = () => {
         return isReadOnly || metalProps?.status === MetalNodeState.PENDING;
-    };
-    const printInputs = () => {
-        const inputs = metalFlowAction.inputs;
-        if (metalProps === null) {
-            return;
-        }
-        console.log(inputs(metalProps.metal.id));
     };
 
     const load = useCallback((props: MetalNodeProps) => {
@@ -215,7 +207,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const isAnalysised = (nodeProps: MetalNodeProps) => {
         const metalStatus: MetalNodeState =
             nodeProps.status === undefined ? MetalNodeState.UNANALYSIS : nodeProps.status;
-        return metalStatus === MetalNodeState.ANALYSISED;
+        return metalStatus === MetalNodeState.ANALYSISED || metalStatus === MetalNodeState.EXECED;
     };
 
     return (

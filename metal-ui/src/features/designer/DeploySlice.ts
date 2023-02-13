@@ -20,27 +20,32 @@ export const createDeploySlice = (
 ): DeploySlice => ({
     bindDeployId: (id: string) => {
         set((prev) => ({
+            ...prev,
             deployId: id
         }));
     },
     bindEpoch: (epoch: number) => {
         set((prev) => ({
+            ...prev,
             epoch: epoch
         }));
     },
     bindBackendStatus: (status: BackendStatus) => {
         set((prev) => ({
+            ...prev,
             backendStatus: status
         }));
     },
     bindDeploy: (id?: string, epoch?: number) => {
         set((prev) => ({
+            ...prev,
             deployId: id,
             epoch: epoch
         }));
     },
     bindExec: (exec: Exec | undefined) => {
         set((prev) => ({
+            ...prev,
             exec
         }));
     }

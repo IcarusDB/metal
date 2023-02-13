@@ -33,7 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal, MetalTypes } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useFlowPending, useHotNodes, useMetalFlow, useModify, useSpecFlow } from "./DesignerProvider";
+import { useFlowPending, useHotNodes, useMetalFlow, useMetalNodeEditor, useModify, useSpecFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -47,21 +47,28 @@ enum LoadState {
 
 
 export interface MetalFlowProps extends IReadOnly{
-    nodePropsWrap: (node: MetalNodeProps) => MetalNodeProps;
     flow?: SpecFlow;
 }
 
 export const MetalFlow = (props: MetalFlowProps) => {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
-    const { isReadOnly, nodePropsWrap} = props;
+    const { isReadOnly} = props;
     const [flow] = useSpecFlow();
     const [, setMetalFlowAction] = useMetalFlow();
+    const [nodeEditorAction] = useMetalNodeEditor();
     const [,, onHotNodesChange] = useHotNodes();
     const [, modify,] = useModify();
     const flowInstance = useReactFlow();
     const [isPending,] = useFlowPending();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
+    const nodePropsWrap = useCallback(
+        (nodeProps: MetalNodeProps) => ({
+            ...nodeProps,
+            editor: nodeEditorAction,
+        }),
+        [nodeEditorAction]
+    );
 
     const [run] = useAsync<void>();
 

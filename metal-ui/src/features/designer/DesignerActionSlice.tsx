@@ -88,28 +88,33 @@ export const createDesignerActionSlice = (
     },
     bindName: (name: string) => {
         set((prev) => ({
+            ...prev,
             name: name
         }));
     },
     pkgs: [],
     bindPkgs: (pkgs: string[]) => {
         set((prev) => ({
+            ...prev,
             pkgs: pkgs
         }));
     },
     bindPlatform: (platform: any) => {
         set((prev) => ({
+            ...prev,
             platform: platform
         }));
     },
     backendArgs: [],
     bindBackendArgs: (args: string[]) => {
         set((prev) => ({
+            ...prev,
             backendArgs: args
         }));
     },
     bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => {
         set((prev) => ({
+            ...prev,
             name,
             pkgs,
             platform,
@@ -119,6 +124,7 @@ export const createDesignerActionSlice = (
     hotNodes: [],
     bindHotNodes: (hotNodes: [string, MetalNodeState][]) => {
         set((prev) => ({
+            ...prev,
             hotNodes
         }))
     },

@@ -7,6 +7,7 @@ import { getProjectById } from "../../api/ProjectApi";
 import { useBackendStatus, useDeploy, useProfile, useSpec } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
+    console.log("Project loader.");
     const [run, status, project, error] = useAsync<Project>();
     const [, setSpec] = useSpec();
     const [, setProfile] = useProfile();
@@ -29,7 +30,7 @@ function useProjectLoader(token: string | null, id: string) {
             run(getProjectById(token, id));       
         }
         
-    }, [id, project, run, setProfile, setSpec, status, token]);
+    }, [id, project, run, setBackendStatus, setDeploy, setProfile, setSpec, status, token]);
 
     return [status, error];
 }

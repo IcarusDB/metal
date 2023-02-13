@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
-import { MetalNodeProps } from "./MetalView";
 import { IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
-import { MetalExplorer } from "./explorer/MetalExplorer";
+import { MetalExplorerWrapper } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow } from "./MetalFlow";
 import {
@@ -18,7 +17,7 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { SpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useMetalFlow, useMetalNodeEditor, useName, usePkgs } from "./DesignerProvider";
+import { useName } from "./DesignerProvider";
 import { ProjectLoader } from "./ProjectLoader";
 import { BackendBar } from "./backend/BackendBar";
 
@@ -28,6 +27,7 @@ export interface DesignerProps {
 }
 
 export function Designer(props: DesignerProps) {
+    console.log("Desiger");
     const { id, mainHandler } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
@@ -35,38 +35,19 @@ export function Designer(props: DesignerProps) {
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
     const [, , onNameChange] = useName();
-    const [pkgs] = usePkgs();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     
-    const [metalFlowAction] = useMetalFlow();
-    const [nodeEditorAction] = useMetalNodeEditor();
-
     const onSwitchExplorer = () => {
         setOpenExplorer(!isOpenExplorer);
     };
 
-    
-
-    const onAddNode = useCallback(
-        (nodeProps: MetalNodeProps) => {
-            metalFlowAction.addNode(nodeProps);
-        },
-        [metalFlowAction]
-    );
-
-    const nodePropsWrap = useCallback(
-        (nodeProps: MetalNodeProps) => ({
-            ...nodeProps,
-            editor: nodeEditorAction,
-        }),
-        [nodeEditorAction]
-    );
-
     const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
     };
+
+    const editor = useMemo(()=>(<MetalNodeEditor />), []);
 
     useEffect(() => {
         const unsub = onNameChange((name: string | undefined, prev: string | undefined) => {
@@ -97,9 +78,7 @@ export function Designer(props: DesignerProps) {
                     }}
                 >
                     <ReactFlowProvider>
-                        <MetalFlow
-                            nodePropsWrap={nodePropsWrap}
-                        />
+                        <MetalFlow />
                     </ReactFlowProvider>
                     <BackendBar id={id}/>
                 </Box>
@@ -113,7 +92,7 @@ export function Designer(props: DesignerProps) {
                             width: "25%",
                         }}
                     >
-                        <MetalExplorer addNode={onAddNode} restrictPkgs={pkgs} />
+                        <MetalExplorerWrapper />
                     </Box>
                 )}
             </Stack>
@@ -166,7 +145,7 @@ export function Designer(props: DesignerProps) {
                     <VscExtensions />
                 </IconButton>
             </Paper>
-            {<MetalNodeEditor />}
+            {editor}
             <ProjectProfile
                 open={false}
                 isCreate={false}

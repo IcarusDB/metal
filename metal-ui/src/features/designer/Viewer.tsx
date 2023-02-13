@@ -25,21 +25,12 @@ export function Viewer(props: ViewerProps) {
     });
 
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
-    const [nodeEditorAction] = useMetalNodeEditor();
     const [, , onNameChange] = useName();
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.rename !== undefined) {
             mainHandler.rename(viewerId(id), name === undefined ? "?" : name);
         }
     });
-
-    const nodePropsWrap = useCallback(
-        (nodeProps: MetalNodeProps) => ({
-            ...nodeProps,
-            editor: nodeEditorAction,
-        }),
-        [nodeEditorAction]
-    );
 
     return (
         <div className="panel">
@@ -61,7 +52,6 @@ export function Viewer(props: ViewerProps) {
                     <ReactFlowProvider>
                         <MetalFlow
                             isReadOnly={true}
-                            nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
                 </Box>

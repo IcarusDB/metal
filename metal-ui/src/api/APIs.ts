@@ -4,7 +4,7 @@ export const Gateway = {
     prefix: 'http',
     host: "localhost",
     port:19000,
-    timeout: 2000
+    timeout: 20000
 }
 
 export function wrapUrl(url: string) {
