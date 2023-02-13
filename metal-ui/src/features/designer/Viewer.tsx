@@ -1,8 +1,7 @@
-import { Alert, Box, IconButton, Paper, Stack } from "@mui/material";
+import { Box, IconButton, Paper, Stack } from "@mui/material";
 import { ReactNode, useCallback, useRef } from "react";
 import { VscOpenPreview } from "react-icons/vsc";
 import { ReactFlowProvider } from "reactflow";
-import { State } from "../../api/State";
 import { useAppSelector } from "../../app/hooks";
 import { MainHandler, viewerId } from "../main/Main";
 import { ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
@@ -11,7 +10,7 @@ import { useMetalNodeEditor, useName } from "./DesignerProvider";
 import { MetalFlow } from "./MetalFlow";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalNodeProps } from "./MetalView";
-import { useSpecLoader } from "./SpecLoader";
+import { SpecLoader } from "./SpecLoader";
 
 export interface ViewerProps {
     id: string;
@@ -25,7 +24,6 @@ export function Viewer(props: ViewerProps) {
         return tokenSelector(state);
     });
 
-    const specLoader = useSpecLoader(token);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     const [nodeEditorAction] = useMetalNodeEditor();
     const [, , onNameChange] = useName();
@@ -46,9 +44,6 @@ export function Viewer(props: ViewerProps) {
     return (
         <div className="panel">
             {children}
-            {specLoader.status === State.failure && (
-                <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
-            )}
             <Stack
                 direction="row"
                 justifyContent="center"
@@ -66,11 +61,11 @@ export function Viewer(props: ViewerProps) {
                     <ReactFlowProvider>
                         <MetalFlow
                             isReadOnly={true}
-                            flow={specLoader.flow === null ? undefined : specLoader.flow}
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
                 </Box>
+                <SpecLoader token={token} />
             </Stack>
             <Paper
                 elevation={2}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "reactflow/dist/style.css";
 import { MetalNodeProps } from "./MetalView";
-import { Alert, IconButton, Paper, Stack } from "@mui/material";
+import { IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorer } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
@@ -14,13 +14,11 @@ import {
 } from "../project/ProjectProfile";
 import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
 import { designerId, MainHandler } from "../main/Main";
-import { State } from "../../api/State";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
-import { useSpecLoader } from "./SpecLoader";
+import { SpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useMetalFlow, useMetalNodeEditor, useName, usePkgs, useSpec } from "./DesignerProvider";
-import { BackendPanelHandler } from "./BackendPanel";
+import { useMetalFlow, useMetalNodeEditor, useName, usePkgs } from "./DesignerProvider";
 import { ProjectLoader } from "./ProjectLoader";
 import { BackendBar } from "./backend/BackendBar";
 
@@ -37,8 +35,6 @@ export function Designer(props: DesignerProps) {
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
     const [, , onNameChange] = useName();
-
-    const specLoader = useSpecLoader(token);
     const [pkgs] = usePkgs();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
@@ -83,10 +79,6 @@ export function Designer(props: DesignerProps) {
 
     return (
         <div className="panel">
-            <ProjectLoader token={token} id={id} />
-            {specLoader.status === State.failure && (
-                <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
-            )}
             <Stack
                 direction="row"
                 justifyContent="center"
@@ -106,12 +98,13 @@ export function Designer(props: DesignerProps) {
                 >
                     <ReactFlowProvider>
                         <MetalFlow
-                            flow={specLoader.flow === null ? undefined : specLoader.flow}
                             nodePropsWrap={nodePropsWrap}
                         />
                     </ReactFlowProvider>
                     <BackendBar id={id}/>
                 </Box>
+                <ProjectLoader token={token} id={id} />
+                <SpecLoader token={token}/>
                 {isOpenExplorer && (
                     <Box
                         component={Paper}

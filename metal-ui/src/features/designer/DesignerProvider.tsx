@@ -9,6 +9,7 @@ import { BackendStatus } from "../../model/Project";
 import { AnalysisResponse } from "../../api/ProjectApi";
 import { MetalNodeState } from "./MetalView";
 import { Exec } from "../../model/Exec";
+import { SpecFlow } from "./SpecLoader";
 
 declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
 
@@ -102,6 +103,14 @@ export function useSpec(): [Spec | undefined, (spec: Spec) => void] {
     return useStore(
         store,
         (state) => ([state.spec, state.bindSpec])
+    );
+}
+
+export function useSpecFlow(): [SpecFlow | undefined, (flow: SpecFlow) => void] {
+    const store = useContext(DesignerStoreContext);
+    return useStore(
+        store,
+        (state) => ([state.flow, state.bindFlow])
     );
 }
 

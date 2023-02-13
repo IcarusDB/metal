@@ -12,7 +12,7 @@ import {
     Grid,
     IconButton,
 } from "@mui/material";
-import { MouseEvent } from "react";
+import { MouseEvent, useCallback, useMemo } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
@@ -252,18 +252,18 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const editor = props.data.editor;
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type);
 
-    const onEdit = (event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
+    const onEdit = useCallback((event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
         if (editor === undefined) {
             return;
         }
         editor.load(props.data);
-    };
+    }, [editor, props.data]);
 
-    const badgeContent = (
+    const badgeContent = useMemo(() => (
         <MetalNodeStateTip status={status} />
-    )
-
-    return (
+    ), [status]);
+    
+    const view = useMemo(()=>(
         <Badge color="default" badgeContent={badgeContent}>
             <div>
                 {nodeView.inputHandle(props.data)}
@@ -455,7 +455,8 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                 {nodeView.outputHandle(props.data)}
             </div>
         </Badge>
-    );
+    ), [badgeContent, id, inputs, isReadOnly, metal.name, metal.props, metalPkg.class, nodeView, onDelete, onEdit, props.data, status, type]);
+    return (<>{view}</>)
 }
 
 export const MetalNodeTypes = {

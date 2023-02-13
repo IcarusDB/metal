@@ -313,10 +313,23 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
                                         {inputs(id)
                                             .filter((nd) => isAnalysised(nd.data))
                                             .map((nd) => (
-                                                <MetalNodeSchema
+                                                <ListItem key={nd.id}>
+                                                    <MetalNodeSchema
                                                     id={nd.id}
                                                     name={nd.data.metal.name}
-                                                />
+                                                    />
+                                                </ListItem>
+                                                
+                                            ))}
+                                        {inputs(id)
+                                            .filter((nd) => !isAnalysised(nd.data))
+                                            .map((nd) => (
+                                                <ListItem key={nd.id}>
+                                                    <Alert severity="info" variant="outlined">
+                                                        {`${nd.data.metal.name}[${MetalNodeState.UNANALYSIS}]`}
+                                                    </Alert>
+                                                </ListItem>
+                                                
                                             ))}
                                     </List>
                                 </div>

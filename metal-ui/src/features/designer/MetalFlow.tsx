@@ -33,7 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal, MetalTypes } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
-import { useFlowPending, useHotNodes, useMetalFlow, useModify } from "./DesignerProvider";
+import { useFlowPending, useHotNodes, useMetalFlow, useModify, useSpecFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -54,7 +54,8 @@ export interface MetalFlowProps extends IReadOnly{
 export const MetalFlow = (props: MetalFlowProps) => {
     const nodeTypes = useMemo(() => ({ ...MetalNodeTypes }), []);
     const counter = useRef<number>(0);
-    const { isReadOnly, nodePropsWrap, flow} = props;
+    const { isReadOnly, nodePropsWrap} = props;
+    const [flow] = useSpecFlow();
     const [, setMetalFlowAction] = useMetalFlow();
     const [,, onHotNodesChange] = useHotNodes();
     const [, modify,] = useModify();

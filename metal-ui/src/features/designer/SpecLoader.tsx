@@ -7,20 +7,21 @@ import { MetalPkg } from "../../model/MetalPkg";
 import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
-import { useSpec } from "./DesignerProvider";
+import { useSpec, useSpecFlow } from "./DesignerProvider";
+import { State } from "../../api/State";
+import { Alert } from "@mui/material";
 
-export interface SpecLoaderProps {
-    spec?: Spec;
-}
+
 
 export interface SpecFlow {
     nodeTmpls: (MetalNodeProps | undefined)[],
     connections: Connection[]
 }
 
-export function useSpecLoader(token: string | null) {
+export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow | null, any] {
     const [spec] = useSpec();
     const [run, status, result, error] = useAsync<SpecFlow>();
+    const [, setSpecFlow] = useSpecFlow();
 
     const load = useCallback(() => {
         if (token === null || spec === undefined) {
@@ -86,18 +87,36 @@ export function useSpecLoader(token: string | null) {
                 nodeTmpls: nodeTmpls,
                 connections: connects,
             };
+            setSpecFlow(flow);
             return flow;
         });
         run(task);
-    }, [run, spec, token]);
+    }, [run, setSpecFlow, spec, token]);
 
-    useEffect(() => {
-       load()
-    }, [load]);
+    // useEffect(() => {
+    //    load()
+    // }, [load]);
 
-    return {
-        status,
-        flow: result,
-        error: error
-    }
+    return [load, status, result, error];
+}
+
+
+export interface SpecLoaderProps {
+    token: string | null;
+}
+export function SpecLoader(props: SpecLoaderProps) {
+    const {token} = props;
+    const [load, status,] = useSpecLoader(token);
+    
+    useEffect(()=>{
+        load();
+    }, [load])
+
+    return (
+        <>
+            {status === State.failure && (
+                <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
+            )}
+        </>
+    )
 }
