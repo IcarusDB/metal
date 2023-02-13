@@ -17,7 +17,7 @@ import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { SpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useName } from "./DesignerProvider";
+import { useName, useNameFn } from "./DesignerProvider";
 import { ProjectLoader } from "./ProjectLoader";
 import { BackendBar } from "./backend/BackendBar";
 
@@ -34,7 +34,7 @@ export function Designer(props: DesignerProps) {
     });
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
-    const [, , onNameChange] = useName();
+    const [, onNameChange] = useNameFn();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);

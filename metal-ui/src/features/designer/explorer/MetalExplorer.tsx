@@ -69,8 +69,8 @@ export function MetalPkgView(props: MetalPkgProps) {
             type: type,
             onDelete: () => {},
             onUpdate: () => {},
-            inputs: (id: string) => ([]),
-            outputs: (id: string) => ([]),
+            inputs: () => ([]),
+            outputs: () => ([]),
             metal: {
                 id: "node-0",
                 name: "node-0",
@@ -375,7 +375,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [run, status, result, error] = useAsync<MetalPkg[]>();
+    const [run, status, result] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
 
     const pkgs =

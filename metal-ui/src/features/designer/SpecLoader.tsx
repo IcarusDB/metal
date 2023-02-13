@@ -7,7 +7,7 @@ import { MetalPkg } from "../../model/MetalPkg";
 import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
-import { useSpec, useSpecFlow } from "./DesignerProvider";
+import { useSpec, useSpecFlow, useSpecFlowFn } from "./DesignerProvider";
 import { State } from "../../api/State";
 import { Alert } from "@mui/material";
 
@@ -21,7 +21,7 @@ export interface SpecFlow {
 export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow | null, any] {
     const [spec] = useSpec();
     const [run, status, result, error] = useAsync<SpecFlow>();
-    const [, setSpecFlow] = useSpecFlow();
+    const [setSpecFlow] = useSpecFlowFn();
 
     const load = useCallback(() => {
         if (token === null || spec === undefined) {

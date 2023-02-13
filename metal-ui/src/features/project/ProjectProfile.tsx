@@ -54,7 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
-import { useProfile } from "../designer/DesignerProvider";
+import { useProfile, useProfileFn } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -526,7 +526,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
-    const [, setProfile] = useProfile();
+    const [setProfile] = useProfileFn();
 
 
     const check: () => [boolean, string | undefined] = useCallback(() => {

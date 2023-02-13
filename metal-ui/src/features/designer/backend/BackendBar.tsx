@@ -1,6 +1,6 @@
 import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
 import {
@@ -21,7 +21,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
-import { useBackendStatus, useDeploy, useDeployId, useEpoch, useExecInfo, useFlowPending, useHotNodes, useMetalFlow, useModify, useName, usePlatform, useProfile } from "../DesignerProvider";
+import { useBackendStatus, useBackendStatusFn, useDeploy, useDeployId, useEpoch, useEpochFn, useExecInfo, useExecInfoFn, useFlowPendingFn, useHotNodesFn, useMetalFlow, useModify, useModifyFn, usePlatform, useProfile } from "../DesignerProvider";
 import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
@@ -76,8 +76,8 @@ interface BackendControlProps {
 
 function useBackendDeploy(token: string | null, deployId?: string | null): [() => void, State] {
     const [run, status] = useAsync<void>();
-    const [, setBackendStatus] = useBackendStatus();
-    const [, setEpoch] = useEpoch();
+    const [setBackendStatus] = useBackendStatusFn();
+    const [setEpoch] = useEpochFn();
     const deploy = () => {
         if (token === null) {
             return;
@@ -99,8 +99,8 @@ function useBackendDeploy(token: string | null, deployId?: string | null): [() =
 
 function useBackendUndeploy(token: string | null, deployId?: string | null): [() => void, State] {
     const [run, status] = useAsync<void>();
-    const [, setBackendStatus] = useBackendStatus();
-    const [, setEpoch] = useEpoch();
+    const [setBackendStatus] = useBackendStatusFn();
+    const [setEpoch] = useEpochFn();
     const undeploy = () => {
         if (token === null) {
             return;
@@ -283,7 +283,7 @@ export function DeployBrief() {
 
 function useSyncBackendStatus(token: string | null): [boolean, () => void] {
     const [deployId] = useDeployId();
-    const [, setEpoch] = useEpoch();
+    const [setEpoch] = useEpochFn();
     const [backendStatus, setBackendStatus] = useBackendStatus();
     const [run, syncStatus,] = useAsync<BackendStatus>({
         onSuccess: (status: BackendStatus) => {
@@ -469,9 +469,9 @@ function BackendNotice() {
 
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
-    const [, setFlowPending] = useFlowPending();
-    const [, setHotNodes] = useHotNodes();
-    const [, modify,] = useModify();
+    const [setFlowPending] = useFlowPendingFn();
+    const [setHotNodes] = useHotNodesFn();
+    const [modify] = useModifyFn();
     const [run, status, result] = useAsync<AnalysisResponse>({
         onSuccess: (result) => {
             const analysed = result.analysed.map(ide => {
@@ -517,10 +517,10 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
 
 function useExec(token: string | null, id: string): [()=>void, State] {
     const [flowAction] = useMetalFlow();
-    const [, setFlowPending] = useFlowPending();
-    const [, setHotNodes] = useHotNodes();
+    const [setFlowPending] = useFlowPendingFn();
+    const [setHotNodes] = useHotNodesFn();
     const [,sync] = useSyncExecInfo(token, id);
-    const [, setExec] = useExecInfo();
+    const [setExec] = useExecInfoFn();
     const [run, status] = useAsync<void>({
         onPending: () => {
             setExec(undefined);
@@ -556,12 +556,12 @@ function useExec(token: string | null, id: string): [()=>void, State] {
 
 
 function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
-    const [, setExec] = useExecInfo();
+    const [setExec] = useExecInfoFn();
     const [deploy] = useDeploy();
     const [profile] = useProfile();
     const [flowAction] = useMetalFlow();
-    const [, setFlowPending] = useFlowPending();
-    const [, setHotNodes] = useHotNodes();
+    const [setFlowPending] = useFlowPendingFn();
+    const [setHotNodes] = useHotNodesFn();
     const deployId = deploy.deployId;
     const epoch = deploy.epoch;
 
@@ -633,7 +633,7 @@ function SyncExecInfo(props: SyncExecInfoProps) {
     const { token, id } = props;
     const [isPending, sync] = useSyncExecInfo(token, id);
     const [exec] = useExecInfo();
-    const [,, onBackendStatusChange] = useBackendStatus();
+    const [, onBackendStatusChange] = useBackendStatusFn();
     const onSync = () => {
         sync();
     };
@@ -709,7 +709,7 @@ function ExecuteBar(props: ExecuteBarProps) {
     const {id, token} = props;
     const [backendStatus] = useBackendStatus();
     const [mode, setMode] = useState<"ANALYSIS" | "EXEC">("ANALYSIS");
-    const [analysis, analysisStatus, analysisResp] = useAnalysis(token, id)
+    const [analysis, analysisStatus] = useAnalysis(token, id)
     const [exec, execStatus] = useExec(token, id);
     const [recent] = useExecInfo();
     const [isModify] = useModify();

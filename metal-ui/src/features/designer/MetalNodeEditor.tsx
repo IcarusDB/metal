@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Accordion,
@@ -25,7 +26,7 @@ import { Metal, MetalTypes } from "../../model/Metal";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { VscArrowLeft, VscExpandAll, VscRefresh, VscTable } from "react-icons/vsc";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
-import { useDeployId, useHotNodes, useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
+import { useDeployId, useMetalNodeEditorFn } from "./DesignerProvider";
 import { IReadOnly } from "../ui/Commons";
 import _ from "lodash";
 import { useAsync } from "../../api/Hooks";
@@ -35,7 +36,6 @@ import { tokenSelector } from "../user/userSlice";
 import { State } from "../../api/State";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ClockLoader, SyncLoader } from "react-spinners";
 
 function useSchema(
     token: string | null,
@@ -150,7 +150,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>();
-    const [, setNodeEditorAction] = useMetalNodeEditor();
+    const [setNodeEditorAction] = useMetalNodeEditorFn();
     const id = metalProps?.metal.id;
     const inputs = metalProps === null ? (id: string) => [] : metalProps.inputs;
 

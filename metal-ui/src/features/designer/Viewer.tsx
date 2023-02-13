@@ -1,15 +1,14 @@
 import { Box, IconButton, Paper, Stack } from "@mui/material";
-import { ReactNode, useCallback, useRef } from "react";
+import { ReactNode, useRef } from "react";
 import { VscOpenPreview } from "react-icons/vsc";
 import { ReactFlowProvider } from "reactflow";
 import { useAppSelector } from "../../app/hooks";
 import { MainHandler, viewerId } from "../main/Main";
 import { ProjectProfileViewer, ProjectProfileViewerHandler } from "../project/ProjectProfile";
 import { tokenSelector } from "../user/userSlice";
-import { useMetalNodeEditor, useName } from "./DesignerProvider";
+import { useName, useNameFn } from "./DesignerProvider";
 import { MetalFlow } from "./MetalFlow";
 import { MetalNodeEditor } from "./MetalNodeEditor";
-import { MetalNodeProps } from "./MetalView";
 import { SpecLoader } from "./SpecLoader";
 
 export interface ViewerProps {
@@ -25,7 +24,7 @@ export function Viewer(props: ViewerProps) {
     });
 
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
-    const [, , onNameChange] = useName();
+    const [, onNameChange] = useNameFn();
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.rename !== undefined) {
             mainHandler.rename(viewerId(id), name === undefined ? "?" : name);

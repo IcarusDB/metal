@@ -4,15 +4,16 @@ import { Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { getProjectById } from "../../api/ProjectApi";
-import { useBackendStatus, useDeploy, useProfile, useSpec } from "./DesignerProvider";
+import { useBackendStatusFn, useDeployIdFn, useEpochFn, useProfileFn, useSpecFn } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
     console.log("Project loader.");
     const [run, status, project, error] = useAsync<Project>();
-    const [, setSpec] = useSpec();
-    const [, setProfile] = useProfile();
-    const [, setDeploy] = useDeploy();
-    const [, setBackendStatus] = useBackendStatus();
+    const [setSpec] = useSpecFn();
+    const [setProfile] = useProfileFn();
+    const [setDeployId] = useDeployIdFn();
+    const [setEpoch] = useEpochFn();
+    const [setBackendStatus] = useBackendStatusFn();
 
     useEffect(() => {
         if (token === null || id.trim() === "") {
@@ -22,7 +23,8 @@ function useProjectLoader(token: string | null, id: string) {
             if (project !== null) {
                 setSpec(project.spec);
                 setProfile(project.name, project.deploy.pkgs, project.deploy.platform, project.deploy.backend.args);
-                setDeploy(project.deploy.id, project.deploy.epoch);
+                setDeployId(project.deploy.id);
+                setEpoch(project.deploy.epoch);
                 setBackendStatus(project.deploy.backend.status);
             }
         }
@@ -30,7 +32,7 @@ function useProjectLoader(token: string | null, id: string) {
             run(getProjectById(token, id));       
         }
         
-    }, [id, project, run, setBackendStatus, setDeploy, setProfile, setSpec, status, token]);
+    }, [id, project, run, setBackendStatus, setDeployId, setEpoch, setProfile, setSpec, status, token]);
 
     return [status, error];
 }

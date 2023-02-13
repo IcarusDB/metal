@@ -5,13 +5,13 @@ import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { useAppSelector } from "../../app/hooks";
 import { Exec } from "../../model/Exec";
-import { useProfile, useSpec } from "../designer/DesignerProvider";
+import { useProfile, useProfileFn, useSpec, useSpecFn } from "../designer/DesignerProvider";
 import { MainHandler } from "../main/Main";
 import { tokenSelector } from "../user/userSlice";
 
 function useExecLoader(token: string | null, id: string, name?: string): [State, any] {
-    const [, setSpec] = useSpec();
-    const [, setProfile] = useProfile();
+    const [setSpec] = useSpecFn();
+    const [setProfile] = useProfileFn();
     const [run, status, exec, error] = useAsync<Exec>();
 
 
