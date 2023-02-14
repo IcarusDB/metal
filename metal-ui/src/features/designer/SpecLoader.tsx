@@ -32,10 +32,12 @@ export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow 
             .map((metal) => (metal.type === undefined ? "" : metal.type));
 
         if (classes.length === 0) {
-            return {
+            const flow: SpecFlow = {
                 nodeTmpls: [],
-                connections: [],
-            };
+                connections: []
+            }
+            setSpecFlow(flow);
+            return;
         }
 
         const task = getAllMetalPkgsOfClasses(token, classes)

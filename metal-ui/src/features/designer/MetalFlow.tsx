@@ -277,9 +277,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const addNode = useCallback(
         (nodeTmpl: MetalNodeProps) => {
             const allNodeIds = new Set(flowInstance.getNodes().map((node) => node.id));
-            let nodeId = `node-${counter.current++}`;
+            let nodeId = `node_${counter.current++}`;
             while (allNodeIds.has(nodeId)) {
-                nodeId = `node-${counter.current++}`;
+                nodeId = `node_${counter.current++}`;
             }
 
             const nodeProps = {

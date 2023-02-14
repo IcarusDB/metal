@@ -7,14 +7,14 @@ import { getProjectById } from "../../api/ProjectApi";
 import { useBackendStatusFn, useDeployIdFn, useEpochFn, useProfileFn, useSpecFn } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
-    console.log("Project loader.");
+    
     const [run, status, project, error] = useAsync<Project>();
     const [setSpec] = useSpecFn();
     const [setProfile] = useProfileFn();
     const [setDeployId] = useDeployIdFn();
     const [setEpoch] = useEpochFn();
     const [setBackendStatus] = useBackendStatusFn();
-
+    console.log(`Project loader. ${status}`);
     useEffect(() => {
         if (token === null || id.trim() === "") {
             return;
