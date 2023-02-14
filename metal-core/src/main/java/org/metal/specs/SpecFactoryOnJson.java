@@ -23,9 +23,10 @@ public class SpecFactoryOnJson implements SpecFactory{
     @Override
     public Spec get(String data) throws MetalSpecParseException{
         try {
-            mapper.registerModule(new GuavaModule());
+//            mapper.registerModule(new GuavaModule());
             return mapper.readValue(data, Spec.class);
         } catch (IOException e) {
+            e.printStackTrace();
             throw new MetalSpecParseException(e);
         }
     }

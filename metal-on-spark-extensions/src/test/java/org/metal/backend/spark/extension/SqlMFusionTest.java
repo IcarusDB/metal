@@ -2,15 +2,12 @@ package org.metal.backend.spark.extension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.spark.sql.SparkSession;
-import org.junit.Assert;
 import org.junit.Test;
 import org.metal.backend.spark.SparkMetalService;
 import org.metal.backend.spark.SparkTranslator;
-import org.metal.core.FormSchemaMethods;
 import org.metal.core.Pair;
 import org.metal.core.props.IMetalProps;
 import org.metal.draft.Draft;
@@ -95,4 +92,65 @@ public class SqlMFusionTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void case1() {
+        Spec spec = new SpecFactoryOnJson().get(payload);
+        spec.getMetals().forEach(m -> {
+            System.out.println(m);
+        });
+    }
+
+
+    private String payload = "{\n"
+        + "  \"version\" : \"1.0\",\n"
+        + "  \"metals\" : [ {\n"
+        + "    \"type\" : \"org.metal.backend.spark.extension.JsonFileMSource\",\n"
+        + "    \"id\" : \"00-00\",\n"
+        + "    \"name\" : \"source-00\",\n"
+        + "    \"props\" : {\n"
+        + "      \"schema\" : \"\",\n"
+        + "      \"path\" : \"src/test/resources/test.json\"\n"
+        + "    }\n"
+        + "  }, {\n"
+        + "    \"type\" : \"org.metal.backend.spark.extension.JsonFileMSource\",\n"
+        + "    \"id\" : \"00-01\",\n"
+        + "    \"name\" : \"source-01\",\n"
+        + "    \"props\" : {\n"
+        + "      \"schema\" : \"\",\n"
+        + "      \"path\" : \"src/test/resources/test.json\"\n"
+        + "    }\n"
+        + "  }, {\n"
+        + "    \"type\" : \"org.metal.backend.spark.extension.SqlMFusion\",\n"
+        + "    \"id\" : \"01-00\",\n"
+        + "    \"name\" : \"fusion-00\",\n"
+        + "    \"props\" : {\n"
+        + "      \"tableAlias\" : {\n"
+        + "        \"00-01\" : \"tbl1\",\n"
+        + "        \"00-00\" : \"tbl0\"\n"
+        + "      },\n"
+        + "      \"sql\" : \"select * from tbl1 left join tbl0 on tbl0.id = tbl1.id\"\n"
+        + "    }\n"
+        + "  }, {\n"
+        + "    \"type\" : \"org.metal.backend.spark.extension.ConsoleMSink\",\n"
+        + "    \"id\" : \"02-00\",\n"
+        + "    \"name\" : \"sink-00\",\n"
+        + "    \"props\" : {\n"
+        + "      \"numRows\" : 10\n"
+        + "    }\n"
+        + "  } ],\n"
+        + "  \"edges\" : [ {\n"
+        + "    \"left\" : \"00-00\",\n"
+        + "    \"right\" : \"01-00\"\n"
+        + "  }, {\n"
+        + "    \"left\" : \"00-01\",\n"
+        + "    \"right\" : \"01-00\"\n"
+        + "  }, {\n"
+        + "    \"left\" : \"01-00\",\n"
+        + "    \"right\" : \"02-00\"\n"
+        + "  } ],\n"
+        + "  \"waitFor\" : [ ]\n"
+        + "}";
+    
+    private static String payload1 = "{\"version\":\"1.0\",\"metals\":[{\"type\":\"org.metal.backend.spark.extension.SqlMFusion\",\"id\":\"node_2\",\"name\":\"node_2\",\"props\":{\"tableAlias\":{\"node_1\":\"tbl1\",\"node_0\":\"tbl0\"},\"sql\":\"select * from tbl0 left join tbl1 on tbl0.id = tbl1.id\"}},{\"type\":\"org.metal.backend.spark.extension.JsonFileMSource\",\"id\":\"node_1\",\"name\":\"node_1\",\"props\":{\"schema\":\"json\",\"path\":\"hdfs://namenode.hdfs.metal.org:9000/metal/test.json\"}},{\"type\":\"org.metal.backend.spark.extension.JsonFileMSource\",\"id\":\"node_0\",\"name\":\"node_0\",\"props\":{\"path\":\"hdfs://namenode.hdfs.metal.org:9000/metal/test.json\",\"schema\":\"json\"}}],\"edges\":[{\"left\":\"node_0\",\"right\":\"node_2\"},{\"left\":\"node_1\",\"right\":\"node_2\"}],\"waitFor\":[]}";
 }

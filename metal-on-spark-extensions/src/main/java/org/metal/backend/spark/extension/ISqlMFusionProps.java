@@ -11,6 +11,7 @@ import org.metal.core.props.IMFusionProps;
 @JsonDeserialize(as = ImmutableISqlMFusionProps.class)
 @JsonSerialize(as = ImmutableISqlMFusionProps.class)
 public interface ISqlMFusionProps extends IMFusionProps {
+    @JsonDeserialize(using = TableAliasDeSer.class)
     public Map<String, String> tableAlias();
     public String sql();
 }
