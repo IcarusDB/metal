@@ -46,7 +46,7 @@ public class SqlMFusionTest {
                 "fusion-00",
                 ImmutableISqlMFusionProps.builder()
                         .tableAlias(alias)
-                        .sql("select * from tbl1 left join tbl0 on tbl0.id = tbl1.id")
+                        .sql("select * from tbl1 left join tbl0 on tbl0.id = tbl1.")
                         .build()
         );
 

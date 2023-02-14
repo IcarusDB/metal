@@ -104,7 +104,7 @@ public class Translator<D, S> {
                 /**
                  * Illegal State happened, the ForgeMaster Context will not change.
                  */
-                throw new MetalTranslateException("Illegal State happened, the Translator Context will not change.", e);
+                throw new MetalTranslateException("Illegal State happened, the Translator Context will not change.", e, metal.id());
             }
         }
 
@@ -151,7 +151,12 @@ public class Translator<D, S> {
                 .collect(Collectors.toList());
 
         for (Metal metal : unStagingDependencyTrace) {
-            metal.translate(this, nextContext);
+            try{
+                metal.translate(this, nextContext);
+            } catch (MetalTranslateException e) {
+                throw new MetalTranslateException(e.getLocalizedMessage(), e, metal.id());
+            }
+
         }
     }
 

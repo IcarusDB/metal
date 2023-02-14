@@ -2,7 +2,6 @@ package org.metal.backend.spark.extension;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.immutables.value.Value;
 import org.metal.core.props.IMFusionProps;

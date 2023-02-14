@@ -134,10 +134,15 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
 
         for (HashCode code : execOrderDeDup) {
             if (!this.context().mProducts().containsKey(code)) {
+                String metals = this.context().hash2metal().get(code).stream()
+                    .map(m -> m.id())
+                    .collect(
+                        Collectors.joining(",", "{", "}")
+                    );
                 String msg = String.format("MSink{%s}{hashcode=%s} is not used in any IMProducts.",
                         this.context().hash2metal().get(code),
                         code);
-                throw new MetalExecuteException(msg);
+                throw new MetalExecuteException(msg, metals);
             }
         }
 
@@ -145,7 +150,12 @@ public class BaseMetalService<D, S, P extends IMetalProps> implements IMetalServ
             try {
                 this.context().mProducts().get(code).exec();
             } catch (Throwable t) {
-                throw new MetalExecuteException(t);
+                String metals = this.context().hash2metal().get(code).stream()
+                    .map(m -> m.id())
+                    .collect(
+                        Collectors.joining(",", "{", "}")
+                    );
+                throw new MetalExecuteException(t.getLocalizedMessage(), t, metals);
             }
         }
     }
