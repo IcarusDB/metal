@@ -6,7 +6,9 @@ import {
     AccordionSummary,
     Alert,
     Button,
+    Chip,
     Container,
+    Divider,
     Grid,
     IconButton,
     LinearProgress,
@@ -101,7 +103,16 @@ export function MetalNodeSchema(props: MetalNodeSchemaProps) {
                     <IconButton>
                         <VscTable />
                     </IconButton>
-                    <Typography>{name === undefined ? id : name}</Typography>
+                    <Typography>
+                        {name === undefined ? id : name} 
+                    </Typography>
+                    <Chip 
+                        sx={{
+                            boxSizing: "border-box",
+                            marginLeft: "1vw",
+                        }}
+                        label={`ID:${id}`} color={"primary"} variant={"outlined"} 
+                    />
                 </div>
             </AccordionSummary>
             <AccordionDetails>
