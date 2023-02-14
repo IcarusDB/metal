@@ -30,6 +30,8 @@ import { getRecentExecOfProject } from "../../../api/ExecApi";
 import { Exec, ExecState } from "../../../model/Exec";
 import { GrTasks } from "react-icons/gr";
 import _ from "lodash";
+import { ApiResponse } from "../../../api/APIs";
+import { HotNode } from "../DesignerActionSlice";
 
 export interface BackendBarProps {
     id: string
@@ -475,11 +477,11 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
     const [run, status, result] = useAsync<AnalysisResponse>({
         onSuccess: (result) => {
             const analysed = result.analysed.map(ide => {
-                const r: [string, MetalNodeState] = [ide, MetalNodeState.ANALYSISED];
+                const r: HotNode= [ide, MetalNodeState.ANALYSISED, undefined];
                 return r;
             });
             const unAnalysed = result.unAnalysed.map(ide => {
-                const r: [string, MetalNodeState] = [ide, MetalNodeState.UNANALYSIS];
+                const r: HotNode = [ide, MetalNodeState.UNANALYSIS, undefined];
                 return r;
             });
            setFlowPending(false);
@@ -492,14 +494,15 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
         onPending: () => {
             setFlowPending(true);
             setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING, undefined])
             );
         },
-        onError: () => {
+        onError: (reason) => {
             setFlowPending(false);
             modify(true);
+            const errorMsg = ApiResponse.extractErrorMessage(reason);
             setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
             );
         }
     });
@@ -526,13 +529,14 @@ function useExec(token: string | null, id: string): [()=>void, State] {
             setExec(undefined);
             setFlowPending(true);
             setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING])
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.PENDING, undefined])
             );
         },
-        onError: () => {
+        onError: (reason) => {
             setFlowPending(false);
+            const errorMsg = ApiResponse.extractErrorMessage(reason);
             setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR])
+                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
             );
         },
         onSuccess: () => {
@@ -589,21 +593,22 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
             if (recent?.status === ExecState.FINISH) {
                 setFlowPending(false);
                 setHotNodes(flowAction.allNodes().map(nd => {
-                    const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.EXECED];
+                    const rt: HotNode = [nd.id, MetalNodeState.EXECED, undefined];
                     return rt;
                 }));
             }
             if (recent?.status === ExecState.FAILURE) {
                 setFlowPending(false);
                 setHotNodes(flowAction.allNodes().map(nd => {
-                    const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
+                    const rt: HotNode = [nd.id, MetalNodeState.ERROR, "Fail to submit."];
                     return rt;
                 }));
             }
         },
-        onError: () => {
+        onError: (reason) => {
+            const errorMsg = ApiResponse.extractErrorMessage(reason);
             setHotNodes(flowAction.allNodes().map(nd => {
-                const rt: [string, MetalNodeState] = [nd.id, MetalNodeState.ERROR];
+                const rt: HotNode = [nd.id, MetalNodeState.ERROR, errorMsg];
                 return rt;
             }));
         },

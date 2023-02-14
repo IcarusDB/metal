@@ -33,6 +33,7 @@ import { useAsync } from "../../api/Hooks";
 import { Metal, MetalTypes } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
+import { HotNode } from "./DesignerActionSlice";
 import { useFlowPending, useHotNodesFn, useMetalFlowFn, useMetalNodeEditor, useModifyFn, useSpecFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
@@ -103,12 +104,12 @@ export const MetalFlow = (props: MetalFlowProps) => {
         }
 
         return Array.from(visited).map(nd => {
-            const nde: [string, MetalNodeState] = [nd.id, status]
+            const nde: HotNode = [nd.id, status, undefined]
             return nde;
         });
     }, [flowInstance]);
 
-    const setNodesStatus = useCallback((nds: [string, MetalNodeState][]) => {
+    const setNodesStatus = useCallback((nds: HotNode[]) => {
         const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
         const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
         const mixNds = _.unionWith(unAnalysised, nds, (n0, n1) => (n0[0] === n1[0]));
@@ -120,7 +121,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
                     ...node,
                     data: {
                         ...node.data,
-                        status: nd[1]
+                        status: nd[1],
+                        msg: nd[2],
                     }
                 }
             })
@@ -133,7 +135,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 return;
             }
             if (connection.target !== null) {
-                setNodesStatus([[connection.target, MetalNodeState.UNANALYSIS]]);
+                setNodesStatus([[connection.target, MetalNodeState.UNANALYSIS, undefined]]);
                 modify(true);
             }
             
@@ -160,7 +162,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             flowInstance.deleteElements({
                 edges: [edge],
             });
-            setNodesStatus([[edge.target, MetalNodeState.UNANALYSIS]])
+            setNodesStatus([[edge.target, MetalNodeState.UNANALYSIS, undefined]])
             modify(true);
         },
         [flowInstance, modify, setNodesStatus]
@@ -259,9 +261,9 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 .getEdges()
                 .filter((edge) => edge.source === id || edge.target === id);
 
-            const hotNodes: [string, MetalNodeState][] = flowInstance.getEdges()
+            const hotNodes: HotNode[] = flowInstance.getEdges()
                                         .filter((edge) => edge.source === id)
-                                        .map((edge) => [edge.target, MetalNodeState.UNANALYSIS]);
+                                        .map((edge) => [edge.target, MetalNodeState.UNANALYSIS, undefined]);
             
             setNodesStatus(hotNodes);
             

@@ -4,6 +4,7 @@ import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 import { StoreApi } from "zustand";
 
+export declare type HotNode = [string, MetalNodeState, string | undefined];
 
 export interface MetalFlowAction {
     allNodes: () => Node<MetalNodeProps>[];
@@ -50,8 +51,8 @@ export interface DesignerActionSlice {
     backendArgs: string[],
     bindBackendArgs: (args: string[]) => void;
     bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void;
-    hotNodes: [string, MetalNodeState][],
-    bindHotNodes: (hotNodes: [string, MetalNodeState][]) => void;
+    hotNodes: HotNode[],
+    bindHotNodes: (hotNodes: HotNode[]) => void;
 }
 
 export const createDesignerActionSlice = (
@@ -122,7 +123,7 @@ export const createDesignerActionSlice = (
         }));
     },
     hotNodes: [],
-    bindHotNodes: (hotNodes: [string, MetalNodeState][]) => {
+    bindHotNodes: (hotNodes: HotNode[]) => {
         set((prev) => ({
             ...prev,
             hotNodes

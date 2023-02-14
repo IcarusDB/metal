@@ -22,7 +22,7 @@ import { tokenSelector } from "../user/userSlice";
 import { ExecLoader } from "./ExecLoader";
 
 function useExecutions(token: string | null): [() => void, State, Exec[] | null] {
-    const [run, status, result, error] = useAsync<Exec[]>();
+    const [run, status, result] = useAsync<Exec[]>();
 
     const load = useCallback(() => {
         if (token !== null) {

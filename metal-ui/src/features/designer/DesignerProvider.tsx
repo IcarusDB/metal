@@ -3,11 +3,10 @@ import { createStore, useStore} from "zustand";
 import { subscribeWithSelector, devtools } from "zustand/middleware";
 import shallow from 'zustand/shallow';
 import { SpecSlice, createSpecSlice } from "./SpecSlice";
-import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction } from "./DesignerActionSlice";
+import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction, HotNode } from "./DesignerActionSlice";
 import { Spec } from "../../model/Spec";
 import { createDeploySlice, DeploySlice } from "./DeploySlice";
 import { BackendStatus } from "../../model/Project";
-import { MetalNodeState } from "./MetalView";
 import { Exec } from "../../model/Exec";
 import { SpecFlow } from "./SpecLoader";
 
@@ -447,7 +446,7 @@ export function useProfileFn(): [
     )
 }
 
-declare type HotNode = [string, MetalNodeState];
+
 
 export function useHotNodes(): [
     HotNode[],

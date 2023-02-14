@@ -64,6 +64,7 @@ export interface MetalNodeProps extends IReadOnly {
     outputs: (id: string) => Node<MetalNodeProps>[];
     editor?: MetalNodeEditorAction;
     status?: MetalNodeState;
+    msg?: string;
 }
 
 export interface IMetalNodeView {
@@ -248,6 +249,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const {id} = props;
     const { metal, metalPkg, type, onDelete, onUpdate, inputs, outputs} = props.data;
     const status = props.data.status === undefined? MetalNodeState.UNANALYSIS: props.data.status;
+    const msg = props.data.msg;
     const isReadOnly = props.data.isReadOnly || status === MetalNodeState.PENDING;
     const editor = props.data.editor;
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type);
@@ -446,6 +448,22 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                 <Grid item xs={11}>
                                     <Typography variant={"caption"} color={"GrayText"}>
                                         {status}
+                                    </Typography>
+                                </Grid>
+                                <Grid
+                                    item
+                                    xs={1}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <GrTip fontSize={"1em"} />
+                                </Grid>
+                                <Grid item xs={11}>
+                                    <Typography variant={"caption"} color={"GrayText"}>
+                                        {status === MetalNodeState.ERROR? msg: ""}
                                     </Typography>
                                 </Grid>
                             </Grid>
