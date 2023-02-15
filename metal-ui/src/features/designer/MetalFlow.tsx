@@ -81,7 +81,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
         const nds: Node<MetalNodeProps>[] = flowInstance.getNodes();
         const edges: Edge<any>[] = flowInstance.getEdges();
         const queue = new Array<Node<MetalNodeProps>>();
-        const visited = new Set<Node<MetalNodeProps>>();
+        const visited = new Set<string>();
 
         nodes.forEach((node: string) => {
             const nd: Node<MetalNodeProps> | undefined = flowInstance.getNode(node);
@@ -96,7 +96,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 break;
             }
 
-            visited.add(nd);
+            visited.add(nd.id);
             const nexts: Node<MetalNodeProps>[] = getOutgoers(nd, nds, edges);
             nexts.forEach(nd => {
                 queue.push(nd);
@@ -104,7 +104,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
         }
 
         return Array.from(visited).map(nd => {
-            const nde: HotNode = [nd.id, status, undefined]
+            const nde: HotNode = [nd, status, undefined]
             return nde;
         });
     }, [flowInstance]);
@@ -112,7 +112,14 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const setNodesStatus = useCallback((nds: HotNode[]) => {
         const unAnalysisNds = nds.filter(nd => nd[1] === MetalNodeState.UNANALYSIS).map(nd => nd[0]);
         const unAnalysised = broadCastNodeStatus(unAnalysisNds, MetalNodeState.UNANALYSIS);
-        const mixNds = _.unionWith(unAnalysised, nds, (n0, n1) => (n0[0] === n1[0]));
+        const mixNds = nds.map(nd => {
+            if (nd[1] === MetalNodeState.ERROR) {
+                return nd;
+            }
+            const unNd = unAnalysised.find((un) => (un[0] === nd[0]))
+            return unNd? unNd: nd;
+        });
+
 
         flowInstance.setNodes((prevNodes: Node<MetalNodeProps>[]) => {
             return prevNodes.map(node => {

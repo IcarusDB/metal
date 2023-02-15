@@ -469,6 +469,16 @@ function BackendNotice() {
     );
 }
 
+function extractMetalIds(errorMsg: string) {
+    const matchResult = errorMsg.match(/^[a-zA-Z0-9\\.]+: Metal\[([a-zA-Z0-9_\-{},]+)\]/);
+    if (matchResult !== null && matchResult?.length >= 1) {
+        const metals = matchResult[1].match(/^{[a-zA-Z0-9_\-,]+}$/);
+        const metalIds = metals === null? [matchResult[1]]: matchResult[1].replace("{", "").replace("}", "").split(",")
+        return metalIds;
+    }
+    return undefined;        
+}
+
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
     const [setFlowPending] = useFlowPendingFn();
@@ -501,9 +511,28 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
             setFlowPending(false);
             modify(true);
             const errorMsg = ApiResponse.extractErrorMessage(reason);
-            setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
-            );
+            if (errorMsg) {
+                const metalIds = extractMetalIds(errorMsg);
+                if (metalIds) {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => {
+                            if (_.find(metalIds, (mid => mid === nd.id))) {
+                                return [nd.id, MetalNodeState.ERROR, errorMsg];
+                            }
+                            return [nd.id, MetalNodeState.UNANALYSIS, undefined];
+                        })
+                    );
+                } else {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
+                    );
+                }
+            } else {
+                setHotNodes(
+                    flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, "Fail to analysis."])
+                );
+            }
+            
         }
     });
 
@@ -535,9 +564,27 @@ function useExec(token: string | null, id: string): [()=>void, State] {
         onError: (reason) => {
             setFlowPending(false);
             const errorMsg = ApiResponse.extractErrorMessage(reason);
-            setHotNodes(
-                flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
-            );
+            if (errorMsg) {
+                const metalIds = extractMetalIds(errorMsg);
+                if (metalIds) {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => {
+                            if (_.find(metalIds, (mid => mid === nd.id))) {
+                                return [nd.id, MetalNodeState.ERROR, errorMsg];
+                            }
+                            return [nd.id, MetalNodeState.UNANALYSIS, undefined];
+                        })
+                    );
+                } else {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
+                    );
+                }
+            } else {
+                setHotNodes(
+                    flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, "Fail to Submit Execution."])
+                );
+            }
         },
         onSuccess: () => {
             sync();
@@ -607,10 +654,27 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
         },
         onError: (reason) => {
             const errorMsg = ApiResponse.extractErrorMessage(reason);
-            setHotNodes(flowAction.allNodes().map(nd => {
-                const rt: HotNode = [nd.id, MetalNodeState.ERROR, errorMsg];
-                return rt;
-            }));
+            if (errorMsg) {
+                const metalIds = extractMetalIds(errorMsg);
+                if (metalIds) {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => {
+                            if (_.find(metalIds, (mid => mid === nd.id))) {
+                                return [nd.id, MetalNodeState.ERROR, errorMsg];
+                            }
+                            return [nd.id, MetalNodeState.UNANALYSIS, undefined];
+                        })
+                    );
+                } else {
+                    setHotNodes(
+                        flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, errorMsg])
+                    );
+                }
+            } else {
+                setHotNodes(
+                    flowAction.allNodes().map(nd => [nd.id, MetalNodeState.ERROR, "Fail to Execute."])
+                );
+            }
         },
     });
 
