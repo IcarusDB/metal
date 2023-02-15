@@ -9,6 +9,7 @@ import {
     VscDebugAltSmall,
     VscDebugDisconnect,
     VscDebugStart,
+    VscError,
     VscGripper,
     VscRemote,
     VscSync,
@@ -32,6 +33,8 @@ import { GrTasks } from "react-icons/gr";
 import _ from "lodash";
 import { ApiResponse } from "../../../api/APIs";
 import { HotNode } from "../DesignerActionSlice";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export interface BackendBarProps {
     id: string
@@ -45,29 +48,29 @@ export function BackendBar(props: BackendBarProps) {
 
     return (
         <Paper
-            square
-            variant="outlined"
-            style={{
-                boxSizing: "border-box",
-                width: "100%",
-                height: "2em",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                // backgroundColor: "#FAFAFA",
-            }}
-        >
-            <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
-                <BackendControl token={token} />
-                <SyncBackendStatus token={token} />
-                <DeployBrief />
-                <BackendStatusBrief />
-                <ExecuteBar id={id} token={token}/>
-            </Stack>
-            <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
-                <BackendNotice />
-            </Stack>
-        </Paper>
+                square
+                variant="outlined"
+                style={{
+                    boxSizing: "border-box",
+                    width: "100%",
+                    height: "2em",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    // backgroundColor: "#FAFAFA",
+                }}
+            >
+                <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
+                    <BackendControl token={token} />
+                    <SyncBackendStatus token={token} />
+                    <DeployBrief />
+                    <BackendStatusBrief />
+                    <ExecuteBar id={id} token={token} />
+                </Stack>
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={1}>
+                    <BackendNotice />
+                </Stack>
+            </Paper>
     );
 }
 
@@ -464,6 +467,83 @@ function BackendNotice() {
                 }}
             >
                 {msg}
+            </Popover>
+        </>
+    );
+}
+
+interface ProblemProps {
+    content: string,
+}
+
+function Problem(props: ProblemProps) {
+    const { content } = props;
+    return (
+        <div
+                style={{
+                    position: "relative",
+                    maxHeight: "30vh",
+                    width: "100%",
+                    overflow: "scroll",
+                }}
+            >
+                <SyntaxHighlighter style={vscDarkPlus} showLineNumbers>
+                    {content}
+                </SyntaxHighlighter>
+        </div>
+    );
+}
+
+export interface ProblemNoticeProps {
+    problem: string,
+}
+
+export function ProblemsNotice(props: ProblemNoticeProps) {
+    const {problem} = props;
+    const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+
+    const onOpen= (event: React.MouseEvent<HTMLElement>) => {
+        setAnchor(event.currentTarget);
+    };
+
+    const onClose = () => {
+        setAnchor(null);
+    };
+
+    return (
+        <>
+            <IconButton
+                size="small"
+                onClick={onOpen}
+                sx={{
+                    borderRadius: "0px",
+                }}
+            >
+                <VscError color="red"/>
+            </IconButton>
+            <Popover
+                open={anchor !== null}
+                onClose={onClose}
+                anchorEl={anchor}
+                anchorOrigin={{
+                    vertical: 'center',
+                    horizontal: 'center',
+                  }}
+                  transformOrigin={{
+                    vertical: 'center',
+                    horizontal: 'center',
+                  }}
+                PaperProps={{
+                    square: true,
+                    variant: "outlined",
+                    sx: {
+                        boxSizing: "border-box",
+                        padding: "0.5em",
+                        minWidth: "10vw",
+                    },
+                }}
+            >
+               {problem && <Problem content={problem}/>}
             </Popover>
         </>
     );

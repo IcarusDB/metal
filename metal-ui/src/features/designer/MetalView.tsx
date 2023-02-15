@@ -22,6 +22,7 @@ import { RingLoader, ScaleLoader } from "react-spinners";
 import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
 import { GrDocumentConfig, GrTip } from "react-icons/gr";
 import _ from "lodash";
+import { ProblemsNotice } from "./backend/BackendBar";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -449,22 +450,13 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                     <Typography variant={"caption"} color={"GrayText"}>
                                         {status}
                                     </Typography>
-                                </Grid>
-                                <Grid
-                                    item
-                                    xs={1}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <GrTip fontSize={"1em"} />
-                                </Grid>
-                                <Grid item xs={11}>
-                                    <Typography variant={"caption"} color={"GrayText"}>
-                                        {status === MetalNodeState.ERROR? msg: ""}
-                                    </Typography>
+                                    {
+                                        status === MetalNodeState.ERROR && 
+                                        msg &&
+                                        (
+                                            <ProblemsNotice problem={msg}/>
+                                        )
+                                    }
                                 </Grid>
                             </Grid>
                         </div>
