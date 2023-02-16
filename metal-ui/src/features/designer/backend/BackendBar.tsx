@@ -35,6 +35,7 @@ import { ApiResponse } from "../../../api/APIs";
 import { HotNode } from "../DesignerActionSlice";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Spec } from "../../../model/Spec";
 
 export interface BackendBarProps {
     id: string
@@ -626,6 +627,73 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
 
     return [analysis, status, result];
 }
+
+export function useAnalysisFn(scope: () => string[]): [(token: string | null, id: string, spec: Spec)=>void, State] {
+    const [,setFlowPending] = useFlowPendingFn();
+    const [,setHotNodes] = useHotNodesFn();
+    const [,modify] = useModifyFn();
+    const [run, status] = useAsync<AnalysisResponse>({
+        onSuccess: (result) => {
+            const analysed = result.analysed.map(ide => {
+                const r: HotNode= [ide, MetalNodeState.ANALYSISED, undefined];
+                return r;
+            });
+            const unAnalysed = result.unAnalysed.map(ide => {
+                const r: HotNode = [ide, MetalNodeState.UNANALYSIS, undefined];
+                return r;
+            });
+           setFlowPending(false);
+           modify(false);
+            setHotNodes([
+                ...analysed,
+                ...unAnalysed,
+            ])
+        },
+        onPending: () => {
+            setFlowPending(true);
+            setHotNodes(
+                scope().map(nd => [nd, MetalNodeState.PENDING, undefined])
+            );
+        },
+        onError: (reason) => {
+            setFlowPending(false);
+            modify(true);
+            const errorMsg = ApiResponse.extractErrorMessage(reason);
+            if (errorMsg) {
+                const metalIds = extractMetalIds(errorMsg);
+                if (metalIds) {
+                    setHotNodes(
+                        scope().map(nd => {
+                            if (_.find(metalIds, (mid => mid === nd))) {
+                                return [nd, MetalNodeState.ERROR, errorMsg];
+                            }
+                            return [nd, MetalNodeState.UNANALYSIS, undefined];
+                        })
+                    );
+                } else {
+                    setHotNodes(
+                        scope().map(nd => [nd, MetalNodeState.ERROR, errorMsg])
+                    );
+                }
+            } else {
+                setHotNodes(
+                    scope().map(nd => [nd, MetalNodeState.ERROR, "Fail to analysis."])
+                );
+            }
+            
+        }
+    });
+
+    const analysis = (token: string | null, id: string, spec: Spec) => {
+        if (token === null) {
+            return;
+        }
+        run(analysisOfId(token, id, spec));
+    }
+
+    return [analysis, status];
+}
+
 
 function useExec(token: string | null, id: string): [()=>void, State] {
     const [flowAction] = useMetalFlow();

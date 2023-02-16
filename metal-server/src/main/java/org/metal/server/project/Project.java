@@ -752,6 +752,88 @@ public class Project extends AbstractVerticle {
       RestServiceEnd.end(ctx, result, LOGGER);
     }
 
+    public void saveSpecOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (
+          OnFailure.doTry(ctx, () -> {
+            return id == null || id.isBlank();
+          }, "Fail to found id in request.", 400)
+      ) {
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      JsonObject spec = body.getJsonObject("spec");
+      if (OnFailure.doTry(ctx, () -> {
+        return spec == null || spec.isEmpty();
+      }, "Fail to found legal spec in request.", 400)) {
+        return;
+      }
+
+      try {
+        SpecJson.check(spec);
+      } catch (IllegalArgumentException e) {
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
+        return;
+      }
+
+      Future<JsonObject> result = service.saveSpecOfId(userId, id, spec);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
+    public void analysisSubSpecOfId(RoutingContext ctx) {
+      User user = ctx.user();
+      String userId = user.get("_id");
+      String id = ctx.request().params().get("id");
+      if (
+          OnFailure.doTry(ctx, () -> {
+            return id == null || id.isBlank();
+          }, "Fail to found id in request.", 400)
+      ) {
+        return;
+      }
+
+      JsonObject body = ctx.body().asJsonObject();
+      JsonObject spec = body.getJsonObject("spec");
+      JsonObject subSpec = body.getJsonObject(("subSpec"));
+      if (OnFailure.doTry(ctx, () -> {
+        return spec == null || spec.isEmpty();
+      }, "Fail to found legal spec in request.", 400)) {
+        return;
+      }
+
+      if (OnFailure.doTry(ctx, () -> {
+        return subSpec == null || subSpec.isEmpty();
+      }, "Fail to found legal subSpec in request.", 400)) {
+        return;
+      }
+
+      try {
+        SpecJson.check(spec);
+      } catch (IllegalArgumentException e) {
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
+        return;
+      }
+
+      try {
+        SpecJson.check(subSpec);
+      } catch (IllegalArgumentException e) {
+        OnFailure.doTry(ctx, () -> {
+          return true;
+        }, e.getLocalizedMessage(), 400);
+        return;
+      }
+
+      Future<JsonObject> result = service.analysisSubSpecOfId(userId, id, spec, subSpec);
+      RestServiceEnd.end(ctx, result, LOGGER);
+    }
+
     public void analysisCurrent(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");

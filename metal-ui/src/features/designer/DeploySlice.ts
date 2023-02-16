@@ -3,10 +3,13 @@ import { Exec } from "../../model/Exec";
 import { BackendStatus } from "../../model/Project";
 
 export interface DeploySlice {
+    projectId?: string,
     deployId?: string,
     epoch?: number,
     backendStatus?: BackendStatus,
     exec?: Exec,
+    getProjectId: () => string | undefined;
+    setProjectId: (id: string) => void;
     getDeployId: () => string | undefined;
     setDeployId: (id: string) => void;
     getEpoch: () => number | undefined;
@@ -23,6 +26,13 @@ export const createDeploySlice = (
     set: StoreApi<DeploySlice>['setState'],
     get: StoreApi<DeploySlice>['getState'],
 ): DeploySlice => ({
+    getProjectId: () => (get().projectId),
+    setProjectId: (id: string) => {
+        set((prev) => ({
+            ...prev,
+            projectId: id
+        }))
+    },
     getDeployId: () => (get().deployId),
     setDeployId: (id: string) => {
         set((prev) => ({

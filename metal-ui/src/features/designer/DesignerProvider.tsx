@@ -429,6 +429,48 @@ export function useHotNodesFn(): IChangeFns<HotNode[]> {
     )
 }
 
+export function useProjectId(): [
+    string | undefined,
+    (id: string) => void,
+    Subscribe<string>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.projectId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.projectId,
+            state.setProjectId,
+            sub
+        ]),
+        shallow
+    )
+}
+
+export function useProjectIdFn(): IChangeFns<string> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.projectId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getProjectId,
+            state.setProjectId,
+            sub
+        ]),
+        shallow
+    )
+}
+
 
 export function useDeployId(): [
     string | undefined,

@@ -22,8 +22,11 @@ import { ScaleLoader } from "react-spinners";
 import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
 import { GrDocumentConfig, GrTip } from "react-icons/gr";
 import _ from "lodash";
-import { ProblemsNotice } from "./backend/BackendBar";
+import { ProblemsNotice, useAnalysisFn } from "./backend/BackendBar";
 import { BackendStatus } from "../../model/Project";
+import { useMetalFlowFn, useProjectIdFn } from "./DesignerProvider";
+import { tokenSelector } from "../user/userSlice";
+import { useAppSelector } from "../../app/hooks";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -256,6 +259,21 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const isReadOnly = props.data.isReadOnly || status === MetalNodeState.PENDING;
     const editor = props.data.editor;
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type);
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+    const [getMetalFlowAction] = useMetalFlowFn();
+    const [getProjectId] = useProjectIdFn();
+    const scope = useCallback(() => {
+        const action = getMetalFlowAction();
+        if (action !== undefined) {
+            const spec = action.exportSubSpec(metal.id, false);
+            return spec? spec.metals.map(m => m.id): [];
+        }
+        return [];
+    }, [getMetalFlowAction, metal.id]);
+
+    const [analysis, analysisStatus] = useAnalysisFn(scope);
 
     const onEdit = useCallback((event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
         if (editor === undefined) {
@@ -265,16 +283,60 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     }, [editor, props.data]);
 
     const onAnalysisInputs = useCallback(() => {
+        const action = getMetalFlowAction();
+        if (action) {
+            const projectId = getProjectId();
+            const spec = action.exportSubSpec(metal.id, false);
+            if (projectId === undefined || spec === undefined) {
+                return;
+            }
+            const checkResult = action.checkSpec(spec);
+            if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
+                return;
+            }
+            analysis(token, projectId, spec)
 
-    }, []);
+        }
+    }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
 
     const onAnalysis = useCallback(() => {
+        const action = getMetalFlowAction();
+        if (action) {
+            const projectId = getProjectId();
+            const spec = action.exportSubSpec(metal.id, true);
+            if (projectId === undefined || spec === undefined) {
+                return;
+            }
+            const checkResult = action.checkSpec(spec);
+            if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
+                return;
+            }
+            analysis(token, projectId, spec)
 
-    }, []);
+        }
+    }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
 
     const badgeContent = useMemo(() => (
         <MetalNodeStateTip status={status} />
     ), [status]);
+
+
+    const isInputReady = () => {
+        if (type === MetalTypes.SOURCE || type === MetalTypes.SETUP) {
+            return true;
+        }
+        const inputNds = inputs(id).length;
+        if (inputNds === 0) {
+            return false;
+        }
+        if ((type === MetalTypes.MAPPER || type === MetalTypes.SINK) && inputNds === 1) {
+            return true;
+        }
+        if (type === MetalTypes.FUSION && inputNds > 1) {
+            return true;
+        }
+        return false;
+    }
     
     const view = useMemo(
         () => (
@@ -452,16 +514,10 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                     </Grid>
                                     <Grid item xs={11}>
                                         <Typography variant={"caption"} color={"GrayText"}>
-                                            {type === MetalTypes.SOURCE || type === MetalTypes.SETUP
-                                                ? "Ready"
-                                                : inputs(id).length === 0
-                                                ? "Unready"
-                                                : "Ready"}
+                                            {isInputReady()? "Ready": "Unready"}
                                         </Typography>
                                         {
-                                            isReadOnly || type === MetalTypes.SOURCE || type === MetalTypes.SETUP 
-                                            ? ("")
-                                            : inputs(id).length === 0
+                                            isReadOnly || !isInputReady() 
                                             ? ("")
                                             : (
                                                 <Button 
@@ -503,22 +559,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                 </div>
             </Badge>
         ),
-        [
-            badgeContent,
-            id,
-            inputs,
-            isReadOnly,
-            metal.name,
-            metal.props,
-            metalPkg.class,
-            msg,
-            nodeView,
-            onDelete,
-            onEdit,
-            props.data,
-            status,
-            type,
-        ]
+        [badgeContent, isInputReady, isReadOnly, metal.name, metal.props, metalPkg.class, msg, nodeView, onAnalysis, onAnalysisInputs, onDelete, onEdit, props.data, status]
     );
     return (<>{view}</>)
 }

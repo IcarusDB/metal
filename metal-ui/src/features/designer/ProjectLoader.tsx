@@ -4,11 +4,12 @@ import { Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { getProjectById } from "../../api/ProjectApi";
-import { useBackendArgsFn, useBackendStatusFn, useDeployIdFn, useEpochFn, useNameFn, usePkgsFn, usePlatformFn, useSpecFn } from "./DesignerProvider";
+import { useBackendArgsFn, useBackendStatusFn, useDeployIdFn, useEpochFn, useNameFn, usePkgsFn, usePlatformFn, useProjectIdFn, useSpecFn } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
     
     const [run, status, project, error] = useAsync<Project>();
+    const [, setProjectId] = useProjectIdFn();
     const [,setSpec] = useSpecFn();
     const [, setName] = useNameFn();
     const [, setPkgs] = usePkgsFn();
@@ -24,6 +25,7 @@ function useProjectLoader(token: string | null, id: string) {
         }
         if (status === State.success) {  
             if (project !== null) {
+                setProjectId(project.id);
                 setSpec(project.spec);
                 setName(project.name);
                 setPkgs(project.deploy.pkgs);
@@ -38,7 +40,7 @@ function useProjectLoader(token: string | null, id: string) {
             run(getProjectById(token, id));       
         }
         
-    }, [id, project, run, setBackendArgs, setBackendStatus, setDeployId, setEpoch, setName, setPkgs, setPlatform, setSpec, status, token]);
+    }, [id, project, run, setBackendArgs, setBackendStatus, setDeployId, setEpoch, setName, setPkgs, setPlatform, setProjectId, setSpec, status, token]);
 
     return [status, error];
 }

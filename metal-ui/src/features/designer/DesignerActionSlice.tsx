@@ -3,6 +3,7 @@ import { emptySpec, Spec } from "../../model/Spec";
 import { MetalNodeProps, MetalNodeState } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 import { StoreApi } from "zustand";
+import { Metal } from "../../model/Metal";
 
 export declare type HotNode = [string, MetalNodeState, string | undefined];
 
@@ -13,6 +14,11 @@ export interface MetalFlowAction {
     addNode: (nodeProps: MetalNodeProps) => void;
     load: (newFlow: SpecFlow | undefined) => void;
     export: () => Spec;
+    exportSubSpec: (target: string, isContainTarget: boolean) => Spec | undefined;
+    checkSpec: (spec: Spec) => {
+        emptyMetals: Metal[],
+        inputsIllegalMetals: {metal: string, inputs: number}[],
+    };
 }
 
 export const initialMetalFlowAction: MetalFlowAction = {
@@ -22,6 +28,8 @@ export const initialMetalFlowAction: MetalFlowAction = {
     addNode: (nodeProps: MetalNodeProps) => { },
     load: (newFlow: SpecFlow | undefined) => { },
     export: () => (emptySpec()),
+    exportSubSpec: (target: string, isContainTarget: boolean) => (undefined),
+    checkSpec: (spec: Spec) => ({emptyMetals: [], inputsIllegalMetals: []})
 };
 
 export interface MetalNodeEditorAction {

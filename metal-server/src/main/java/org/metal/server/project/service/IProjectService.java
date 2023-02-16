@@ -134,6 +134,10 @@ public interface IProjectService {
 
   public Future<JsonObject> analysisOfId(String userId, String id, JsonObject spec);
 
+  public Future<JsonObject> saveSpecOfId(String userId, String id, JsonObject spec);
+
+  public Future<JsonObject> analysisSubSpecOfId(String userId, String id, JsonObject spec, JsonObject subSpec);
+
   public Future<JsonObject> exec(String userId, String name);
 
   public Future<JsonObject> execOfId(String userId, String id);

@@ -323,7 +323,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             flowInstance.addNodes(node);
             modify(true);
         },
-        [deleteNode, flowInstance, inputs, isReadOnly, modify, nodePropsWrap, outputs, updateNode]
+        [deleteNode, flowInstance, getBackendStatus, inputs, isReadOnly, modify, nodePropsWrap, outputs, updateNode]
     );
 
     const autoLayout = useCallback(() => {
@@ -438,6 +438,64 @@ export const MetalFlow = (props: MetalFlowProps) => {
         return spec;
     }, [flowInstance]); 
 
+    const checkSpec = useCallback((spec: Spec) => {
+        const emptyMetals = spec.metals.filter(metal => (metal.props === undefined || metal.props === null || _.isEmpty(metal.props)));
+        const inputsIllegalMetals = spec.metals.filter(metal => (
+            !(metal.type === MetalTypes.SETUP || metal.type === MetalTypes.SOURCE)
+        )).map(metal => ({
+            metal: metal,
+            inputs: inputs(metal.id).length,
+        })).filter(({metal, inputs}) => (
+            ((metal.type === MetalTypes.MAPPER || metal.type === MetalTypes.SINK) && inputs !== 1) ||
+            (metal.type === MetalTypes.FUSION && inputs < 1)
+        )).map(({metal, inputs}) => ({metal: metal.id, inputs: inputs}));
+        return {
+            emptyMetals: emptyMetals,
+            inputsIllegalMetals: inputsIllegalMetals,
+        }
+    }, [inputs]);
+
+    const exportSubSpec = useCallback(
+        (target: string, isContainTarget: boolean) => {
+            const targetNd: Node<MetalNodeProps> | undefined = flowInstance.getNode(target);
+            if (targetNd === undefined) {
+                return undefined;
+            }
+            const nodes: Node<MetalNodeProps>[] = flowInstance.getNodes();
+            const edges: Edge<any>[] = flowInstance.getEdges();
+            const queue = new Array<Node<MetalNodeProps>>();
+            const visitedEdges = new Array<[string, string]>();
+            const visited = new Set<Node<MetalNodeProps>>();
+            if (isContainTarget) {
+                queue.push(targetNd);
+            } else {
+                getIncomers(targetNd, nodes, edges).forEach(incomer => queue.push(incomer));
+            }
+            
+            while (queue.length !== 0) {
+                const nd = queue.pop();
+                if (nd === undefined) {
+                    break;
+                }
+                const incomers: Node<MetalNodeProps>[] = getIncomers(nd, nodes, edges);
+                incomers.forEach((incomer) => visitedEdges.push([incomer.id, nd?.id]));
+                incomers.forEach((incomer) => queue.push(incomer));
+                visited.add(nd);
+            }
+
+            const spec: Spec = {
+                version: "1.0",
+                metals: _.uniqWith(Array.from(visited), (a, b) => a.id === b.id).map(
+                    (node: Node<MetalNodeProps>) => node.data.metal
+                ),
+                edges: visitedEdges.map((edge) => ({ left: edge[0], right: edge[1] })),
+                waitFor: [],
+            };
+            return spec;
+        },
+        [flowInstance]
+    ); 
+
     useMemo(() => {
         setMetalFlowAction({
             allNodes: allNodes,
@@ -446,8 +504,10 @@ export const MetalFlow = (props: MetalFlowProps) => {
             addNode: addNode,
             load: load,
             export: exportSpec,
+            exportSubSpec: exportSubSpec,
+            checkSpec: checkSpec,
         });
-    }, [addNode, allNodes, exportSpec, inputs, load, outputs, setMetalFlowAction]);
+    }, [addNode, allNodes, checkSpec, exportSpec, exportSubSpec, inputs, load, outputs, setMetalFlowAction]);
 
     const initialNodes = useMemo(() => loadNodesFromFlow(flow), []);
     const initialEdges = useMemo(() => loadEdgesFromFlow(flow), []);

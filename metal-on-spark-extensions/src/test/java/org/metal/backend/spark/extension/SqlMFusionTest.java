@@ -153,4 +153,5 @@ public class SqlMFusionTest {
         + "}";
     
     private static String payload1 = "{\"version\":\"1.0\",\"metals\":[{\"type\":\"org.metal.backend.spark.extension.SqlMFusion\",\"id\":\"node_2\",\"name\":\"node_2\",\"props\":{\"tableAlias\":{\"node_1\":\"tbl1\",\"node_0\":\"tbl0\"},\"sql\":\"select * from tbl0 left join tbl1 on tbl0.id = tbl1.id\"}},{\"type\":\"org.metal.backend.spark.extension.JsonFileMSource\",\"id\":\"node_1\",\"name\":\"node_1\",\"props\":{\"schema\":\"json\",\"path\":\"hdfs://namenode.hdfs.metal.org:9000/metal/test.json\"}},{\"type\":\"org.metal.backend.spark.extension.JsonFileMSource\",\"id\":\"node_0\",\"name\":\"node_0\",\"props\":{\"path\":\"hdfs://namenode.hdfs.metal.org:9000/metal/test.json\",\"schema\":\"json\"}}],\"edges\":[{\"left\":\"node_0\",\"right\":\"node_2\"},{\"left\":\"node_1\",\"right\":\"node_2\"}],\"waitFor\":[]}";
+
 }

@@ -614,6 +614,37 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
+  public Future<JsonObject> saveSpecOfId(String userId, String id, JsonObject spec) {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      try {
+        String projectName = proj.getString(ProjectDB.NAME);
+        return ProjectDB.updateSpec(mongo, userId, projectName, spec);
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
+  public Future<JsonObject> analysisSubSpecOfId(String userId, String id, JsonObject spec,
+      JsonObject subSpec) {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      try {
+        String projectName = proj.getString(ProjectDB.NAME);
+        JsonObject deploy = proj.getJsonObject(ProjectDB.DEPLOY);
+        checkBackendUp(deploy);
+        JsonObject address = backendAddress(deploy);
+        return ProjectDB.updateSpec(mongo, userId, projectName, spec).compose((JsonObject ret) -> {
+          BackendService backendService = BackendService.create(vertx, address);
+          return backendService.analyse(subSpec);
+        });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
   public Future<JsonObject> exec(String userId, String name) {
     return ProjectDB.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
       return execProject(userId, proj);
