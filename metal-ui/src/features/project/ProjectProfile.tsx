@@ -41,7 +41,7 @@ import {
 import { VscArrowLeft, VscClose, VscError, VscInfo, VscPackage, VscSymbolParameter, VscWarning } from "react-icons/vsc";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
+import { platformSchema, platformType, PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
 import _ from "lodash";
@@ -54,7 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
-import { useProfile, useProfileFn } from "../designer/DesignerProvider";
+import { useBackendArgs, useBackendArgsFn, useName, useNameFn, usePkgs, usePkgsFn, usePlatform, usePlatformFn } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -526,8 +526,10 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
-    const [setProfile] = useProfileFn();
-
+    const [, setName] = useNameFn();
+    const [, setPkgs] = usePkgsFn();
+    const [, setPlatform] = usePlatformFn();
+    const [, setBackendArgs] = useBackendArgsFn();
 
     const check: () => [boolean, string | undefined] = useCallback(() => {
         const { basic, pkgs, platform} = profile;
@@ -582,7 +584,18 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             const params: ProjectParams = projectParams(profile);
             run(
                 updateProject(token, id, params).then(ret => {
-                    setProfile(params.name, params.pkgs, params.platform === null? undefined: params.platform, params.backendArgs);
+                    if (params.name) {
+                        setName(params.name)
+                    };
+                    if (params.pkgs) {
+                        setPkgs(params.pkgs);
+                    }
+                    if (params.platform) {
+                        setPlatform(params.platform);
+                    }
+                    if (params.backendArgs) {
+                        setBackendArgs(params.backendArgs);
+                    }
                     return ret;
                 })
             );
@@ -790,7 +803,10 @@ export const ProjectProfile = forwardRef(
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        const [{name, pkgs, platform, backendArgs}] = useProfile();
+        const [name] = useName();
+        const [pkgs] = usePkgs();
+        const [platform] = usePlatform();
+        const [backendArgs] = useBackendArgs();
         const basicProfile = {
             name: name === undefined? "": name,
             platform: extractPlatformType(platform)
@@ -990,8 +1006,12 @@ export interface ProjectProfileViewerHandler {
 
 export const ProjectProfileViewer = forwardRef(
     (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
+        console.log("ProjectProfileViewer");
         const [isOpen, setOpen] = useState(false);
-        const [{name, pkgs, platform, backendArgs}] = useProfile();
+        const [name] = useName();
+        const [pkgs] = usePkgs();
+        const [platform] = usePlatform();
+        const [backendArgs] = useBackendArgs();
 
         const onOpen = () => {;
             setOpen(true);

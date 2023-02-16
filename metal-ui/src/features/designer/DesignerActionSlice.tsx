@@ -38,21 +38,31 @@ export interface DesignerActionSlice {
     isModify: boolean;
     metalFlowAction: MetalFlowAction;
     metalNodeEditorAction: MetalNodeEditorAction;
-    bindFlowPending: (value: boolean) => void;
-    bindModify: (isModify: boolean) => void;
-    bindMetalFlowAction: (action: MetalFlowAction) => void;
-    bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => void;
+    getFlowPending: () => boolean;
+    setFlowPending: (value: boolean) => void;
+    getModify: () => boolean;
+    setModify: (isModify: boolean) => void;
+    getMetalFlowAction: () => MetalFlowAction;
+    setMetalFlowAction: (action: MetalFlowAction) => void;
+    getMetalNodeEditorAction: () => MetalNodeEditorAction;
+    setMetalNodeEditorAction: (action: MetalNodeEditorAction) => void;
     name?: string,
-    bindName: (name: string) => void;
+    getName: () => string | undefined;
+    setName: (name: string) => void;
     pkgs: string[],
-    bindPkgs: (pkgs: string[]) => void;
+    getPkgs: () => string[];
+    setPkgs: (pkgs: string[]) => void;
     platform?: any,
-    bindPlatform: (platform: any) => void;
-    backendArgs: string[],
-    bindBackendArgs: (args: string[]) => void;
-    bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void;
+    getPlatform: () => any;
+    setPlatform: (platform: any) => void;
+    backendArgs: string[];
+    getBackendArgs: () => string[];
+    setBackendArgs: (args: string[]) => void;
+    getProfile: () => {name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]};
+    setProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void;
     hotNodes: HotNode[],
-    bindHotNodes: (hotNodes: HotNode[]) => void;
+    getHotNode: () => HotNode[];
+    setHotNodes: (hotNodes: HotNode[]) => void;
 }
 
 export const createDesignerActionSlice = (
@@ -63,57 +73,66 @@ export const createDesignerActionSlice = (
     isModify: true,
     metalFlowAction: initialMetalFlowAction,
     metalNodeEditorAction: initialMetalNodeEditorAction,
-    bindFlowPending: (value: boolean) => {
+    getFlowPending: () => (get().isFlowPending),
+    setFlowPending: (value: boolean) => {
         set((prev) => ({
             ...prev,
             isFlowPending: value,
         }));
     },
-    bindModify: (isModify: boolean) => {
+    getModify: () => (get().isModify),
+    setModify: (isModify: boolean) => {
         set((prev) => ({
             ...prev,
             isModify: isModify,
         }))
     },
-    bindMetalFlowAction: (action: MetalFlowAction) => {
+    getMetalFlowAction: () => (get().metalFlowAction),
+    setMetalFlowAction: (action: MetalFlowAction) => {
         set((prev) => ({
             ...prev,
             metalFlowAction: action,
         }));
     },
-    bindMetalNodeEditorAction: (action: MetalNodeEditorAction) => {
+    getMetalNodeEditorAction: () => (get().metalNodeEditorAction),
+    setMetalNodeEditorAction: (action: MetalNodeEditorAction) => {
         set((prev) => ({
             ...prev,
             metalNodeEditorAction: action,
         }));
     },
-    bindName: (name: string) => {
+    getName: () => (get().name),
+    setName: (name: string) => {
         set((prev) => ({
             ...prev,
             name: name
         }));
     },
     pkgs: [],
-    bindPkgs: (pkgs: string[]) => {
+    getPkgs: () => (get().pkgs),
+    setPkgs: (pkgs: string[]) => {
         set((prev) => ({
             ...prev,
             pkgs: pkgs
         }));
     },
-    bindPlatform: (platform: any) => {
+    getPlatform: () => (get().platform),
+    setPlatform: (platform: any) => {
         set((prev) => ({
             ...prev,
             platform: platform
         }));
     },
     backendArgs: [],
-    bindBackendArgs: (args: string[]) => {
+    getBackendArgs: () => (get().backendArgs),
+    setBackendArgs: (args: string[]) => {
         set((prev) => ({
             ...prev,
             backendArgs: args
         }));
     },
-    bindProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => {
+    getProfile: () => ({name: get().name, pkgs: get().pkgs, platform: get().platform, backendArgs: get().backendArgs}),
+    setProfile: (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => {
         set((prev) => ({
             ...prev,
             name,
@@ -123,7 +142,8 @@ export const createDesignerActionSlice = (
         }));
     },
     hotNodes: [],
-    bindHotNodes: (hotNodes: HotNode[]) => {
+    getHotNode: () => (get().hotNodes),
+    setHotNodes: (hotNodes: HotNode[]) => {
         set((prev) => ({
             ...prev,
             hotNodes

@@ -12,6 +12,7 @@ import { SpecFlow } from "./SpecLoader";
 
 declare type Subscribe<S> = (listener: (s: S | undefined, prev: S | undefined) => void) => () => void;
 declare type IChangeFns <S> = [
+    () => S | undefined,
     (s: S) => void,
     Subscribe<S>,
 ];
@@ -40,7 +41,7 @@ export function useFlowPending(): [boolean,
         store,
         (state) => ([
             state.isFlowPending,
-            state.bindFlowPending,
+            state.setFlowPending,
             sub
         ]),
         shallow
@@ -55,7 +56,8 @@ export function useFlowPendingFn(): IChangeFns<boolean> {
     return useStore(
         store,
         (state) => ([
-            state.bindFlowPending,
+            state.getFlowPending,
+            state.setFlowPending,
             sub
         ]),
         shallow
@@ -75,7 +77,7 @@ export function useModify(): [boolean, (isModify: boolean)=>void, (listener: (st
         store,
         (state) => ([
             state.isModify,
-            state.bindModify,
+            state.setModify,
             sub
         ]),
         shallow
@@ -94,7 +96,8 @@ export function useModifyFn(): IChangeFns<boolean> {
     return useStore(
         store,
         (state) => ([
-            state.bindModify,
+            state.getModify,
+            state.setModify,
             sub
         ]),
         shallow
@@ -114,7 +117,7 @@ export function useMetalFlow(): [
 
     return useStore(
         store, 
-        (state)=>([state.metalFlowAction, state.bindMetalFlowAction, sub]),
+        (state)=>([state.metalFlowAction, state.setMetalFlowAction, sub]),
         shallow
     );
 }
@@ -127,7 +130,7 @@ export function useMetalFlowFn(): IChangeFns<MetalFlowAction>{
 
     return useStore(
         store, 
-        (state)=>([state.bindMetalFlowAction, sub]),
+        (state)=>([state.getMetalFlowAction, state.setMetalFlowAction, sub]),
         shallow
     );
 }
@@ -145,7 +148,7 @@ export function useMetalNodeEditor(): [
         store, 
         (state)=>([
             state.metalNodeEditorAction, 
-            state.bindMetalNodeEditorAction,
+            state.setMetalNodeEditorAction,
             sub
         ]),
         shallow
@@ -160,7 +163,8 @@ export function useMetalNodeEditorFn(): IChangeFns<MetalNodeEditorAction>{
     return useStore(
         store, 
         (state)=>([
-            state.bindMetalNodeEditorAction,
+            state.getMetalNodeEditorAction,
+            state.setMetalNodeEditorAction,
             sub
         ]),
         shallow
@@ -184,7 +188,7 @@ export function useName(): [
         store,
         (state) => ([
             state.name, 
-            state.bindName,
+            state.setName,
             subscribe,
         ]),
         shallow
@@ -202,7 +206,8 @@ export function useNameFn(): IChangeFns<string>{
     return useStore(
         store,
         (state) => ([
-            state.bindName,
+            state.getName,
+            state.setName,
             subscribe,
         ]),
         shallow
@@ -221,7 +226,7 @@ export function usePkgs(): [string[], (pkgs: string[]) => void, Subscribe<string
         store,
         (state) => ([
             state.pkgs,
-            state.bindPkgs,
+            state.setPkgs,
             sub
         ]),
         shallow
@@ -239,7 +244,8 @@ export function usePkgsFn(): IChangeFns<string[]>{
     return useStore(
         store,
         (state) => ([
-            state.bindPkgs,
+            state.getPkgs,
+            state.setPkgs,
             sub
         ]),
         shallow
@@ -257,7 +263,7 @@ export function useSpec(): [Spec | undefined, (spec: Spec) => void, Subscribe<Sp
     )
     return useStore(
         store,
-        (state) => ([state.spec, state.bindSpec, sub]),
+        (state) => ([state.spec, state.setSpec, sub]),
         shallow
     );
 }
@@ -273,7 +279,7 @@ export function useSpecFn(): IChangeFns<Spec> {
     )
     return useStore(
         store,
-        (state) => ([state.bindSpec, sub]),
+        (state) => ([state.getSpec, state.setSpec, sub]),
         shallow
     );
 }
@@ -293,7 +299,7 @@ export function useSpecFlow(): [
     )
     return useStore(
         store,
-        (state) => ([state.flow, state.bindFlow, sub]),
+        (state) => ([state.flow, state.setFlow, sub]),
         shallow
     );
 }
@@ -308,7 +314,7 @@ export function useSpecFlowFn(): IChangeFns<SpecFlow>{
     )
     return useStore(
         store,
-        (state) => ([state.bindFlow, sub]),
+        (state) => ([state.getFlow, state.setFlow, sub]),
         shallow
     );
 }
@@ -327,7 +333,7 @@ export function usePlatform(): [
     )
     return useStore(
         store,
-        (state) => ([state.platform, state.bindPlatform, sub]),
+        (state) => ([state.platform, state.setPlatform, sub]),
         shallow
     );
 }
@@ -342,7 +348,7 @@ export function usePlatformFn(): IChangeFns<any>{
     )
     return useStore(
         store,
-        (state) => ([state.bindPlatform, sub]),
+        (state) => ([state.getPlatform, state.setPlatform, sub]),
         shallow
     );
 }
@@ -361,7 +367,7 @@ export function useBackendArgs(): [
     )
     return useStore(
         store,
-        (state) => ([state.backendArgs, state.bindBackendArgs, sub]),
+        (state) => ([state.backendArgs, state.setBackendArgs, sub]),
         shallow
     );
 }
@@ -376,76 +382,10 @@ export function useBackendArgsFn(): IChangeFns<string[]>{
     )
     return useStore(
         store,
-        (state) => ([state.bindBackendArgs, sub]),
+        (state) => ([state.getBackendArgs, state.setBackendArgs, sub]),
         shallow
     );
 }
-
-type MixedProfile = {
-    name?: string,
-    pkgs: string[],
-    platform?: any,
-    backendArgs: string[]
-};
-
-export function useProfile(): [
-    {name: string | undefined, pkgs: string[], platform: any | undefined, backendArgs: string[]},
-    (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void,
-    Subscribe<MixedProfile>
-
-] {
-    const store = useContext(DesignerStoreContext);
-    const sub: Subscribe<MixedProfile> = (listener) => (
-        store.subscribe(
-            state => ({
-                name: state.name,
-                pkgs: state.pkgs,
-                platform: state.platform,
-                backendArgs: state.backendArgs,
-            })
-        )
-    )
-    return useStore(
-        store,
-        (state) => ([
-            {
-                name: state.name,
-                pkgs: state.pkgs,
-                platform: state.platform,
-                backendArgs: state.backendArgs,
-            },
-            state.bindProfile,
-            sub
-        ]),
-        shallow
-    )
-}
-
-export function useProfileFn(): [
-    (name?: string, pkgs?: string[], platform?: any, backendArgs?: string[]) => void,
-    Subscribe<MixedProfile>
-]{
-    const store = useContext(DesignerStoreContext);
-    const sub: Subscribe<MixedProfile> = (listener) => (
-        store.subscribe(
-            state => ({
-                name: state.name,
-                pkgs: state.pkgs,
-                platform: state.platform,
-                backendArgs: state.backendArgs,
-            })
-        )
-    )
-    return useStore(
-        store,
-        (state) => ([
-            state.bindProfile,
-            sub
-        ]),
-        shallow
-    )
-}
-
 
 
 export function useHotNodes(): [
@@ -463,7 +403,7 @@ export function useHotNodes(): [
         store,
         (state) => ([
             state.hotNodes,
-            state.bindHotNodes,
+            state.setHotNodes,
             subscribe
         ]),
         shallow
@@ -481,7 +421,8 @@ export function useHotNodesFn(): IChangeFns<HotNode[]> {
     return useStore(
         store,
         (state) => ([
-            state.bindHotNodes,
+            state.getHotNode,
+            state.setHotNodes,
             subscribe
         ]),
         shallow
@@ -505,7 +446,7 @@ export function useDeployId(): [
         store,
         (state) => ([
             state.deployId,
-            state.bindDeployId,
+            state.setDeployId,
             sub
         ]),
         shallow
@@ -523,7 +464,8 @@ export function useDeployIdFn(): IChangeFns<string> {
     return useStore(
         store,
         (state) => ([
-            state.bindDeployId,
+            state.getDeployId,
+            state.setDeployId,
             sub
         ]),
         shallow
@@ -547,7 +489,7 @@ export function useEpoch(): [
         store,
         (state) => ([
             state.epoch,
-            state.bindEpoch,
+            state.setEpoch,
             sub
         ]),
         shallow
@@ -565,7 +507,8 @@ export function useEpochFn(): IChangeFns<number> {
     return useStore(
         store,
         (state) => ([
-            state.bindEpoch,
+            state.getEpoch,
+            state.setEpoch,
             sub
         ]),
         shallow
@@ -590,7 +533,7 @@ export function useBackendStatus(): [
         store,
         (state) => ([
             state.backendStatus,
-            state.bindBackendStatus,
+            state.setBackendStatus,
             sub
         ]),
         shallow
@@ -609,31 +552,14 @@ export function useBackendStatusFn(): IChangeFns<BackendStatus>{
     return useStore(
         store,
         (state) => ([
-            state.bindBackendStatus,
+            state.getBackendStatus,
+            state.setBackendStatus,
             sub
         ]),
         shallow
     );
 }
 
-
-export function useDeploy(): [
-    {deployId: string | undefined, epoch: number | undefined},
-    (deployId?: string, epoch?: number) => void,
-] {
-    const store = useContext(DesignerStoreContext);
-    return useStore(
-        store,
-        (state) => ([
-            {
-                deployId: state.deployId,
-                epoch: state.epoch
-            },
-            state.bindDeploy
-        ]),
-        shallow
-    )
-}
 
 export function useExecInfo(): [
     Exec | undefined,
@@ -651,7 +577,7 @@ export function useExecInfo(): [
         store,
         (state) => ([
             state.exec,
-            state.bindExec,
+            state.setExec,
             sub
         ]),
         shallow
@@ -669,7 +595,8 @@ export function useExecInfoFn(): IChangeFns<Exec | undefined> {
     return useStore(
         store,
         (state) => ([
-            state.bindExec,
+            state.getExec,
+            state.setExec,
             sub
         ]),
         shallow

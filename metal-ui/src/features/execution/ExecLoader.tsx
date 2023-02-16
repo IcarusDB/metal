@@ -3,15 +3,16 @@ import { useEffect } from "react";
 import { getExecOfId } from "../../api/ExecApi";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
-import { useAppSelector } from "../../app/hooks";
 import { Exec } from "../../model/Exec";
-import { useProfile, useProfileFn, useSpec, useSpecFn } from "../designer/DesignerProvider";
+import { useBackendArgsFn, useNameFn, usePkgsFn, usePlatformFn, useSpecFn } from "../designer/DesignerProvider";
 import { MainHandler } from "../main/Main";
-import { tokenSelector } from "../user/userSlice";
 
 function useExecLoader(token: string | null, id: string, name?: string): [State, any] {
-    const [setSpec] = useSpecFn();
-    const [setProfile] = useProfileFn();
+    const [,setSpec] = useSpecFn();
+    const [, setName] = useNameFn();
+    const [, setPkgs] = usePkgsFn();
+    const [, setPlatform] = usePlatformFn();
+    const [, setBackendArgs] = useBackendArgsFn();
     const [run, status, exec, error] = useAsync<Exec>();
 
 
@@ -25,14 +26,12 @@ function useExecLoader(token: string | null, id: string, name?: string): [State,
 
         if (status === State.success && exec !== null) {
             setSpec(exec.SPEC);
-            setProfile(
-                name === undefined? `Project[${name}]-${exec.id}`: `Project[${exec.fromProject}]-${exec.id}`,
-                exec.deploy.pkgs,
-                exec.deploy.platform,
-                exec.deploy.backend.args
-            );
+            setName(name === undefined? `Project[${name}]-${exec.id}`: `Project[${exec.fromProject}]-${exec.id}`,);
+            setPkgs(exec.deploy.pkgs);
+            setPlatform(exec.deploy.platform);
+            setBackendArgs(exec.deploy.backend.args);
         }
-    }, [exec, id, run, setProfile, setSpec, status, token]);
+    }, [exec, id, name, run, setBackendArgs, setName, setPkgs, setPlatform, setSpec, status, token]);
 
     return [status, error];
 }

@@ -5,17 +5,21 @@ import { SpecFlow } from "./SpecLoader";
 export interface SpecSlice {
     spec?: Spec;
     flow?: SpecFlow;
-    bindSpec: (spec: Spec) => void;
-    bindFlow: (flow: SpecFlow) => void;
+    getSpec: () => Spec | undefined;
+    setSpec: (spec: Spec) => void;
+    getFlow: () => SpecFlow | undefined;
+    setFlow: (flow: SpecFlow) => void;
 }
 export const createSpecSlice = (
     set: StoreApi<SpecSlice>["setState"],
     get: StoreApi<SpecSlice>["getState"]
 ): SpecSlice => ({
-    bindSpec: (spec: Spec) => {
+    getSpec: () => (get().spec),
+    setSpec: (spec: Spec) => {
         set((prev: SpecSlice) => ({ ...prev, spec: spec }));
     },
-    bindFlow: (flow: SpecFlow) => {
+    getFlow: () => (get().flow),
+    setFlow: (flow: SpecFlow) => {
         set((prev: SpecSlice) => ({...prev, flow: flow}));
     }
 });

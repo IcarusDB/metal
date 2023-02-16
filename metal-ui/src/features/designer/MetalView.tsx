@@ -1,6 +1,6 @@
 import { ImUpload, ImDownload } from "react-icons/im";
 import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
-import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscWorkspaceUnknown, VscWorkspaceTrusted, VscWorkspaceUntrusted, VscRunErrors } from "react-icons/vsc";
+import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscRunErrors } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
 import {
@@ -18,11 +18,12 @@ import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
 import { MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
-import { RingLoader, ScaleLoader } from "react-spinners";
+import { ScaleLoader } from "react-spinners";
 import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
 import { GrDocumentConfig, GrTip } from "react-icons/gr";
 import _ from "lodash";
 import { ProblemsNotice } from "./backend/BackendBar";
+import { BackendStatus } from "../../model/Project";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -63,6 +64,7 @@ export interface MetalNodeProps extends IReadOnly {
     onDelete: () => void;
     inputs: (id: string) => Node<MetalNodeProps>[];
     outputs: (id: string) => Node<MetalNodeProps>[];
+    backendStatus: () => BackendStatus | undefined;
     editor?: MetalNodeEditorAction;
     status?: MetalNodeState;
     msg?: string;
@@ -465,7 +467,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                 {nodeView.outputHandle(props.data)}
             </div>
         </Badge>
-    ), [badgeContent, id, inputs, isReadOnly, metal.name, metal.props, metalPkg.class, nodeView, onDelete, onEdit, props.data, status, type]);
+    ), [badgeContent, id, inputs, isReadOnly, metal.name, metal.props, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status, type]);
     return (<>{view}</>)
 }
 

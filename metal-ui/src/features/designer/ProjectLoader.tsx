@@ -4,16 +4,19 @@ import { Project } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { getProjectById } from "../../api/ProjectApi";
-import { useBackendStatusFn, useDeployIdFn, useEpochFn, useProfileFn, useSpecFn } from "./DesignerProvider";
+import { useBackendArgsFn, useBackendStatusFn, useDeployIdFn, useEpochFn, useNameFn, usePkgsFn, usePlatformFn, useSpecFn } from "./DesignerProvider";
 
 function useProjectLoader(token: string | null, id: string) {
     
     const [run, status, project, error] = useAsync<Project>();
-    const [setSpec] = useSpecFn();
-    const [setProfile] = useProfileFn();
-    const [setDeployId] = useDeployIdFn();
-    const [setEpoch] = useEpochFn();
-    const [setBackendStatus] = useBackendStatusFn();
+    const [,setSpec] = useSpecFn();
+    const [, setName] = useNameFn();
+    const [, setPkgs] = usePkgsFn();
+    const [, setPlatform] = usePlatformFn();
+    const [, setBackendArgs] = useBackendArgsFn();
+    const [,setDeployId] = useDeployIdFn();
+    const [,setEpoch] = useEpochFn();
+    const [,setBackendStatus] = useBackendStatusFn();
     console.log(`Project loader. ${status}`);
     useEffect(() => {
         if (token === null || id.trim() === "") {
@@ -22,7 +25,10 @@ function useProjectLoader(token: string | null, id: string) {
         if (status === State.success) {  
             if (project !== null) {
                 setSpec(project.spec);
-                setProfile(project.name, project.deploy.pkgs, project.deploy.platform, project.deploy.backend.args);
+                setName(project.name);
+                setPkgs(project.deploy.pkgs);
+                setPlatform(project.deploy.platform);
+                setBackendArgs(project.deploy.backend.args);
                 setDeployId(project.deploy.id);
                 setEpoch(project.deploy.epoch);
                 setBackendStatus(project.deploy.backend.status);
@@ -32,7 +38,7 @@ function useProjectLoader(token: string | null, id: string) {
             run(getProjectById(token, id));       
         }
         
-    }, [id, project, run, setBackendStatus, setDeployId, setEpoch, setProfile, setSpec, status, token]);
+    }, [id, project, run, setBackendArgs, setBackendStatus, setDeployId, setEpoch, setName, setPkgs, setPlatform, setSpec, status, token]);
 
     return [status, error];
 }

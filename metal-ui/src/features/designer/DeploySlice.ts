@@ -7,46 +7,56 @@ export interface DeploySlice {
     epoch?: number,
     backendStatus?: BackendStatus,
     exec?: Exec,
-    bindDeployId: (id: string) => void;
-    bindEpoch: (epoch: number) => void;
-    bindBackendStatus: (status: BackendStatus) => void;
-    bindDeploy: (id?: string, epoch?: number) => void;
-    bindExec: (exec: Exec | undefined) => void;
+    getDeployId: () => string | undefined;
+    setDeployId: (id: string) => void;
+    getEpoch: () => number | undefined;
+    setEpoch: (epoch: number) => void;
+    setBackendStatus: (status: BackendStatus) => void;
+    getBackendStatus: () => BackendStatus | undefined;
+    setDeploy: (id?: string, epoch?: number) => void;
+    getDeploy: () => {id?: string, epoch?: number};
+    setExec: (exec: Exec | undefined) => void;
+    getExec: () => Exec | undefined;
 }
 
 export const createDeploySlice = (
     set: StoreApi<DeploySlice>['setState'],
     get: StoreApi<DeploySlice>['getState'],
 ): DeploySlice => ({
-    bindDeployId: (id: string) => {
+    getDeployId: () => (get().deployId),
+    setDeployId: (id: string) => {
         set((prev) => ({
             ...prev,
             deployId: id
         }));
     },
-    bindEpoch: (epoch: number) => {
+    getEpoch: () => (get().epoch),
+    setEpoch: (epoch: number) => {
         set((prev) => ({
             ...prev,
             epoch: epoch
         }));
     },
-    bindBackendStatus: (status: BackendStatus) => {
+    setBackendStatus: (status: BackendStatus) => {
         set((prev) => ({
             ...prev,
             backendStatus: status
         }));
     },
-    bindDeploy: (id?: string, epoch?: number) => {
+    getBackendStatus: () => (get().backendStatus),
+    setDeploy: (id?: string, epoch?: number) => {
         set((prev) => ({
             ...prev,
             deployId: id,
             epoch: epoch
         }));
     },
-    bindExec: (exec: Exec | undefined) => {
+    getDeploy: () => ({deployId: get().deployId, epoch: get().epoch}),
+    setExec: (exec: Exec | undefined) => {
         set((prev) => ({
             ...prev,
             exec
         }));
-    }
+    },
+    getExec: () => (get().exec),
 })

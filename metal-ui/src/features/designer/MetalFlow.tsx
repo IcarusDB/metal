@@ -56,10 +56,10 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const counter = useRef<number>(0);
     const { isReadOnly} = props;
     const [flow] = useSpecFlow();
-    const [setMetalFlowAction] = useMetalFlowFn();
+    const [,setMetalFlowAction] = useMetalFlowFn();
     const [nodeEditorAction] = useMetalNodeEditor();
-    const [,onHotNodesChange] = useHotNodesFn();
-    const [modify] = useModifyFn();
+    const [,,onHotNodesChange] = useHotNodesFn();
+    const [,modify] = useModifyFn();
     const flowInstance = useReactFlow();
     const [isPending,] = useFlowPending();
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);

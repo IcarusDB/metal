@@ -4,10 +4,9 @@ import { Connection } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { metalType } from "../../model/Metal";
 import { MetalPkg } from "../../model/MetalPkg";
-import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
-import { MetalNodeProps, MetalNodeState } from "./MetalView";
-import { useSpec, useSpecFlow, useSpecFlowFn } from "./DesignerProvider";
+import { MetalNodeProps } from "./MetalView";
+import { useBackendStatusFn, useSpec, useSpecFlowFn } from "./DesignerProvider";
 import { State } from "../../api/State";
 import { Alert } from "@mui/material";
 
@@ -21,7 +20,8 @@ export interface SpecFlow {
 export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow | null, any] {
     const [spec] = useSpec();
     const [run, status, result, error] = useAsync<SpecFlow>();
-    const [setSpecFlow] = useSpecFlowFn();
+    const [, setSpecFlow] = useSpecFlowFn();
+    const [getBackendStatus] = useBackendStatusFn();
 
     const load = useCallback(() => {
         if (token === null || spec === undefined) {
@@ -57,6 +57,7 @@ export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow 
                         onDelete: () => {},
                         inputs: (id: string) => ([]),
                         outputs: (id: string) => ([]),
+                        backendStatus: getBackendStatus,
                         // status: MetalNodeState.PENDING,
                     };
                     return nodeTmpl;
