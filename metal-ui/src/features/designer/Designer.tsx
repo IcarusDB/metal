@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
-import { IconButton, Paper, Stack } from "@mui/material";
+import { Button, IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
 import { MetalExplorerWrapper } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
@@ -11,15 +11,40 @@ import {
     ProjectProfileViewer,
     ProjectProfileViewerHandler,
 } from "../project/ProjectProfile";
-import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
+import { VscExtensions, VscOpenPreview, VscSave, VscSettingsGear } from "react-icons/vsc";
 import { designerId, MainHandler } from "../main/Main";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import { SpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useNameFn } from "./DesignerProvider";
+import { useMetalFlowFn, useNameFn } from "./DesignerProvider";
 import { ProjectLoader } from "./ProjectLoader";
 import { BackendBar } from "./backend/BackendBar";
+import { useAsync } from "../../api/Hooks";
+import { SaveResponse, saveSpecOfId } from "../../api/ProjectApi";
+import { Spec } from "../../model/Spec";
+import { State } from "../../api/State";
+
+function useSaveSpec(token: string | null, id: string): [()=>void, State]{
+    const [run, status] = useAsync<SaveResponse>();
+    const [getMetalFlowAction] = useMetalFlowFn();
+
+    const save = useCallback(() => {
+        if (token === null) {
+            return;
+        }
+        const action = getMetalFlowAction();
+        if (action === undefined) {
+            return;
+        }
+
+        const spec: Spec = action.export();
+
+        run(saveSpecOfId(token, id, spec));
+    }, [getMetalFlowAction, id, run, token]);
+    
+    return [save, status];
+}
 
 export interface DesignerProps {
     id: string;
@@ -35,13 +60,18 @@ export function Designer(props: DesignerProps) {
     const [isOpenExplorer, setOpenExplorer] = useState(true);
 
     const [,, onNameChange] = useNameFn();
+    const [saveSpec, saveStatus] = useSaveSpec(token, id);
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
     
-    const onSwitchExplorer = () => {
+    const onSwitchExplorer = useCallback(() => {
         setOpenExplorer(!isOpenExplorer);
-    };
+    }, [isOpenExplorer]);
+
+    const onSaveSpec = useCallback(()=>{
+        saveSpec();
+    }, [saveSpec]);
 
     const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
@@ -80,10 +110,10 @@ export function Designer(props: DesignerProps) {
                     <ReactFlowProvider>
                         <MetalFlow />
                     </ReactFlowProvider>
-                    <BackendBar id={id}/>
+                    <BackendBar id={id} />
                 </Box>
                 <ProjectLoader token={token} id={id} />
-                <SpecLoader token={token}/>
+                <SpecLoader token={token} />
                 {isOpenExplorer && (
                     <Box
                         component={Paper}
@@ -144,6 +174,20 @@ export function Designer(props: DesignerProps) {
                 >
                     <VscExtensions />
                 </IconButton>
+                <Button
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    variant={"outlined"}
+                    onClick={onSaveSpec}
+                    disabled={saveStatus === State.pending}
+                    startIcon={<VscSave />}
+                >
+                    {saveStatus === State.failure
+                    ? "FAIL"
+                    : saveStatus === State.pending? "SAVING...": "SAVE" }
+                </Button>
             </Paper>
             {editor}
             <ProjectProfile

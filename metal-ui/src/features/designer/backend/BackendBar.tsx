@@ -17,7 +17,7 @@ import {
     VscWorkspaceUnknown,
 } from "react-icons/vsc";
 import { RingLoader } from "react-spinners";
-import { analysisOfId, AnalysisResponse, deployBackendOfId, execOfId, getBackendStatus, undeployBackendOfId } from "../../../api/ProjectApi";
+import { analysisOfId, AnalysisResponse, analysisSubSpecOfId, deployBackendOfId, execOfId, getBackendStatus, undeployBackendOfId } from "../../../api/ProjectApi";
 import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
@@ -628,7 +628,9 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
     return [analysis, status, result];
 }
 
-export function useAnalysisFn(scope: () => string[]): [(token: string | null, id: string, spec: Spec)=>void, State] {
+export function useAnalysisFn(scope: () => string[]): [
+    (token: string | null, id: string, spec: Spec, subSpec: Spec)=>void, 
+    State] {
     const [,setFlowPending] = useFlowPendingFn();
     const [,setHotNodes] = useHotNodesFn();
     const [,modify] = useModifyFn();
@@ -684,11 +686,11 @@ export function useAnalysisFn(scope: () => string[]): [(token: string | null, id
         }
     });
 
-    const analysis = (token: string | null, id: string, spec: Spec) => {
+    const analysis = (token: string | null, id: string, spec: Spec, subSpec: Spec) => {
         if (token === null) {
             return;
         }
-        run(analysisOfId(token, id, spec));
+        run(analysisSubSpecOfId(token, id, spec, subSpec));
     }
 
     return [analysis, status];

@@ -286,15 +286,16 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         const action = getMetalFlowAction();
         if (action) {
             const projectId = getProjectId();
-            const spec = action.exportSubSpec(metal.id, false);
-            if (projectId === undefined || spec === undefined) {
+            const spec = action.export();
+            const subSpec = action.exportSubSpec(metal.id, false);
+            if (projectId === undefined || subSpec === undefined) {
                 return;
             }
-            const checkResult = action.checkSpec(spec);
+            const checkResult = action.checkSpec(subSpec);
             if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
                 return;
             }
-            analysis(token, projectId, spec)
+            analysis(token, projectId, spec, subSpec);
 
         }
     }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
@@ -303,15 +304,16 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         const action = getMetalFlowAction();
         if (action) {
             const projectId = getProjectId();
-            const spec = action.exportSubSpec(metal.id, true);
-            if (projectId === undefined || spec === undefined) {
+            const spec = action.export();
+            const subSpec = action.exportSubSpec(metal.id, true);
+            if (projectId === undefined || subSpec === undefined) {
                 return;
             }
-            const checkResult = action.checkSpec(spec);
+            const checkResult = action.checkSpec(subSpec);
             if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
                 return;
             }
-            analysis(token, projectId, spec)
+            analysis(token, projectId, spec, subSpec);
 
         }
     }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
@@ -321,7 +323,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     ), [status]);
 
 
-    const isInputReady = () => {
+    const isInputReady = useCallback(() => {
         if (type === MetalTypes.SOURCE || type === MetalTypes.SETUP) {
             return true;
         }
@@ -336,7 +338,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
             return true;
         }
         return false;
-    }
+    }, [id, inputs, type]);
     
     const view = useMemo(
         () => (

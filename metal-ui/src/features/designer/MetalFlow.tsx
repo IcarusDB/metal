@@ -447,7 +447,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
             inputs: inputs(metal.id).length,
         })).filter(({metal, inputs}) => (
             ((metal.type === MetalTypes.MAPPER || metal.type === MetalTypes.SINK) && inputs !== 1) ||
-            (metal.type === MetalTypes.FUSION && inputs < 1)
+            (metal.type === MetalTypes.FUSION && inputs < 2)
         )).map(({metal, inputs}) => ({metal: metal.id, inputs: inputs}));
         return {
             emptyMetals: emptyMetals,

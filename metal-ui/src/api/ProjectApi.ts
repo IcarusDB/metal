@@ -288,6 +288,51 @@ export async function analysisOfId(token: string, id: string, spec: Spec) {
     })
 }
 
+export async function analysisSubSpecOfId(token: string, id: string, spec: Spec, subSpec: Spec) {
+    const url = `/api/v1/projects/id/${id}/subSpec`;
+    return instance.post(url, {
+        spec: spec,
+        subSpec: subSpec,
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const analysisResp: AnalysisResponse = resp.data;
+            return analysisResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface SaveResponse {
+
+}
+
+export async function saveSpecOfId(token: string, id: string, spec: Spec) {
+    const url = `/api/v1/projects/id/${id}/spec`;
+    return instance.put(url, {
+        spec: spec
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const saveResp: SaveResponse = resp.data;
+            return saveResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
 export interface SchemaResponse {
     id: string,
     schema: {
