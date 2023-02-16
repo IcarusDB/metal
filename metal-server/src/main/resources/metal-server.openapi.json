@@ -7,9 +7,6 @@
   },
   "tags": [
     {
-      "name": "spark standalone"
-    },
-    {
       "name": "metal-server"
     },
     {
@@ -29,287 +26,6 @@
     }
   ],
   "paths": {
-    "/v1/submissions/create": {
-      "post": {
-        "summary": "spark standalone 提交backend",
-        "x-apifox-folder": "spark standalone",
-        "x-apifox-status": "developing",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "spark standalone"
-        ],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "appResource": {
-                    "type": "string"
-                  },
-                  "sparkProperties": {
-                    "type": "object",
-                    "properties": {
-                      "spark.executor.userClassPathFirst": {
-                        "type": "string"
-                      },
-                      "spark.driver.userClassPathFirst": {
-                        "type": "string"
-                      },
-                      "spark.master": {
-                        "type": "string"
-                      },
-                      "spark.app.name": {
-                        "type": "string"
-                      },
-                      "spark.submit.deployMode": {
-                        "type": "string"
-                      },
-                      "spark.eventLog.enabled": {
-                        "type": "string"
-                      },
-                      "spark.eventLog.dir": {
-                        "type": "string"
-                      },
-                      "spark.jars": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "spark.executor.userClassPathFirst",
-                      "spark.driver.userClassPathFirst",
-                      "spark.master",
-                      "spark.app.name",
-                      "spark.submit.deployMode",
-                      "spark.eventLog.enabled",
-                      "spark.eventLog.dir",
-                      "spark.jars"
-                    ],
-                    "x-apifox-orders": [
-                      "spark.executor.userClassPathFirst",
-                      "spark.driver.userClassPathFirst",
-                      "spark.master",
-                      "spark.app.name",
-                      "spark.submit.deployMode",
-                      "spark.eventLog.enabled",
-                      "spark.eventLog.dir",
-                      "spark.jars"
-                    ],
-                    "x-apifox-ignore-properties": []
-                  },
-                  "clientSparkVersion": {
-                    "type": "string"
-                  },
-                  "mainClass": {
-                    "type": "string"
-                  },
-                  "environmentVariables": {
-                    "type": "object",
-                    "properties": {
-                      "SPARK_ENV_LOADED": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "SPARK_ENV_LOADED"
-                    ],
-                    "x-apifox-orders": [
-                      "SPARK_ENV_LOADED"
-                    ],
-                    "x-apifox-ignore-properties": []
-                  },
-                  "action": {
-                    "type": "string"
-                  },
-                  "appArgs": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": [
-                  "appResource",
-                  "sparkProperties",
-                  "clientSparkVersion",
-                  "mainClass",
-                  "environmentVariables",
-                  "action",
-                  "appArgs"
-                ],
-                "x-apifox-orders": [
-                  "appResource",
-                  "sparkProperties",
-                  "clientSparkVersion",
-                  "mainClass",
-                  "environmentVariables",
-                  "action",
-                  "appArgs"
-                ],
-                "x-apifox-ignore-properties": []
-              },
-              "example": {
-                "appResource": "/home/spark/metal/metal-backend-{{metal_backend_version}}.jar",
-                "sparkProperties": {
-                  "spark.executor.userClassPathFirst": "true",
-                  "spark.driver.userClassPathFirst": "true",
-                  "spark.master": "{{spark_master}}",
-                  "spark.app.name": "Spark REST API - Metal-Backend",
-                  "spark.submit.deployMode": "cluster",
-                  "spark.eventLog.enabled": "true",
-                  "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
-                  "spark.jars": "/home/spark/metal/metal-backend-{{metal_backend_version}}.jar"
-                },
-                "clientSparkVersion": "3.3.0",
-                "mainClass": "org.metal.backend.BackendLauncher",
-                "environmentVariables": {
-                  "SPARK_ENV_LOADED": "1"
-                },
-                "action": "CreateSubmissionRequest",
-                "appArgs": [
-                  "--interactive-mode",
-                  "--deploy-id",
-                  "{{deploy_id}}",
-                  "--deploy-epoch",
-                  "{{deploy_epoch}}",
-                  "--report-service-address",
-                  "{{report_service_address}}",
-                  "--rest-api-port",
-                  "{{rest_api_port}}"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "action": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "serverSparkVersion": {
-                      "type": "string"
-                    },
-                    "submissionId": {
-                      "type": "string"
-                    },
-                    "success": {
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "action",
-                    "message",
-                    "serverSparkVersion",
-                    "submissionId",
-                    "success"
-                  ],
-                  "x-apifox-orders": [
-                    "action",
-                    "message",
-                    "serverSparkVersion",
-                    "submissionId",
-                    "success"
-                  ],
-                  "x-apifox-ignore-properties": []
-                }
-              }
-            }
-          }
-        },
-        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43944292-run"
-      }
-    },
-    "/v1/submissions/status/{driver_id}": {
-      "get": {
-        "summary": "查看backend状态",
-        "x-apifox-folder": "spark standalone",
-        "x-apifox-status": "developing",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "spark standalone"
-        ],
-        "parameters": [
-          {
-            "name": "driver_id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "{{driver_id}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
-                }
-              }
-            }
-          }
-        },
-        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43949764-run"
-      }
-    },
-    "/v1/submissions/kill/{driver_id}": {
-      "post": {
-        "summary": "关闭backend",
-        "x-apifox-folder": "spark standalone",
-        "x-apifox-status": "developing",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "spark standalone"
-        ],
-        "parameters": [
-          {
-            "name": "driver_id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "{{driver_id}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
-                }
-              }
-            }
-          }
-        },
-        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-43951102-run"
-      }
-    },
     "/api/v1/tokens": {
       "post": {
         "summary": "获取JWT 管理员",
@@ -3298,6 +3014,117 @@
           }
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-54023817-run"
+      },
+      "put": {
+        "summary": "保存Spec根据id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "spec": {
+                  "version": "1.0",
+                  "metals": [
+                    {
+                      "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "id": "00-00",
+                      "name": "source-00",
+                      "props": {
+                        "schema": "",
+                        "path": "hdfs://namenode.hdfs.metal.org:9000/metal/test.json"
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.SqlMMapper",
+                      "id": "01-00",
+                      "name": "mapper-00",
+                      "props": {
+                        "tableAlias": "source",
+                        "sql": "select * from source where id != \"0001\""
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-00",
+                      "name": "sink-00",
+                      "props": {
+                        "numRows": 10
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-01",
+                      "name": "sink-01",
+                      "props": {
+                        "numRows": 10
+                      }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "left": "00-00",
+                      "right": "01-00"
+                    },
+                    {
+                      "left": "01-00",
+                      "right": "02-00"
+                    },
+                    {
+                      "left": "00-00",
+                      "right": "02-01"
+                    }
+                  ],
+                  "waitFor": [
+                    {
+                      "left": "02-00",
+                      "right": "02-01"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-62953843-run"
       }
     },
     "/api/v1/projects/deploy/{deployId}/epoch": {
@@ -3378,6 +3205,178 @@
           }
         },
         "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-54029130-run"
+      }
+    },
+    "/api/v1/projects/id/{id}/subSpec": {
+      "post": {
+        "summary": "提交分析SubSpec根据id",
+        "x-apifox-folder": "metal-server/工程",
+        "x-apifox-status": "developing",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "metal-server/工程"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "63561855e2b7291d712bd0b3",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "x-apifox-ignore-properties": [],
+                "x-apifox-orders": []
+              },
+              "example": {
+                "spec": {
+                  "version": "1.0",
+                  "metals": [
+                    {
+                      "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "id": "00-00",
+                      "name": "source-00",
+                      "props": {
+                        "schema": "",
+                        "path": "hdfs://namenode.hdfs.metal.org:9000/metal/test.json"
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.SqlMMapper",
+                      "id": "01-00",
+                      "name": "mapper-00",
+                      "props": {
+                        "tableAlias": "source",
+                        "sql": "select * from source where id != \"0001\""
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-00",
+                      "name": "sink-00",
+                      "props": {
+                        "numRows": 10
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-01",
+                      "name": "sink-01",
+                      "props": {
+                        "numRows": 10
+                      }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "left": "00-00",
+                      "right": "01-00"
+                    },
+                    {
+                      "left": "01-00",
+                      "right": "02-00"
+                    },
+                    {
+                      "left": "00-00",
+                      "right": "02-01"
+                    }
+                  ],
+                  "waitFor": [
+                    {
+                      "left": "02-00",
+                      "right": "02-01"
+                    }
+                  ]
+                },
+                "subSpec": {
+                  "version": "1.0",
+                  "metals": [
+                    {
+                      "type": "org.metal.backend.spark.extension.JsonFileMSource",
+                      "id": "00-00",
+                      "name": "source-00",
+                      "props": {
+                        "schema": "",
+                        "path": "hdfs://namenode.hdfs.metal.org:9000/metal/test.json"
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.SqlMMapper",
+                      "id": "01-00",
+                      "name": "mapper-00",
+                      "props": {
+                        "tableAlias": "source",
+                        "sql": "select * from source where id != \"0001\""
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-00",
+                      "name": "sink-00",
+                      "props": {
+                        "numRows": 10
+                      }
+                    },
+                    {
+                      "type": "org.metal.backend.spark.extension.ConsoleMSink",
+                      "id": "02-01",
+                      "name": "sink-01",
+                      "props": {
+                        "numRows": 10
+                      }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "left": "00-00",
+                      "right": "01-00"
+                    },
+                    {
+                      "left": "01-00",
+                      "right": "02-00"
+                    },
+                    {
+                      "left": "00-00",
+                      "right": "02-01"
+                    }
+                  ],
+                  "waitFor": [
+                    {
+                      "left": "02-00",
+                      "right": "02-01"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "x-apifox-ignore-properties": [],
+                  "x-apifox-orders": []
+                }
+              }
+            }
+          }
+        },
+        "x-run-in-apifox": "https://www.apifox.cn/web/project/1754087/apis/api-62953749-run"
       }
     }
   },
