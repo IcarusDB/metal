@@ -34,7 +34,7 @@ import { Metal, MetalTypes } from "../../model/Metal";
 import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
 import { HotNode } from "./DesignerActionSlice";
-import { useFlowPending, useHotNodesFn, useMetalFlowFn, useMetalNodeEditor, useModifyFn, useSpecFlow } from "./DesignerProvider";
+import { useBackendStatusFn, useFlowPending, useHotNodesFn, useMetalFlowFn, useMetalNodeEditor, useModifyFn, useSpecFlow } from "./DesignerProvider";
 import { layout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
@@ -59,6 +59,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const [,setMetalFlowAction] = useMetalFlowFn();
     const [nodeEditorAction] = useMetalNodeEditor();
     const [,,onHotNodesChange] = useHotNodesFn();
+    const [getBackendStatus] = useBackendStatusFn();
     const [,modify] = useModifyFn();
     const flowInstance = useReactFlow();
     const [isPending,] = useFlowPending();
@@ -307,6 +308,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
                 },
                 inputs: nodeTmpl.type === MetalTypes.SOURCE || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): inputs,
                 outputs: nodeTmpl.type === MetalTypes.SINK || nodeTmpl.type === MetalTypes.SETUP? (id: string) => ([]): outputs,    
+                backendStatus: getBackendStatus,
                 isReadOnly: isReadOnly,
             };
             const nodePropsWrapped = nodePropsWrap(nodeProps);

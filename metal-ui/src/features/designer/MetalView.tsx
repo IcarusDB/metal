@@ -1,6 +1,6 @@
 import { ImUpload, ImDownload } from "react-icons/im";
 import { AiOutlineFunction, AiOutlineDelete } from "react-icons/ai";
-import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscRunErrors } from "react-icons/vsc";
+import { VscMerge, VscExpandAll, VscExtensions, VscSymbolClass, VscRunErrors, VscDebug } from "react-icons/vsc";
 import { Connection, Node, Edge, NodeProps } from "reactflow";
 import { Handle, Position } from "reactflow";
 import {
@@ -264,59 +264,57 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         editor.load(props.data);
     }, [editor, props.data]);
 
+    const onAnalysisInputs = useCallback(() => {
+
+    }, []);
+
+    const onAnalysis = useCallback(() => {
+
+    }, []);
+
     const badgeContent = useMemo(() => (
         <MetalNodeStateTip status={status} />
     ), [status]);
     
-    const view = useMemo(()=>(
-        <Badge color="default" badgeContent={badgeContent}>
-            <div>
-                {nodeView.inputHandle(props.data)}
-                <Paper
-                    square
-                    variant="outlined"
-                    sx={{
-                        backgroundColor: "#66ffcc",
-                        borderWidth: "5px",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            boxSizing: "border-box",
-                            width: "100%",
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            alignContent: "center",
-                            justifyContent: "space-around",
-                            alignItems: "center",
-                            wordBreak: "break-all",
-                            paddingTop: "1vh",
-                            paddingBottom: "1vh",
-                            paddingRight: "1vw",
-                            paddingLeft: "1vw",
+    const view = useMemo(
+        () => (
+            <Badge color="default" badgeContent={badgeContent}>
+                <div>
+                    {nodeView.inputHandle(props.data)}
+                    <Paper
+                        square
+                        variant="outlined"
+                        sx={{
+                            backgroundColor: "#66ffcc",
+                            borderWidth: "5px",
                         }}
                     >
                         <div
                             style={{
                                 display: "flex",
+                                boxSizing: "border-box",
                                 width: "100%",
-                                flexDirection: "column",
+                                flexDirection: "row",
                                 flexWrap: "wrap",
-                                alignContent: "flex-start",
-                                justifyContent: "flex-start",
-                                alignItems: "flex-start",
+                                alignContent: "center",
+                                justifyContent: "space-around",
+                                alignItems: "center",
+                                wordBreak: "break-all",
+                                paddingTop: "1vh",
+                                paddingBottom: "1vh",
+                                paddingRight: "1vw",
+                                paddingLeft: "1vw",
                             }}
                         >
                             <div
                                 style={{
                                     display: "flex",
                                     width: "100%",
-                                    flexDirection: "row",
-                                    flexWrap: "nowrap",
-                                    alignContent: "center",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
+                                    flexDirection: "column",
+                                    flexWrap: "wrap",
+                                    alignContent: "flex-start",
+                                    justifyContent: "flex-start",
+                                    alignItems: "flex-start",
                                 }}
                             >
                                 <div
@@ -324,150 +322,204 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                         display: "flex",
                                         width: "100%",
                                         flexDirection: "row",
-                                        flexWrap: "wrap",
+                                        flexWrap: "nowrap",
                                         alignContent: "center",
-                                        justifyContent: "flex-start",
+                                        justifyContent: "space-between",
                                         alignItems: "center",
                                     }}
                                 >
                                     <div
                                         style={{
-                                            fontSize: "2em",
-                                            padding: "1vh",
+                                            display: "flex",
+                                            width: "100%",
+                                            flexDirection: "row",
+                                            flexWrap: "wrap",
+                                            alignContent: "center",
+                                            justifyContent: "flex-start",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        {nodeView.logo(props.data)}
+                                        <div
+                                            style={{
+                                                fontSize: "2em",
+                                                padding: "1vh",
+                                            }}
+                                        >
+                                            {nodeView.logo(props.data)}
+                                        </div>
+                                        <Divider orientation="vertical" flexItem />
+                                        <Typography
+                                            variant={"h6"}
+                                            sx={{
+                                                paddingLeft: "1vw",
+                                            }}
+                                        >
+                                            {metal.name}
+                                        </Typography>
                                     </div>
-                                    <Divider orientation="vertical" flexItem />
-                                    <Typography
-                                        variant={"h6"}
-                                        sx={{
-                                            paddingLeft: "1vw",
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            flexWrap: "wrap",
+                                            alignContent: "center",
+                                            justifyContent: "flex-end",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        {metal.name}
-                                    </Typography>
+                                        <Button
+                                            size="small"
+                                            sx={{ borderTopLeftRadius: 0 }}
+                                            onClick={onEdit}
+                                        >
+                                            <VscExpandAll />
+                                        </Button>
+                                        {!isReadOnly && (
+                                            <Button
+                                                size="small"
+                                                sx={{ borderBottomLeftRadius: 0 }}
+                                                onClick={onDelete}
+                                                disabled={isReadOnly}
+                                            >
+                                                <AiOutlineDelete />
+                                            </Button>
+                                        )}
+                                        {!isReadOnly && (
+                                            <Button
+                                                size="small"
+                                                sx={{ borderBottomLeftRadius: 0 }}
+                                                onClick={onAnalysis}
+                                                disabled={isReadOnly}
+                                            >
+                                                <VscDebug />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        flexWrap: "wrap",
-                                        alignContent: "center",
-                                        justifyContent: "flex-end",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <Button
-                                        size="small"
-                                        sx={{ borderTopLeftRadius: 0 }}
-                                        onClick={onEdit}
-                                    >
-                                        <VscExpandAll />
-                                    </Button>
-                                    <Button
-                                        size="small"
-                                        sx={{ borderBottomLeftRadius: 0 }}
-                                        onClick={onDelete}
-                                        disabled={isReadOnly}
-                                    >
-                                        <AiOutlineDelete />
-                                    </Button>
-                                </div>
-                            </div>
 
-                            <Divider orientation="horizontal" flexItem />
-                            <Grid container>
+                                <Divider orientation="horizontal" flexItem />
+                                <Grid container>
+                                    <Grid
+                                        item
+                                        xs={1}
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <VscSymbolClass fontSize={"1em"} />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant={"caption"} color={"GrayText"}>
+                                            {metalPkg.class}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                                <Divider orientation="horizontal" flexItem />
                                 <Grid
-                                    item
-                                    xs={1}
+                                    container
                                     sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
+                                        backgroundColor: "white",
                                     }}
                                 >
-                                    <VscSymbolClass fontSize={"1em"} />
-                                </Grid>
-                                <Grid item xs={11}>
-                                    <Typography variant={"caption"} color={"GrayText"}>
-                                        {metalPkg.class}   
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-                            <Divider orientation="horizontal" flexItem />
-                            <Grid container
-                                sx={{
-                                    backgroundColor: "white"
-                                }}
-                            >
-                                <Grid
-                                    item
-                                    xs={1}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <GrDocumentConfig fontSize={"1em"} />
-                                </Grid>
-                                <Grid item xs={11}>
-                                    <Typography variant={"caption"} color={"GrayText"}>
-                                        {_.isEmpty(metal.props)? "Undefined": "Defined"}
-                                    </Typography>
-                                </Grid>
-                                <Grid
-                                    item
-                                    xs={1}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <MdInput fontSize={"1em"} />
-                                </Grid>
-                                <Grid item xs={11}>
-                                    <Typography variant={"caption"} color={"GrayText"}>
-                                        {   
-                                            type === MetalTypes.SOURCE || type === MetalTypes.SETUP? 
-                                                "Ready": 
-                                                inputs(id).length === 0? "Unready": "Ready"
+                                    <Grid
+                                        item
+                                        xs={1}
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <GrDocumentConfig fontSize={"1em"} />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant={"caption"} color={"GrayText"}>
+                                            {_.isEmpty(metal.props) ? "Undefined" : "Defined"}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={1}
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <MdInput fontSize={"1em"} />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant={"caption"} color={"GrayText"}>
+                                            {type === MetalTypes.SOURCE || type === MetalTypes.SETUP
+                                                ? "Ready"
+                                                : inputs(id).length === 0
+                                                ? "Unready"
+                                                : "Ready"}
+                                        </Typography>
+                                        {
+                                            isReadOnly || type === MetalTypes.SOURCE || type === MetalTypes.SETUP 
+                                            ? ("")
+                                            : inputs(id).length === 0
+                                            ? ("")
+                                            : (
+                                                <Button 
+                                                    startIcon={<VscDebug />}
+                                                    onClick={onAnalysisInputs}
+                                                    size={"small"}
+                                                    variant={"outlined"}
+                                                    disabled={isReadOnly}
+                                                >
+                                                    {"Analysis all inputs."}
+                                                </Button>
+                                            )
                                         }
-                                    </Typography>
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={1}
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <GrTip fontSize={"1em"} />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant={"caption"} color={"GrayText"}>
+                                            {status}
+                                        </Typography>
+                                        {status === MetalNodeState.ERROR && msg && (
+                                            <ProblemsNotice problem={msg} />
+                                        )}
+                                    </Grid>
                                 </Grid>
-                                <Grid
-                                    item
-                                    xs={1}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <GrTip fontSize={"1em"} />
-                                </Grid>
-                                <Grid item xs={11}>
-                                    <Typography variant={"caption"} color={"GrayText"}>
-                                        {status}
-                                    </Typography>
-                                    {
-                                        status === MetalNodeState.ERROR && 
-                                        msg &&
-                                        (
-                                            <ProblemsNotice problem={msg}/>
-                                        )
-                                    }
-                                </Grid>
-                            </Grid>
+                            </div>
                         </div>
-                    </div>
-                </Paper>
-                {nodeView.outputHandle(props.data)}
-            </div>
-        </Badge>
-    ), [badgeContent, id, inputs, isReadOnly, metal.name, metal.props, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status, type]);
+                    </Paper>
+                    {nodeView.outputHandle(props.data)}
+                </div>
+            </Badge>
+        ),
+        [
+            badgeContent,
+            id,
+            inputs,
+            isReadOnly,
+            metal.name,
+            metal.props,
+            metalPkg.class,
+            msg,
+            nodeView,
+            onDelete,
+            onEdit,
+            props.data,
+            status,
+            type,
+        ]
+    );
     return (<>{view}</>)
 }
 

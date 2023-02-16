@@ -24,7 +24,7 @@ export function Viewer(props: ViewerProps) {
     });
 
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
-    const [, onNameChange] = useNameFn();
+    const [,, onNameChange] = useNameFn();
     onNameChange((name: string | undefined, prev: string | undefined) => {
         if (mainHandler !== undefined && mainHandler.rename !== undefined) {
             mainHandler.rename(viewerId(id), name === undefined ? "?" : name);

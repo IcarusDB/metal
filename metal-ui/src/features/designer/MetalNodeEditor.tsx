@@ -161,7 +161,7 @@ export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>();
-    const [setNodeEditorAction] = useMetalNodeEditorFn();
+    const [, setNodeEditorAction] = useMetalNodeEditorFn();
     const id = metalProps?.metal.id;
     const inputs = metalProps === null ? (id: string) => [] : metalProps.inputs;
 

@@ -71,6 +71,7 @@ export function MetalPkgView(props: MetalPkgProps) {
             onUpdate: () => {},
             inputs: () => ([]),
             outputs: () => ([]),
+            backendStatus: () => (undefined),
             metal: {
                 id: "node-0",
                 name: "node-0",
