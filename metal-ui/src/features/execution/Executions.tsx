@@ -11,6 +11,7 @@ import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from
 import moment from "moment";
 import { useCallback, useEffect } from "react";
 import { AiOutlineEye, AiOutlineReload } from "react-icons/ai";
+import { VscBrowser } from "react-icons/vsc";
 import { getAllExecsOfUser } from "../../api/ExecApi";
 import { useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
@@ -35,6 +36,7 @@ function useExecutions(token: string | null): [() => void, State, Exec[] | null]
 
 interface ExecAction {
     onView: () => void;
+    onOpen: () => void;
 }
 
 type ExecRow = Exec & { projectName: string; action: ExecAction };
@@ -56,10 +58,11 @@ const columns: GridColDef[] = [
         field: "action",
         headerName: "Action",
         renderCell: (params: GridRenderCellParams<ExecAction>) => {
-            const action =
+            const action: ExecAction =
                 params.value === undefined
                     ? {
                           onView: () => {},
+                          onOpen: () => {},
                       }
                     : params.value;
 
@@ -73,6 +76,9 @@ const columns: GridColDef[] = [
                 >
                     <IconButton onClick={action.onView}>
                         <AiOutlineEye />
+                    </IconButton>
+                    <IconButton onClick={action.onOpen}>
+                        <VscBrowser/>
                     </IconButton>
                 </Stack>
             );
@@ -114,6 +120,12 @@ export function Executions(props: ExecutionsProps) {
                                   ),
                               });
                           },
+                          onOpen: () => {
+                            mainHandler.openExecutionPage({
+                                id: exec.id,
+                                mainHandler: mainHandler,
+                            })
+                          }
                       },
                   }));
 

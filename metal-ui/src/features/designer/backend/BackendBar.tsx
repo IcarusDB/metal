@@ -337,7 +337,15 @@ function SyncBackendStatus(props: SyncBackendStatusProps) {
         sync();
     };
     return (
-        <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={1}>
+        <Stack 
+            sx={{
+                width: "2vw",
+            }}
+            direction="row" 
+            justifyContent="flex-start" 
+            alignItems="center" 
+            spacing={1}
+        >
             {!isPending && (
                 <IconButton
                     sx={{
@@ -349,13 +357,7 @@ function SyncBackendStatus(props: SyncBackendStatusProps) {
                     <VscSync />
                 </IconButton>
             )}
-
             <RingLoader size="1em" loading={isPending} />
-            {/* {isPending && (
-                <Typography variant="body1" color={"text.secondary"}>
-                    Syncing Backend status...
-                </Typography>
-            )} */}
         </Stack>
     );
 }
@@ -403,6 +405,7 @@ function BackendStatusBrief() {
             startIcon={icon}
             sx={{
                 borderRadius: "0px",
+                width: "13vw",
             }}
         >
             {tip}

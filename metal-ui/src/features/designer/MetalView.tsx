@@ -277,6 +277,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         <MetalNodeStateTip status={status} />
     ), [status]);
 
+    const isPropDefined = ()=> (!_.isEmpty(metal.props));
 
     const isInputReady = useCallback(() => {
         if (type === MetalTypes.SOURCE || type === MetalTypes.SETUP) {
@@ -403,7 +404,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                                 <AiOutlineDelete />
                                             </Button>
                                         )}
-                                        {!isReadOnly && (
+                                        {!isReadOnly && isInputReady() && isPropDefined() && (
                                             <NodeAnalysis
                                                 id={metal.id}
                                                 content={"Analysis"}
@@ -453,7 +454,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                     </Grid>
                                     <Grid item xs={11}>
                                         <Typography variant={"caption"} color={"GrayText"}>
-                                            {_.isEmpty(metal.props) ? "Undefined" : "Defined"}
+                                            {isPropDefined() ? "Defined" : "Undefined"}
                                         </Typography>
                                     </Grid>
                                     <Grid
@@ -512,6 +513,8 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         [badgeContent, isInputReady, isReadOnly, metal.id, metal.name, metal.props, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status]
     );
     return (<>{view}</>)
+
+    
 }
 
 export const MetalNodeTypes = {

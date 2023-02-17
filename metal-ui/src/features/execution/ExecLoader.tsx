@@ -26,7 +26,8 @@ function useExecLoader(token: string | null, id: string, name?: string): [State,
 
         if (status === State.success && exec !== null) {
             setSpec(exec.SPEC);
-            setName(name === undefined? `Project[${name}]-${exec.id}`: `Project[${exec.fromProject}]-${exec.id}`,);
+            console.log(exec);
+            setName(name !== undefined? `Project[${name}]-${exec.id}`: `Project[${exec.fromProject}]-${exec.id}`,);
             setPkgs(exec.deploy.pkgs);
             setPlatform(exec.deploy.platform);
             setBackendArgs(exec.deploy.backend.args);
@@ -46,7 +47,7 @@ export interface ExecLoaderProps {
 export function ExecLoader(props: ExecLoaderProps) {
     const {id, token, mainHandler, name} = props;
 
-    const [loadStatus, loadError] = useExecLoader(token, id);
+    const [loadStatus, loadError] = useExecLoader(token, id, name);
     const isPending = () => (loadStatus === State.pending);
     const isFailure = () => (loadStatus === State.failure);
 

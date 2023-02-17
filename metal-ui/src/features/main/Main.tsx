@@ -15,7 +15,7 @@ import { Skeleton } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaProjectDiagram } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
-import { VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
+import { VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
@@ -26,6 +26,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import _ from "lodash";
 import { Executions, ExecutionsProps } from "../execution/Executions";
 import { Viewer, ViewerProps } from "../designer/Viewer";
+import { ExecutionPage, ExecutionPageProps } from "../execution/ExecutionPage";
 
 interface Component {
     id: string,
@@ -85,7 +86,8 @@ function iconFatory(node: TabNode) {
             return <VscExtensions />;
         case "deploymentIcon":
             return <AiOutlineDeploymentUnit />;
-
+        case "executionPageIcon":
+            return <VscBrowser />;
         case "executionsIcon":
             return <GrTasks />;
 
@@ -102,12 +104,16 @@ export function viewerId(id: string) {
   return `viewer[${id}]`;
 }
 
+export function execPageId(id: string) {
+    return `exec[${id}]`;
+}
 
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
     openViewer: (props: ViewerProps) => void;
     openMetalRepo: (props: MetalRepoProps) => void;
+    openExecutionPage: (props: ExecutionPageProps) => void;
     select: (id: string) => void;
     close?: (id: string) => void;
     rename?: (id: string, newName: string) => void;
@@ -279,6 +285,35 @@ export function Main() {
         }
     };
 
+    const openExecutionPage = (props: ExecutionPageProps) => {
+        const {id} = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: execPageId(id),
+            name: `Exec[${id}]`,
+            icon: "executionPageIcon",
+            component: "executionPage",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
 
 
     const close = (id: string) => {
@@ -340,6 +375,7 @@ export function Main() {
         openDesigner: openDesigner,
         openViewer: openViewer,
         openMetalRepo: openMetalRepo,
+        openExecutionPage: openExecutionPage,
         select: select,
         close: close,
         rename: rename,
@@ -394,6 +430,16 @@ export function Main() {
                 const props: MetalRepoProps = config;
                 return memorizeCmps(component, props, ()=>(
                     <MetalRepo {...props} />
+                ), id);
+            }
+
+            case "executionPage": {
+                const props: ExecutionPageProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <ExecutionPage {...props}/>
                 ), id);
             }
 
