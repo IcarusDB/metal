@@ -1,11 +1,10 @@
-import { Alert, Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
+import { Button, Grid, IconButton, Paper, Popover, Stack, Typography } from "@mui/material";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AiFillThunderbolt, AiOutlineApi, AiOutlineWarning } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
 import {
     VscBookmark,
-    VscComment,
     VscDebugAltSmall,
     VscDebugDisconnect,
     VscDebugStart,
@@ -13,17 +12,15 @@ import {
     VscGripper,
     VscRemote,
     VscSync,
-    VscWarning,
     VscWorkspaceUnknown,
 } from "react-icons/vsc";
 import { RingLoader } from "react-spinners";
-import { analysisOfId, AnalysisResponse, analysisSubSpecOfId, deployBackendOfId, execOfId, getBackendStatus, undeployBackendOfId } from "../../../api/ProjectApi";
+import { analysisOfId, AnalysisResponse, deployBackendOfId, execOfId, getBackendStatus, undeployBackendOfId } from "../../../api/ProjectApi";
 import { useAppSelector } from "../../../app/hooks";
 import { BackendState, BackendStatus } from "../../../model/Project";
 import { extractPlatformType } from "../../project/ProjectProfile";
 import { tokenSelector } from "../../user/userSlice";
 import { useBackendArgs, useBackendStatus, useBackendStatusFn, useDeployId, useEpoch, useEpochFn, useExecInfo, useExecInfoFn, useFlowPendingFn, useHotNodesFn, useMetalFlow, useModify, useModifyFn, usePkgs, usePlatform } from "../DesignerProvider";
-import { useAsync } from "../../../api/Hooks";
 import { State } from "../../../api/State";
 import { AxiosError } from "axios";
 import { MetalNodeState } from "../MetalView";
@@ -35,7 +32,8 @@ import { ApiResponse } from "../../../api/APIs";
 import { HotNode } from "../DesignerActionSlice";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Spec } from "../../../model/Spec";
+import { BackendNotice } from "./BackendNotice";
+import { useDesignerAsync } from "../DesignerHooks";
 
 export interface BackendBarProps {
     id: string
@@ -81,7 +79,7 @@ interface BackendControlProps {
 }
 
 function useBackendDeploy(token: string | null, deployId?: string | null): [() => void, State] {
-    const [run, status] = useAsync<void>();
+    const [run, status] = useDesignerAsync<void>();
     const [,setBackendStatus] = useBackendStatusFn();
     const [,setEpoch] = useEpochFn();
     const deploy = () => {
@@ -104,7 +102,7 @@ function useBackendDeploy(token: string | null, deployId?: string | null): [() =
 }
 
 function useBackendUndeploy(token: string | null, deployId?: string | null): [() => void, State] {
-    const [run, status] = useAsync<void>();
+    const [run, status] = useDesignerAsync<void>();
     const [,setBackendStatus] = useBackendStatusFn();
     const [,setEpoch] = useEpochFn();
     const undeploy = () => {
@@ -291,7 +289,7 @@ function useSyncBackendStatus(token: string | null): [boolean, () => void] {
     const [deployId] = useDeployId();
     const [,setEpoch] = useEpochFn();
     const [backendStatus, setBackendStatus] = useBackendStatus();
-    const [run, syncStatus,] = useAsync<BackendStatus>({
+    const [run, syncStatus,] = useDesignerAsync<BackendStatus>({
         onSuccess: (status: BackendStatus) => {
             setBackendStatus(status);
             if (status.epoch !== undefined) {
@@ -412,67 +410,6 @@ function BackendStatusBrief() {
     );
 }
 
-function BackendNotice() {
-    const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-    const [status] = useBackendStatus();
-    const isFailure = status?.current === BackendState.FAILURE;
-    const icon = isFailure ? <VscWarning /> : <VscComment />;
-
-    const onClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchor(event.currentTarget);
-    };
-
-    const onClose = () => {
-        setAnchor(null);
-    };
-
-    const msg = isFailure ? (
-        <Alert severity="error" variant="outlined">
-            {status.failureMsg}
-        </Alert>
-    ) : (
-        <Alert severity="info" variant="outlined"></Alert>
-    );
-
-    return (
-        <>
-            <IconButton
-                size="small"
-                onClick={onClick}
-                sx={{
-                    borderRadius: "0px",
-                }}
-            >
-                {icon}
-            </IconButton>
-            <Popover
-                open={anchor !== null}
-                onClose={onClose}
-                anchorEl={anchor}
-                anchorOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
-                }}
-                transformOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                }}
-                PaperProps={{
-                    square: true,
-                    variant: "outlined",
-                    sx: {
-                        boxSizing: "border-box",
-                        padding: "0.5em",
-                        minWidth: "10vw",
-                    },
-                }}
-            >
-                {msg}
-            </Popover>
-        </>
-    );
-}
-
 interface ProblemProps {
     content: string,
 }
@@ -550,22 +487,12 @@ export function ProblemsNotice(props: ProblemNoticeProps) {
     );
 }
 
-function extractMetalIds(errorMsg: string) {
-    const matchResult = errorMsg.match(/^[a-zA-Z0-9\\.]+: Metal\[([a-zA-Z0-9_\-{},]+)\]/);
-    if (matchResult !== null && matchResult?.length >= 1) {
-        const metals = matchResult[1].match(/^{[a-zA-Z0-9_\-,]+}$/);
-        const metalIds = metals === null? [matchResult[1]]: matchResult[1].replace("{", "").replace("}", "").split(",")
-        return metalIds;
-    }
-    return undefined;        
-}
-
 function useAnalysis(token: string | null, id: string): [()=>void, State, AnalysisResponse | null] {
     const [flowAction] = useMetalFlow();
     const [,setFlowPending] = useFlowPendingFn();
     const [,setHotNodes] = useHotNodesFn();
     const [,modify] = useModifyFn();
-    const [run, status, result] = useAsync<AnalysisResponse>({
+    const [run, status, result] = useDesignerAsync<AnalysisResponse>({
         onSuccess: (result) => {
             const analysed = result.analysed.map(ide => {
                 const r: HotNode= [ide, MetalNodeState.ANALYSISED, undefined];
@@ -593,7 +520,7 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
             modify(true);
             const errorMsg = ApiResponse.extractErrorMessage(reason);
             if (errorMsg) {
-                const metalIds = extractMetalIds(errorMsg);
+                const metalIds = ApiResponse.extractMetalIds(errorMsg);
                 if (metalIds) {
                     setHotNodes(
                         flowAction.allNodes().map(nd => {
@@ -628,74 +555,6 @@ function useAnalysis(token: string | null, id: string): [()=>void, State, Analys
     return [analysis, status, result];
 }
 
-export function useAnalysisFn(scope: () => string[]): [
-    (token: string | null, id: string, spec: Spec, subSpec: Spec)=>void, 
-    State] {
-    const [,setFlowPending] = useFlowPendingFn();
-    const [,setHotNodes] = useHotNodesFn();
-    const [,modify] = useModifyFn();
-    const [run, status] = useAsync<AnalysisResponse>({
-        onSuccess: (result) => {
-            const analysed = result.analysed.map(ide => {
-                const r: HotNode= [ide, MetalNodeState.ANALYSISED, undefined];
-                return r;
-            });
-            const unAnalysed = result.unAnalysed.map(ide => {
-                const r: HotNode = [ide, MetalNodeState.UNANALYSIS, undefined];
-                return r;
-            });
-           setFlowPending(false);
-           modify(false);
-            setHotNodes([
-                ...analysed,
-                ...unAnalysed,
-            ])
-        },
-        onPending: () => {
-            setFlowPending(true);
-            setHotNodes(
-                scope().map(nd => [nd, MetalNodeState.PENDING, undefined])
-            );
-        },
-        onError: (reason) => {
-            setFlowPending(false);
-            modify(true);
-            const errorMsg = ApiResponse.extractErrorMessage(reason);
-            if (errorMsg) {
-                const metalIds = extractMetalIds(errorMsg);
-                if (metalIds) {
-                    setHotNodes(
-                        scope().map(nd => {
-                            if (_.find(metalIds, (mid => mid === nd))) {
-                                return [nd, MetalNodeState.ERROR, errorMsg];
-                            }
-                            return [nd, MetalNodeState.UNANALYSIS, undefined];
-                        })
-                    );
-                } else {
-                    setHotNodes(
-                        scope().map(nd => [nd, MetalNodeState.ERROR, errorMsg])
-                    );
-                }
-            } else {
-                setHotNodes(
-                    scope().map(nd => [nd, MetalNodeState.ERROR, "Fail to analysis."])
-                );
-            }
-            
-        }
-    });
-
-    const analysis = (token: string | null, id: string, spec: Spec, subSpec: Spec) => {
-        if (token === null) {
-            return;
-        }
-        run(analysisSubSpecOfId(token, id, spec, subSpec));
-    }
-
-    return [analysis, status];
-}
-
 
 function useExec(token: string | null, id: string): [()=>void, State] {
     const [flowAction] = useMetalFlow();
@@ -703,7 +562,7 @@ function useExec(token: string | null, id: string): [()=>void, State] {
     const [,setHotNodes] = useHotNodesFn();
     const [,sync] = useSyncExecInfo(token, id);
     const [,setExec] = useExecInfoFn();
-    const [run, status] = useAsync<void>({
+    const [run, status] = useDesignerAsync<void>({
         onPending: () => {
             setExec(undefined);
             setFlowPending(true);
@@ -715,7 +574,7 @@ function useExec(token: string | null, id: string): [()=>void, State] {
             setFlowPending(false);
             const errorMsg = ApiResponse.extractErrorMessage(reason);
             if (errorMsg) {
-                const metalIds = extractMetalIds(errorMsg);
+                const metalIds = ApiResponse.extractMetalIds(errorMsg);
                 if (metalIds) {
                     setHotNodes(
                         flowAction.allNodes().map(nd => {
@@ -767,7 +626,7 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
     const [,setFlowPending] = useFlowPendingFn();
     const [,setHotNodes] = useHotNodesFn();
 
-    const [run, status] = useAsync<Exec | undefined>({
+    const [run, status] = useDesignerAsync<Exec | undefined>({
         onSuccess: (recent) => {
             if (recent === undefined) {
                 setExec(undefined);
@@ -806,7 +665,7 @@ function useSyncExecInfo(token: string | null, id: string): [boolean, ()=>void]{
         onError: (reason) => {
             const errorMsg = ApiResponse.extractErrorMessage(reason);
             if (errorMsg) {
-                const metalIds = extractMetalIds(errorMsg);
+                const metalIds = ApiResponse.extractMetalIds(errorMsg);
                 if (metalIds) {
                     setHotNodes(
                         flowAction.allNodes().map(nd => {

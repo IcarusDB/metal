@@ -1,141 +1,13 @@
-import {
-    Alert,
-    Divider,
-    IconButton,
-    List,
-    ListItem,
-    Popover,
-    Typography,
-} from "@mui/material";
+import { Alert, Divider, IconButton, List, ListItem, Popover, Typography } from "@mui/material";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { VscBell, VscBellDot, VscClearAll } from "react-icons/vsc";
-import create from "zustand";
-import { subscribeWithSelector } from "zustand/middleware";
+import { useMessages, useMessagesAction } from "../DesignerProvider";
 
-export interface Message {
-    content: string | JSX.Element;
-    time: number;
-}
 
-export interface Logger {
-    info: (message: string | JSX.Element) => void;
-    warning: (message: string | JSX.Element) => void;
-    success: (message: string | JSX.Element) => void;
-    error: (message: string | JSX.Element) => void;
-}
-
-interface Store {
-    messages: Message[];
-}
-
-export interface NoticeAction {
-    put: (message: string | JSX.Element) => void;
-    clear: () => void;
-}
-
-declare type NoticeStore = Store & NoticeAction & Logger;
-
-const MAX_SIZE = 64;
-
-function combinePrevMessages(messages: Message[], message: Message) {
-    const combineMsgs = [message, ...messages];
-    combineMsgs.splice(MAX_SIZE);
-    return combineMsgs;
-}
-
-export function loggerSelector(store: NoticeStore): Logger {
-    return {
-        info: store.info,
-        error: store.error,
-        success: store.success,
-        warning: store.warning,
-    }
-}
-
-export const useNotice = create<NoticeStore>()(
-    subscribeWithSelector((set, get) => ({
-        messages: [],
-        put: (message: string | JSX.Element) => {
-            set((prev) => ({
-                messages: combinePrevMessages(
-                    prev.messages, {
-                        content: message,
-                        time: new Date().getTime(),
-                    }
-                )
-            }));
-        },
-        info: (message: string | JSX.Element) => {
-            const wrap = (
-                <Alert severity="info" variant="outlined">
-                    {message}
-                </Alert>
-            );
-            set((prev) => ({
-                messages: combinePrevMessages(
-                    prev.messages, {
-                        content: wrap,
-                        time: new Date().getTime(),
-                    }
-                )
-            }));
-        },
-        warning: (message: string | JSX.Element) => {
-            const wrap = (
-                <Alert severity="warning" variant="outlined">
-                    {message}
-                </Alert>
-            );
-            set((prev) => ({
-                messages: combinePrevMessages(
-                    prev.messages, {
-                        content: wrap,
-                        time: new Date().getTime(),
-                    }
-                )
-            }));
-        },
-        success: (message: string | JSX.Element) => {
-            const wrap = (
-                <Alert severity="success" variant="outlined">
-                    {message}
-                </Alert>
-            )
-            set((prev) => ({
-                messages: combinePrevMessages(
-                    prev.messages, {
-                        content: wrap,
-                        time: new Date().getTime(),
-                    }
-                )
-            }));
-        },
-        error: (message: string | JSX.Element) => {
-            const wrap = (
-                <Alert severity="error" variant="outlined">
-                    {message}
-                </Alert>
-            );
-            set((prev) => ({
-                messages: combinePrevMessages(
-                    prev.messages, {
-                        content: wrap,
-                        time: new Date().getTime(),
-                    }
-                )
-            }));
-        },
-        clear: () => {
-            set(() => ({
-                messages: [],
-            }));
-        },
-    }))
-);
-
-export function Notice() {
-    const [messages, clear] = useNotice((state) => [state.messages, state.clear]);
+export function BackendNotice() {
+    const [messages,, onMessagesChange] = useMessages();
+    const {clear} = useMessagesAction();
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
     const [isNew, setIsNew] = useState(false);
 
@@ -155,30 +27,37 @@ export function Notice() {
     const isOpen = anchor !== null;
 
     useEffect(()=>{
-        return useNotice.subscribe(
-            (state) => state.messages,
-            (state, prev) => {
-                if (state.length >= prev.length) {
-                    setIsNew(true);
-                }
+        onMessagesChange((msgs, prev) => {
+            if (msgs === undefined) {
+                setIsNew(false);
+                return;
             }
-        );
-    }, []);
 
+            if (prev === undefined) {
+                setIsNew(true);
+                return;
+            }
+
+            if (msgs?.length >= prev?.length) {
+                setIsNew(true);
+            }
+        })
+    }, [onMessagesChange]);
+    
     return (
-        <>
+<>
             <IconButton onClick={onClick}>{isNew ? <VscBellDot /> : <VscBell />}</IconButton>
             <Popover
                 open={isOpen}
                 anchorEl={anchor}
                 onClose={onClose}
                 anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                }}
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
                 transformOrigin={{
-                    vertical: "top",
-                    horizontal: "right",
+                    vertical: 'bottom',
+                    horizontal: 'right',
                 }}
             >
                 <div

@@ -1,13 +1,15 @@
 import { StoreApi } from "zustand";
 import { Exec } from "../../model/Exec";
 import { BackendStatus } from "../../model/Project";
+import { Message } from "../notice/Notice";
 
-export interface DeploySlice {
+export interface BackendSlice {
     projectId?: string,
     deployId?: string,
     epoch?: number,
     backendStatus?: BackendStatus,
     exec?: Exec,
+    messages: Message[],
     getProjectId: () => string | undefined;
     setProjectId: (id: string) => void;
     getDeployId: () => string | undefined;
@@ -20,12 +22,14 @@ export interface DeploySlice {
     getDeploy: () => {id?: string, epoch?: number};
     setExec: (exec: Exec | undefined) => void;
     getExec: () => Exec | undefined;
+    getMessages: () => Message[];
+    setMessages: (messages: Message[]) => void;
 }
 
-export const createDeploySlice = (
-    set: StoreApi<DeploySlice>['setState'],
-    get: StoreApi<DeploySlice>['getState'],
-): DeploySlice => ({
+export const createBackendSlice = (
+    set: StoreApi<BackendSlice>['setState'],
+    get: StoreApi<BackendSlice>['getState'],
+): BackendSlice => ({
     getProjectId: () => (get().projectId),
     setProjectId: (id: string) => {
         set((prev) => ({
@@ -69,4 +73,12 @@ export const createDeploySlice = (
         }));
     },
     getExec: () => (get().exec),
+    messages: [],
+    getMessages: () => (get().messages),
+    setMessages: (messages: Message[]) => {
+        set((prev) => ({
+            ...prev,
+            messages: messages
+        }));
+    }
 })

@@ -12,21 +12,26 @@ import {
     Grid,
     IconButton,
 } from "@mui/material";
-import { MouseEvent, useCallback, useMemo } from "react";
+import { MouseEvent, useCallback, useMemo, useState } from "react";
 import { MetalPkg } from "../../model/MetalPkg";
 import { Metal, Metals, MetalTypes } from "../../model/Metal";
 import { GraphTopology } from "../../model/GraphTopology";
-import { MetalNodeEditorAction } from "./DesignerActionSlice";
+import { HotNode, MetalNodeEditorAction } from "./DesignerActionSlice";
 import { IReadOnly } from "../ui/Commons";
 import { ScaleLoader } from "react-spinners";
 import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnchecked } from "react-icons/md";
 import { GrDocumentConfig, GrTip } from "react-icons/gr";
 import _ from "lodash";
-import { ProblemsNotice, useAnalysisFn } from "./backend/BackendBar";
+import { ProblemsNotice } from "./backend/BackendBar";
 import { BackendStatus } from "../../model/Project";
-import { useMetalFlowFn, useProjectIdFn } from "./DesignerProvider";
+import { useFlowPendingFn, useHotNodesFn, useMessagsLogger, useMetalFlowFn, useModifyFn, useProjectIdFn } from "./DesignerProvider";
 import { tokenSelector } from "../user/userSlice";
 import { useAppSelector } from "../../app/hooks";
+import { useDesignerAsync } from "./DesignerHooks";
+import { AnalysisResponse, analysisSubSpecOfId } from "../../api/ProjectApi";
+import { State } from "../../api/State";
+import { Spec } from "../../model/Spec";
+import { ApiResponse } from "../../api/APIs";
 
 export const MetalViewIcons = {
     SOURCE: <ImUpload />,
@@ -259,21 +264,6 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
     const isReadOnly = props.data.isReadOnly || status === MetalNodeState.PENDING;
     const editor = props.data.editor;
     const nodeView: IMetalNodeView = MetalNodeViews.metalNodeView(type);
-    const token: string | null = useAppSelector((state) => {
-        return tokenSelector(state);
-    });
-    const [getMetalFlowAction] = useMetalFlowFn();
-    const [getProjectId] = useProjectIdFn();
-    const scope = useCallback(() => {
-        const action = getMetalFlowAction();
-        if (action !== undefined) {
-            const spec = action.exportSubSpec(metal.id, false);
-            return spec? spec.metals.map(m => m.id): [];
-        }
-        return [];
-    }, [getMetalFlowAction, metal.id]);
-
-    const [analysis, analysisStatus] = useAnalysisFn(scope);
 
     const onEdit = useCallback((event: MouseEvent<HTMLAnchorElement> | MouseEvent<HTMLButtonElement>) => {
         if (editor === undefined) {
@@ -282,41 +272,6 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
         editor.load(props.data);
     }, [editor, props.data]);
 
-    const onAnalysisInputs = useCallback(() => {
-        const action = getMetalFlowAction();
-        if (action) {
-            const projectId = getProjectId();
-            const spec = action.export();
-            const subSpec = action.exportSubSpec(metal.id, false);
-            if (projectId === undefined || subSpec === undefined) {
-                return;
-            }
-            const checkResult = action.checkSpec(subSpec);
-            if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
-                return;
-            }
-            analysis(token, projectId, spec, subSpec);
-
-        }
-    }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
-
-    const onAnalysis = useCallback(() => {
-        const action = getMetalFlowAction();
-        if (action) {
-            const projectId = getProjectId();
-            const spec = action.export();
-            const subSpec = action.exportSubSpec(metal.id, true);
-            if (projectId === undefined || subSpec === undefined) {
-                return;
-            }
-            const checkResult = action.checkSpec(subSpec);
-            if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
-                return;
-            }
-            analysis(token, projectId, spec, subSpec);
-
-        }
-    }, [analysis, getMetalFlowAction, getProjectId, metal.id, token]);
 
     const badgeContent = useMemo(() => (
         <MetalNodeStateTip status={status} />
@@ -449,14 +404,12 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                             </Button>
                                         )}
                                         {!isReadOnly && (
-                                            <Button
-                                                size="small"
-                                                sx={{ borderBottomLeftRadius: 0 }}
-                                                onClick={onAnalysis}
-                                                disabled={isReadOnly}
-                                            >
-                                                <VscDebug />
-                                            </Button>
+                                            <NodeAnalysis
+                                                id={metal.id}
+                                                content={"Analysis"}
+                                                isContainNode={true}
+                                                isReadOnly={isReadOnly}
+                                            />
                                         )}
                                     </div>
                                 </div>
@@ -516,23 +469,18 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                                     </Grid>
                                     <Grid item xs={11}>
                                         <Typography variant={"caption"} color={"GrayText"}>
-                                            {isInputReady()? "Ready": "Unready"}
+                                            {isInputReady() ? "Ready" : "Unready"}
                                         </Typography>
-                                        {
-                                            isReadOnly || !isInputReady() 
-                                            ? ("")
-                                            : (
-                                                <Button 
-                                                    startIcon={<VscDebug />}
-                                                    onClick={onAnalysisInputs}
-                                                    size={"small"}
-                                                    variant={"outlined"}
-                                                    disabled={isReadOnly}
-                                                >
-                                                    {"Analysis all inputs."}
-                                                </Button>
-                                            )
-                                        }
+                                        {isReadOnly || !isInputReady() ? (
+                                            ""
+                                        ) : (
+                                            <NodeAnalysis
+                                                id={metal.id}
+                                                content={"Analysis all inputs"}
+                                                isContainNode={false}
+                                                isReadOnly={isReadOnly}
+                                            />
+                                        )}
                                     </Grid>
                                     <Grid
                                         item
@@ -561,7 +509,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                 </div>
             </Badge>
         ),
-        [badgeContent, isInputReady, isReadOnly, metal.name, metal.props, metalPkg.class, msg, nodeView, onAnalysis, onAnalysisInputs, onDelete, onEdit, props.data, status]
+        [badgeContent, isInputReady, isReadOnly, metal.id, metal.name, metal.props, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status]
     );
     return (<>{view}</>)
 }
@@ -569,3 +517,145 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
 export const MetalNodeTypes = {
     metal: MetalNode,
 };
+
+
+function useNodeAnalysis(token: string | null, id: string | undefined, scope: ()=> string[]): [
+    (spec: Spec, subSpec: Spec) => void,
+    State
+] {
+    const [,setFlowPending] = useFlowPendingFn();
+    const [,setHotNodes] = useHotNodesFn();
+    const [,modify] = useModifyFn();
+    const [run, status] = useDesignerAsync<AnalysisResponse>({
+        onSuccess: (result) => {
+            const analysed = result.analysed.map(ide => {
+                const r: HotNode= [ide, MetalNodeState.ANALYSISED, undefined];
+                return r;
+            });
+            const unAnalysed = result.unAnalysed.map(ide => {
+                const r: HotNode = [ide, MetalNodeState.UNANALYSIS, undefined];
+                return r;
+            });
+           setFlowPending(false);
+           modify(false);
+            setHotNodes([
+                ...analysed,
+                ...unAnalysed,
+            ])
+        },
+        onPending: () => {
+            setFlowPending(true);
+            setHotNodes(
+                scope().map(nd => [nd, MetalNodeState.PENDING, undefined])
+            );
+        },
+        onError: (reason) => {
+            setFlowPending(false);
+            modify(true);
+            const errorMsg = ApiResponse.extractErrorMessage(reason);
+            if (errorMsg) {
+                const metalIds = ApiResponse.extractMetalIds(errorMsg);
+                if (metalIds) {
+                    setHotNodes(
+                        scope().map(nd => {
+                            if (_.find(metalIds, (mid => mid === nd))) {
+                                return [nd, MetalNodeState.ERROR, errorMsg];
+                            }
+                            return [nd, MetalNodeState.UNANALYSIS, undefined];
+                        })
+                    );
+                } else {
+                    setHotNodes(
+                        scope().map(nd => [nd, MetalNodeState.ERROR, errorMsg])
+                    );
+                }
+            } else {
+                setHotNodes(
+                    scope().map(nd => [nd, MetalNodeState.ERROR, "Fail to analysis."])
+                );
+            }
+            
+        }
+    });
+    const analysis = useCallback((spec: Spec, subSpec: Spec) => {
+        if (token === null || id === undefined) {
+            return;
+        }
+        run(analysisSubSpecOfId(token, id, spec, subSpec));
+    }, [id, run, token]);
+    
+    return [analysis, status];
+}
+
+interface NodeAnalysisProps extends IReadOnly {
+    id: string,
+    isContainNode: boolean,
+    content: string,
+}
+
+function NodeAnalysis(props: NodeAnalysisProps) {
+    const {id, isReadOnly, isContainNode, content} = props;
+    const token: string | null = useAppSelector((state) => {
+        return tokenSelector(state);
+    });
+    const [getProjectId] = useProjectIdFn();
+    const [flowAction] = useMetalFlowFn();
+    const {warning} = useMessagsLogger();
+    const scope = useCallback(() => {
+        if (flowAction) {
+            const action = flowAction();
+            if (action) {
+                const spec = action.exportSubSpec(id, isContainNode);
+                if (spec) {
+                    return spec.metals.map(m => m.id);
+                }
+            }
+        }
+        return [];
+    }, [flowAction, id, isContainNode]);
+
+    const [analysis, analysisStatus] = useNodeAnalysis(token, getProjectId(), scope);
+    const [isTipFail , setTipFail] = useState<boolean>(false);
+    const isPending = analysisStatus === State.pending;
+    const isFail = analysisStatus === State.failure || isTipFail;
+
+    const onClick = () => {
+        const action = flowAction();
+        if (action) {
+            const projectId = getProjectId();
+            if (projectId === undefined) {
+                warning("Project id is undefined.")
+                setTipFail(true);
+                return;
+            }
+            const spec = action.export();
+            const subSpec = action.exportSubSpec(id, isContainNode);
+            if (subSpec === undefined) {
+                warning("Fail export subSpec.");
+                setTipFail(true);
+                return;
+            }
+            const checkResult = action.checkSpec(subSpec);
+            if (checkResult.emptyMetals.length !== 0 || checkResult.inputsIllegalMetals.length !== 0) {
+                const emptyMsg = `Property undefined: [${checkResult.emptyMetals.join(",")}]`;
+                const illegalInputsMsg = `Illegal inputs: [${checkResult.inputsIllegalMetals.map(m => m.metal).join(",")}]`
+                const warnMsg = `${emptyMsg}\n${illegalInputsMsg}`;
+                warning(warnMsg)
+                setTipFail(true);
+                return;
+            }
+            analysis(spec, subSpec);
+        }
+    }
+
+    return (
+        <IconButton
+            color={isFail? "error": "info"}
+            onClick={onClick}
+            size={"small"}
+            disabled={isReadOnly || isPending}
+        >
+            <VscDebug />
+        </IconButton>
+    );
+}

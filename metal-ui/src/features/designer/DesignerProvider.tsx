@@ -1,14 +1,16 @@
-import { createContext, ReactNode, useContext } from "react"
+import { createContext, ReactNode, useCallback, useContext } from "react"
 import { createStore, useStore} from "zustand";
 import { subscribeWithSelector, devtools } from "zustand/middleware";
 import shallow from 'zustand/shallow';
 import { SpecSlice, createSpecSlice } from "./SpecSlice";
 import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction, HotNode } from "./DesignerActionSlice";
 import { Spec } from "../../model/Spec";
-import { createDeploySlice, DeploySlice } from "./DeploySlice";
+import { createBackendSlice, BackendSlice,} from "./BackendSlice";
 import { BackendStatus } from "../../model/Project";
 import { Exec } from "../../model/Exec";
 import { SpecFlow } from "./SpecLoader";
+import { Logger, Message, NoticeAction } from "../notice/Notice";
+import { Alert } from "@mui/material";
 
 declare type Subscribe<S> = (listener: (s: S | undefined, prev: S | undefined) => void) => () => void;
 declare type IChangeFns <S> = [
@@ -17,13 +19,13 @@ declare type IChangeFns <S> = [
     Subscribe<S>,
 ];
 
-declare type DesingerStore = DesignerActionSlice & SpecSlice & DeploySlice;
+declare type DesingerStore = DesignerActionSlice & SpecSlice & BackendSlice;
 
 const defaultStore = createStore<DesingerStore>()(
     subscribeWithSelector((set, get) => ({
         ...createDesignerActionSlice(set, get),
         ...createSpecSlice(set, get),
-        ...createDeploySlice(set, get),
+        ...createBackendSlice(set, get),
     }))
 );
 
@@ -645,6 +647,98 @@ export function useExecInfoFn(): IChangeFns<Exec | undefined> {
     )
 }
 
+export function useMessages(): [
+    Message[],
+    (messages: Message[]) => void,
+    Subscribe<Message[]>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Message[]> = (listener) => (
+        store.subscribe(
+            state => state.messages,
+            listener
+        )
+    )
+
+    return useStore(
+        store,
+        (state) => ([
+            state.messages,
+            state.setMessages,
+            sub
+        ]),
+        shallow
+    )
+}
+
+export function useMessagesFn(): IChangeFns<Message[]>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Message[]> = (listener) => (
+        store.subscribe(
+            state => state.messages,
+            listener
+        )
+    )
+
+    return useStore(
+        store,
+        (state) => ([
+            state.getMessages,
+            state.setMessages,
+            sub
+        ]),
+        shallow
+    )
+}
+
+const MAX_SIZE = 64;
+
+function combinePrevMessages(messages: Message[], message: Message) {
+    const combineMsgs = [message, ...messages];
+    combineMsgs.splice(MAX_SIZE);
+    return combineMsgs;
+}
+
+export function useMessagesAction(): NoticeAction {
+    const store = useContext(DesignerStoreContext);
+
+    return useStore(
+        store,
+        (state) => ({
+            put: (message: string | JSX.Element) => {
+                const msg: Message = {
+                    content: message,
+                    time: new Date().getTime(),
+                };
+                state.setMessages(combinePrevMessages(state.messages, msg));
+            },
+            clear: () => {
+                state.setMessages([]);
+            }
+        }),
+        shallow
+    )
+}
+
+export function useMessagsLogger(): Logger {
+    const {put} = useMessagesAction();
+
+    const log = useCallback((message: string | JSX.Element, severity: "info" | "warning" | "success" | "error") => {
+        const wrap = (
+            <Alert severity={severity} variant="outlined">
+                {message}
+            </Alert>
+        );
+        put(wrap);
+    }, [put]);
+
+    return {
+        info: (message) => {log(message, "info");},
+        warning: (message) => {log(message, "warning");},
+        success: (message) => {log(message, "success");},
+        error: (message) => {log(message, "error")},
+    };
+}
 
 
 export interface DesignerProviderProps {
@@ -658,7 +752,7 @@ export function DesignerProvider(props: DesignerProviderProps) {
         devtools(subscribeWithSelector((set, get) => ({
             ...createDesignerActionSlice(set, get),
             ...createSpecSlice(set, get),
-            ...createDeploySlice(set, get),
+            ...createBackendSlice(set, get),
         })), {
             name: "zustand",
             enabled: true,
