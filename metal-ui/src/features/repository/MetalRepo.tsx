@@ -26,6 +26,7 @@ import { tokenSelector } from "../user/userSlice";
 import { Mutable } from "../../model/Mutable";
 import { State } from "../../api/State";
 import { Logger, loggerSelector, useNotice } from "../notice/Notice";
+import shallow from 'zustand/shallow';
 export interface MetalRepoProps {}
 
 export function MetalRepo(props: MetalRepoProps) {
@@ -157,7 +158,7 @@ function uploadTip(status: State) {
 }
 
 function MetalRepoMaintain(props: MetalRepoMaintainProps) {
-    const notice = useNotice<Logger>(loggerSelector);
+    const notice = useNotice<Logger>(loggerSelector, shallow);
     const { token } = props;
     const [upload, uploadStatus, uploadError] = useMetalPkgsUpload(token);
     const [scope, setScope] = useState<Scope>(Scope.PRIVATE);

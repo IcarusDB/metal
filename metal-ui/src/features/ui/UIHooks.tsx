@@ -1,11 +1,11 @@
+import shallow from 'zustand/shallow';
 import { ApiResponse } from "../../api/APIs";
 import { IAsyncCallback, useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
 import { Logger, loggerSelector, useNotice } from "../notice/Notice";
 
 export function useUIAsync<R>(callback?: IAsyncCallback<R>): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
-    console.log("UI Async update");
-    const {warning, error} = useNotice<Logger>(loggerSelector);
+    const {warning, error} = useNotice<Logger>(loggerSelector, shallow);
     return useAsync<R>({
         ...callback,
         onError: (reason) => {
