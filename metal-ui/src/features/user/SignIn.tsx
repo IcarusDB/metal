@@ -17,6 +17,9 @@ import {
     CircularProgress,
     Paper,
 } from "@mui/material";
+import { TokenUser } from "./UserBar";
+import jwtDecode from "jwt-decode";
+import { useUserAction } from "./UserStore";
 
 enum State {
     idle,
@@ -31,6 +34,7 @@ function SignInForm() {
     const dispatch = useAppDispatch();
     const [state, setState] = useState(State.idle);
     const [token, setToken] = useState<string | null>(null);
+    const {setUser} = useUserAction();
     const isPending = () => {
         return state === State.pending;
     };
@@ -55,6 +59,16 @@ function SignInForm() {
             (_token: string) => {
                 setState(State.success);
                 setToken(_token);
+                const user: TokenUser = _token === null? {
+                    username: "Off Line",
+                    _id: "*",
+                    iat: -1,
+                }: jwtDecode(_token);
+                setUser({
+                    id: user._id,
+                    name: user.username,
+                    roles: []
+                });
             },
             (reason) => {
                 setState(State.fail);

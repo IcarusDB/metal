@@ -12,34 +12,30 @@ import { IChangeEvent } from "@rjsf/core";
 import { Form } from "@rjsf/mui";
 import { RJSFSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
-import jwtDecode from "jwt-decode";
 import { useCallback } from "react";
 import { VscChevronDown } from "react-icons/vsc";
 import { State } from "../../api/State";
 import { updateName, UpdateNameRequest, UpdateNameResponse, updatePassword, UpdatePasswordRequest, UpdatePasswordResponse } from "../../api/UserApi";
-import { useAppSelector } from "../../app/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { MainHandler } from "../main/Main";
 import { useUIAsync } from "../ui/UIHooks";
-import { TokenUser } from "./UserBar";
-import { tokenSelector } from "./userSlice";
+import { logout, tokenSelector } from "./userSlice";
+import { useUser, useUserAction } from "./UserStore";
+import { Logout } from "@mui/icons-material";
 
 export interface UserPageProps {
     mainHandler: MainHandler;
 }
 
 export function UserPage(props: UserPageProps) {
+    const dispatch = useAppDispatch();
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-
-    const user: TokenUser =
-        token === null
-            ? {
-                  username: "Off Line",
-                  _id: "*",
-                  iat: -1,
-              }
-            : jwtDecode(token);
+    const onLogout = useCallback(()=>{
+        dispatch(logout(undefined));
+    }, [dispatch]);
+    const {user} = useUser();
 
     return (
         <div
@@ -52,24 +48,28 @@ export function UserPage(props: UserPageProps) {
             }}
         >
             <Typography variant="h6" color={"text.secondary"}>
-                {`User[${user.username}]`}
+                {`User[${user.name}]`}
             </Typography>
-            <UserNamePage token={token}/>
-            <UserPasswordPage token={token} />
+            <UserNamePage token={token} logout={onLogout}/>
+            <UserPasswordPage token={token} logout={onLogout}/>
         </div>
     );
 }
 
 function useUpdateName(token: string | null): [(newName: string) => void, State] {
+    const {setName} = useUserAction();
     const [run, status] = useUIAsync<UpdateNameResponse>();
     const update = useCallback(
         (newName: string) => {
             if (token === null) {
                 return;
             }
-            run(updateName(token, newName));
+            run(updateName(token, newName).then(response => {
+                setName(newName);
+                return response;
+            }));
         },
-        [run, token]
+        [run, setName, token]
     );
 
     return [update, status];
@@ -77,11 +77,12 @@ function useUpdateName(token: string | null): [(newName: string) => void, State]
 
 interface UserNamePageProps {
     token: string | null;
+    logout: () => void;
 }
 
 
 function UserNamePage(props: UserNamePageProps) {
-    const { token } = props;
+    const { token, logout } = props;
     const [update, updateStatus] = useUpdateName(token);
     const formSchema: RJSFSchema = {
         type: "object",
@@ -113,7 +114,18 @@ function UserNamePage(props: UserNamePageProps) {
                     isPending() && <LinearProgress />
                 }
                 <Divider orientation="horizontal" flexItem />
-                { isSuccess() && <Alert severity="info" variant="outlined">{"Success to update name."}</Alert>}
+                { isSuccess() && 
+                    <Alert severity="info" variant="outlined">
+                        {"Success to update name. Please sign in again."}
+                        <Button 
+                            startIcon={<Logout />}
+                            variant={"contained"}
+                            onClick={logout}
+                        > 
+                            {"Logout"} 
+                        </Button>
+                    </Alert>
+                }
                 { isFailure() && <Alert severity="error" variant="outlined">{"Fail to update name."}</Alert>}
                 <Form schema={formSchema} validator={validator} onSubmit={onSubmit} readonly={isPending()}>
                     <Button type={"submit"} variant={"contained"}>
@@ -142,11 +154,12 @@ function useUpdatePassword(token: string | null): [(oldPassword: string, newPass
 }
 
 interface UserPasswordPageProps {
-    token: string | null
+    token: string | null,
+    logout: () => void,
 }
 
 function UserPasswordPage(props: UserPasswordPageProps) {
-    const { token } = props;
+    const { token, logout } = props;
     const [update, updateStatus] = useUpdatePassword(token);
     const formSchema: RJSFSchema = {
         type: "object",
@@ -191,7 +204,18 @@ function UserPasswordPage(props: UserPasswordPageProps) {
                     isPending() && <LinearProgress />
                 }
                 <Divider orientation="horizontal" flexItem />
-                { isSuccess() && <Alert severity="info" variant="outlined">{"Success to update password."}</Alert>}
+                { isSuccess() && 
+                    <Alert severity="info" variant="outlined">
+                        {"Success to update password. Please sign in again."}
+                        <Button 
+                            startIcon={<Logout />}
+                            variant={"contained"}
+                            onClick={logout}
+                        > 
+                            {"Logout"} 
+                        </Button>
+                    </Alert>
+                }
                 { isFailure() && <Alert severity="error" variant="outlined">{"Fail to update password."}</Alert>}
                 <Form 
                     schema={formSchema} 

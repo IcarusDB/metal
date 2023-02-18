@@ -72,3 +72,59 @@ export async function getRecentExecOfProject(token: string, id: string, deployId
         }
     });
 }
+
+export interface RecoverRequest {
+    execId: string,
+}
+
+export interface RecoverResponse {
+    projectId: string
+}
+
+export async function recoverProjectFromExec(token: string, id: string) {
+    const url = `/api/v1/projects/recover/exec`;
+    const request: RecoverRequest = {
+        execId: id,
+    };
+
+    return instance
+        .post(url, request, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        })
+        .then((response) => {
+            try {
+                const resp: ApiResponseEntity = response.data;
+                ApiResponse.mayBeFailure(resp);
+                const rt: RecoverResponse = resp.data;
+                return rt;
+            } catch (error) {
+                return Promise.reject(error);
+            }
+        });
+}
+
+export interface RemoveExecResponse {
+
+}
+
+export async function removeExec(token: string, id: string) {
+    const url = `/api/v1/execs/id/${id}`;
+    return instance.delete(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {  
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const rt: RemoveExecResponse = resp.data;
+            return rt;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    })
+}
+
+

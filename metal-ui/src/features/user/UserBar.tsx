@@ -1,10 +1,10 @@
 import { Logout } from "@mui/icons-material";
 import { Avatar, Divider, IconButton, ListItemIcon, Menu, MenuItem, Typography } from "@mui/material";
-import jwtDecode from "jwt-decode";
 import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useAppDispatch } from "../../app/hooks";
 import { Notice } from "../notice/Notice";
-import { logout, tokenSelector } from "./userSlice";
+import { logout } from "./userSlice";
+import { useUser } from "./UserStore";
 
 export interface TokenUser {
     username: string,
@@ -18,15 +18,7 @@ export interface UserBarProps {
 
 export function UserBar(props: UserBarProps) {
     const dispatch = useAppDispatch();
-    const token: string | null = useAppSelector((state) => {
-        return tokenSelector(state);
-    });
-    
-    const user: TokenUser = token === null? {
-        username: "Off Line",
-        _id: "*",
-        iat: -1,
-    }: jwtDecode(token);
+    const {user} = useUser();
 
     const [anchor, setAnchor] = useState<null | HTMLElement>(null);
     const isOpenMenu = Boolean(anchor);
@@ -79,7 +71,7 @@ export function UserBar(props: UserBarProps) {
                         paddingRight: "1vw",
                     }}
                 >
-                    {user.username}
+                    {user.name}
                 </Typography>
                 <IconButton onClick={onOpenMenu}>
                     <Avatar alt="user" src="/images/metal.png" />
