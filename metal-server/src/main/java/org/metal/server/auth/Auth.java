@@ -19,6 +19,9 @@ import io.vertx.ext.auth.mongo.MongoAuthorizationOptions;
 import io.vertx.ext.mongo.IndexOptions;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
+import org.metal.server.user.UserDB;
+import org.metal.server.util.OnFailure;
+import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.SendJson;
 
 public class Auth extends AbstractVerticle {
@@ -97,6 +100,61 @@ public class Auth extends AbstractVerticle {
       }
     }
     return true;
+  }
+
+  public void updateUserName(RoutingContext ctx) {
+    User user = ctx.user();
+    String userId = user.get("_id");
+    JsonObject body = ctx.body().asJsonObject();
+    String newName = body.getString("newName");
+
+    if (
+        OnFailure.doTry(ctx, () -> {
+          return newName == null || newName.isBlank();
+        }, "Fail to found legal newName in request.", 400)
+    ) {
+      return;
+    }
+
+    JsonObject matcher = new JsonObject()
+        .put(UserDB.FIELD_ID, userId);
+    JsonObject update = new JsonObject()
+        .put("$set", new JsonObject().put(UserDB.FIELD_USER_NAME, newName));
+    Future<JsonObject> result = UserDB.update(mongo, matcher, update);
+    RestServiceEnd.end(ctx, result, LOGGER);
+  }
+
+  public void updateUserPassword(RoutingContext ctx) {
+    User user = ctx.user();
+    String userId = user.get("_id");
+    JsonObject body = ctx.body().asJsonObject();
+    String oldPassword = body.getString("oldPassword");
+    String newPassword = body.getString("newPassword");
+    if (
+        OnFailure.doTry(ctx, () -> {
+          return oldPassword == null || oldPassword.isBlank();
+        }, "Fail to found legal oldPassword in request.", 400)
+    ) {
+      return;
+    }
+
+    if (
+        OnFailure.doTry(ctx, () -> {
+          return newPassword == null || newPassword.isBlank();
+        }, "Fail to found legal newPassword in request.", 400)
+    ) {
+      return;
+    }
+
+    String oldHash = authenticationProvider.hash(HASH_ALGO, "", oldPassword);
+    String newHash = authenticationProvider.hash(HASH_ALGO, "", newPassword);
+    JsonObject matcher = new JsonObject()
+        .put(UserDB.FIELD_ID, userId)
+        .put(UserDB.FIELD_PASSWORD, oldHash);
+    JsonObject update = new JsonObject()
+        .put("$set", new JsonObject().put(UserDB.FIELD_PASSWORD, newHash));
+    Future<JsonObject> result = UserDB.update(mongo, matcher, update);
+    RestServiceEnd.end(ctx, result, LOGGER);
   }
 
   public void registerUser(RoutingContext ctx) {

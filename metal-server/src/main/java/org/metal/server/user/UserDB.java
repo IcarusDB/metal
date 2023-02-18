@@ -40,4 +40,14 @@ public class UserDB {
             .put(FIELD_ROLES, true)
     );
   }
+
+  public static Future<JsonObject> update(MongoClient mongo, JsonObject matcher, JsonObject updater) {
+    return mongo.updateCollection(DB, matcher, updater)
+        .compose(result -> {
+          if (result.getDocMatched() == 0) {
+            return Future.failedFuture(String.format("Fail to match any record. Matcher: %s", matcher.toString()));
+          }
+          return Future.succeededFuture(result.toJson());
+        });
+  }
 }

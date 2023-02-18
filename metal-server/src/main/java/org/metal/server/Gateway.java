@@ -85,6 +85,18 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(this::userInfo);
 
+    router.put("/api/v1/user/password")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(this.auth::updateUserPassword);
+
+    router.put("/api/v1/user/name")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(this.auth::updateUserName);
+
     router.route("/api/v1/something")
         .produces("application/json")
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
