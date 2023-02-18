@@ -15,7 +15,7 @@ import { Skeleton } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaProjectDiagram } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
-import { VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
+import { VscAccount, VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
@@ -27,6 +27,7 @@ import _ from "lodash";
 import { Executions, ExecutionsProps } from "../execution/Executions";
 import { Viewer, ViewerProps } from "../designer/Viewer";
 import { ExecutionPage, ExecutionPageProps } from "../execution/ExecutionPage";
+import { UserPage, UserPageProps } from "../user/UserPage";
 
 interface Component {
     id: string,
@@ -90,6 +91,8 @@ function iconFatory(node: TabNode) {
             return <VscBrowser />;
         case "executionsIcon":
             return <GrTasks />;
+        case "userPageIcon":
+            return <VscAccount />;
 
         default:
             return <RiFunctionLine />;
@@ -114,6 +117,7 @@ export interface MainHandler {
     openViewer: (props: ViewerProps) => void;
     openMetalRepo: (props: MetalRepoProps) => void;
     openExecutionPage: (props: ExecutionPageProps) => void;
+    openUserPage: (props: UserPageProps) => void;
     select: (id: string) => void;
     close?: (id: string) => void;
     rename?: (id: string, newName: string) => void;
@@ -314,6 +318,34 @@ export function Main() {
         }
     };
 
+    const openUserPage = (props: UserPageProps) => {
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: "User",
+            name: "User",
+            icon: "userPageIcon",
+            component: "userPage",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
 
 
     const close = (id: string) => {
@@ -376,6 +408,7 @@ export function Main() {
         openViewer: openViewer,
         openMetalRepo: openMetalRepo,
         openExecutionPage: openExecutionPage,
+        openUserPage: openUserPage,
         select: select,
         close: close,
         rename: rename,
@@ -451,6 +484,16 @@ export function Main() {
                 return memorizeCmps(component, props, ()=>(
                     <Executions {...props} />
                 ), id)
+            }
+
+            case "userPage": {
+                const props: UserPageProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                }
+                return memorizeCmps(component, props, ()=>(
+                    <UserPage {...props}/>
+                ), id);
             }
 
             case "home": {

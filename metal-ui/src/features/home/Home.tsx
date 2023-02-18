@@ -12,6 +12,7 @@ import {
     Typography,
 } from "@mui/material";
 import {
+    VscAccount,
     VscChevronDown,
     VscExtensions,
     VscFolderOpened,
@@ -61,6 +62,12 @@ export function Home(props: HomeProps) {
         mainHandler.openMetalRepo({});
     };
 
+    const onOpenUserPage = () => {
+        mainHandler.openUserPage({
+            mainHandler: mainHandler
+        });
+    };
+
     if (token === null) {
         return <Skeleton />;
     }
@@ -92,6 +99,11 @@ export function Home(props: HomeProps) {
                 <ListItem key="metalRepository">
                     <Button startIcon={<VscExtensions />} onClick={onOpenMetalRepo}>
                         Metal Repository
+                    </Button>
+                </ListItem>
+                <ListItem key="userPage">
+                    <Button startIcon={<VscAccount />} onClick={onOpenUserPage}>
+                        User
                     </Button>
                 </ListItem>
             </List>

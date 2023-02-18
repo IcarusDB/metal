@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { Notice } from "../notice/Notice";
 import { logout, tokenSelector } from "./userSlice";
 
-interface TokenUser {
+export interface TokenUser {
     username: string,
     _id: string,
     iat: number,

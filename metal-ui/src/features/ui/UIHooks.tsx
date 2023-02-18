@@ -1,10 +1,11 @@
 import { ApiResponse } from "../../api/APIs";
 import { IAsyncCallback, useAsync } from "../../api/Hooks";
 import { State } from "../../api/State";
-import { useNotice } from "../notice/Notice";
+import { Logger, loggerSelector, useNotice } from "../notice/Notice";
 
 export function useUIAsync<R>(callback?: IAsyncCallback<R>): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
-    const {warning, error} = useNotice();
+    console.log("UI Async update");
+    const {warning, error} = useNotice<Logger>(loggerSelector);
     return useAsync<R>({
         ...callback,
         onError: (reason) => {

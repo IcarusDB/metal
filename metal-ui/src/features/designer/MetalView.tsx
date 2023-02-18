@@ -23,8 +23,8 @@ import { MdInput, MdOutlineCheckCircle, MdRadioButtonChecked, MdRadioButtonUnche
 import { GrDocumentConfig, GrTip } from "react-icons/gr";
 import _ from "lodash";
 import { ProblemsNotice } from "./backend/BackendBar";
-import { BackendStatus } from "../../model/Project";
-import { useFlowPendingFn, useHotNodesFn, useMessagsLogger, useMetalFlowFn, useModifyFn, useProjectIdFn } from "./DesignerProvider";
+import { BackendState, BackendStatus } from "../../model/Project";
+import { useBackendStatusFn, useFlowPendingFn, useHotNodesFn, useMessagsLogger, useMetalFlowFn, useModifyFn, useProjectIdFn } from "./DesignerProvider";
 import { tokenSelector } from "../user/userSlice";
 import { useAppSelector } from "../../app/hooks";
 import { useDesignerAsync } from "./DesignerHooks";
@@ -616,7 +616,7 @@ function NodeAnalysis(props: NodeAnalysisProps) {
         }
         return [];
     }, [flowAction, id, isContainNode]);
-
+    const [getBackendStatus] = useBackendStatusFn();
     const [analysis, analysisStatus] = useNodeAnalysis(token, getProjectId(), scope);
     const [isTipFail , setTipFail] = useState<boolean>(false);
     const isPending = analysisStatus === State.pending;
@@ -631,6 +631,12 @@ function NodeAnalysis(props: NodeAnalysisProps) {
                 setTipFail(true);
                 return;
             }
+            const backendStatus = getBackendStatus();
+            if (backendStatus === undefined || backendStatus.current !== BackendState.UP) {
+                warning("Backend is not up.");
+                return;
+            }
+
             const spec = action.export();
             const subSpec = action.exportSubSpec(id, isContainNode);
             if (subSpec === undefined) {

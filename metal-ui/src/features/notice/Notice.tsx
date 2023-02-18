@@ -134,6 +134,7 @@ export const useNotice = create<NoticeStore>()(
     }))
 );
 
+
 export function Notice() {
     const [messages, clear] = useNotice((state) => [state.messages, state.clear]);
     const [anchor, setAnchor] = useState<HTMLElement | null>(null);
