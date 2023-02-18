@@ -86,6 +86,13 @@ const columns: GridColDef[] = [
     },
 ];
 
+function extractProjectName(exec: Exec) {
+    if (exec.fromProjectDetail) {
+        return exec.fromProjectDetail.name;
+    }
+    return "Unknown";
+}
+
 export interface ExecutionsProps {
     mainHandler: MainHandler;
 }
@@ -105,7 +112,7 @@ export function Executions(props: ExecutionsProps) {
                   .sort((a, b) => b.createTime - a.createTime)
                   .map((exec) => ({
                       ...exec,
-                      projectName: exec.fromProjectDetail.name,
+                      projectName: extractProjectName(exec),
                       action: {
                           onView: () => {
                               mainHandler.openViewer({
@@ -115,7 +122,7 @@ export function Executions(props: ExecutionsProps) {
                                       <ExecLoader
                                           token={token}
                                           id={exec.id}
-                                          name={exec.fromProjectDetail.name}
+                                          name={extractProjectName(exec)}
                                       />
                                   ),
                               });

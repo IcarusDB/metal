@@ -26,7 +26,7 @@ import {
 import { HiStop } from "react-icons/hi";
 import { useCallback, useEffect, useMemo } from "react";
 import { BackendState, BackendStatus, Deploy, Project } from "../../model/Project";
-import { getAllProjectOfUser } from "../../api/ProjectApi";
+import { getAllProjectOfUser, removeProjectOfName, RemoveProjectResponse } from "../../api/ProjectApi";
 import { State } from "../../api/State";
 import { useAsync } from "../../api/Hooks";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
@@ -34,6 +34,10 @@ import { MainHandler } from "../main/Main";
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
 import moment from "moment";
 import { ProjectLoader } from "../designer/ProjectLoader";
+import { useUIAsync } from "../ui/UIHooks";
+import { RemoveExecResponse } from "../../api/ExecApi";
+import { FiDelete } from "react-icons/fi";
+import { act } from "react-dom/test-utils";
 
 function backendStatusTip(backendStatus: BackendStatus) {
     switch (backendStatus.current) {
@@ -172,13 +176,35 @@ function backendStatus(deploy: Deploy | undefined) {
 
 const theme = createTheme();
 
+
+function useRemoveProject(token: string | null, cb: ()=>void): [
+    (name: string) => void,
+    State
+] {
+    const [run, status] = useUIAsync<RemoveProjectResponse>({
+        onSuccess: (result) => {
+            cb();
+        }
+    });
+    const remove = useCallback((name: string)=>{
+        if (token === null) {
+            return;
+        }
+        run(removeProjectOfName(token, name));
+    }, [run, token]);
+
+    return [remove, status];
+}
+
 export interface ProjectListProps {
     mainHandler: MainHandler;
 }
 
 interface ProjectAction {
+    status?: BackendState,
     onEdit: () => void;
     onView: () => void;
+    onDelete: () => void;
 }
 
 export function ProjectList(props: ProjectListProps) {
@@ -189,6 +215,7 @@ export function ProjectList(props: ProjectListProps) {
     });
 
     const [run, status, result, error] = useAsync<Project[]>();
+   
     const projects = useMemo(() => (result === null ? [] : result), [result]);
     const isPending = () => {
         return status === State.pending;
@@ -202,6 +229,8 @@ export function ProjectList(props: ProjectListProps) {
             run(getAllProjectOfUser(token));
         }
     }, [run, token]);
+
+    const [remove, removeStatus] = useRemoveProject(token, load);
 
     const columns: GridColDef[] = useMemo<GridColDef[]>(
         () => [
@@ -220,12 +249,14 @@ export function ProjectList(props: ProjectListProps) {
             {
                 field: "action",
                 headerName: "Action",
+                width: 300,
                 renderCell: (params: GridRenderCellParams<ProjectAction>) => {
                     const action =
                         params.value === undefined
                             ? {
                                   onEdit: () => {},
                                   onView: () => {},
+                                  onDelete: () => {},
                               }
                             : params.value;
                     return (
@@ -241,6 +272,16 @@ export function ProjectList(props: ProjectListProps) {
                             </IconButton>
                             <IconButton onClick={action.onEdit}>
                                 <AiOutlineEdit />
+                            </IconButton>
+                            <IconButton 
+                                onClick={action.onDelete}
+                                disabled={
+                                    action.status === undefined
+                                        ?true
+                                        : !(action.status === BackendState.DOWN || action.status === BackendState.FAILURE)
+                                }
+                            >
+                                <FiDelete />
                             </IconButton>
                         </Stack>
                     );
@@ -270,10 +311,14 @@ export function ProjectList(props: ProjectListProps) {
                             children: (<ProjectLoader token={token} id={project.id} />)
                         });
                     },
+                    onDelete: () => {
+                        remove(project.name);
+                    },
+                    status: project.deploy.backend.status.current
                 },
             };
         });
-    }, [mainHandler, projects, token]);
+    }, [mainHandler, projects, remove, token]);
 
     const toolbar = () => {
         return (
@@ -303,9 +348,7 @@ export function ProjectList(props: ProjectListProps) {
 
     const progress = isPending() ? (
         <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
+    ) : ("");
 
     useEffect(() => {
         load();
@@ -320,6 +363,11 @@ export function ProjectList(props: ProjectListProps) {
                 }}
             >
                 {progress}
+                {removeStatus === State.failure &&
+                    <Alert severity={"error"}>
+                        {"Fail to remove project."}
+                    </Alert>
+                }
                 {isFail() && <Alert severity={"error"}>{"Fail to load projects."}</Alert>}
                 <Paper sx={{ height: "100%" }}>
                     <DataGrid

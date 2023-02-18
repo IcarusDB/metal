@@ -379,3 +379,25 @@ export async function execOfId(token: string, id: string) {
         }
     })
 }
+
+export interface RemoveProjectResponse {
+
+}
+
+export async function removeProjectOfName(token: string, name: string) {
+    const url = `/api/v1/projects/name/${name}`;
+    return instance.delete(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const removeResp: RemoveProjectResponse = resp.data;
+            return removeResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}

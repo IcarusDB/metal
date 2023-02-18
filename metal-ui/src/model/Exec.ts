@@ -23,7 +23,7 @@ export interface Exec {
     userId: string,
     deploy: ExecDeploy,
     fromProject: string,
-    fromProjectDetail: {
+    fromProjectDetail?: {
         name: string
     },
     SPEC: Spec,
