@@ -44,6 +44,38 @@
       </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-jar-to-libs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy>
+                  <fileset>
+                    <include />
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-conf</id>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <copy>
+                  <fileset />
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
