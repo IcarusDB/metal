@@ -35,31 +35,24 @@ export function useAsync<R>(callback?: IAsyncCallback<R>): [(promise: Promise<R>
 
         try {
             const res = await promise;
-            setTimeout(() => {
-                setState({
-                    status: State.success,
-                    result: res,
-                    error: null,
-                });
+            setState({
+                status: State.success,
+                result: res,
+                error: null,
+            });
 
-                if (callback?.onSuccess) {
-                    callback.onSuccess(res);
-                }
-            }, 1000);
+            if (callback?.onSuccess) {
+                callback.onSuccess(res);
+            }
         } catch (reason) {
-            setTimeout(
-                () => {
-                    setState({
-                        status: State.failure,
-                        result: null,
-                        error: reason,
-                    });
-                    if (callback?.onError) {
-                        callback.onError(reason);
-                    }
-                }, 1000
-            )
-            
+            setState({
+                status: State.failure,
+                result: null,
+                error: reason,
+            });
+            if (callback?.onError) {
+                callback.onError(reason);
+            }
         }
     }, [callback]);
 
