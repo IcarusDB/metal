@@ -19,6 +19,7 @@ import io.vertx.ext.web.handler.AuthorizationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.JWTAuthHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
@@ -485,6 +486,8 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(AuthorizationHandler.create(Auth.adminAuthor()))
         .handler(exec::forceRemoveAll);
+
+    router.route("/*").handler(StaticHandler.create());
 
     return Future.succeededFuture(router);
   }
