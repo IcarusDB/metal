@@ -43,7 +43,7 @@
     <maven-project.version>3.0-alpha-2</maven-project.version>
     <metal.build.dir>../build</metal.build.dir>
     <metal.libs.dir>${metal.build.dir}/libs</metal.libs.dir>
-    <metal.ui.dir>${metal.build.dir}/ui</metal.ui.dir>
+    <metal.ui.dir>${metal.build.dir}/ui/webroot</metal.ui.dir>
     <metal.conf.dir>${metal.build.dir}/conf</metal.conf.dir>
   </properties>
 
