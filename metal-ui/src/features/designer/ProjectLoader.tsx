@@ -18,7 +18,7 @@ function useProjectLoader(token: string | null, id: string) {
     const [,setDeployId] = useDeployIdFn();
     const [,setEpoch] = useEpochFn();
     const [,setBackendStatus] = useBackendStatusFn();
-    console.log(`Project loader. ${status}`);
+
     useEffect(() => {
         if (token === null || id.trim() === "") {
             return;

@@ -1,6 +1,9 @@
 import { Node, Edge } from "reactflow";
 import { MetalNodeProps } from "./MetalView";
 import ELK, { ElkNode } from 'elkjs/lib/elk.bundled.js';
+import { IAsyncCallback, useAsync } from "../../api/Hooks";
+import { useCallback } from "react";
+import { State } from "../../api/State";
 
 export async function layout(
     nodes: () => Node<MetalNodeProps>[], 
@@ -32,7 +35,7 @@ export async function layout(
     return elk.layout(graph).then(newGraph => {
         let newNodesMap = new Map<string, ElkNode>()
         if (newGraph.children === undefined) {
-            return nodes;
+            return nodes();
         }
 
         newGraph.children.forEach(node => {
@@ -54,3 +57,21 @@ export async function layout(
         })
     })
 };
+
+export function useFlowLayout(callback?: IAsyncCallback<Node<MetalNodeProps>[]>): [
+    (
+        nodes: () => Node<MetalNodeProps>[], 
+        edges: ()=> Edge<any>[]
+    ) => void,
+    State,
+    Node<MetalNodeProps>[] | null
+] {
+    const [run, status, result] = useAsync<Node<MetalNodeProps>[]>(callback);
+    const onLayout = useCallback((
+        nodes: () => Node<MetalNodeProps>[], 
+        edges: ()=> Edge<any>[])=>{
+        run(layout(nodes, edges))
+    }, [run]);
+
+    return [onLayout, status, result];
+}

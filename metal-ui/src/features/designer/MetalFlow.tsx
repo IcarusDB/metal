@@ -35,7 +35,7 @@ import { Spec } from "../../model/Spec";
 import { IReadOnly } from "../ui/Commons";
 import { HotNode } from "./DesignerActionSlice";
 import { useBackendStatusFn, useFlowPending, useHotNodesFn, useMetalFlowFn, useMetalNodeEditor, useModifyFn, useSpecFlow } from "./DesignerProvider";
-import { layout } from "./MetalFlowLayout";
+import { useFlowLayout } from "./MetalFlowLayout";
 import { MetalNodeProps, MetalNodeState, MetalNodeTypes, onConnectValid } from "./MetalView";
 import { SpecFlow } from "./SpecLoader";
 
@@ -63,6 +63,7 @@ export const MetalFlow = (props: MetalFlowProps) => {
     const [,modify] = useModifyFn();
     const flowInstance = useReactFlow();
     const [isPending,] = useFlowPending();
+    
     const [loadStatus, setLoadStatus] = useState<LoadState>(LoadState.UNLOAD);
     const nodePropsWrap = useCallback(
         (nodeProps: MetalNodeProps) => ({
@@ -326,17 +327,20 @@ export const MetalFlow = (props: MetalFlowProps) => {
         [deleteNode, flowInstance, getBackendStatus, inputs, isReadOnly, modify, nodePropsWrap, outputs, updateNode]
     );
 
+    const [layout, layoutStatus] = useFlowLayout({
+        onSuccess: (newNodes) => {
+            flowInstance.setNodes(newNodes);
+            setLoadStatus(LoadState.LOADED);
+        },
+    });
+
     const autoLayout = useCallback(() => {
-        run(
-            layout(flowInstance.getNodes, flowInstance.getEdges).then((newNodes) =>
-                flowInstance.setNodes(newNodes)
-            )
-        );
-    }, [flowInstance, run]);
+        layout(flowInstance.getNodes, flowInstance.getEdges);
+    }, [flowInstance.getEdges, flowInstance.getNodes, layout]);
 
     const onLayout = useCallback(() => {
-        setLoadStatus(LoadState.LOADING);
-    }, []);
+        autoLayout();
+    }, [autoLayout]);
 
     const loadNodesFromFlow = useCallback(
         (newFlow: SpecFlow | undefined) => {
@@ -413,12 +417,8 @@ export const MetalFlow = (props: MetalFlowProps) => {
 
     const load = useCallback(
         (newFlow: SpecFlow | undefined) => {
-            if (load === undefined) {
-                return;
-            }
-
             loadFlow(newFlow);
-            setLoadStatus(LoadState.LOADING);
+            // setLoadStatus(LoadState.LOADING);
         },
         [loadFlow]
     );
@@ -520,16 +520,17 @@ export const MetalFlow = (props: MetalFlowProps) => {
             case LoadState.UNLOAD:
                 if (flow !== undefined) {
                     load(flow);
-                    setLoadStatus(LoadState.LOADING);
+                    setLoadStatus(LoadState.LAYOUTING);
                 }
                 break;
-            case LoadState.LOADING:
-                autoLayout();
-                setLoadStatus(LoadState.LAYOUTING);
-                break;
             case LoadState.LAYOUTING:
-                setLoadStatus(LoadState.LOADED);
-                break;
+                autoLayout();
+            // case LoadState.LOADING:
+            //     setTimeout(()=>{
+            //         setLoadStatus(LoadState.LAYOUTING);
+            //         autoLayout();
+            //     }, 1000);
+            //     break;
         }
 
         const unsub = onHotNodesChange((hotNodes) => {

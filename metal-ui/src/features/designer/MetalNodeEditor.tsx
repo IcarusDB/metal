@@ -156,7 +156,6 @@ export function MetalNodeSchema(props: MetalNodeSchemaProps) {
 export interface MetalNodeEditorProps extends IReadOnly {}
 
 export const MetalNodeEditor = (props: MetalNodeEditorProps) => {
-    console.log("Editor");
     const { isReadOnly } = props;
     const [metalProps, setMetalProps] = useState<MetalNodeProps | null>(null);
     const [isOpen, setOpen] = useState(false);

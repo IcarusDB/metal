@@ -1006,7 +1006,6 @@ export interface ProjectProfileViewerHandler {
 
 export const ProjectProfileViewer = forwardRef(
     (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
-        console.log("ProjectProfileViewer");
         const [isOpen, setOpen] = useState(false);
         const [name] = useName();
         const [pkgs] = usePkgs();
