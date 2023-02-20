@@ -1,4 +1,4 @@
-import { Alert, Button, LinearProgress, List, ListItem, Typography } from "@mui/material";
+import { Alert, Button, Chip, Container, Divider, Grid, LinearProgress, List, ListItem, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import { RiDeviceRecoverLine } from "react-icons/ri";
 import { FiDelete } from "react-icons/fi";
@@ -6,11 +6,12 @@ import { VscEye } from "react-icons/vsc";
 import { getExecOfId, recoverProjectFromExec, RecoverResponse, removeExec, RemoveExecResponse } from "../../api/ExecApi";
 import { State } from "../../api/State";
 import { useAppSelector } from "../../app/hooks";
-import { Exec } from "../../model/Exec";
+import { Exec, ExecState } from "../../model/Exec";
 import { MainHandler } from "../main/Main";
 import { useUIAsync } from "../ui/UIHooks";
 import { tokenSelector } from "../user/userSlice";
 import { ExecLoader } from "./ExecLoader";
+import moment from "moment";
 
 function useExecution(token: string | null, id: string): [() => void, State, Exec | null] {
     const [run, status, exec] = useUIAsync<Exec>();
@@ -187,6 +188,63 @@ export function ExecutionPage(props: ExecutionPageProps) {
                     </Button>
                 </ListItem>
             </List>
+            <Divider orientation={'horizontal'} />
+            <Paper
+                sx={{
+                    boxSizing: "border-box",
+                    marginTop: "2vh",
+                    padding: "1em",
+                }}
+                square
+            >
+            <Grid  container spacing={1}>
+                <Grid key={"Status"} item xs={2}>{"Status"}</Grid>
+                <Grid key={"statusVal"} item xs={10}>
+                {
+                    <Chip 
+                        label={exec?.status} 
+                        variant={exec?.status === ExecState.RUNNING || exec?.status === ExecState.FINISH? "filled": "outlined"} 
+                        color={
+                            exec?.status === ExecState.CREATE
+                            ? "info"
+                            : exec?.status === ExecState.FAILURE
+                            ? "error"
+                            : exec?.status === ExecState.FINISH
+                            ? "success"
+                            : exec?.status === ExecState.RUNNING
+                            ? "info"
+                            : "warning"
+                        } 
+                    />
+                }
+                </Grid>
+
+                <Grid key={"createTime"} item xs={2}>{"Create Time"}</Grid>
+                <Grid key={"createTimeVal"} item xs={10}>{moment(exec?.createTime).format("YYYY-MM-DD HH:mm:ss")}</Grid>
+
+                <Grid key={"submitTime"} item xs={2}>{"Submit Time"}</Grid>
+                <Grid key={"submitTimeVal"} item xs={10}>{moment(exec?.submitTime).format("YYYY-MM-DD HH:mm:ss")}</Grid>
+                
+                <Grid key={"beatTime"} item xs={2}>{"Beat Time"}</Grid>
+                <Grid key={"beatTimeVal"} item xs={10}>{moment(exec?.beatTime).format("YYYY-MM-DD HH:mm:ss")}</Grid>
+                
+                <Grid key={"finishTime"} item xs={2}>{"Finish Time"}</Grid>
+                <Grid key={"finishTimeVal"} item xs={10}>
+                {
+                    exec?.status === ExecState.FINISH? moment(exec?.finishTime).format("YYYY-MM-DD HH:mm:ss"): ""
+                }
+                </Grid>
+                
+                <Grid key={"terminateTime"} item xs={2}>{"Terminate Time"}</Grid>
+                <Grid key={"terminateTimeVal"} item xs={10}>
+                {
+                    exec?.status === ExecState.FAILURE? moment(exec?.terminateTime).format("YYYY-MM-DD HH:mm:ss"): ""
+                }
+                </Grid>
+            </Grid>
+            </Paper>
+            
+
         </div>
     );
 }
