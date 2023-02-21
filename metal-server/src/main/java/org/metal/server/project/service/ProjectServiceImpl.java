@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.metal.backend.api.BackendService;
+import org.metal.server.api.BackendReportError;
 import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecService;
 import org.metal.server.util.JsonConvertor;
@@ -74,7 +75,7 @@ public class ProjectServiceImpl implements IProjectService{
       }
     }
 
-    return ProjectDBEx.add(
+    return ProjectDB.add(
         mongo,
         userId,
         name,
@@ -87,17 +88,17 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<String> createProjectFrom(String userId, String name) {
-    return ProjectDBEx.copyFromProject(mongo, userId, name);
+    return ProjectDB.copyFromProject(mongo, userId, name);
   }
 
   @Override
   public Future<String> createProjectFromWithCopyName(String userId, String name, String copyName) {
-    return ProjectDBEx.copyFromProject(mongo, userId, name, copyName);
+    return ProjectDB.copyFromProject(mongo, userId, name, copyName);
   }
 
   @Override
   public Future<String> createProjectFromExec(String userId, String execId) {
-    return ProjectDBEx.recoverFromExec(mongo, userId, execId);
+    return ProjectDB.recoverFromExec(mongo, userId, execId);
   }
 
   @Override
@@ -133,93 +134,128 @@ public class ProjectServiceImpl implements IProjectService{
       return Future.failedFuture(e);
     }
 
-    return ProjectDBEx.updateProject(mongo, userId, id, name, pkgs, platform, backendArgs, spec);
+    return ProjectDB.updateProject(mongo, userId, id, name, pkgs, platform, backendArgs, spec);
   }
 
   @Override
   public Future<JsonObject> updateName(String userId, String name, String newName) {
-    return ProjectDBEx.updateName(mongo, userId, name, newName);
+    return ProjectDB.updateName(mongo, userId, name, newName);
   }
 
 
   @Override
   public Future<JsonObject> updateSpec(String userId, String projectName, JsonObject spec) {
-    return ProjectDBEx.updateSpec(mongo, userId, projectName, spec);
+    return ProjectDB.updateSpec(mongo, userId, projectName, spec);
   }
 
   @Override
   public Future<JsonObject> updatePlatform(String deployId, JsonObject platform) {
-    return ProjectDBEx.updatePlatform(mongo, deployId, platform);
+    return ProjectDB.updatePlatform(mongo, deployId, platform);
   }
 
   @Override
   public Future<JsonObject> updateBackendArgs(String deployId, List<String> backendArgs) {
-    return ProjectDBEx.updateBackendArgs(mongo, deployId, backendArgs);
+    return ProjectDB.updateBackendArgs(mongo, deployId, backendArgs);
   }
 
   @Override
   public Future<JsonObject> updatePkgs(String deployId, List<String> pkgs) {
-    return ProjectDBEx.updatePkgs(mongo, deployId, pkgs);
+    return ProjectDB.updatePkgs(mongo, deployId, pkgs);
   }
 
   @Override
   public Future<JsonObject> updateDeployConfsByPath(String deployId, JsonObject updateConfs) {
-    return ProjectDBEx.updateDeployConfs(mongo, deployId, updateConfs);
+    return ProjectDB.updateDeployConfs(mongo, deployId, updateConfs);
   }
 
   @Override
   public Future<JsonObject> updateBackendStatus(String deployId, JsonObject updateStatus) {
-    return ProjectDBEx.updateBackendStatus(mongo, deployId, updateStatus);
+    return ProjectDB.updateBackendStatus(mongo, deployId, updateStatus);
   }
 
   @Override
   public Future<JsonObject> updateBackendStatusOnUndeploy(String deployId) {
-    return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId);
+    return ProjectDB.updateBackendStatusOnUndeploy(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnCreated(String deployId) {
+    return ProjectDB.updateBackendStatusOnCreated(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch, BackendState current) {
+    return ProjectDB.updateBackendStatusOnCreated(mongo, deployId, epoch, current);
   }
 
   @Override
   public Future<JsonObject> updateBackendStatusOnUp(String deployId) {
-    return ProjectDBEx.updateBackendStatusOnUp(mongo, deployId);
+    return ProjectDB.updateBackendStatusOnUp(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch, BackendState current) {
+    return ProjectDB.updateBackendStatusOnUp(mongo, deployId, epoch, current);
   }
 
   @Override
   public Future<JsonObject> updateBackendStatusOnDown(String deployId) {
-    return ProjectDBEx.updateBackendStatusOnDown(mongo, deployId);
+    return ProjectDB.updateBackendStatusOnDown(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch, BackendState current) {
+    return ProjectDB.updateBackendStatusOnDown(mongo, deployId, epoch, current);
   }
 
   @Override
   public Future<JsonObject> updateBackendStatusOnFailure(String deployId, String failureMsg) {
-    return ProjectDBEx.updateBackendStatusOnFailure(mongo, deployId, failureMsg);
+    return ProjectDB.updateBackendStatusOnFailure(mongo, deployId, failureMsg);
+  }
+
+  @Override
+  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch, BackendState current, String failureMsg) {
+    return ProjectDB.updateBackendStatusOnFailure(mongo, deployId, epoch, current, failureMsg);
   }
 
   @Override
   public Future<JsonObject> getOfId(String userId, String projectId) {
-    return ProjectDBEx.getOfId(mongo, userId, projectId);
+    return ProjectDB.getOfId(mongo, userId, projectId);
   }
 
   @Override
   public Future<JsonObject> getOfName(String userId, String projectName) {
-    return ProjectDBEx.getOfName(mongo, userId, projectName);
+    return ProjectDB.getOfName(mongo, userId, projectName);
   }
 
   @Override
   public Future<JsonObject> getDeploymentOfDeployId(String deployId) {
-    return ProjectDBEx.getDeployOfDeployId(mongo, deployId);
+    return ProjectDB.getDeployOfDeployId(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> getDeploymentOfDeployIdWithEpoch(String deployId, int epoch) {
+    return ProjectDB.getDeployOfDeployIdWithEpoch(mongo, deployId, epoch);
   }
 
   @Override
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId) {
-    return ProjectDBEx.getBackendStatus(mongo, deployId);
+    return ProjectDB.getBackendStatus(mongo, deployId);
+  }
+
+  @Override
+  public Future<JsonObject> getBackendStatusOfDeployIdWithEpoch(String deployId, int epoch) {
+    return ProjectDB.getBackendStatus(mongo, deployId, epoch);
   }
 
   @Override
   public Future<JsonObject> getSpecOfName(String userId, String name) {
-    return ProjectDBEx.getSpecOfName(mongo, userId, name);
+    return ProjectDB.getSpecOfName(mongo, userId, name);
   }
 
   @Override
   public Future<JsonObject> getSpecSchemaOfMetalId(String deployId, String metalId) {
-    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+    return ProjectDB.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
       if (deploy == null || deploy.isEmpty()) {
         return Future.failedFuture("Fail to get schema, no deploy found.");
       }
@@ -237,7 +273,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> heartOfDeployId(String deployId) {
-    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+    return ProjectDB.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
       if (deploy == null || deploy.isEmpty()) {
         return Future.failedFuture("Fail to get schema, no deploy found.");
       }
@@ -255,7 +291,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> getBackendServiceStatusOfDeployId(String deployId) {
-    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+    return ProjectDB.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
       if (deploy == null || deploy.isEmpty()) {
         return Future.failedFuture("Fail to get schema, no deploy found.");
       }
@@ -275,66 +311,83 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<List<JsonObject>> getAllOfUser(String userId) {
-    return ProjectDBEx.getAllOfUser(mongo, userId);
+    return ProjectDB.getAllOfUser(mongo, userId);
   }
 
   @Override
   public Future<List<JsonObject>> getAll() {
-    return ProjectDBEx.getAll(mongo);
+    return ProjectDB.getAll(mongo);
   }
 
   @Override
   public Future<JsonObject> removeOfId(String userId, String id) {
-    return ProjectDBEx.removeOfId(mongo, userId, id);
+    return ProjectDB.removeOfId(mongo, userId, id);
   }
 
   @Override
   public Future<JsonObject> removeOfName(String userId, String name) {
-    return ProjectDBEx.removeOfName(mongo, userId, name);
+    return ProjectDB.removeOfName(mongo, userId, name);
   }
 
   @Override
   public Future<JsonObject> removeAllOfUser(String userId) {
-    return ProjectDBEx.removeAllOfUser(mongo, userId);
+    return ProjectDB.removeAllOfUser(mongo, userId);
   }
 
   @Override
   public Future<JsonObject> removeAll() {
-    return ProjectDBEx.removeAll(mongo);
+    return ProjectDB.removeAll(mongo);
   }
 
   @Override
   public Future<JsonObject> deploy(String userId, String name) {
-    return ProjectDBEx.increaseDeployEpoch(mongo, userId, name).compose(ret -> {
-      return getOfName(userId, name);
-    }).compose((JsonObject project) -> {
-      JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
-      return onDeploy(deploy);
+    return getOfName(userId, name).compose((JsonObject proj) -> {
+      try {
+        String deployId = proj.getJsonObject(ProjectDB.DEPLOY).getString(ProjectDB.DEPLOY_ID);
+        return Future.succeededFuture(deployId);
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    }).compose((String deployId) -> {
+      return deployOfId(deployId);
     });
   }
 
   @Override
   public Future<JsonObject> deployOfId(String deployId) {
-    return ProjectDBEx.increaseDeployEpoch(mongo, deployId).compose(ret -> {
-      return getDeploymentOfDeployId(deployId);
-    }).compose((JsonObject deploy) -> {
-      return onDeploy(deploy);
+    return getBackendStatusOfDeployId(deployId).compose((JsonObject lastStatus) -> {
+      try {
+        int epoch = lastStatus.getInteger("epoch");
+        BackendState current = BackendState.valueOf(lastStatus.getString("current"));
+        maybeCreatedOrUp(lastStatus);
+        return ProjectDB.increaseDeployEpoch(mongo, deployId, epoch, current).compose(ret -> {
+          return getDeploymentOfDeployId(deployId);
+        }).compose((JsonObject deploy) -> {
+          return onDeploy(deploy);
+        });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
     });
   }
 
-  private Future<JsonObject> onDeploy(JsonObject deploy) {
-    JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-    JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
-    if (backendStatus != null && !backendStatus.isEmpty()) {
-      return Future.failedFuture(
-          "One backend has been deployed. User can\'t deploy the other new backend before that the deployed backend is cleaned.");
+  private static void maybeCreatedOrUp(JsonObject lastStatus) throws Exception{
+    BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
+    if (lastState.equals(BackendState.CREATED) || lastState.equals(BackendState.UP)) {
+      String msg = String.format("The status of exec has been marked %s.", lastState.toString());
+      throw new IllegalArgumentException(msg);
     }
+  }
 
-    String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-    int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
-    List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDBEx.DEPLOY_PKGS));
-    JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
-    List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDBEx.DEPLOY_BACKEND_ARGS));
+  private Future<JsonObject> onDeploy(JsonObject deploy) {
+    JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+    JsonObject backendStatus = backend.getJsonObject(ProjectDB.DEPLOY_BACKEND_STATUS);
+
+    String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
+    int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
+    List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDB.DEPLOY_PKGS));
+    JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
+    List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDB.DEPLOY_BACKEND_ARGS));
 
     backendArgs = antiInject(backendArgs);
     String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
@@ -371,7 +424,7 @@ public class ProjectServiceImpl implements IProjectService{
   public Future<JsonObject> reDeploy(String userId, String name) {
     return getOfName(userId, name).compose((JsonObject project) -> {
       try {
-        JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
+        JsonObject deploy = project.getJsonObject(ProjectDB.DEPLOY);
         return reDeploy(deploy);
       } catch (Exception e) {
         return Future.failedFuture(e);
@@ -394,7 +447,7 @@ public class ProjectServiceImpl implements IProjectService{
         return Future.failedFuture(msg);
       }
 
-      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+      String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
       if (deployId == null || deployId.isBlank()) {
         String msg = "Fail to reDeploy, no deploy id found.";
         LOGGER.error(msg);
@@ -402,8 +455,6 @@ public class ProjectServiceImpl implements IProjectService{
       }
 
       return forceKillBackend(deployId).compose((JsonObject ret) -> {
-        return ProjectDBEx.increaseDeployEpoch(mongo, deployId);
-      }).compose((JsonObject ret) -> {
         return deployOfId(deployId);
       });
     } catch (Exception e) {
@@ -424,10 +475,9 @@ public class ProjectServiceImpl implements IProjectService{
     WebClient webClient = WebClient.create(vertx);
     UriTemplate createURI = UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
 
-    return ProjectDBEx.updateBackendStatusOnUndeploy(mongo, deployId).compose(ret -> {
-      return webClient.post(restApiPort, restApiHost, createURI)
-          .sendJsonObject(conf);
-    }).compose((HttpResponse<Buffer> response) -> {
+    return webClient.post(restApiPort, restApiHost, createURI)
+          .sendJsonObject(conf)
+        .compose((HttpResponse<Buffer> response) -> {
       try {
         JsonObject resp = response.bodyAsJsonObject();
         Boolean isSuccess = resp.getBoolean("success");
@@ -438,7 +488,7 @@ public class ProjectServiceImpl implements IProjectService{
         String driverId = resp.getString("submissionId");
         JsonObject tracer = new JsonObject()
             .put("driverId", driverId);
-        return ProjectDBEx.updateBackendStatusTracer(mongo, deployId, tracer)
+        return ProjectDB.updateBackendStatusTracer(mongo, deployId, epoch, tracer)
             .compose(ret -> {
               return Future.succeededFuture(resp);
             });
@@ -450,73 +500,64 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> forceKillBackend(String deployId) {
-    return ProjectDBEx.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
-      JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
-      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-      if (backend == null || backend.isEmpty()) {
-        return Future.failedFuture("Fail to froce kill, no backend configuration found.");
-      }
+    return ProjectDB.getDeployOfDeployId(mongo, deployId).compose((JsonObject deploy) -> {
+      try {
+        JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
+        JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+        if (backend == null || backend.isEmpty()) {
+          return Future.failedFuture("Fail to force kill, no backend configuration found.");
+        }
 
-      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
-      if (backendStatus == null || backendStatus.isEmpty()) {
-        return Future.failedFuture("Fail to force kill, no status found.");
-      }
+        JsonObject backendStatus = backend.getJsonObject(ProjectDB.DEPLOY_BACKEND_STATUS);
+        if (backendStatus == null || backendStatus.isEmpty()) {
+          return Future.failedFuture("Fail to force kill, no status found.");
+        }
 
-      JsonObject tracer = backendStatus.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS_TRACER);
-      if (tracer == null || tracer.isEmpty()) {
-        return Future.failedFuture("Fail to force kill, no tracer found.");
-      }
+        int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
+        BackendState current = BackendState.valueOf(backendStatus.getString("current"));
 
-      if (platform == null || platform.isEmpty()) {
-        return Future.failedFuture("Fail to force kill, no platform configuration found.");
-      }
+        JsonObject tracer = backendStatus.getJsonObject(ProjectDB.DEPLOY_BACKEND_STATUS_TRACER);
+        if (tracer == null || tracer.isEmpty()) {
+          return Future.failedFuture("Fail to force kill, no tracer found.");
+        }
 
-      if (platform.containsKey("spark.standalone")) {
-        try {
+        if (platform == null || platform.isEmpty()) {
+          return Future.failedFuture("Fail to force kill, no platform configuration found.");
+        }
+
+        if (platform.containsKey("spark.standalone")) {
           JsonObject restApi = platform.getJsonObject("spark.standalone").getJsonObject("rest.api");
           if (restApi == null || restApi.isEmpty()) {
             return Future.failedFuture("Fail to force kill, no rest api found.");
           }
-          return sparkStandaloneForceKill(tracer, restApi).compose((JsonObject resp) -> {
-            return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId)
-                .compose(ret -> {
-                  return Future.succeededFuture(resp);
-                });
-          }, error -> {
-            LOGGER.error(error);
-            return heartOfDeployId(deployId).compose(ret -> {
-              return sparkStandaloneForceKill(tracer, restApi);
-            }).compose(ret -> {
-              return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId).compose(v -> {
-                return Future.succeededFuture(ret);
+          return updateBackendStatusOnDownWith(deployId, epoch, current)
+              .compose(ret -> {
+                return sparkStandaloneForceKill(tracer, restApi)
+                    .compose(
+                        (JsonObject resp) -> {
+                          return Future.succeededFuture(resp);
+                        },
+                        error -> {
+                          LOGGER.error(error);
+                          return Future.failedFuture(error);
+                        });
               });
-            }, err -> {
-              return ProjectDBEx.removeBackendStatusOfDeployId(mongo, deployId)
-                  .compose(ret -> {
-                    JsonObject resp = new JsonObject();
-                    resp.put("Status", "OK")
-                        .put("msg", err.getLocalizedMessage());
-                    return Future.succeededFuture(resp);
-                  });
-            });
-          });
-        } catch (ClassCastException e) {
-          return Future.failedFuture(e);
         }
+        return Future.failedFuture("Fail to force kill, no support platform.");
+      } catch (Exception e) {
+        return Future.failedFuture(e);
       }
-
-      return Future.failedFuture("Fail to force kill, no support platform.");
     });
   }
 
   private boolean checkBackendUp(JsonObject deploy) throws IllegalArgumentException {
     try {
-      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-      JsonObject backendStatus = backend.getJsonObject(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+      JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+      JsonObject backendStatus = backend.getJsonObject(ProjectDB.DEPLOY_BACKEND_STATUS);
       if (backendStatus == null || backendStatus.isEmpty()) {
         throw new IllegalArgumentException("The backend is not UP.");
       }
-      BackendState current = BackendState.valueOf(backendStatus.getString(ProjectDBEx.DEPLOY_BACKEND_STATUS_CURRENT));
+      BackendState current = BackendState.valueOf(backendStatus.getString(ProjectDB.DEPLOY_BACKEND_STATUS_CURRENT));
       if (!current.equals(BackendState.UP)) {
         throw new IllegalArgumentException("The backend is not UP.");
       }
@@ -526,11 +567,11 @@ public class ProjectServiceImpl implements IProjectService{
     }
   }
 
-  private JsonObject backendAddress(JsonObject deploy) {
+  public static JsonObject backendAddress(JsonObject deploy) {
     try {
-      JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-      Integer epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
-      String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
+      JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+      Integer epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
+      String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
       if (epoch == null) {
         throw new IllegalArgumentException("Fail to get address, the epoch of backend is not existed.");
       }
@@ -545,18 +586,18 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> analysis(String userId, String name, JsonObject spec) {
-    return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
+    return ProjectDB.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
       return analysisSpec(userId, spec, proj);
     });
   }
 
   private Future<JsonObject> analysisSpec(String userId, JsonObject spec, JsonObject proj) {
     try {
-      String projectName = proj.getString(ProjectDBEx.NAME);
-      JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+      String projectName = proj.getString(ProjectDB.NAME);
+      JsonObject deploy = proj.getJsonObject(ProjectDB.DEPLOY);
       checkBackendUp(deploy);
       JsonObject address = backendAddress(deploy);
-      return ProjectDBEx.updateSpec(mongo, userId, projectName, spec).compose((JsonObject ret) -> {
+      return ProjectDB.updateSpec(mongo, userId, projectName, spec).compose((JsonObject ret) -> {
         BackendService backendService = BackendService.create(vertx, address);
         return backendService.analyse(spec);
       });
@@ -567,28 +608,59 @@ public class ProjectServiceImpl implements IProjectService{
 
   @Override
   public Future<JsonObject> analysisOfId(String userId, String id, JsonObject spec) {
-    return ProjectDBEx.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
       return analysisSpec(userId, spec, proj);
     });
   }
 
   @Override
+  public Future<JsonObject> saveSpecOfId(String userId, String id, JsonObject spec) {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      try {
+        String projectName = proj.getString(ProjectDB.NAME);
+        return ProjectDB.updateSpec(mongo, userId, projectName, spec);
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
+  public Future<JsonObject> analysisSubSpecOfId(String userId, String id, JsonObject spec,
+      JsonObject subSpec) {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+      try {
+        String projectName = proj.getString(ProjectDB.NAME);
+        JsonObject deploy = proj.getJsonObject(ProjectDB.DEPLOY);
+        checkBackendUp(deploy);
+        JsonObject address = backendAddress(deploy);
+        return ProjectDB.updateSpec(mongo, userId, projectName, spec).compose((JsonObject ret) -> {
+          BackendService backendService = BackendService.create(vertx, address);
+          return backendService.analyse(subSpec);
+        });
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+    });
+  }
+
+  @Override
   public Future<JsonObject> exec(String userId, String name) {
-    return ProjectDBEx.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
+    return ProjectDB.getOfName(mongo, userId, name).compose((JsonObject proj) -> {
       return execProject(userId, proj);
     });
   }
 
   @Override
   public Future<JsonObject> execOfId(String userId, String id) {
-    return ProjectDBEx.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
+    return ProjectDB.getOfId(mongo, userId, id).compose((JsonObject proj) -> {
       return execProject(userId, proj);
     });
   }
 
   private Future<JsonObject> execProject(String userId, JsonObject proj) {
     try {
-      JsonObject deploy = proj.getJsonObject(ProjectDBEx.DEPLOY);
+      JsonObject deploy = proj.getJsonObject(ProjectDB.DEPLOY);
       checkBackendUp(deploy);
       JsonObject address = backendAddress(deploy);
       return execService.add(userId, proj).compose((String execId) -> {

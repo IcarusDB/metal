@@ -3,6 +3,7 @@ import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
 import {BackendStatus, Deploy, Project} from "../model/Project";
 import _ from "lodash"
 import { Spec } from "../model/Spec";
+import { idMap } from "./IdMap";
 
 const instance = axios.create({
     headers: {
@@ -10,14 +11,6 @@ const instance = axios.create({
     },
     timeout: timeout()
 })
-
-function idMap <T> (obj: any): T {
-    obj = _.mapKeys(obj, (val, key) => {
-        return key === '_id'? 'id': key
-    })
-    const target: T = obj
-    return target;
-}
 
 function projectMap (obj: any): Project {
     obj.user = _.mapKeys(obj.user, (val, key) => {
@@ -295,6 +288,76 @@ export async function analysisOfId(token: string, id: string, spec: Spec) {
     })
 }
 
+export async function analysisSubSpecOfId(token: string, id: string, spec: Spec, subSpec: Spec) {
+    const url = `/api/v1/projects/id/${id}/subSpec`;
+    return instance.post(url, {
+        spec: spec,
+        subSpec: subSpec,
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const analysisResp: AnalysisResponse = resp.data;
+            return analysisResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface SaveResponse {
+
+}
+
+export async function saveSpecOfId(token: string, id: string, spec: Spec) {
+    const url = `/api/v1/projects/id/${id}/spec`;
+    return instance.put(url, {
+        spec: spec
+    }, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const saveResp: SaveResponse = resp.data;
+            return saveResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface SchemaResponse {
+    id: string,
+    schema: {
+        fields: any[]
+    }
+}
+
+export async function schemaOfId(token: string, deployId: string, metalId: string) {
+    const url = `/api/v1/projects/deploy/${deployId}/spec/metals/${metalId}`;
+    return instance.get(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const schemaResp: SchemaResponse = resp.data;
+            return schemaResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
 export interface ExecResponse {
     status: string | "OK",
 }
@@ -311,6 +374,28 @@ export async function execOfId(token: string, id: string) {
             ApiResponse.mayBeFailure(resp);
             const execResp: ExecResponse = resp.data;
             return execResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface RemoveProjectResponse {
+
+}
+
+export async function removeProjectOfName(token: string, name: string) {
+    const url = `/api/v1/projects/name/${name}`;
+    return instance.delete(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        }
+    }).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const removeResp: RemoveProjectResponse = resp.data;
+            return removeResp;
         } catch (err) {
             return Promise.reject(err);
         }

@@ -4,38 +4,44 @@ import { Connection } from "reactflow";
 import { useAsync } from "../../api/Hooks";
 import { metalType } from "../../model/Metal";
 import { MetalPkg } from "../../model/MetalPkg";
-import { Spec } from "../../model/Spec";
 import { getAllMetalPkgsOfClasses } from "../../api/MetalPkgApi";
 import { MetalNodeProps } from "./MetalView";
+import { useBackendStatusFn, useSpec, useSpecFlowFn } from "./DesignerProvider";
+import { State } from "../../api/State";
+import { Alert } from "@mui/material";
 
-export interface SpecLoaderProps {
-    spec?: Spec;
-}
+
 
 export interface SpecFlow {
     nodeTmpls: (MetalNodeProps | undefined)[],
     connections: Connection[]
 }
 
-export function useSpecLoader(token: string | null, spec?: Spec) {
+export function useSpecLoader(token: string | null): [()=>void, State, SpecFlow | null, any] {
+    const [spec] = useSpec();
     const [run, status, result, error] = useAsync<SpecFlow>();
+    const [, setSpecFlow] = useSpecFlowFn();
+    const [getBackendStatus] = useBackendStatusFn();
 
-    const loadSpec = useCallback(async () => {
+    const load = useCallback(() => {
         if (token === null || spec === undefined) {
-            return Promise.reject("Fail to load spec.");
+            return;
         }
         const classes = spec.metals
             .filter((metal) => metal.type !== undefined)
             .map((metal) => (metal.type === undefined ? "" : metal.type));
 
         if (classes.length === 0) {
-            return {
+            const flow: SpecFlow = {
                 nodeTmpls: [],
-                connections: [],
-            };
+                connections: []
+            }
+            setSpecFlow(flow);
+            return;
         }
 
-        return getAllMetalPkgsOfClasses(token, classes).then((metalPkgs) => {
+        const task = getAllMetalPkgsOfClasses(token, classes)
+        .then((metalPkgs) => {
             const nodeTmpls: (MetalNodeProps | undefined)[] = spec.metals
                 .filter((metal) => metal.type !== undefined)
                 .map((metal) => {
@@ -49,6 +55,10 @@ export function useSpecLoader(token: string | null, spec?: Spec) {
                         type: metalType(pkg.type),
                         onUpdate: () => {},
                         onDelete: () => {},
+                        inputs: (id: string) => ([]),
+                        outputs: (id: string) => ([]),
+                        backendStatus: getBackendStatus,
+                        // status: MetalNodeState.PENDING,
                     };
                     return nodeTmpl;
                 });
@@ -80,21 +90,36 @@ export function useSpecLoader(token: string | null, spec?: Spec) {
                 nodeTmpls: nodeTmpls,
                 connections: connects,
             };
+            setSpecFlow(flow);
             return flow;
         });
-    }, [spec, token]);
+        run(task);
+    }, [run, setSpecFlow, spec, token]);
 
-    const load = useCallback(()=>{
-        run(loadSpec())
-    }, [loadSpec, run])
+    // useEffect(() => {
+    //    load()
+    // }, [load]);
 
-    useEffect(() => {
-       load()
-    }, [load]);
+    return [load, status, result, error];
+}
 
-    return {
-        status,
-        flow: result,
-        error: error
-    }
+
+export interface SpecLoaderProps {
+    token: string | null;
+}
+export function SpecLoader(props: SpecLoaderProps) {
+    const {token} = props;
+    const [load, status,] = useSpecLoader(token);
+    
+    useEffect(()=>{
+        load();
+    }, [load])
+
+    return (
+        <>
+            {status === State.failure && (
+                <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
+            )}
+        </>
+    )
 }

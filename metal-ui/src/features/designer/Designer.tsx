@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "reactflow/dist/style.css";
-import { MetalNodeProps } from "./MetalView";
-import { Alert, IconButton, LinearProgress, Paper, Skeleton, Stack } from "@mui/material";
+import { IconButton, Paper, Stack } from "@mui/material";
 import { MetalNodeEditor } from "./MetalNodeEditor";
-import { MetalExplorer } from "./explorer/MetalExplorer";
+import { MetalExplorerWrapper } from "./explorer/MetalExplorer";
 import { Box } from "@mui/system";
 import { MetalFlow } from "./MetalFlow";
 import {
@@ -13,138 +12,55 @@ import {
     ProjectProfileViewerHandler,
 } from "../project/ProjectProfile";
 import { VscExtensions, VscOpenPreview, VscSettingsGear } from "react-icons/vsc";
-import { Project } from "../../model/Project";
 import { designerId, MainHandler } from "../main/Main";
-import { useAsync } from "../../api/Hooks";
-import { State } from "../../api/State";
-import { getProjectById } from "../../api/ProjectApi";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
-import { useSpecLoader } from "./SpecLoader";
+import { SpecLoader } from "./SpecLoader";
 import { ReactFlowProvider } from "reactflow";
-import { useMetalFlow, useMetalNodeEditor } from "./DesignerProvider";
-import { IReadOnly } from "../ui/Commons";
-import { BackendPanel, BackendPanelHandler } from "./BackendPanel";
+import { useNameFn } from "./DesignerProvider";
+import { ProjectLoader } from "./ProjectLoader";
+import { BackendBar } from "./backend/BackendBar";
+import { SaveSpec } from "./SaveSpec";
 
-export interface DesignerProps extends IReadOnly {
+export interface DesignerProps {
     id: string;
-    name?: string;
     mainHandler?: MainHandler;
 }
 
 export function Designer(props: DesignerProps) {
-    const { id, mainHandler, isReadOnly } = props;
+    console.log("Desiger");
+    const { id, mainHandler } = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [isOpenExplorer, setOpenExplorer] = useState(isReadOnly ? false : true);
-    const [run, status, result, error] = useAsync<Project>();
+    const [isOpenExplorer, setOpenExplorer] = useState(true);
 
-    const project = result === null ? undefined : result;
-    const specLoader = useSpecLoader(token, project?.spec);
+    const [,, onNameChange] = useNameFn();
 
     const projectProfileRef = useRef<ProjectProfileHandler>(null);
     const projectProfileViewerRef = useRef<ProjectProfileViewerHandler>(null);
-    const backendPanelRef = useRef<BackendPanelHandler>(null);
-    const metalFlowHandler = useMetalFlow();
-    const nodeEditorHandler = useMetalNodeEditor();
-
-    const isPending = () => status === State.pending;
-    const isFailure = () => status === State.failure;
-
-    const onSwitchExplorer = () => {
-        if (isReadOnly !== undefined && isReadOnly === false) {
-            return;
-        }
-        setOpenExplorer(!isOpenExplorer);
-    };
-
-    const rename = useCallback((newName: string) => {
-        if (
-            mainHandler !== undefined &&
-            mainHandler.renameDesigner !== undefined
-        ) {
-            mainHandler.renameDesigner(designerId(id, isReadOnly), newName);
-        }
-    }, [id, isReadOnly, mainHandler]);
-
-    const load = useCallback(() => {
-        if (token !== null) {
-            run(getProjectById(token, id)
-            .then(proj => {
-                rename(proj.name);
-                return proj;
-            }
-            ));
-        }
-    }, [id, rename, run, token]);
-
-    const onAddNode = useCallback(
-        (nodeProps: MetalNodeProps) => {
-            metalFlowHandler.addNode(nodeProps);
-        },
-        [metalFlowHandler]
-    );
-
-    const explorer = useMemo(() => {
-        return <MetalExplorer addNode={onAddNode} restrictPkgs={project?.deploy.pkgs} />;
-    }, [onAddNode, project?.deploy.pkgs]);
-
-    const nodePropsWrap = useCallback(
-        (nodeProps: MetalNodeProps) => ({
-            ...nodeProps,
-            editor: nodeEditorHandler,
-        }),
-        [nodeEditorHandler]
-    );
-
     
+    const onSwitchExplorer = useCallback(() => {
+        setOpenExplorer(!isOpenExplorer);
+    }, [isOpenExplorer]);
 
-    const progress = isPending() ? (
-        <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
-
-    const onReloadProject = (projectId: string) => {
+    const onProfileFinish = (projectId: string) => {
         projectProfileRef.current?.close();
-        if (mainHandler !== undefined) {
-            if (mainHandler.close !== undefined) {
-                mainHandler.close(designerId(id, isReadOnly));
-
-                setTimeout(() => {
-                    mainHandler.openDesigner({
-                        id: id,
-                        isReadOnly: isReadOnly,
-                        mainHandler: mainHandler,
-                    });
-                }, 2000);
-            }
-        }
     };
+
+    const editor = useMemo(()=>(<MetalNodeEditor />), []);
 
     useEffect(() => {
-        load();
-    }, [load]);
-
-    if (project === undefined) {
-        return (
-            <>
-                {isPending() && progress}
-                <Skeleton>
-                    {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
-                </Skeleton>
-            </>
-        );
-    }
+        const unsub = onNameChange((name: string | undefined, prev: string | undefined) => {
+            if (mainHandler !== undefined && mainHandler.rename !== undefined) {
+                mainHandler.rename(designerId(id), name === undefined ? "?" : name);
+            }
+        });
+        return unsub;
+    }, [id, mainHandler, onNameChange]);
 
     return (
         <div className="panel">
-            {isPending() && progress}
-            {isFailure() && <Alert severity={"error"}>{"Fail to load project."}</Alert>}
-            {specLoader.status === State.failure && (
-                <Alert severity={"error"}>{"Fail to load project spec."}</Alert>
-            )}
             <Stack
                 direction="row"
                 justifyContent="center"
@@ -157,16 +73,18 @@ export function Designer(props: DesignerProps) {
                     sx={{
                         height: "100%",
                         width: !isOpenExplorer ? "100%" : "75%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                     }}
                 >
                     <ReactFlowProvider>
-                        <MetalFlow
-                            isReadOnly={isReadOnly}
-                            flow={specLoader.flow === null ? undefined : specLoader.flow}
-                            nodePropsWrap={nodePropsWrap}
-                        />
+                        <MetalFlow />
                     </ReactFlowProvider>
+                    <BackendBar id={id} />
                 </Box>
+                <ProjectLoader token={token} id={id} />
+                <SpecLoader token={token} />
                 {isOpenExplorer && (
                     <Box
                         component={Paper}
@@ -175,7 +93,7 @@ export function Designer(props: DesignerProps) {
                             width: "25%",
                         }}
                     >
-                        {explorer}
+                        <MetalExplorerWrapper />
                     </Box>
                 )}
             </Stack>
@@ -185,59 +103,56 @@ export function Designer(props: DesignerProps) {
                     position: "absolute",
                     top: "1vh",
                     left: "1vw",
-                    paddingTop: "1em",
-                    paddingBottom: "1em",
-                    paddingLeft: "1em",
-                    paddingRight: "1em",
+                    padding: "0.5em",
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     alignItems: "flex-start",
                     justifyContent: "flex-start",
                 }}
             >
-                <div
-                    style={{
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "flex-start",
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={() => {
+                        if (projectProfileRef.current !== null) {
+                            projectProfileRef.current.open();
+                        }
                     }}
                 >
-                    {!isReadOnly && (
-                        <IconButton
-                            onClick={() => {
-                                if (projectProfileRef.current !== null) {
-                                    projectProfileRef.current.open();
-                                }
-                            }}
-                        >
-                            <VscSettingsGear />
-                        </IconButton>
-                    )}
+                    <VscSettingsGear />
+                </IconButton>
 
-                    <IconButton
-                        onClick={() => {
-                            projectProfileViewerRef.current?.open(project);
-                        }}
-                    >
-                        <VscOpenPreview />
-                    </IconButton>
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={() => {
+                        projectProfileViewerRef.current?.open();
+                    }}
+                >
+                    <VscOpenPreview />
+                </IconButton>
 
-                    {!isReadOnly && (
-                        <IconButton onClick={onSwitchExplorer}>
-                            <VscExtensions />
-                        </IconButton>
-                    )}
-                </div>
-                <BackendPanel deployId={project.deploy.id} currentSpec={()=>{return metalFlowHandler.export()}} ref={backendPanelRef}/>
+                <IconButton
+                    size="small"
+                    sx={{
+                        borderRadius: "0px",
+                    }}
+                    onClick={onSwitchExplorer}
+                >
+                    <VscExtensions />
+                </IconButton>
+                <SaveSpec token={token} id={id} />
             </Paper>
-            <MetalNodeEditor isReadOnly={isReadOnly} />
+            {editor}
             <ProjectProfile
                 open={false}
                 isCreate={false}
-                onFinish={onReloadProject}
-                project={project}
+                onFinish={onProfileFinish}
+                id={id}
                 ref={projectProfileRef}
             />
             <ProjectProfileViewer ref={projectProfileViewerRef} />

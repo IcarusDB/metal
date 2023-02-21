@@ -1,6 +1,5 @@
 import {
     Alert,
-    Box,
     Button,
     Chip,
     Container,
@@ -11,8 +10,6 @@ import {
     List,
     ListItem,
     Paper,
-    Stack,
-    Toolbar,
     Typography,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -45,11 +42,13 @@ import { ResizeBackdrop } from "../../ui/ResizeBackdrop";
 import { tokenSelector } from "../../user/userSlice";
 import { MetalNodeProps, metalViewIcon, MetalViewIcons } from "../MetalView";
 import { getAllMetalPkgsOfUserAccess } from "../../../api/MetalPkgApi";
+import { useFlowPending, useMetalFlow, usePkgs } from "../DesignerProvider";
 
 const theme = createTheme();
 moment.locale("zh_CN");
 
 export interface MetalPkgProps {
+    isReadOnly?: boolean;
     type: MetalTypes;
     metalPkg: MetalPkg;
     addNode: (nodeTmpl: MetalNodeProps) => void;
@@ -57,7 +56,7 @@ export interface MetalPkgProps {
 }
 
 export function MetalPkgView(props: MetalPkgProps) {
-    const { type, metalPkg, addNode, openDetail } = props;
+    const {isReadOnly, type, metalPkg, addNode, openDetail } = props;
     const classSubs = metalPkg.class.split(".");
     const className = classSubs.length > 0 ? classSubs[classSubs.length - 1] : "?";
     const pkgSubs = metalPkg.pkg.split(":");
@@ -70,6 +69,9 @@ export function MetalPkgView(props: MetalPkgProps) {
             type: type,
             onDelete: () => {},
             onUpdate: () => {},
+            inputs: () => ([]),
+            outputs: () => ([]),
+            backendStatus: () => (undefined),
             metal: {
                 id: "node-0",
                 name: "node-0",
@@ -143,7 +145,7 @@ export function MetalPkgView(props: MetalPkgProps) {
                     <VscOrganization />
                 </Grid>
                 <Grid item xs={11}>
-                    <Chip label={groupId} size="small" color="primary" variant="outlined"/>
+                    <Chip label={groupId} size="small" color="primary" variant="outlined" />
                 </Grid>
                 <Grid
                     item
@@ -174,16 +176,21 @@ export function MetalPkgView(props: MetalPkgProps) {
                     <Chip size="small" variant="outlined" label={version} color={"info"} />
                 </Grid>
                 <Grid item xs={12}>
-                <Divider orientation="horizontal" flexItem  sx={{
-                    paddingTop: "1vh",
-                }}/>
+                    <Divider
+                        orientation="horizontal"
+                        flexItem
+                        sx={{
+                            paddingTop: "1vh",
+                        }}
+                    />
                 </Grid>
                 <Grid item xs={6}></Grid>
                 <Grid item xs={4}>
                     {type !== MetalTypes.SETUP && (
-                        <Button 
-                            variant="contained" 
-                            color="primary" 
+                        <Button
+                            disabled={isReadOnly}
+                            variant="contained"
+                            color="primary"
                             onClick={onAddNode}
                             style={{
                                 width: "100%",
@@ -365,10 +372,11 @@ interface MetalExplorerProps {
 
 export function MetalExplorer(props: MetalExplorerProps) {
     const { addNode, restrictPkgs } = props;
+    const [isFlowPending] = useFlowPending();
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const [run, status, result, error] = useAsync<MetalPkg[]>();
+    const [run, status, result] = useAsync<MetalPkg[]>();
     const [pkgFilter, setPkgFilter] = useState<Set<MetalTypes>>(new Set<MetalTypes>());
 
     const pkgs =
@@ -430,28 +438,37 @@ export function MetalExplorer(props: MetalExplorerProps) {
                     justifyContent: "space-between",
                 }}
             >
-                <div
-                    style={{
+                <Paper
+                    square
+                    variant="outlined"
+                    sx={{
+                        boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "row",
-                        alignContent: "center",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        height: "8%",
+                        height: "6%",
+                        // backgroundColor: "#d8c3c366",
                     }}
                 >
-                    <Toolbar
-                        sx={{
+                    <div
+                        style={{
                             boxSizing: "border-box",
-                            paddingLeft: "1vw",
-                            width: "80%",
-                            minHeight: "4vh",
+                            padding: "0.5em",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
                         }}
                     >
                         <IconButton
                             disabled={isPending()}
                             color={filters.source.isOn() ? "success" : "secondary"}
                             onClick={filters.source.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
+                            size="small"
                         >
                             {MetalViewIcons.SOURCE}
                         </IconButton>
@@ -459,6 +476,10 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.sink.isOn() ? "success" : "secondary"}
                             onClick={filters.sink.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
+                            size="small"
                         >
                             {MetalViewIcons.SINK}
                         </IconButton>
@@ -466,6 +487,10 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.mapper.isOn() ? "success" : "secondary"}
                             onClick={filters.mapper.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
+                            size="small"
                         >
                             {MetalViewIcons.MAPPER}
                         </IconButton>
@@ -473,6 +498,10 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.fusion.isOn() ? "success" : "secondary"}
                             onClick={filters.fusion.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
+                            size="small"
                         >
                             {MetalViewIcons.FUSION}
                         </IconButton>
@@ -480,15 +509,24 @@ export function MetalExplorer(props: MetalExplorerProps) {
                             disabled={isPending()}
                             color={filters.setup.isOn() ? "success" : "secondary"}
                             onClick={filters.setup.onToggle}
+                            sx={{
+                                borderRadius: "0px",
+                            }}
+                            size="small"
                         >
                             {MetalViewIcons.SETUP}
                         </IconButton>
-                    </Toolbar>
-                    <Divider orientation="vertical" flexItem />
-                    <IconButton disabled={isPending()} onClick={load}>
+                    </div>
+                    <IconButton
+                        disabled={isPending()}
+                        onClick={load}
+                        sx={{
+                            borderRadius: "0px",
+                        }}
+                    >
                         <AiOutlineReload />
                     </IconButton>
-                </div>
+                </Paper>
                 {progress}
                 <Paper
                     square
@@ -509,6 +547,7 @@ export function MetalExplorer(props: MetalExplorerProps) {
                         {afterTypeFilter(pkgFilter, pkgs).map(
                             (metalPkg: MetalPkg, index: number) => {
                                 const props = {
+                                    isReadOnly: isFlowPending,
                                     type: metalType(metalPkg.type),
                                     metalPkg: metalPkg,
                                     addNode: addNode,
@@ -533,4 +572,19 @@ function afterTypeFilter(pkgFilter: Set<MetalTypes>, pkgs: MetalPkg[]) {
     return pkgFilter.size > 0
         ? pkgs.filter((pkg: MetalPkg) => pkgFilter.has(metalType(pkg.type)))
         : pkgs;
+}
+
+export function MetalExplorerWrapper() {
+    const [pkgs] = usePkgs();
+    const [metalFlowAction] = useMetalFlow();
+    const onAddNode = useCallback(
+        (nodeProps: MetalNodeProps) => {
+            metalFlowAction.addNode(nodeProps);
+        },
+        [metalFlowAction]
+    );
+
+    return (
+        <MetalExplorer addNode={onAddNode} restrictPkgs={pkgs} />
+    )
 }

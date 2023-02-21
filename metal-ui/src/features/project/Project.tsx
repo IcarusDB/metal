@@ -2,21 +2,14 @@ import "./Project.css";
 import { useAppSelector } from "../../app/hooks";
 import { tokenSelector } from "../user/userSlice";
 import {
-    Box,
     Paper,
     Divider,
     IconButton,
-    List,
-    ListItem,
-    ListItemText,
     Tooltip,
-    TableRow,
-    TableCell,
     CircularProgress,
     Alert,
     LinearProgress,
-    Container,
-    Button,
+    Grid,
 } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -31,78 +24,105 @@ import {
     AiOutlineReload,
 } from "react-icons/ai";
 import { HiStop } from "react-icons/hi";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { BackendState, BackendStatus, Deploy, Project } from "../../model/Project";
-import { getAllProjectOfUser } from "../../api/ProjectApi";
+import { getAllProjectOfUser, removeProjectOfName, RemoveProjectResponse } from "../../api/ProjectApi";
 import { State } from "../../api/State";
 import { useAsync } from "../../api/Hooks";
 import { ResizeBackdrop } from "../ui/ResizeBackdrop";
 import { MainHandler } from "../main/Main";
-import { VscAdd } from "react-icons/vsc";
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer } from "@mui/x-data-grid";
+import moment from "moment";
+import { ProjectLoader } from "../designer/ProjectLoader";
+import { useUIAsync } from "../ui/UIHooks";
+import { RemoveExecResponse } from "../../api/ExecApi";
+import { FiDelete } from "react-icons/fi";
+import { act } from "react-dom/test-utils";
 
 function backendStatusTip(backendStatus: BackendStatus) {
-    const upTime =
-        backendStatus.upTime === undefined ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Up Time"}</ListItemText>
-                <ListItemText>{backendStatus.upTime}</ListItemText>
-            </ListItem>
-        );
-
-    const downTime =
-        backendStatus.downTime === undefined ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Down Time"}</ListItemText>
-                <ListItemText>{backendStatus.downTime}</ListItemText>
-            </ListItem>
-        );
-
-    const failureTime =
-        backendStatus.failureTime === undefined ||
-        backendStatus.current !== BackendState.FAILURE ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Failure Time"}</ListItemText>
-                <ListItemText>{backendStatus.failureTime}</ListItemText>
-            </ListItem>
-        );
-
-    const failureMsg =
-        backendStatus.failureTime === undefined ||
-        backendStatus.current !== BackendState.FAILURE ? (
-            <></>
-        ) : (
-            <ListItem>
-                <ListItemText>{"Failure Message"}</ListItemText>
-                <ListItemText>{backendStatus.failureMsg}</ListItemText>
-            </ListItem>
-        );
-
-    return (
-        <List>
-            <ListItem>
-                <ListItemText>{"current"}</ListItemText>
-                <ListItem>{backendStatus.current}</ListItem>
-            </ListItem>
-            {upTime}
-            {downTime}
-            {failureTime}
-            {failureMsg}
-        </List>
-    );
+    switch (backendStatus.current) {
+        case BackendState.CREATED:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Created Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.createdTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.UP:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Up Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.upTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.DOWN:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Down Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.downTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                </Grid>
+            );
+        case BackendState.FAILURE:
+            return (
+                <Grid container>
+                    <Grid item xs={4}>
+                        CURRENT
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.current}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Failure Time
+                    </Grid>
+                    <Grid item xs={8}>
+                        {moment(backendStatus.failureTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                    <Grid item xs={4}>
+                        Message
+                    </Grid>
+                    <Grid item xs={8}>
+                        {backendStatus.failureMsg}
+                    </Grid>
+                </Grid>
+            );
+    }
 }
 
 function backendStatus(deploy: Deploy | undefined) {
     if (deploy === undefined) {
         return "?";
     }
-    if (deploy.backend === undefined || deploy.backend.status === undefined) {
+    if (deploy.backend === undefined) {
         return (
             <Tooltip title={"No deployment is set."}>
                 <IconButton>
@@ -113,10 +133,10 @@ function backendStatus(deploy: Deploy | undefined) {
     }
 
     switch (deploy.backend.status.current) {
-        case BackendState.UN_DEPLOY:
+        case BackendState.CREATED:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="primary">
                         <AiOutlineApi />
                     </IconButton>
                 </Tooltip>
@@ -124,7 +144,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.UP:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="success">
                         <AiFillThunderbolt />
                     </IconButton>
                 </Tooltip>
@@ -132,7 +152,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.DOWN:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="info">
                         <HiStop />
                     </IconButton>
                 </Tooltip>
@@ -140,7 +160,7 @@ function backendStatus(deploy: Deploy | undefined) {
         case BackendState.FAILURE:
             return (
                 <Tooltip title={backendStatusTip(deploy.backend.status)}>
-                    <IconButton>
+                    <IconButton color="error">
                         <AiOutlineWarning />
                     </IconButton>
                 </Tooltip>
@@ -156,13 +176,35 @@ function backendStatus(deploy: Deploy | undefined) {
 
 const theme = createTheme();
 
+
+function useRemoveProject(token: string | null, cb: ()=>void): [
+    (name: string) => void,
+    State
+] {
+    const [run, status] = useUIAsync<RemoveProjectResponse>({
+        onSuccess: (result) => {
+            cb();
+        }
+    });
+    const remove = useCallback((name: string)=>{
+        if (token === null) {
+            return;
+        }
+        run(removeProjectOfName(token, name));
+    }, [run, token]);
+
+    return [remove, status];
+}
+
 export interface ProjectListProps {
     mainHandler: MainHandler;
 }
 
 interface ProjectAction {
+    status?: BackendState,
     onEdit: () => void;
     onView: () => void;
+    onDelete: () => void;
 }
 
 export function ProjectList(props: ProjectListProps) {
@@ -171,9 +213,9 @@ export function ProjectList(props: ProjectListProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-    const starterCounter = useRef(0);
 
     const [run, status, result, error] = useAsync<Project[]>();
+   
     const projects = useMemo(() => (result === null ? [] : result), [result]);
     const isPending = () => {
         return status === State.pending;
@@ -187,6 +229,8 @@ export function ProjectList(props: ProjectListProps) {
             run(getAllProjectOfUser(token));
         }
     }, [run, token]);
+
+    const [remove, removeStatus] = useRemoveProject(token, load);
 
     const columns: GridColDef[] = useMemo<GridColDef[]>(
         () => [
@@ -205,12 +249,14 @@ export function ProjectList(props: ProjectListProps) {
             {
                 field: "action",
                 headerName: "Action",
+                width: 300,
                 renderCell: (params: GridRenderCellParams<ProjectAction>) => {
                     const action =
                         params.value === undefined
                             ? {
                                   onEdit: () => {},
                                   onView: () => {},
+                                  onDelete: () => {},
                               }
                             : params.value;
                     return (
@@ -226,6 +272,16 @@ export function ProjectList(props: ProjectListProps) {
                             </IconButton>
                             <IconButton onClick={action.onEdit}>
                                 <AiOutlineEdit />
+                            </IconButton>
+                            <IconButton 
+                                onClick={action.onDelete}
+                                disabled={
+                                    action.status === undefined
+                                        ?true
+                                        : !(action.status === BackendState.DOWN || action.status === BackendState.FAILURE)
+                                }
+                            >
+                                <FiDelete />
                             </IconButton>
                         </Stack>
                     );
@@ -246,38 +302,35 @@ export function ProjectList(props: ProjectListProps) {
                     onEdit: () => {
                         mainHandler?.openDesigner({
                             id: project.id,
-                            name: project.name,
-                            mainHandler: mainHandler
+                            mainHandler: mainHandler,
                         });
                     },
                     onView: () => {
-                        mainHandler?.openDesigner({
+                        mainHandler?.openViewer({
                             id: project.id,
-                            name: project.name,
-                            isReadOnly: true,
-                        })
+                            children: (<ProjectLoader token={token} id={project.id} />)
+                        });
                     },
+                    onDelete: () => {
+                        remove(project.name);
+                    },
+                    status: project.deploy.backend.status.current
                 },
             };
         });
-    }, [mainHandler, projects]);
+    }, [mainHandler, projects, remove, token]);
 
     const toolbar = () => {
         return (
             <GridToolbarContainer sx={{ width: "100%" }}>
                 <Stack
                     direction="row"
-                    justifyContent="space-between"
+                    justifyContent="flex-end"
                     alignItems="center"
-                    divider={<Divider orientation="vertical" flexItem />}
                     spacing={0}
                     sx={{ width: "100%" }}
                 >
-                    <Button variant="contained" onClick={onAddProject}>
-                        <VscAdd />
-                    </Button>
-
-                    <Container></Container>
+                    <Divider orientation="vertical" flexItem />
                     <IconButton disabled={isPending()} onClick={load}>
                         <AiOutlineReload />
                         {isPending() && (
@@ -295,16 +348,7 @@ export function ProjectList(props: ProjectListProps) {
 
     const progress = isPending() ? (
         <LinearProgress />
-    ) : (
-        <LinearProgress variant="determinate" value={0} />
-    );
-
-    const onAddProject = () => {
-        mainHandler.openProjectStarter({
-            id: `starter[${starterCounter.current++}]`,
-            mainHandler: mainHandler,
-        });
-    };
+    ) : ("");
 
     useEffect(() => {
         load();
@@ -319,6 +363,11 @@ export function ProjectList(props: ProjectListProps) {
                 }}
             >
                 {progress}
+                {removeStatus === State.failure &&
+                    <Alert severity={"error"}>
+                        {"Fail to remove project."}
+                    </Alert>
+                }
                 {isFail() && <Alert severity={"error"}>{"Fail to load projects."}</Alert>}
                 <Paper sx={{ height: "100%" }}>
                     <DataGrid
@@ -336,3 +385,4 @@ export function ProjectList(props: ProjectListProps) {
         </ThemeProvider>
     );
 }
+

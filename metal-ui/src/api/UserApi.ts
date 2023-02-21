@@ -49,3 +49,64 @@ export async function sync(token: string): Promise<User> {
         }
     })
 }
+
+export interface UpdateNameRequest {
+    newName: string
+}
+export interface UpdateNameResponse {
+
+}
+
+export async function updateName(token: string, newName: string): Promise<UpdateNameResponse> {
+    const url = "/api/v1/user/name";
+    const request: UpdateNameRequest = {
+        newName: newName,
+    }
+    return instance.put(url, request, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    ).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const updateResp: UpdateNameResponse = resp.data;
+            return updateResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}
+
+export interface UpdatePasswordRequest {
+    oldPassword: string,
+    newPassword: string
+}
+
+export interface UpdatePasswordResponse {
+
+}
+
+export async function updatePassword(token: string, oldPassword: string, newPassword: string): Promise<UpdatePasswordResponse> {
+    const url = "/api/v1/user/password";
+    const request: UpdatePasswordRequest = {
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+    };
+    return instance.put(url, request, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    ).then(response => {
+        try {
+            const resp: ApiResponseEntity = response.data;
+            ApiResponse.mayBeFailure(resp);
+            const updateResp: UpdatePasswordResponse = resp.data;
+            return updateResp;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    })
+}

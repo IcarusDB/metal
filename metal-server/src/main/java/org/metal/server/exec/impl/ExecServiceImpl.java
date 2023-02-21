@@ -8,7 +8,7 @@ import java.util.List;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecDB;
 import org.metal.server.exec.ExecService;
-import org.metal.server.project.service.ProjectDBEx;
+import org.metal.server.project.service.ProjectDB;
 
 public class ExecServiceImpl implements ExecService {
   private Vertx vertx;
@@ -157,8 +157,8 @@ public class ExecServiceImpl implements ExecService {
         .compose((JsonObject exec) -> {
           JsonObject execStatus = new JsonObject();
           JsonObject deploy = exec.getJsonObject(ExecDB.FIELD_DEPLOY);
-          String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-          int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+          String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
+          int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
 
           execStatus = exec.copy();
           execStatus.remove(ExecDB.FIELD_SPEC);

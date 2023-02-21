@@ -41,7 +41,12 @@
     <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <maven-project.version>3.0-alpha-2</maven-project.version>
-    <metal.libs.dir>../libs</metal.libs.dir>
+    <metal.build.dir>../build</metal.build.dir>
+    <metal.libs.dir>${metal.build.dir}/libs</metal.libs.dir>
+    <metal.ui.dir>${metal.build.dir}/ui/webroot</metal.ui.dir>
+    <metal.conf.dir>${metal.build.dir}/conf</metal.conf.dir>
+    <metal.sbin.dir>${metal.build.dir}/sbin</metal.sbin.dir>
+    <metal.db.init.dir>${metal.sbin.dir}/db</metal.db.init.dir>
   </properties>
 
   <dependencyManagement>
@@ -99,6 +104,11 @@
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jsonSchema</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-guava</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
@@ -295,26 +305,20 @@
         <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>${maven-antrun-plugin.version}</version>
-          <executions>
-            <execution>
-              <id>copy-jar-to-libs</id>
-              <phase>package</phase>
-              <configuration>
-                <target>
-                  <copy todir="${metal.libs.dir}">
-                    <fileset dir="${project.build.directory}/">
-                      <include name="${project.artifactId}-${project.version}.jar"/>
-                    </fileset>
-                  </copy>
-                </target>
-              </configuration>
-              <goals>
-                <goal>run</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${metal.build.dir}</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>

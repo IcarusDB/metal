@@ -1,118 +1,766 @@
-import _ from "lodash";
-import React, { createContext, ReactNode, useContext } from "react"
-import { Node } from "reactflow";
-import { Mutable } from "../../model/Mutable";
-import { emptySpec, Spec } from "../../model/Spec";
-import { MetalNodeProps } from "./MetalView";
+import { createContext, ReactNode, useCallback, useContext } from "react"
+import { createStore, useStore} from "zustand";
+import { subscribeWithSelector, devtools } from "zustand/middleware";
+import shallow from 'zustand/shallow';
+import { SpecSlice, createSpecSlice } from "./SpecSlice";
+import { DesignerActionSlice, createDesignerActionSlice, MetalFlowAction, MetalNodeEditorAction, HotNode } from "./DesignerActionSlice";
+import { Spec } from "../../model/Spec";
+import { createBackendSlice, BackendSlice,} from "./BackendSlice";
+import { BackendStatus } from "../../model/Project";
+import { Exec } from "../../model/Exec";
 import { SpecFlow } from "./SpecLoader";
+import { Logger, Message, NoticeAction } from "../notice/Notice";
+import { Alert } from "@mui/material";
 
+declare type Subscribe<S> = (listener: (s: S | undefined, prev: S | undefined) => void) => () => void;
+declare type IChangeFns <S> = [
+    () => S | undefined,
+    (s: S) => void,
+    Subscribe<S>,
+];
 
-export interface MetalFlowHandler {
-    inputs: (id: string) => Node<MetalNodeProps>[];
-    outputs: (id: string) => Node<MetalNodeProps>[];
-    addNode: (nodeProps: MetalNodeProps) => void;
-    load: (newFlow: SpecFlow | undefined) => void;
-    export: () => Spec;
+declare type DesingerStore = DesignerActionSlice & SpecSlice & BackendSlice;
+
+const defaultStore = createStore<DesingerStore>()(
+    subscribeWithSelector((set, get) => ({
+        ...createDesignerActionSlice(set, get),
+        ...createSpecSlice(set, get),
+        ...createBackendSlice(set, get),
+    }))
+);
+
+export const DesignerStoreContext = createContext(defaultStore);
+
+export function useFlowPending(): [boolean, 
+    (value: boolean) => void,
+    Subscribe<boolean>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<boolean> = (listener) => (
+        store.subscribe(state => state.isFlowPending, listener)
+    );
+    return useStore(
+        store,
+        (state) => ([
+            state.isFlowPending,
+            state.setFlowPending,
+            sub
+        ]),
+        shallow
+    )
+}   
+
+export function useFlowPendingFn(): IChangeFns<boolean> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<boolean> = (listener) => (
+        store.subscribe(state => state.isFlowPending, listener)
+    );
+    return useStore(
+        store,
+        (state) => ([
+            state.getFlowPending,
+            state.setFlowPending,
+            sub
+        ]),
+        shallow
+    )
+}  
+
+export function useModify(): [boolean, (isModify: boolean)=>void, (listener: (status: boolean, prev: boolean) => void) => () => void] {
+    const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: boolean, prev: boolean) => void) => {
+        return store.subscribe(
+            state => state.isModify,
+            listener
+        )
+    };
+
+    return useStore(
+        store,
+        (state) => ([
+            state.isModify,
+            state.setModify,
+            sub
+        ]),
+        shallow
+    )
 }
 
-export const metalFlowHandlerInitial: MetalFlowHandler = {
-    inputs: (id: string) => [],
-    outputs: (id: string) => [],
-    addNode: (nodeProps: MetalNodeProps) => {},
-    load: (newFlow: SpecFlow | undefined) => {},
-    export: () => (emptySpec()),
-};
+export function useModifyFn(): IChangeFns<boolean> {
+    const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: boolean, prev: boolean) => void) => {
+        return store.subscribe(
+            state => state.isModify,
+            listener
+        )
+    };
 
-export class MutableMetalFlowHandler extends Mutable<MetalFlowHandler> implements MetalFlowHandler {
-    inputs(id: string) {
-        return this.get().inputs(id);
-    }
-
-    outputs(id: string) {
-        return this.get().outputs(id);
-    }
-
-    addNode(nodeProps: MetalNodeProps) {
-        this.get().addNode(nodeProps);
-    }
-
-    load(newFlow: SpecFlow | undefined) {
-        this.get().load(newFlow);
-    }
-
-    export() {
-        return this.get().export();
-    }
+    return useStore(
+        store,
+        (state) => ([
+            state.getModify,
+            state.setModify,
+            sub
+        ]),
+        shallow
+    )
 }
 
-export interface MetalNodeEditorHandler {
-    load: (props: MetalNodeProps) => void;
-    close: () => void;
+
+export function useMetalFlow(): [
+    MetalFlowAction, 
+    (action: MetalFlowAction) => void,
+    Subscribe<MetalFlowAction>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<MetalFlowAction> = (listener) => (
+        store.subscribe(state => state.metalFlowAction, listener)
+    );
+
+    return useStore(
+        store, 
+        (state)=>([state.metalFlowAction, state.setMetalFlowAction, sub]),
+        shallow
+    );
 }
 
-export const metalNodeEditorHandlerInitial: MetalNodeEditorHandler = {
-    load: (props: MetalNodeProps) => {},
-    close: () => {},
-};
+export function useMetalFlowFn(): IChangeFns<MetalFlowAction>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<MetalFlowAction> = (listener) => (
+        store.subscribe(state => state.metalFlowAction, listener)
+    );
 
-export class MutableMetalNodeEditorHandler extends Mutable<MetalNodeEditorHandler> implements MetalNodeEditorHandler {
-    load(props: MetalNodeProps) {
-        this.get().load(props);
+    return useStore(
+        store, 
+        (state)=>([state.getMetalFlowAction, state.setMetalFlowAction, sub]),
+        shallow
+    );
+}
+
+export function useMetalNodeEditor(): [
+    MetalNodeEditorAction, 
+    (action: MetalNodeEditorAction) => void,
+    Subscribe<MetalNodeEditorAction>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<MetalNodeEditorAction> = (listener) => (
+        store.subscribe(state => state.metalNodeEditorAction, listener)
+    );
+    return useStore(
+        store, 
+        (state)=>([
+            state.metalNodeEditorAction, 
+            state.setMetalNodeEditorAction,
+            sub
+        ]),
+        shallow
+    );
+}
+
+export function useMetalNodeEditorFn(): IChangeFns<MetalNodeEditorAction>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<MetalNodeEditorAction> = (listener) => (
+        store.subscribe(state => state.metalNodeEditorAction, listener)
+    );
+    return useStore(
+        store, 
+        (state)=>([
+            state.getMetalNodeEditorAction,
+            state.setMetalNodeEditorAction,
+            sub
+        ]),
+        shallow
+    );
+}
+
+
+export function useName(): [
+    string | undefined, 
+    (name: string) => void,
+    Subscribe<string>
+] {
+    const store = useContext(DesignerStoreContext);
+    const subscribe = (listener: (name: string | undefined, prev: string | undefined) => void ) => {
+        return store.subscribe(
+            state => state.name,
+            listener
+        );
+    }
+    return useStore(
+        store,
+        (state) => ([
+            state.name, 
+            state.setName,
+            subscribe,
+        ]),
+        shallow
+    );
+}
+
+export function useNameFn(): IChangeFns<string>{
+    const store = useContext(DesignerStoreContext);
+    const subscribe = (listener: (name: string | undefined, prev: string | undefined) => void ) => {
+        return store.subscribe(
+            state => state.name,
+            listener
+        );
+    }
+    return useStore(
+        store,
+        (state) => ([
+            state.getName,
+            state.setName,
+            subscribe,
+        ]),
+        shallow
+    );
+}
+
+export function usePkgs(): [string[], (pkgs: string[]) => void, Subscribe<string[]>]{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string[]> = (listener) => (
+        store.subscribe(
+            state => state.pkgs,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.pkgs,
+            state.setPkgs,
+            sub
+        ]),
+        shallow
+    );
+}
+
+export function usePkgsFn(): IChangeFns<string[]>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string[]> = (listener) => (
+        store.subscribe(
+            state => state.pkgs,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getPkgs,
+            state.setPkgs,
+            sub
+        ]),
+        shallow
+    );
+}
+
+
+export function useSpec(): [Spec | undefined, (spec: Spec) => void, Subscribe<Spec>] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Spec> = (listener) => (
+        store.subscribe(
+            state => state.spec,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.spec, state.setSpec, sub]),
+        shallow
+    );
+}
+
+
+export function useSpecFn(): IChangeFns<Spec> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Spec> = (listener) => (
+        store.subscribe(
+            state => state.spec,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.getSpec, state.setSpec, sub]),
+        shallow
+    );
+}
+
+
+export function useSpecFlow(): [
+    SpecFlow | undefined, 
+    (flow: SpecFlow) => void,
+    Subscribe<SpecFlow>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<SpecFlow> = (listener) => (
+        store.subscribe(
+            state => state.flow,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.flow, state.setFlow, sub]),
+        shallow
+    );
+}
+
+export function useSpecFlowFn(): IChangeFns<SpecFlow>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<SpecFlow> = (listener) => (
+        store.subscribe(
+            state => state.flow,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.getFlow, state.setFlow, sub]),
+        shallow
+    );
+}
+
+export function usePlatform(): [
+    any | undefined, 
+    (platform: any) => void,
+    Subscribe<any>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<any> = (listener) => (
+        store.subscribe(
+            state => state.platform,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.platform, state.setPlatform, sub]),
+        shallow
+    );
+}
+
+export function usePlatformFn(): IChangeFns<any>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<any> = (listener) => (
+        store.subscribe(
+            state => state.platform,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.getPlatform, state.setPlatform, sub]),
+        shallow
+    );
+}
+
+export function useBackendArgs(): [
+    string[], 
+    (args: string[]) => void,
+    Subscribe<string[]>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string[]> = (listener) => (
+        store.subscribe(
+            state => state.backendArgs,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.backendArgs, state.setBackendArgs, sub]),
+        shallow
+    );
+}
+
+export function useBackendArgsFn(): IChangeFns<string[]>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string[]> = (listener) => (
+        store.subscribe(
+            state => state.backendArgs,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([state.getBackendArgs, state.setBackendArgs, sub]),
+        shallow
+    );
+}
+
+
+export function useHotNodes(): [
+    HotNode[],
+    (hotNodes: HotNode[]) => void,
+    Subscribe<HotNode[]>] {
+    const store = useContext(DesignerStoreContext);
+    const subscribe: Subscribe<HotNode[]> =  (listener) => {
+        return store.subscribe(
+            state => state.hotNodes,
+            listener
+        )
+    } 
+    return useStore(
+        store,
+        (state) => ([
+            state.hotNodes,
+            state.setHotNodes,
+            subscribe
+        ]),
+        shallow
+    )
+}
+
+export function useHotNodesFn(): IChangeFns<HotNode[]> {
+    const store = useContext(DesignerStoreContext);
+    const subscribe: Subscribe<HotNode[]> =  (listener) => {
+        return store.subscribe(
+            state => state.hotNodes,
+            listener
+        )
+    } 
+    return useStore(
+        store,
+        (state) => ([
+            state.getHotNode,
+            state.setHotNodes,
+            subscribe
+        ]),
+        shallow
+    )
+}
+
+export function useProjectId(): [
+    string | undefined,
+    (id: string) => void,
+    Subscribe<string>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.projectId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.projectId,
+            state.setProjectId,
+            sub
+        ]),
+        shallow
+    )
+}
+
+export function useProjectIdFn(): IChangeFns<string> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.projectId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getProjectId,
+            state.setProjectId,
+            sub
+        ]),
+        shallow
+    )
+}
+
+
+export function useDeployId(): [
+    string | undefined,
+    (id: string) => void,
+    Subscribe<string>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.deployId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.deployId,
+            state.setDeployId,
+            sub
+        ]),
+        shallow
+    )
+}
+
+export function useDeployIdFn(): IChangeFns<string> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<string> = (listener) => (
+        store.subscribe(
+            state => state.deployId,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getDeployId,
+            state.setDeployId,
+            sub
+        ]),
+        shallow
+    )
+}
+
+
+export function useEpoch(): [
+    number | undefined,
+    (epoch: number) => void,
+    Subscribe<number>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<number> = (listener) => (
+        store.subscribe(
+            state => state.epoch,
+            listener,
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.epoch,
+            state.setEpoch,
+            sub
+        ]),
+        shallow
+    )
+}
+
+export function useEpochFn(): IChangeFns<number> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<number> = (listener) => (
+        store.subscribe(
+            state => state.epoch,
+            listener,
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getEpoch,
+            state.setEpoch,
+            sub
+        ]),
+        shallow
+    )
+}
+
+
+export function useBackendStatus(): [
+    BackendStatus | undefined,
+    (status: BackendStatus) => void,
+    Subscribe<BackendStatus>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: BackendStatus | undefined, prev: BackendStatus | undefined) => void) => {
+        return store.subscribe(
+            state => state.backendStatus,
+            listener
+        );
     }
     
-    close() {
-        this.get().close();
+    return useStore(
+        store,
+        (state) => ([
+            state.backendStatus,
+            state.setBackendStatus,
+            sub
+        ]),
+        shallow
+    );
+}
+
+export function useBackendStatusFn(): IChangeFns<BackendStatus>{
+    const store = useContext(DesignerStoreContext);
+    const sub = (listener: (status: BackendStatus | undefined, prev: BackendStatus | undefined) => void) => {
+        return store.subscribe(
+            state => state.backendStatus,
+            listener
+        );
     }
+    
+    return useStore(
+        store,
+        (state) => ([
+            state.getBackendStatus,
+            state.setBackendStatus,
+            sub
+        ]),
+        shallow
+    );
 }
 
-export interface DesignerHandler {
-    metalFlowHandler: MutableMetalFlowHandler,
-    metalNodeEditorHandler: MutableMetalNodeEditorHandler,
+
+export function useExecInfo(): [
+    Exec | undefined,
+    (exec: Exec | undefined) => void,
+    Subscribe<Exec>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Exec> = (listener) => (
+        store.subscribe(
+            state => state.exec,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.exec,
+            state.setExec,
+            sub
+        ]),
+        shallow
+    )
 }
 
-export const defaultDesignerHandler: DesignerHandler = {
-    metalFlowHandler: new MutableMetalFlowHandler(metalFlowHandlerInitial),
-    metalNodeEditorHandler: new MutableMetalNodeEditorHandler(metalNodeEditorHandlerInitial),
-}
- 
-
-export const DesignerCtx: React.Context<DesignerHandler> = createContext<DesignerHandler>(defaultDesignerHandler)
-
-export function useMetalFlow() {
-    const ctx = useContext(DesignerCtx);
-    const handler: MetalFlowHandler = ctx.metalFlowHandler;
-    return handler;
-}
-
-export function useMutableMetalFlow() {
-    const ctx = useContext(DesignerCtx);
-    return ctx.metalFlowHandler;
-}
-
-export function useMetalNodeEditor() {
-    const ctx = useContext(DesignerCtx);
-    const handler: MetalNodeEditorHandler = ctx.metalNodeEditorHandler;
-    return handler;
+export function useExecInfoFn(): IChangeFns<Exec | undefined> {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Exec | undefined> = (listener) => (
+        store.subscribe(
+            state => state.exec,
+            listener
+        )
+    )
+    return useStore(
+        store,
+        (state) => ([
+            state.getExec,
+            state.setExec,
+            sub
+        ]),
+        shallow
+    )
 }
 
-export function useMutableMetalNodeEditor() {
-    const ctx = useContext(DesignerCtx);
-    return ctx.metalNodeEditorHandler;
+export function useMessages(): [
+    Message[],
+    (messages: Message[]) => void,
+    Subscribe<Message[]>
+] {
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Message[]> = (listener) => (
+        store.subscribe(
+            state => state.messages,
+            listener
+        )
+    )
+
+    return useStore(
+        store,
+        (state) => ([
+            state.messages,
+            state.setMessages,
+            sub
+        ]),
+        shallow
+    )
 }
+
+export function useMessagesFn(): IChangeFns<Message[]>{
+    const store = useContext(DesignerStoreContext);
+    const sub: Subscribe<Message[]> = (listener) => (
+        store.subscribe(
+            state => state.messages,
+            listener
+        )
+    )
+
+    return useStore(
+        store,
+        (state) => ([
+            state.getMessages,
+            state.setMessages,
+            sub
+        ]),
+        shallow
+    )
+}
+
+const MAX_SIZE = 64;
+
+function combinePrevMessages(messages: Message[], message: Message) {
+    const combineMsgs = [message, ...messages];
+    combineMsgs.splice(MAX_SIZE);
+    return combineMsgs;
+}
+
+export function useMessagesAction(): NoticeAction {
+    const store = useContext(DesignerStoreContext);
+
+    return useStore(
+        store,
+        (state) => ({
+            put: (message: string | JSX.Element) => {
+                const msg: Message = {
+                    content: message,
+                    time: new Date().getTime(),
+                };
+                state.setMessages(combinePrevMessages(state.messages, msg));
+            },
+            clear: () => {
+                state.setMessages([]);
+            }
+        }),
+        shallow
+    )
+}
+
+export function useMessagsLogger(): Logger {
+    const {put} = useMessagesAction();
+
+    const log = useCallback((message: string | JSX.Element, severity: "info" | "warning" | "success" | "error") => {
+        const wrap = (
+            <Alert severity={severity} variant="outlined">
+                {message}
+            </Alert>
+        );
+        put(wrap);
+    }, [put]);
+
+    return {
+        info: (message) => {log(message, "info");},
+        warning: (message) => {log(message, "warning");},
+        success: (message) => {log(message, "success");},
+        error: (message) => {log(message, "error")},
+    };
+}
+
 
 export interface DesignerProviderProps {
     children?: ReactNode
 }
 
 export function DesignerProvider(props: DesignerProviderProps) {
+    console.log("Designer Provider.");
     const {children} = props;
-    const designerHandler: DesignerHandler = {
-        metalFlowHandler: new MutableMetalFlowHandler(_.clone(metalFlowHandlerInitial)),
-        metalNodeEditorHandler: new MutableMetalNodeEditorHandler(_.clone(metalNodeEditorHandlerInitial))
-    }
+    const store = createStore<DesingerStore>()(
+        devtools(subscribeWithSelector((set, get) => ({
+            ...createDesignerActionSlice(set, get),
+            ...createSpecSlice(set, get),
+            ...createBackendSlice(set, get),
+        })), {
+            name: "zustand",
+            enabled: true,
+        })
+    )
     return (
-        <DesignerCtx.Provider value={{...designerHandler}}>
+        <DesignerStoreContext.Provider value={store}>
             {children}
-        </DesignerCtx.Provider>
+        </DesignerStoreContext.Provider>
     )
 }

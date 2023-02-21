@@ -4,12 +4,12 @@ import io.vertx.core.Future;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonObject;
+import org.metal.server.api.BackendReportError;
 import org.metal.server.api.BackendReportService;
 import org.metal.server.api.BackendState;
 import org.metal.server.api.ExecState;
 import org.metal.server.exec.ExecService;
 import org.metal.server.project.service.IProjectService;
-import org.metal.server.project.service.ProjectDBEx;
 
 public class BackendReportServiceImpl implements BackendReportService {
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendReportServiceImpl.class);
@@ -42,10 +42,9 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return execService.getStatus(execId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
 
@@ -156,7 +155,8 @@ public class BackendReportServiceImpl implements BackendReportService {
       return true;
     } else {
       String msg = String.format(
-          "Last epoch in server is %d. The epoch of report is %d and is illegal. %s-%d maybe left cluster.", lastEpoch, epoch, deployId, epoch
+          "[%s] Last epoch in server is %d. The epoch of report is %d and is illegal. %s-%d maybe left cluster.",
+          BackendReportError.EPOCH_ILLEGAL.toString(), lastEpoch, epoch, deployId, epoch
       );
       throw new IllegalArgumentException(msg);
     }
@@ -181,10 +181,9 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return execService.getStatus(execId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
 
@@ -220,10 +219,9 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return execService.getStatus(execId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
 
@@ -260,10 +258,9 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return execService.getStatus(execId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
 
@@ -298,34 +295,19 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return projectService.getBackendStatusOfDeployId(deployId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = -1;
           try {
-            lastEpoch = lastStatus.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+            BackendState current = BackendState.valueOf(lastStatus.getString("current"));
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+            maybeMarkedDown(lastStatus);
+            maybeMarkedFailure(lastStatus);
+            return projectService.updateBackendStatusOnUpWith(deployId, epoch, current)
+                .compose(ret -> {
+                  LOGGER.info(String.format("Backend[%s-%d] has up.", deployId, epoch));
+                  return Future.succeededFuture();
+                });
           } catch (Exception e) {
             return Future.failedFuture(e);
           }
-
-          try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
-            return Future.failedFuture(e);
-          }
-
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
-          if (lastState.equals(BackendState.DOWN)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
-            return Future.failedFuture(msg);
-          }
-
-          JsonObject update = new JsonObject();
-          update.put("current", BackendState.UP.toString())
-              .put(timeName, upTime);
-
-          return projectService.updateBackendStatus(deployId, update)
-              .compose(ret -> {
-                LOGGER.info(String.format("Backend[%s-%d] has up. %s.", deployId, epoch, update.toString()));
-                return Future.succeededFuture();
-              });
         }, error -> {
           LOGGER.error(error);
           return Future.failedFuture(error);
@@ -349,25 +331,19 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return projectService.getBackendStatusOfDeployId(deployId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            BackendState current = BackendState.valueOf(lastStatus.getString("current"));
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+            maybeMarkedDown(lastStatus);
+            maybeMarkedFailure(lastStatus);
+            return projectService.updateBackendStatusOnDownWith(deployId, epoch, current)
+                .compose(ret -> {
+                  LOGGER.info(String.format("Backend[%s-%d] has down.", deployId, epoch));
+                  return Future.succeededFuture();
+                });
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
-
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
-          if (lastState.equals(BackendState.DOWN)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
-            return Future.failedFuture(msg);
-          }
-
-          JsonObject update = new JsonObject();
-          update.put("current", BackendState.DOWN.toString())
-              .put(timeName, downTime);
-
-          return projectService.updateBackendStatus(deployId, update)
-              .compose(ret -> {return Future.succeededFuture();});
         });
   }
 
@@ -389,26 +365,41 @@ public class BackendReportServiceImpl implements BackendReportService {
 
     return projectService.getBackendStatusOfDeployId(deployId)
         .compose((JsonObject lastStatus) -> {
-          int lastEpoch = lastStatus.getInteger("epoch");
           try {
-            checkLegalEpoch(lastEpoch, epoch, deployId);
-          } catch (IllegalArgumentException e) {
+            BackendState current = BackendState.valueOf(lastStatus.getString("current"));
+            maybeEpochIllegal(deployId, epoch, lastStatus);
+            maybeMarkedDown(lastStatus);
+            maybeMarkedFailure(lastStatus);
+
+            return projectService.updateBackendStatusOnFailureWith(deployId, epoch, current, failureMsg)
+                .compose(ret -> {
+                  LOGGER.info(String.format("Backend[%s-%d] has failure: %s.", deployId, epoch, failureMsg));
+                  return Future.succeededFuture();
+                });
+          } catch (Exception e) {
             return Future.failedFuture(e);
           }
-
-          BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
-          if (lastState.equals(BackendState.DOWN)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
-            return Future.failedFuture(msg);
-          }
-
-          JsonObject update = new JsonObject();
-          update.put("current", BackendState.FAILURE.toString())
-              .put(ProjectDBEx.DEPLOY_BACKEND_STATUS_FAILURE_MSG, failureMsg)
-              .put(ProjectDBEx.DEPLOY_BACKEND_STATUS_FAILURE_TIME, failureTime);
-
-          return projectService.updateBackendStatus(deployId, update)
-              .compose(ret -> {return Future.succeededFuture();});
         });
+  }
+
+  private static void maybeEpochIllegal(String deployId, int epoch, JsonObject lastStatus) throws Exception{
+    int lastEpoch = lastStatus.getInteger("epoch");
+    checkLegalEpoch(lastEpoch, epoch, deployId);
+  }
+
+  private static void maybeMarkedDown(JsonObject lastStatus) throws Exception{
+    BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
+    if (lastState.equals(BackendState.DOWN)) {
+      String msg = String.format("[%s] The status of exec has been marked %s and terminated.", BackendReportError.MARKED_DOWN.toString(), lastState.toString());
+      throw new IllegalArgumentException(msg);
+    }
+  }
+
+  private static void maybeMarkedFailure(JsonObject lastStatus) throws Exception{
+    BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
+    if (lastState.equals(BackendState.FAILURE)) {
+      String msg = String.format("[%s] The status of exec has been marked %s and terminated.", BackendReportError.MARKED_FAILURE.toString(), lastState.toString());
+      throw new IllegalArgumentException(msg);
+    }
   }
 }

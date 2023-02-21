@@ -19,6 +19,7 @@ export const ResizeBackdrop = (props: PendingBackdropProps) => {
     return (
         <div
             style={{
+                boxSizing: "border-box",
                 position: "absolute",
                 overflow: "hidden",
                 top: "0px",

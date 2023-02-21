@@ -11,19 +11,70 @@ import {
     TabNode,
 } from "flexlayout-react";
 import { Designer, DesignerProps } from "../designer/Designer";
-import { Button, Container, Paper, Skeleton, Stack } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
-import { FaProjectDiagram, FaDrawPolygon } from "react-icons/fa";
+import { FaProjectDiagram } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
-import { VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
+import { VscAccount, VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
-import { useMemo } from "react";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
+import { Home, HomeProps } from "../home/Home";
+import { MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
+import create from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import _ from "lodash";
+import { Executions, ExecutionsProps } from "../execution/Executions";
+import { Viewer, ViewerProps } from "../designer/Viewer";
+import { ExecutionPage, ExecutionPageProps } from "../execution/ExecutionPage";
+import { UserPage, UserPageProps } from "../user/UserPage";
+
+interface Component {
+    id: string,
+    type: string,
+    props: any,
+    instance: JSX.Element,
+}
+
+interface ComponentFactory {
+    components: Component[],
+    memorize: (type: string, props: any, cmpFactory: () => JSX.Element, id: string) => JSX.Element,
+    destory: (equal: (cmp: Component) => boolean) => void,
+}
+
+const useComponentFactory = create<ComponentFactory>()(subscribeWithSelector((set, get) => ({
+    components: [],
+    memorize: (type, props, cmpFactory, id) => {
+        const mCmps = get().components.filter(component => {
+            if (component.type !== type) {
+                return false;
+            }
+
+            return _.isEqualWith(props, component.props);
+        });
+        if (mCmps.length === 0) {
+            const newCmp = cmpFactory();
+            set((prev) => ({
+                components: [{ id: id, type: type, props: props, instance: newCmp }, ...prev.components]
+            }));
+            return newCmp;
+        } else {
+            return mCmps[0].instance;
+        }
+    },
+    destory: (equal: (cmp: Component) => boolean) => {
+        set((prev) => ({
+            components: _.dropWhile(prev.components, equal)
+        }));
+    }
+})));
+
 
 function iconFatory(node: TabNode) {
     const icon = node.getIcon();
     switch (icon) {
+        case "homeIcon":
+            return <VscHome />;
         case "projectsIcon":
             return <FaProjectDiagram />;
         case "designerIcon":
@@ -36,33 +87,53 @@ function iconFatory(node: TabNode) {
             return <VscExtensions />;
         case "deploymentIcon":
             return <AiOutlineDeploymentUnit />;
-
+        case "executionPageIcon":
+            return <VscBrowser />;
         case "executionsIcon":
             return <GrTasks />;
+        case "userPageIcon":
+            return <VscAccount />;
 
         default:
             return <RiFunctionLine />;
     }
 }
 
-export function designerId(id: string, isReadOnly: boolean | undefined) {
-    return isReadOnly? `viewer[${id}]`: `designer[${id}]`;
+export function designerId(id: string) {
+    return `designer[${id}]`;
 }
 
+export function viewerId(id: string) {
+  return `viewer[${id}]`;
+}
+
+export function execPageId(id: string) {
+    return `exec[${id}]`;
+}
 
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
+    openViewer: (props: ViewerProps) => void;
+    openMetalRepo: (props: MetalRepoProps) => void;
+    openExecutionPage: (props: ExecutionPageProps) => void;
+    openUserPage: (props: UserPageProps) => void;
+    select: (id: string) => void;
     close?: (id: string) => void;
-    renameDesigner?: (id: string, newName: string) => void;
+    rename?: (id: string, newName: string) => void;
 }
 
 export function Main() {
+    const memorizeCmps = useComponentFactory(state => state.memorize);
+    const destoryCmp = useComponentFactory(state => state.destory);
     const home: IJsonTabNode = {
         type: "tab",
         name: "Home",
-        icon: "executionsIcon",
+        icon: "homeIcon",
         component: "home", 
+        enableDrag: false,
+        enableFloat: false,
+        enableRename: false,
         enableClose: false,
     }
     
@@ -85,6 +156,7 @@ export function Main() {
                 children: [
                     {
                         type: "tab",
+                        id: "projects_tab",
                         name: "Projects",
                         enableDrag: false,
                         enableClose: false,
@@ -97,15 +169,7 @@ export function Main() {
                     },
                     {
                         type: "tab",
-                        name: "Metal Repo",
-                        enableDrag: false,
-                        enableClose: false,
-                        enableFloat: false,
-                        icon: "metalRepoIcon",
-                        component: "empty",
-                    },
-                    {
-                        type: "tab",
+                        id: "deployment_tab",
                         name: "Deployment",
                         enableDrag: false,
                         enableClose: false,
@@ -115,12 +179,16 @@ export function Main() {
                     },
                     {
                         type: "tab",
+                        id: "executions_tab",
                         name: "Executions",
                         enableDrag: false,
                         enableClose: false,
                         enableFloat: false,
                         icon: "executionsIcon",
-                        component: "empty",
+                        component: "executions",
+                        config: {
+                            mainHandler: null
+                        }
                     },
                 ],
             },
@@ -151,16 +219,25 @@ export function Main() {
             DockLocation.CENTER,
             1
         );
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }  
     }
 
     const openDesigner = (props: DesignerProps) => {
-        const { id, name, isReadOnly } = props;
+        const { id } = props;
         const tab: IJsonTabNode = {
             type: "tab",
-            id: designerId(id, isReadOnly),
-            name: name === undefined? `Project[${id}]`: `Project[${name}]`,
-            icon: isReadOnly? "viewerIcon": "designerIcon",
+            id: designerId(id),
+            name: `Designer[${id}]`,
+            icon: "designerIcon",
             component: "designer",
             config: props,
         }
@@ -171,27 +248,174 @@ export function Main() {
             DockLocation.CENTER,
             1
         );
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
     };
+
+    const openViewer = (props: ViewerProps) => {
+        const {id} = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: viewerId(id),
+            name: `Viewer[${id}]`,
+            icon: "viewerIcon",
+            component: "viewer",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
+    const openExecutionPage = (props: ExecutionPageProps) => {
+        const {id} = props;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: execPageId(id),
+            name: `Exec[${id}]`,
+            icon: "executionPageIcon",
+            component: "executionPage",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
+    const openUserPage = (props: UserPageProps) => {
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: "User",
+            name: "User",
+            icon: "userPageIcon",
+            component: "userPage",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
+
 
     const close = (id: string) => {
         const action: Action = Actions.deleteTab(id);
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
     }
 
-    const renameDesigner = (id: string, newName: string) => {
+    const rename = (id: string, newName: string) => {
         const action: Action = Actions.renameTab(id, newName);
-        layoutModel.doAction(action);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
+    }
+
+    const select = (id: string) => {
+        const action: Action = Actions.selectTab(id);
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+        }
+    }
+
+    const openMetalRepo = (props: MetalRepoProps) => {
+        const tab: IJsonTabNode = {
+            id: "metal-repository",
+            type: "tab",
+            name: "Repository",
+            icon: "metalRepoIcon",
+            component: "metalRepo",
+            config: props,
+        }
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
     }
 
     const mainHandler: MainHandler = {
         openProjectStarter: openProjectStarter,
         openDesigner: openDesigner,
+        openViewer: openViewer,
+        openMetalRepo: openMetalRepo,
+        openExecutionPage: openExecutionPage,
+        openUserPage: openUserPage,
+        select: select,
         close: close,
-        renameDesigner: renameDesigner,
+        rename: rename,
     }
 
     const factory = (node: TabNode) => {
+        const id = node.getId();
         const component = node.getComponent();
         const config = node.getConfig();
         switch (component) {
@@ -200,7 +424,7 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return <ProjectList {...props}/>;
+                return memorizeCmps(component, props, ()=>(<ProjectList {...props}/>), id)
             }
 
             case "starter": {
@@ -208,16 +432,78 @@ export function Main() {
                     ...config,
                     mainHandler: mainHandler
                 };
-                return <ProjectStarter {...props}/>;
+                return memorizeCmps(component, props, ()=>(<ProjectStarter {...props}/>), id)
             }
                 
             case "designer": {
-                const props: DesignerProps = config;
-                return (
+                const props: DesignerProps =  {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
                     <DesignerProvider>
-                        <Designer {...props} mainHandler={mainHandler}/>
+                        <Designer {...props}/>
                     </DesignerProvider>
-                );
+                ), id);
+            }
+
+            case "viewer": {
+                const props: ViewerProps =  {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <DesignerProvider>
+                        <Viewer {...props} />
+                    </DesignerProvider>
+                ), id);
+            }
+
+            case "metalRepo": {
+                const props: MetalRepoProps = config;
+                return memorizeCmps(component, props, ()=>(
+                    <MetalRepo {...props} />
+                ), id);
+            }
+
+            case "executionPage": {
+                const props: ExecutionPageProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <ExecutionPage {...props}/>
+                ), id);
+            }
+
+            case "executions": {
+                const props: ExecutionsProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <Executions {...props} />
+                ), id)
+            }
+
+            case "userPage": {
+                const props: UserPageProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                }
+                return memorizeCmps(component, props, ()=>(
+                    <UserPage {...props}/>
+                ), id);
+            }
+
+            case "home": {
+                const props: HomeProps = {
+                    ...config,
+                    mainHandler: mainHandler,
+                }
+                return memorizeCmps(component, props, ()=>(
+                    <Home {...props}/>
+                ), id)
             }
 
             default:
@@ -229,11 +515,20 @@ export function Main() {
         }
     };
 
+    const onRecycle = (action: FlexLayout.Action) => {
+        if (action.type === FlexLayout.Actions.DELETE_TAB) {
+            const id: string = action.data['node'];
+            destoryCmp((cmp: Component) => (cmp.id === id));
+        }
+        return action;
+    }
+
     return (
         <FlexLayout.Layout
             model={layoutModel}
             factory={factory}
             iconFactory={iconFatory}
+            onAction={onRecycle}
         ></FlexLayout.Layout>
     );
 }

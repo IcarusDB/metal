@@ -4,7 +4,7 @@ export const Gateway = {
     prefix: 'http',
     host: "localhost",
     port:19000,
-    timeout: 2000
+    timeout: 300000,
 }
 
 export function wrapUrl(url: string) {
@@ -56,6 +56,11 @@ export const ApiResponse = {
             throw new AxiosError("Response is successful, but no data found in response.");
         }
     },
+    extractErrorBreif: (error: AxiosError) => {
+        if (error.isAxiosError) {
+            return error.message;
+        }
+    },
     extractErrorMessage: (error: AxiosError<ApiResponseEntity>) => {
         if (error.isAxiosError) {
             const errorResp: ApiResponseEntity | undefined = error.response?.data;
@@ -64,4 +69,13 @@ export const ApiResponse = {
             }
         }
     },
+    extractMetalIds: (errorMsg: string) => {
+        const matchResult = errorMsg.match(/^[a-zA-Z0-9\\.]+: Metal\[([a-zA-Z0-9_\-{},]+)\]/);
+        if (matchResult !== null && matchResult?.length >= 1) {
+            const metals = matchResult[1].match(/^{[a-zA-Z0-9_\-,]+}$/);
+            const metalIds = metals === null? [matchResult[1]]: matchResult[1].replace("{", "").replace("}", "").split(",")
+            return metalIds;
+        }
+        return undefined;        
+    }
 };

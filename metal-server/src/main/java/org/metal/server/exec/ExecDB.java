@@ -3,12 +3,10 @@ package org.metal.server.exec;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import java.util.List;
 import org.metal.server.api.ExecState;
-import org.metal.server.project.service.ProjectDBEx;
+import org.metal.server.project.service.ProjectDB;
 import org.metal.server.util.JsonKeyReplacer;
 import org.metal.server.util.ReadStreamCollector;
 
@@ -29,21 +27,21 @@ public class ExecDB {
   public final static String FIELD_SPEC = "SPEC";
 
   public static Future<String> add(MongoClient mongo, String userId, JsonObject project) {
-    JsonObject spec = project.getJsonObject(ProjectDBEx.SPEC);
+    JsonObject spec = project.getJsonObject(ProjectDB.SPEC);
     if (spec == null || spec.isEmpty()) {
       return Future.failedFuture("No spec found.");
     }
 
-    String projectId = project.getString(ProjectDBEx.ID);
-    JsonObject deploy = project.getJsonObject(ProjectDBEx.DEPLOY);
-    JsonObject backend = deploy.getJsonObject(ProjectDBEx.DEPLOY_BACKEND);
-    backend.remove(ProjectDBEx.DEPLOY_BACKEND_STATUS);
+    String projectId = project.getString(ProjectDB.ID);
+    JsonObject deploy = project.getJsonObject(ProjectDB.DEPLOY);
+    JsonObject backend = deploy.getJsonObject(ProjectDB.DEPLOY_BACKEND);
+    backend.remove(ProjectDB.DEPLOY_BACKEND_STATUS);
 
-    JsonObject platform = deploy.getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
     if (platform != null) {
       platform = JsonKeyReplacer.compatBson(platform);
     }
-    deploy.put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+    deploy.put(ProjectDB.DEPLOY_PLATFORM, platform);
 
     JsonObject exec = new JsonObject();
     exec.put(FIELD_USER_ID, userId)
@@ -111,8 +109,8 @@ public class ExecDB {
 
   private static JsonObject noDetail(JsonObject exec) {
     JsonObject deploy = exec.getJsonObject(FIELD_DEPLOY);
-    String deployId = deploy.getString(ProjectDBEx.DEPLOY_ID);
-    int epoch = deploy.getInteger(ProjectDBEx.DEPLOY_EPOCH);
+    String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
+    int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
     exec.remove(FIELD_SPEC);
     exec.remove(FIELD_DEPLOY);
     exec.put("deployId", deployId);
@@ -121,19 +119,75 @@ public class ExecDB {
   }
 
   private static JsonObject compatJsonOnPlatform(JsonObject exec) {
-    JsonObject platform = exec.getJsonObject(FIELD_DEPLOY).getJsonObject(ProjectDBEx.DEPLOY_PLATFORM);
+    JsonObject platform = exec.getJsonObject(FIELD_DEPLOY).getJsonObject(ProjectDB.DEPLOY_PLATFORM);
     platform = JsonKeyReplacer.compatJson(platform);
-    exec.getJsonObject(FIELD_DEPLOY).put(ProjectDBEx.DEPLOY_PLATFORM, platform);
+    exec.getJsonObject(FIELD_DEPLOY).put(ProjectDB.DEPLOY_PLATFORM, platform);
     return exec;
+  }
+
+  public static Future<List<JsonObject>> getAllOfMatcher(MongoClient mongo, JsonObject matcher) {
+    JsonObject match = new JsonObject();
+    JsonObject lookup = new JsonObject();
+    JsonObject project = new JsonObject();
+    JsonObject reduceProject = new JsonObject();
+
+    match.put("$match", matcher);
+    lookup.put("$lookup",
+        new JsonObject()
+            .put("from", ProjectDB.DB)
+            .put("localField", ExecDB.FIELD_FROM_PROJECT)
+            .put("foreignField", ProjectDB.ID)
+            .put("as", "fromProjectCopy")
+    );
+
+    project.put("$project",
+        new JsonObject()
+            .put(FIELD_ID, true)
+            .put(FIELD_USER_ID, true)
+            .put(FIELD_SPEC, true)
+            .put(FIELD_DEPLOY, true)
+            .put(FIELD_STATUS, true)
+            .put(FIELD_CREATE_TIME, true)
+            .put(FIELD_SUBMIT_TIME, true)
+            .put(FIELD_BEAT_TIME, true)
+            .put(FIELD_FINISH_TIME, true)
+            .put(FIELD_TERMINATE_TIME, true)
+            .put(FIELD_FROM_PROJECT, true)
+            .put("fromProjectDetail", new JsonObject().put("$arrayElemAt", new JsonArray().add("$fromProjectCopy").add(0)))
+    );
+
+
+    reduceProject.put("$project",
+        new JsonObject()
+            .put(FIELD_ID, true)
+            .put(FIELD_USER_ID, true)
+            .put(FIELD_SPEC, true)
+            .put(FIELD_DEPLOY, true)
+            .put(FIELD_STATUS, true)
+            .put(FIELD_CREATE_TIME, true)
+            .put(FIELD_SUBMIT_TIME, true)
+            .put(FIELD_BEAT_TIME, true)
+            .put(FIELD_FINISH_TIME, true)
+            .put(FIELD_TERMINATE_TIME, true)
+            .put(FIELD_FROM_PROJECT, true)
+            .put("fromProjectDetail", new JsonObject().put(ProjectDB.NAME, true))
+    );
+
+    JsonArray pipeline = new JsonArray()
+        .add(match)
+        .add(lookup)
+        .add(project)
+        .add(reduceProject);
+
+    return ReadStreamCollector.<JsonObject, JsonObject>toList(
+        mongo.aggregate(DB, pipeline), ExecDB::compatJsonOnPlatform
+    );
   }
 
   public static Future<List<JsonObject>> getAllOfUser(MongoClient mongo, String userId) {
     JsonObject matcher = new JsonObject();
     matcher.put(FIELD_USER_ID, userId);
-
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllOfUserNoDetail(MongoClient mongo, String userId) {
@@ -149,9 +203,7 @@ public class ExecDB {
   public static Future<List<JsonObject>> getAll(MongoClient mongo) {
     JsonObject matcher = new JsonObject();
 
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllNoDetail(MongoClient mongo) {
@@ -167,9 +219,7 @@ public class ExecDB {
     JsonObject matcher = new JsonObject();
     matcher.put(FIELD_FROM_PROJECT, projectId);
 
-    return ReadStreamCollector.<JsonObject, JsonObject>toList(
-        mongo.findBatch(DB, matcher),
-        ExecDB::compatJsonOnPlatform);
+    return getAllOfMatcher(mongo, matcher);
   }
 
   public static Future<List<JsonObject>> getAllOfProjectNoDetail(MongoClient mongo, String projectId) {

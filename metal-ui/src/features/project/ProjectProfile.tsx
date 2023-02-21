@@ -9,7 +9,6 @@ import {
     List,
     ListItem,
     Paper,
-    Skeleton,
     Stack,
     Step,
     StepLabel,
@@ -17,7 +16,6 @@ import {
     Switch,
     Typography,
 } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
     DataGrid,
     GridColDef,
@@ -41,7 +39,9 @@ import {
     useState,
 } from "react";
 import { VscArrowLeft, VscClose, VscError, VscInfo, VscPackage, VscSymbolParameter, VscWarning } from "react-icons/vsc";
-import { platformSchema, platformType, PlatformType, Project } from "../../model/Project";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { platformSchema, platformType, PlatformType } from "../../model/Project";
 import { useAsync } from "../../api/Hooks";
 import { MetalPkg } from "../../model/MetalPkg";
 import _ from "lodash";
@@ -54,6 +54,7 @@ import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { createProject, ProjectParams, updateProject } from "../../api/ProjectApi";
 import { Mutable } from "../../model/Mutable";
+import { useBackendArgs, useBackendArgsFn, useName, useNameFn, usePkgs, usePkgsFn, usePlatform, usePlatformFn } from "../designer/DesignerProvider";
 
 export interface ProjectBasicProfileValue {
     name: string;
@@ -141,7 +142,7 @@ export const PkgSelector = (props: PkgSelectorProps) => {
     const packages: MetalPackage[] =
         result === null
             ? []
-            : result.map((metalPkg: MetalPkg, index: number) => {
+            : result.map((metalPkg: MetalPkg) => {
                   const pkg: MetalPackage = {
                       id: metalPkg.pkg,
                       groupId: metalPkg.groupId,
@@ -335,7 +336,7 @@ export function PlatformProfile(props: PlatformProfileProps) {
         });
     };
 
-    const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    const handleDidMount = (editor: EditorApi.editor.IStandaloneCodeEditor) => {
         const handler: PlatformProfileHandler = handlerRef.current;
         handler.update({
             value: () => {
@@ -521,13 +522,17 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
-
     const { id, isCreate, profile, onFinish } = props;
-    const { basic, pkgs, platform, backendArgs } = profile;
     const [warnTip, setWarnTip] = useState<string>();
     const [run, status, result, error] = useAsync<string>();
 
+    const [, setName] = useNameFn();
+    const [, setPkgs] = usePkgsFn();
+    const [, setPlatform] = usePlatformFn();
+    const [, setBackendArgs] = useBackendArgsFn();
+
     const check: () => [boolean, string | undefined] = useCallback(() => {
+        const { basic, pkgs, platform} = profile;
         if (basic === null || basic.name === "") {
             return [false, "The project basic profile is not configured."];
         }
@@ -542,7 +547,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             }
         }
         return [true, undefined];
-    }, [basic, pkgs, platform]);
+    }, [profile]);
 
     const isPending = () => status === State.pending;
     const isSuccess = () => status === State.success;
@@ -577,7 +582,23 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
             return;
         } else {
             const params: ProjectParams = projectParams(profile);
-            run(updateProject(token, id, params));
+            run(
+                updateProject(token, id, params).then(ret => {
+                    if (params.name) {
+                        setName(params.name)
+                    };
+                    if (params.pkgs) {
+                        setPkgs(params.pkgs);
+                    }
+                    if (params.platform) {
+                        setPlatform(params.platform);
+                    }
+                    if (params.backendArgs) {
+                        setBackendArgs(params.backendArgs);
+                    }
+                    return ret;
+                })
+            );
         }
     };
 
@@ -589,7 +610,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
         }
     };
 
-    const onReloadProject = () => {
+    const onClose = () => {
         if (isSuccess()) {
             if (onFinish !== undefined && result !== null) {
                 onFinish(result);
@@ -678,8 +699,8 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
                         </Button>
                     )}
                     {!isCreate && isSuccess() && (
-                        <Button variant={"contained"} onClick={onReloadProject}>
-                            {"Reload Project"}
+                        <Button variant={"contained"} onClick={onClose}>
+                            {"Close"}
                         </Button>
                     )}
                 </Stack>
@@ -692,7 +713,7 @@ export function ProjectProfileFinish(props: ProjectProfileFinishProps) {
 export interface ProjectProfileProps {
     open: boolean;
     isCreate: boolean;
-    project?: Project;
+    id?: string;
     onFinish?: (projectId: string) => void;
 }
 
@@ -727,87 +748,84 @@ export interface ProjectProfileValue {
 
 const STEP_SIZE = 5;
 
-function extractBasicProfile(project: Project | undefined): ProjectBasicProfileValue | null {
-    if (project === undefined || project === null) {
-        return null;
+export function extractPlatformType(platform: any): PlatformType{
+    const types = _.keys(platform);
+    if (types.length === 0) {
+        return  PlatformType.SPARK_STANDALONE;
     }
-    const platforms = _.keys(project.deploy.platform);
-    if (platforms.length === 0) {
-        return {
-            name: project.name,
-            platform: PlatformType.SPARK_STANDALONE,
-        };
-    }
-
-    return {
-        name: project.name,
-        platform: platformType(platforms[0]),
-    };
+    return platformType(types[0]);
 }
 
-function extractPkgProfile(project: Project | undefined): PkgProfileValue | null {
-    if (project === undefined || project === null) {
-        return null;
-    }
+
+function mapToPkgProfile(pkgs: string[]): PkgProfileValue {
     return {
-        packages: project.deploy.pkgs
-            .filter((pkg) => {
-                return pkg.split(":").length === 3;
-            })
-            .map((pkg) => {
-                const sub = pkg.split(":");
-                return {
-                    id: pkg,
-                    groupId: sub[0],
-                    artifactId: sub[1],
-                    version: sub[2],
-                    scope: "PRIVATE",
-                };
-            }),
-    };
+        packages: pkgs.filter((pkg) => {
+            return pkg.split(":").length === 3;
+        }).map((pkg) => {
+            const sub = pkg.split(":");
+            return {
+                id: pkg,
+                groupId: sub[0],
+                artifactId: sub[1],
+                version: sub[2],
+                scope: "PRIVATE",
+            };
+        })
+    }
 }
 
-function extractPlatformProfile(type: PlatformType, project: Project | undefined): any {
-    if (project === undefined || project === null) {
-        return null;
-    }
-    if (_.hasIn(project.deploy.platform, type)) {
-        return project.deploy.platform[type];
+
+function mapToPlatformProfile(type: PlatformType, platformWithType: any) : any {
+    if (_.hasIn(platformWithType, type)) {
+        return platformWithType[type];
     } else {
         return null;
     }
 }
 
-function extractBackendArgumentsProfile(project: Project | undefined): string[] | null {
-    if (project === undefined || project === null) {
+
+
+function platformWithType (platformProfile: any | null, basicProfile: ProjectBasicProfileValue | null) {
+    if (platformProfile === null || platformProfile === undefined) {
         return null;
     }
-    return project.deploy.backend.args;
-}
+    if (basicProfile === null) {
+        return null;
+    }
+    const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
+
+    return JSON.parse(withType);
+};
 
 export const ProjectProfile = forwardRef(
     (props: ProjectProfileProps, ref: ForwardedRef<ProjectProfileHandler>) => {
-        const { open, isCreate, project, onFinish } = props;
+        const { open, isCreate, id, onFinish } = props;
         const [isOpen, setOpen] = useState(open);
         const [activeStep, setActiveStep] = useState(0);
 
-        const [basicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(() =>
-            extractBasicProfile(project)
+        const [name] = useName();
+        const [pkgs] = usePkgs();
+        const [platform] = usePlatform();
+        const [backendArgs] = useBackendArgs();
+        const basicProfile = {
+            name: name === undefined? "": name,
+            platform: extractPlatformType(platform)
+        };
+        const pkgProfile = mapToPkgProfile(pkgs);
+
+        const platformProfile = mapToPlatformProfile(
+            basicProfile === null
+                ? PlatformType.SPARK_STANDALONE
+                : platformType(basicProfile.platform),
+            platform
         );
-        const [pkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(() =>
-            extractPkgProfile(project)
-        );
-        const [platformProfile, setPlatformProfile] = useState<any>(() =>
-            extractPlatformProfile(
-                basicProfile === null
-                    ? PlatformType.SPARK_STANDALONE
-                    : platformType(basicProfile.platform),
-                project
-            )
-        );
-        const [backendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(() =>
-            extractBackendArgumentsProfile(project)
-        );
+
+        const backendArgsProfile = backendArgs;
+
+        const [newBasicProfile, setBasicProfile] = useState<ProjectBasicProfileValue | null>(basicProfile);
+        const [newPkgProfile, setPkgProfile] = useState<PkgProfileValue | null>(pkgProfile);
+        const [newPlatformProfile, setPlatformProfile] = useState<any>(platformProfile);
+        const [newBackendArgsProfile, setBackendArgsProfile] = useState<string[] | null>(backendArgs);
 
         const close = () => {
             setOpen(false);
@@ -841,18 +859,6 @@ export const ProjectProfile = forwardRef(
             handleNextStep();
         };
 
-        const platformWithType = () => {
-            if (platformProfile === null || platformProfile === undefined) {
-                return null;
-            }
-            if (basicProfile === null) {
-                return null;
-            }
-            const withType = `{"${basicProfile.platform}": ${JSON.stringify(platformProfile)}}`;
-
-            return JSON.parse(withType);
-        };
-
         useImperativeHandle(
             ref,
             () => ({
@@ -882,7 +888,6 @@ export const ProjectProfile = forwardRef(
                     {!isCreate && (
                         <Paper
                             square
-                            variant="outlined"
                             sx={{
                                 boxSizing: "border-box",
                                 margin: "0px",
@@ -917,7 +922,7 @@ export const ProjectProfile = forwardRef(
                                 <StepLabel>{"Platform profile."}</StepLabel>
                             </Step>
                             <Step key={"Backend arguments profile."} completed={false}>
-                                <StepLabel>{"Platform profile."}</StepLabel>
+                                <StepLabel>{"Backend arguments profile."}</StepLabel>
                             </Step>
                             <Step key={"Profile Finish."} completed={false}>
                                 <StepLabel>{"Profile Finish."}</StepLabel>
@@ -956,13 +961,13 @@ export const ProjectProfile = forwardRef(
                     )}
                     {activeStep === 4 && (
                         <ProjectProfileFinish
-                            id={project?.id}
+                            id={id}
                             isCreate={isCreate}
                             profile={{
-                                basic: basicProfile,
-                                pkgs: pkgProfile,
-                                platform: platformWithType(),
-                                backendArgs: backendArgsProfile,
+                                basic: newBasicProfile,
+                                pkgs: newPkgProfile,
+                                platform: platformWithType(newPlatformProfile, newBasicProfile),
+                                backendArgs: newBackendArgsProfile,
                             }}
                             onFinish={onFinish}
                         />
@@ -995,18 +1000,19 @@ export const ProjectProfile = forwardRef(
 export interface ProjectProfileViewerProps {}
 
 export interface ProjectProfileViewerHandler {
-    open: (project: Project) => void;
+    open: () => void;
     close: () => void;
 }
 
-const theme = createTheme();
-
 export const ProjectProfileViewer = forwardRef(
     (props: ProjectProfileViewerProps, ref: ForwardedRef<ProjectProfileViewerHandler>) => {
-        const [project, setProject] = useState<Project>();
         const [isOpen, setOpen] = useState(false);
-        const onOpen = (project: Project) => {
-            setProject(project);
+        const [name] = useName();
+        const [pkgs] = usePkgs();
+        const [platform] = usePlatform();
+        const [backendArgs] = useBackendArgs();
+
+        const onOpen = () => {;
             setOpen(true);
         };
         const onClose = () => {
@@ -1021,24 +1027,14 @@ export const ProjectProfileViewer = forwardRef(
             []
         );
 
-        if (project === undefined) {
-            return (
-                <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
-                    <Skeleton></Skeleton>
-                </ResizeBackdrop>
-            );
-        }
-
-        const name = project.name;
-        const platformTypes = _.keys(project.deploy.platform);
-        const packages = project.deploy.pkgs;
-        const backendArgs = project.deploy.backend.args;
-        const platformConf = JSON.stringify(project.deploy.platform, null, 2);
+        const platformTypes = _.keys(platform);
+        const packages = pkgs;
+        const platformConf = JSON.stringify(platform, null, 2);
 
         return (
             <ResizeBackdrop open={isOpen} backgroundColor={"#f4f4f4"} opacity={"1"}>
                     <Grid container spacing={1}>
-                        <Grid item xs={12}>
+                        <Grid key={0} item xs={12}>
                             <Paper
                             square
                             sx={{
@@ -1054,7 +1050,7 @@ export const ProjectProfileViewer = forwardRef(
                             </IconButton>
                             </Paper>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={1} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1065,7 +1061,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                             <Typography>{"Name"}</Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={2} item xs={10}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1075,7 +1071,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                             <Typography>{name}</Typography>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={3} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1086,7 +1082,7 @@ export const ProjectProfileViewer = forwardRef(
                         >
                              <Typography>{"Platform Type"}</Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={4} item xs={10}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1099,7 +1095,7 @@ export const ProjectProfileViewer = forwardRef(
                                 {platformTypes.length > 0 ? platformTypes[0] : "?"}
                             </Typography>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={5} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1111,6 +1107,7 @@ export const ProjectProfileViewer = forwardRef(
                              <Typography>{"Packages"}</Typography> 
                         </Grid>
                         <Grid
+                            key={6}
                             item
                             xs={10}
                             sx={{
@@ -1124,14 +1121,14 @@ export const ProjectProfileViewer = forwardRef(
                                     overflowY: "scroll",
                                 }}
                             >
-                                {packages.map((pkg) => (
-                                    <ListItem>
+                                {packages.map((pkg, index) => (
+                                    <ListItem key={index}>
                                         <Chip label={pkg} icon={<VscPackage />} color={"primary"} />
                                     </ListItem>
                                 ))}
                             </List>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={7} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1142,20 +1139,20 @@ export const ProjectProfileViewer = forwardRef(
                         >
                            <Typography> {"Backend Arguments"} </Typography> 
                         </Grid>
-                        <Grid item xs={10}
+                        <Grid key={8} item xs={10}
                             sx={{
                                 backgroundColor: "white",
                             }}
                         >
                             <List>
-                                {backendArgs.map((arg) => (
-                                    <ListItem>
+                                {backendArgs.map((arg, index) => (
+                                    <ListItem key={index}>
                                         <Chip label={arg} icon={<VscSymbolParameter />} variant="outlined" color={"primary"} />
                                     </ListItem>
                                 ))}
                             </List>
                         </Grid>
-                        <Grid item xs={2}
+                        <Grid key={9} item xs={2}
                         sx={{
                             display: "flex",
                             flexDirection: "row",
@@ -1164,15 +1161,15 @@ export const ProjectProfileViewer = forwardRef(
                             // backgroundColor: "white",
                         }}
                         >
-                           <Typography> {"Platform configuration"} </Typography> 
+                            <Typography> {"Platform Configuration"} </Typography> 
                         </Grid>
-                        <Grid item xs={10}>
-                            <Editor
-                                height={"60vh"}
-                                defaultLanguage={"json"}
-                                defaultValue={platformConf}
-                                theme={"vs-dark"}
-                            ></Editor>
+                        <Grid key={10} item xs={10} sx={{
+                            maxHeight: "60vh",
+                            overflow: "auto",
+                        }}>
+                            <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
+                                {platformConf}
+                            </SyntaxHighlighter>
                         </Grid>
                     </Grid>
             </ResizeBackdrop>

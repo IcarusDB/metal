@@ -19,6 +19,7 @@
     <module>metal-on-spark-extensions</module>
     <module>metal-backend-api</module>
     <module>metal-backend</module>
+    <module>metal-ui</module>
     <module>metal-server</module>
   </modules>
 

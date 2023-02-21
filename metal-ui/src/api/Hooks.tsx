@@ -7,7 +7,13 @@ interface AsyncState<R> {
     error: any | null;
 }
 
-export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
+export interface IAsyncCallback<R> {
+    onPending?: () => void;
+    onSuccess?: (result: R) => void;
+    onError?: (reason: any) => void;
+}
+
+export function useAsync<R>(callback?: IAsyncCallback<R>): [(promise: Promise<R>) => Promise<void>,State, R | null, any] {
     const [state, setState] = useState<AsyncState<R>>({
         status: State.idle,
         result: null,
@@ -22,24 +28,33 @@ export function useAsync<R>(): [(promise: Promise<R>) => Promise<void>,State, R 
             ...prevState,
             status: State.pending,
         }));
+
+        if (callback?.onPending) {
+            callback.onPending();
+        }
+
         try {
             const res = await promise;
-            setTimeout(() => {
-                setState({
-                    status: State.success,
-                    result: res,
-                    error: null,
-                });
-            }, 1000);
+            setState({
+                status: State.success,
+                result: res,
+                error: null,
+            });
+
+            if (callback?.onSuccess) {
+                callback.onSuccess(res);
+            }
         } catch (reason) {
             setState({
                 status: State.failure,
                 result: null,
                 error: reason,
             });
-            console.log(reason);
+            if (callback?.onError) {
+                callback.onError(reason);
+            }
         }
-    }, []);
+    }, [callback]);
 
     return [run, state.status, state.result, state.error];
 }

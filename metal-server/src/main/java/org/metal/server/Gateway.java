@@ -19,6 +19,7 @@ import io.vertx.ext.web.handler.AuthorizationHandler;
 import io.vertx.ext.web.handler.BasicAuthHandler;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.JWTAuthHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import org.metal.server.auth.AttachRoles;
 import org.metal.server.auth.Auth;
 import org.metal.server.auth.Roles;
@@ -84,6 +85,18 @@ public class Gateway extends AbstractVerticle {
         .handler(BodyHandler.create())
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(this::userInfo);
+
+    router.put("/api/v1/user/password")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(this.auth::updateUserPassword);
+
+    router.put("/api/v1/user/name")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(this.auth::updateUserName);
 
     router.route("/api/v1/something")
         .produces("application/json")
@@ -319,6 +332,18 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(project::analysisOfId);
 
+    router.put("/api/v1/projects/id/:id/spec")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::saveSpecOfId);
+
+    router.post("/api/v1/projects/id/:id/subSpec")
+        .produces("application/json")
+        .handler(BodyHandler.create())
+        .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
+        .handler(project::analysisSubSpecOfId);
+
     router.post("/api/v1/projects/name/:name/spec/current")
         .produces("application/json")
         .handler(BodyHandler.create())
@@ -461,6 +486,8 @@ public class Gateway extends AbstractVerticle {
         .handler(JWTAuthHandler.create(this.auth.getJwtAuth()))
         .handler(AuthorizationHandler.create(Auth.adminAuthor()))
         .handler(exec::forceRemoveAll);
+
+    router.route("/*").handler(StaticHandler.create());
 
     return Future.succeededFuture(router);
   }

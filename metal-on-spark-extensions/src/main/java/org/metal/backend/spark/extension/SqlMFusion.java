@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -47,7 +49,7 @@ public class SqlMFusion extends SparkMFusion<ISqlMFusionProps> {
             throw new MetalTranslateException(msg);
         }
 
-        if (!tables.primary().equals(this.props().tableAlias().values())) {
+        if (isTablesOutRange(tables.primary(), new HashSet<String>(this.props().tableAlias().values()))) {
             String msg = String.format("%s accessed table should be same with configured Table Alias{%s}.", this.props().sql(), this.props().tableAlias().values());
             throw new MetalTranslateException(msg);
         }
@@ -63,6 +65,15 @@ public class SqlMFusion extends SparkMFusion<ISqlMFusionProps> {
         } catch (Exception e) {
             throw new MetalTranslateException(e);
         }
+    }
+
+    private static boolean isTablesOutRange(Set<String> tables, Set<String> alias) {
+        for(String table: tables) {
+            if (!alias.contains(table)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @FormSchemaMethod
