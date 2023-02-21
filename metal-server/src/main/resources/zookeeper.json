@@ -1,5 +1,5 @@
 {
-  "zookeeperHosts": "192.168.41.201",
+  "zookeeperHosts": "192.168.42.20",
   "sessionTimeout": 20000,
   "connectionTimeout": 3000,
   "rootPath": "io.vertx",

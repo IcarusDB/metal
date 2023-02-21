@@ -1,0 +1,137 @@
+version: '3.0'
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.1-hadoop3.3.3-java11
+    tty: true
+    hostname: namenode.hdfs.metal.org
+    container_name: metal-test-namenode
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.10
+    volumes:
+      - ./hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=metal
+    env_file:
+      - ./hadoop.env
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.1-hadoop3.3.3-java11
+    tty: true
+    hostname: datanode.hdfs.metal.org
+    container_name: metal-test-datanode
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.11
+    volumes:
+      - ./hadoop_datanode:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "metal-test-namenode:9870"
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+
+  httpfs:
+    image: bde2020/hadoop-httpfs:2.0.1-hadoop3.3.3-java11
+    tty: true
+    hostname: httpfs.hdfs.metal.org
+    container_name: metal-test-httpfs
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.12
+    environment:
+      SERVICE_PRECONDITION: "metal-test-namenode:9870"
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      - namenode
+
+  zoo0:
+    image: zookeeper
+    tty: true
+    hostname: zoo0.metal.org
+    container_name: metal-test-zoo0
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.20
+    environment:
+      ZOO_MY_ID: 0
+      ZOO_SERVERS: server.0=metal-test-zoo0:2888:3888;2181
+
+  spark-master-0:
+    image: spark-standalone-master:1.0.0-spark-3.3.0-java11
+    tty: true
+    hostname: master-0.spark.metal.org
+    volumes:
+      - ../../build/libs:/home/spark/metal
+   
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.30
+    container_name: metal-test-spark-master-0
+    depends_on:
+      - datanode
+      - namenode
+    environment:
+      - SPARK_ENV_JAVA_HOME=/home/spark/jdk
+      - SPARK_HOME=/home/spark/spark
+      - SPARK_CONF_spark_master_rest_enabled=true
+
+  spark-worker-0:
+    image: spark-standalone-worker:1.0.0-spark-3.3.0-java11
+    tty: true
+    hostname: worker-0.spark.metal.org
+    volumes:
+      - ../../build/libs:/home/spark/metal
+
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.40
+    container_name: metal-test-spark-worker-0
+    environment:
+      - SPARK_ENV_JAVA_HOME=/home/spark/jdk
+      - SPARK_HOME=/home/spark/spark
+    depends_on:
+      - spark-master-0
+    command:
+      - "spark"
+      - "spark://master-0.spark.metal.org:7077"
+      - "--cores 2"
+      - "--memory 2G"
+
+  mongo:
+    image: mongo
+    tty: true
+    hostname: db.mongo.metal.org
+    container_name: metal-test-db.mongo
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.50
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+ 
+  mongo-express:
+    image: mongo-express
+    tty: true
+    ports:
+      - 8081:18081
+    hostname: express.mongo.metal.org
+    container_name: metal-test-express.mongo
+    depends_on:
+      - mongo
+    networks:
+      metal-test-net:
+        ipv4_address: 192.168.42.51
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: 123456
+      ME_CONFIG_MONGODB_URL: mongodb://root:123456@metal-test-db.mongo:27017/
+
+networks:
+  metal-test-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.42.0/24	

@@ -1,6 +1,6 @@
 {
   "mongoConf": {
-    "connection_string": "mongodb://metal:123456@192.168.15.10:27017/metalDB"
+    "connection_string": "mongodb://metal:123456@192.168.42.50:27017/metalDB"
   },
   "gateway": {
     "port": 19000,
