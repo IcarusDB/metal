@@ -56,8 +56,8 @@ services:
       metal-test-net:
         ipv4_address: 192.168.42.20
     environment:
-      ZOO_MY_ID: 0
-      ZOO_SERVERS: server.0=metal-test-zoo0:2888:3888;2181
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=192.168.42.20:2888:3888;2181
 
   spark-master-0:
     image: spark-standalone-master:1.0.0-spark-3.3.0-java11
@@ -65,7 +65,7 @@ services:
     hostname: master-0.spark.metal.org
     volumes:
       - ../../build/libs:/home/spark/metal
-   
+      - ../../build/conf/backend:/home/spark/metal-conf
     networks:
       metal-test-net:
         ipv4_address: 192.168.42.30
@@ -84,7 +84,7 @@ services:
     hostname: worker-0.spark.metal.org
     volumes:
       - ../../build/libs:/home/spark/metal
-
+      - ../../build/conf/backend:/home/spark/metal-conf
     networks:
       metal-test-net:
         ipv4_address: 192.168.42.40

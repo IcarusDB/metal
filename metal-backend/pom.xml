@@ -113,6 +113,21 @@
               <goal>run</goal>
             </goals>
           </execution>
+          <execution>
+            <id>copy-conf</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <copy todir="${metal.conf.dir}/backend">
+                  <fileset dir="${project.build.resources[0].directory}">
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
     </plugins>
