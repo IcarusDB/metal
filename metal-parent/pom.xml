@@ -45,6 +45,8 @@
     <metal.libs.dir>${metal.build.dir}/libs</metal.libs.dir>
     <metal.ui.dir>${metal.build.dir}/ui/webroot</metal.ui.dir>
     <metal.conf.dir>${metal.build.dir}/conf</metal.conf.dir>
+    <metal.sbin.dir>${metal.build.dir}/sbin</metal.sbin.dir>
+    <metal.db.init.dir>${metal.sbin.dir}/db</metal.db.init.dir>
   </properties>
 
   <dependencyManagement>

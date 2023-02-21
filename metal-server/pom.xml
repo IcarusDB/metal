@@ -146,6 +146,21 @@
               <goal>run</goal>
             </goals>
           </execution>
+          <execution>
+            <id>copy-db-init</id>
+            <phase>package</phase>
+            <configuration>
+              <target>
+                <copy todir="${metal.db.init.dir}">
+                  <fileset dir="${project.build.scriptSourceDirectory}/db">
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
     </plugins>
