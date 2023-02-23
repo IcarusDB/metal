@@ -462,6 +462,12 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
             type: "string",
         },
     };
+    const uiSchema  = {
+        items: {
+            'ui:widget': 'textarea',
+            'ui:description': 'Item should be \'{string}\'. And " in {string} should be escape by \\.'        
+        }
+    }
 
     const onSubmit = (data: IChangeEvent<any, RJSFSchema, any>) => {
         const newProfile: string[] = data.formData;
@@ -483,6 +489,7 @@ export function BackendArgsProfile(props: BackendArgsProfileProps) {
             <Form
                 formData={profile === undefined ? [] : profile}
                 schema={schema}
+                uiSchema={uiSchema}
                 validator={validator}
                 onSubmit={onSubmit}
             >

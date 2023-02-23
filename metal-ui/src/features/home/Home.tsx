@@ -59,7 +59,9 @@ export function Home(props: HomeProps) {
     };
 
     const onOpenMetalRepo = () => {
-        mainHandler.openMetalRepo({});
+        mainHandler.openMetalRepo({
+            mainHandler: mainHandler
+        });
     };
 
     const onOpenUserPage = () => {
