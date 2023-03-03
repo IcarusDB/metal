@@ -1,4 +1,5 @@
 @import "flexlayout-react/style/underline.css";
+@import 'cal-heatmap/cal-heatmap.css';
 
 .App {
     left: 0px;
@@ -18,3 +19,4 @@
     box-sizing: border-box;
     overflow: hidden;
 }
+

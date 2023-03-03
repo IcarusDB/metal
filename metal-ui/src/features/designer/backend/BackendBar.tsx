@@ -405,7 +405,7 @@ function BackendStatusBrief() {
             startIcon={icon}
             sx={{
                 borderRadius: "0px",
-                width: "15vw",
+                width: "20vw",
             }}
         >
             {tip}

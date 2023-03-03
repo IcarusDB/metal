@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
 import {BackendStatus, Deploy, Project} from "../model/Project";
 import _ from "lodash"
