@@ -1,7 +1,12 @@
 # Metal
 
-<img src="/metal-ui/public/images/metal_brand.svg" alt="metal logo" height="200px" align="right" />
+<img src="/metal-ui/public/images/metal_brand.svg" alt="metal logo" height="200px" align="center" />
 
+---
+
+[![CN doc](https://img.shields.io/badge/document-Chinese-yellow.svg)](README.md)
+
+---
 ## What is Metal?
 
 Metal是一款数据流建模软件，通过Metal可以管理数据流处理算子、可视化建模、批处理任务执行。
@@ -32,3 +37,6 @@ Metal是一款数据流建模软件，通过Metal可以管理数据流处理算�
 
 ## Architecture
 [Architecture](/doc/Architecture.md)
+
+## License
+[Apache 2.0 License.](LICENSE)
