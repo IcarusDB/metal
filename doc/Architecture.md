@@ -3,7 +3,7 @@
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-arch.svg" width = "95%" alt=""/>
+    src="img/resources/metal-arch.svg" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -43,7 +43,7 @@ Metal数据流处理算子包括四种，分别为Source、Mapper、Fusion和Sin
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-plugin-class.svg" width = "95%" alt=""/>
+    src="img/resources/metal-plugin-class.svg" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -134,7 +134,7 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-spec.svg" width = "95%" alt=""/>
+    src="img/resources/metal-spec.svg" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -174,7 +174,7 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-IBackendAPI.svg" width = "95%" alt=""/>
+    src="img/resources/metal-IBackendAPI.svg" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -249,7 +249,7 @@ $SPARK_HOME/bin/spark-submit \
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-server-model.svg" width = "95%" alt=""/>
+    src="img/resources/metal-server-model.svg" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -272,7 +272,7 @@ $SPARK_HOME/bin/spark-submit \
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-ui-home.png" width = "95%" alt=""/>
+    src="img/resources/metal-ui-home.png" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -285,7 +285,7 @@ $SPARK_HOME/bin/spark-submit \
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-ui-designer.png" width = "95%" alt=""/>
+    src="img/resources/metal-ui-designer.png" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -298,7 +298,7 @@ $SPARK_HOME/bin/spark-submit \
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-ui-designer-profiler.png" width = "95%" alt=""/>
+    src="img/resources/metal-ui-designer-profiler.png" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
@@ -311,7 +311,7 @@ $SPARK_HOME/bin/spark-submit \
 <center>
     <img style="border-radius: 0.3125em;
     box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="/img/resources/metal-ui-repo.png" width = "95%" alt=""/>
+    src="img/resources/metal-ui-repo.png" width = "95%" alt=""/>
     <br>
     <div style="color:orange; border-bottom: 1px solid #d9d9d9;
     display: inline-block;
