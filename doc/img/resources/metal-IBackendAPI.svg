@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="670px" preserveAspectRatio="none" style="width:788px;height:670px;background:#FFFFFF;" version="1.1" viewBox="0 0 788 670" width="788px" zoomAndPan="magnify"><defs/><g><!--MD5=[a6c58708aef9b4dfcd4702e123e5ba4a]
+class ConcurrentBackendAPI--><g id="elem_ConcurrentBackendAPI"><rect codeLine="5" fill="#FFFFFF" height="255.8594" id="ConcurrentBackendAPI" rx="2.5" ry="2.5" style="stroke:#000000;stroke-width:1.0;" width="466" x="12" y="12"/><ellipse cx="161.25" cy="26" fill="#FFFFFF" rx="9" ry="9" style="stroke:#000000;stroke-width:1.0;"/><path d="M164.2188,31.6406 Q163.6406,31.9375 163,32.0781 Q162.3594,32.2344 161.6563,32.2344 Q159.1563,32.2344 157.8281,30.5938 Q156.5156,28.9375 156.5156,25.8125 Q156.5156,22.6875 157.8281,21.0313 Q159.1563,19.375 161.6563,19.375 Q162.3594,19.375 163,19.5313 Q163.6563,19.6875 164.2188,19.9844 L164.2188,22.7031 Q163.5938,22.125 163,21.8594 Q162.4063,21.5781 161.7813,21.5781 Q160.4375,21.5781 159.75,22.6563 Q159.0625,23.7188 159.0625,25.8125 Q159.0625,27.9063 159.75,28.9844 Q160.4375,30.0469 161.7813,30.0469 Q162.4063,30.0469 163,29.7813 Q163.5938,29.5 164.2188,28.9219 L164.2188,31.6406 Z " fill="#000000"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="160" x="178.75" y="30.8467">ConcurrentBackendAPI</text><line style="stroke:#000000;stroke-width:1.0;" x1="13" x2="477" y1="40" y2="40"/><rect fill="none" height="6" style="stroke:#000000;stroke-width:1.0;" width="6" x="20" y="50.6484"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="115" x="30" y="56.9951">API: IBackendAPI</text><rect fill="none" height="6" style="stroke:#000000;stroke-width:1.0;" width="6" x="20" y="66.9453"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="197" x="30" y="73.292">analyseReadLock: ReadLock</text><rect fill="none" height="6" style="stroke:#000000;stroke-width:1.0;" width="6" x="20" y="83.2422"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="175" x="30" y="89.5889">execLock: ReentrantLock</text><rect fill="none" height="6" style="stroke:#000000;stroke-width:1.0;" width="6" x="20" y="99.5391"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="195" x="30" y="105.8857">analyseWriteLock: WriteLock</text><line style="stroke:#000000;stroke-width:1.0;" x1="13" x2="477" y1="113.1875" y2="113.1875"/><ellipse cx="23" cy="126.8359" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="228" x="30" y="130.1826">analyseAPI(RoutingContext): void</text><ellipse cx="23" cy="143.1328" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="212" x="30" y="146.4795">heartAPI(RoutingContext): void</text><ellipse cx="23" cy="159.4297" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="209" x="30" y="162.7764">execAPI(RoutingContext): void</text><ellipse cx="23" cy="175.7266" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="439" x="30" y="179.0732">tryAnalyseAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="23" cy="192.0234" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="430" x="30" y="195.3701">tryStatusAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="23" cy="208.3203" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="219" x="30" y="211.667">statusAPI(RoutingContext): void</text><ellipse cx="23" cy="224.6172" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="442" x="30" y="227.9639">trySchemaAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="23" cy="240.9141" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="419" x="30" y="244.2607">tryExecAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="23" cy="257.2109" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="231" x="30" y="260.5576">schemaAPI(RoutingContext): void</text></g><!--MD5=[4589a9d61bb021b2437445c0af17217f]
+class IBackendAPI--><g id="elem_IBackendAPI"><rect codeLine="20" fill="#FFFFFF" height="154.0469" id="IBackendAPI" rx="2.5" ry="2.5" style="stroke:#000000;stroke-width:1.0;" width="301" x="94.5" y="509"/><ellipse cx="198.75" cy="529.1328" fill="#FFFFFF" rx="9" ry="9" style="stroke:#000000;stroke-width:1.0;"/><path d="M194.6719,524.8984 L194.6719,522.7422 L202.0625,522.7422 L202.0625,524.8984 L199.5938,524.8984 L199.5938,532.9766 L202.0625,532.9766 L202.0625,535.1328 L194.6719,535.1328 L194.6719,532.9766 L197.1406,532.9766 L197.1406,524.8984 L194.6719,524.8984 Z " fill="#000000"/><text fill="#000000" font-family="Verdana" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="70" x="223.75" y="525.1387">«interface»</text><text fill="#000000" font-family="Verdana" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="85" x="216.25" y="540.9639">IBackendAPI</text><line style="stroke:#000000;stroke-width:1.0;" x1="95.5" x2="394.5" y1="549.2656" y2="549.2656"/><line style="stroke:#000000;stroke-width:1.0;" x1="95.5" x2="394.5" y1="557.2656" y2="557.2656"/><ellipse cx="105.5" cy="570.9141" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="209" x="112.5" y="574.2607">execAPI(RoutingContext): void</text><ellipse cx="105.5" cy="587.2109" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="228" x="112.5" y="590.5576">analyseAPI(RoutingContext): void</text><ellipse cx="105.5" cy="603.5078" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="231" x="112.5" y="606.8545">schemaAPI(RoutingContext): void</text><ellipse cx="105.5" cy="619.8047" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="212" x="112.5" y="623.1514">heartAPI(RoutingContext): void</text><ellipse cx="105.5" cy="636.1016" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="219" x="112.5" y="639.4482">statusAPI(RoutingContext): void</text><ellipse cx="105.5" cy="652.3984" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="277" x="112.5" y="655.7451">of(IBackendAPI): ConcurrentBackendAPI</text></g><!--MD5=[9ed9b41cc58fb5e38b22a86d8cab96c5]
+class IBackendTryAPI--><g id="elem_IBackendTryAPI"><rect codeLine="28" fill="#FFFFFF" height="121.4531" id="IBackendTryAPI" rx="2.5" ry="2.5" style="stroke:#000000;stroke-width:1.0;" width="466" x="315" y="328"/><ellipse cx="491.25" cy="348.1328" fill="#FFFFFF" rx="9" ry="9" style="stroke:#000000;stroke-width:1.0;"/><path d="M487.1719,343.8984 L487.1719,341.7422 L494.5625,341.7422 L494.5625,343.8984 L492.0938,343.8984 L492.0938,351.9766 L494.5625,351.9766 L494.5625,354.1328 L487.1719,354.1328 L487.1719,351.9766 L489.6406,351.9766 L489.6406,343.8984 L487.1719,343.8984 Z " fill="#000000"/><text fill="#000000" font-family="Verdana" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="70" x="526.75" y="344.1387">«interface»</text><text fill="#000000" font-family="Verdana" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="106" x="508.75" y="359.9639">IBackendTryAPI</text><line style="stroke:#000000;stroke-width:1.0;" x1="316" x2="780" y1="368.2656" y2="368.2656"/><line style="stroke:#000000;stroke-width:1.0;" x1="316" x2="780" y1="376.2656" y2="376.2656"/><ellipse cx="326" cy="389.9141" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="419" x="333" y="393.2607">tryExecAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="326" cy="406.2109" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="430" x="333" y="409.5576">tryStatusAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="326" cy="422.5078" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="439" x="333" y="425.8545">tryAnalyseAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text><ellipse cx="326" cy="438.8047" fill="#FFFFFF" rx="3" ry="3" style="stroke:#000000;stroke-width:1.0;"/><text fill="#000000" font-family="Verdana" font-size="14" lengthAdjust="spacing" textLength="442" x="333" y="442.1514">trySchemaAPI(RoutingContext, Handler&lt;RoutingContext&gt;): void</text></g><!--MD5=[4e163eeb4bbb7dd75be6bf2c74b51884]
+link ConcurrentBackendAPI to IBackendAPI--><g id="link_ConcurrentBackendAPI_IBackendAPI"><path codeLine="35" d="M168,268.1 C168,268.1 168,488.99 168,488.99 " fill="none" id="ConcurrentBackendAPI-to-IBackendAPI" style="stroke:#008200;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="175,488.99,168,508.99,161,488.99,175,488.99" style="stroke:#008200;stroke-width:1.0;"/></g><!--MD5=[f48ad4dfdb8bfbd87ae1408cb2d451c7]
+reverse link ConcurrentBackendAPI to IBackendAPI--><g id="link_ConcurrentBackendAPI_IBackendAPI"><path codeLine="36" d="M241.5,283.1 C241.5,283.1 241.5,508.99 241.5,508.99 " fill="none" id="ConcurrentBackendAPI-backto-IBackendAPI" style="stroke:#820000;stroke-width:1.0;"/><ellipse cx="241.5" cy="276.1" fill="#FFFFFF" rx="8" ry="8" style="stroke:#820000;stroke-width:1.0;"/><line style="stroke:#820000;stroke-width:1.0;" x1="241.5" x2="241.5" y1="284.1" y2="268.1"/><line style="stroke:#820000;stroke-width:1.0;" x1="233.5" x2="249.5" y1="276.1" y2="276.1"/></g><!--MD5=[e97810f040e4f18a082d9e86b080e1b9]
+link ConcurrentBackendAPI to IBackendTryAPI--><g id="link_ConcurrentBackendAPI_IBackendTryAPI"><path codeLine="37" d="M396.5,268.25 C396.5,268.25 396.5,307.79 396.5,307.79 " fill="none" id="ConcurrentBackendAPI-to-IBackendTryAPI" style="stroke:#008200;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/><polygon fill="none" points="403.5,307.79,396.5,327.79,389.5,307.79,403.5,307.79" style="stroke:#008200;stroke-width:1.0;"/></g><!--MD5=[a18f1481de0bafb11a44ee5a9e8aa474]
+reverse link IBackendTryAPI to IBackendAPI--><g id="link_IBackendTryAPI_IBackendAPI"><path codeLine="38" d="M355.25,464.1 C355.25,464.1 355.25,508.73 355.25,508.73 " fill="none" id="IBackendTryAPI-backto-IBackendAPI" style="stroke:#820000;stroke-width:1.0;"/><ellipse cx="355.25" cy="457.1" fill="#FFFFFF" rx="8" ry="8" style="stroke:#820000;stroke-width:1.0;"/><line style="stroke:#820000;stroke-width:1.0;" x1="355.25" x2="355.25" y1="465.1" y2="449.1"/><line style="stroke:#820000;stroke-width:1.0;" x1="347.25" x2="363.25" y1="457.1" y2="457.1"/></g><!--MD5=[94088d7796b2e2e8821d6c8bc28a3b06]
+@startuml
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class ConcurrentBackendAPI {
+  - API: IBackendAPI
+  - analyseReadLock: ReadLock
+  - execLock: ReentrantLock
+  - analyseWriteLock: WriteLock
+  + analyseAPI(RoutingContext): void
+  + heartAPI(RoutingContext): void
+  + execAPI(RoutingContext): void
+  + tryAnalyseAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryStatusAPI(RoutingContext, Handler<RoutingContext>): void
+  + statusAPI(RoutingContext): void
+  + trySchemaAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryExecAPI(RoutingContext, Handler<RoutingContext>): void
+  + schemaAPI(RoutingContext): void
+}
+interface IBackendAPI << interface >> {
+  + execAPI(RoutingContext): void
+  + analyseAPI(RoutingContext): void
+  + schemaAPI(RoutingContext): void
+  + heartAPI(RoutingContext): void
+  + statusAPI(RoutingContext): void
+  + of(IBackendAPI): ConcurrentBackendAPI
+}
+interface IBackendTryAPI << interface >> {
+  + tryExecAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryStatusAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryAnalyseAPI(RoutingContext, Handler<RoutingContext>): void
+  + trySchemaAPI(RoutingContext, Handler<RoutingContext>): void
+}
+
+ConcurrentBackendAPI  -[#008200,dashed]-^  IBackendAPI          
+ConcurrentBackendAPI  +-[#820000,plain]-  IBackendAPI          
+ConcurrentBackendAPI  -[#008200,dashed]-^  IBackendTryAPI       
+IBackendTryAPI        +-[#820000,plain]-  IBackendAPI
+@enduml
+
+@startuml
+
+
+
+
+
+
+
+<style>
+  root {
+    BackgroundColor white
+    FontColor black
+    FontName Verdana
+    HyperLinkColor blue
+    LineColor black
+    LineThickness 1
+    Margin 5
+  }
+  caption {
+    LineThickness 0
+  }
+  footer {
+    LineThickness 0
+  }
+  header {
+    LineThickness 0
+  }
+  node {
+    MaximumWidth 300
+  }
+  title {
+    FontSize 22
+    LineThickness 0
+  }
+</style>
+
+skinparam ArrowLollipopColor black
+skinparam BackgroundColor white
+skinparam DefaultFontName Verdana
+skinparam DefaultMonospacedFontName Courier
+skinparam LifelineStrategy nosolid
+skinparam ParticipantPadding 10
+skinparam SequenceLifeLineBorderColor black
+skinparam Shadowing false
+skinparam UseBetaStyle true
+
+skinparam Activity {
+  BackgroundColor white
+  BarColor black
+  BorderColor black
+  FontColor black
+  FontName Verdana
+}
+skinparam Boundary {
+  FontColor black
+}
+skinparam Box {
+  Padding 5
+}
+skinparam CircledCharacter {
+  FontColor black
+  FontName Courier
+  Radius 9
+}
+skinparam Class {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontName Verdana
+}
+skinparam ClassAttribute {
+  FontColor black
+  FontName Verdana
+}
+skinparam ClassStereotype {
+  FontColor black
+  FontName Verdana
+}
+skinparam Footer {
+  FontColor black
+  FontName Verdana
+}
+skinparam Header {
+  FontColor black
+  FontName Verdana
+}
+skinparam Hyperlink {
+  Color blue
+}
+skinparam IconPackage {
+  Color black
+  BackgroundColor white
+}
+skinparam IconPrivate {
+  Color black
+  BackgroundColor white
+}
+skinparam IconProtected {
+  Color black
+  BackgroundColor white
+}
+skinparam IconPublic {
+  Color black
+  BackgroundColor white
+}
+skinparam Note {
+  FontColor black
+  FontName Verdana
+}
+skinparam Object {
+  BorderColor black
+}
+skinparam Package {
+  BorderColor black
+  FontColor black
+  FontName Verdana
+}
+skinparam State {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeA {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeC {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeE {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeI {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam StereotypeN {
+  BackgroundColor white
+  BorderColor black
+}
+skinparam UseCaseStereoType {
+  FontColor black
+  FontName Verdana
+}
+top to bottom direction
+skinparam linetype ortho
+
+class ConcurrentBackendAPI {
+  - API: IBackendAPI
+  - analyseReadLock: ReadLock
+  - execLock: ReentrantLock
+  - analyseWriteLock: WriteLock
+  + analyseAPI(RoutingContext): void
+  + heartAPI(RoutingContext): void
+  + execAPI(RoutingContext): void
+  + tryAnalyseAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryStatusAPI(RoutingContext, Handler<RoutingContext>): void
+  + statusAPI(RoutingContext): void
+  + trySchemaAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryExecAPI(RoutingContext, Handler<RoutingContext>): void
+  + schemaAPI(RoutingContext): void
+}
+interface IBackendAPI << interface >> {
+  + execAPI(RoutingContext): void
+  + analyseAPI(RoutingContext): void
+  + schemaAPI(RoutingContext): void
+  + heartAPI(RoutingContext): void
+  + statusAPI(RoutingContext): void
+  + of(IBackendAPI): ConcurrentBackendAPI
+}
+interface IBackendTryAPI << interface >> {
+  + tryExecAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryStatusAPI(RoutingContext, Handler<RoutingContext>): void
+  + tryAnalyseAPI(RoutingContext, Handler<RoutingContext>): void
+  + trySchemaAPI(RoutingContext, Handler<RoutingContext>): void
+}
+
+ConcurrentBackendAPI  -[#008200,dashed]-^  IBackendAPI          
+ConcurrentBackendAPI  +-[#820000,plain]-  IBackendAPI          
+ConcurrentBackendAPI  -[#008200,dashed]-^  IBackendTryAPI       
+IBackendTryAPI        +-[#820000,plain]-  IBackendAPI
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 17:01:30 UTC 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>
