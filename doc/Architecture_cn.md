@@ -8,18 +8,8 @@
 
 ---
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-arch.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Metal架构
-  	</div>
-</center>
+<img src="img/resources/metal-arch.svg" width = "75%" alt="Metal Architecture" align="center" />
+
 Metal项目目前包括如下几个组件，
 
 ```shell
@@ -48,18 +38,8 @@ Metal项目目前包括如下几个组件，
 
 Metal数据流处理算子包括四种，分别为Source、Mapper、Fusion和Sink。
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-plugin-class.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      数据流算子类型
-  	</div>
-</center>
+<img src="img/resources/metal-plugin-class.svg" width = "75%" alt="Data Flow Operator Types" align="center" />
+
 
 从上图可以看出，所有算子/操作的最终父类为`Metal`，所有继承`Metal`的子类都有`id`、`name`以及配置属性`props`。其中，`props`用于为算子注入配置。`metal-core`下的Metal抽象算子是平台无关的。目前，Metal仅支持将Spark作为后端执行引擎。
 上图中`MSource`、`MMapper`、`MFusion`和`MSink`定义了数据流的四种基本处理逻辑。
@@ -139,18 +119,7 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 }
 ```
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-spec.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      数据流示例
-  	</div>
-</center>
+<img src="img/resources/metal-spec.svg" width = "75%" alt="Data flow Spec example" align="center" />
 
 在示例中，source-00会从`src/test/resources/test.json`获取JSON数据，mapper-00将source-00作为输入并且筛选出`id != "0001"`的记录，sink-00将mapper-00过滤出的数据打印在控制台。sink-00会直接将source-00的数据打印在控制台。sink-00会先于sink-01被调度执行。
 
@@ -179,18 +148,7 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 
 第1行第4列<analyse, exec>为不并发，这表示当analyse执行时，exec请求会被阻塞等待执行或直接方法。`metal-backend`定了`IBackendAPI`实现了这种并发控制，具体的设计图如下。
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-IBackendAPI.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      IBackendAPI类图
-  	</div>
-</center>
+<img src="img/resources/metal-IBackendAPI.svg" width = "75%" alt="Class diagram of IBackendAPI" align="center" />
 
 `IBackendTryAPI`中定义的接口为非阻塞接口。
 
@@ -254,18 +212,9 @@ $SPARK_HOME/bin/spark-submit \
 ## metal-server和metal-ui
 ### metal-server
 #### 模型
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-server-model.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      metal-server领域实体关系图
-  	</div>
-</center>
+
+<img src="img/resources/metal-server-model.svg" width = "75%" alt="Domain Entity Relationship Diagram of metal-server" align="center" />
+
 `metal-server`建立了Project的概念来管理数据流以及相关配置。你可以在Project中选择需要的Metal算子，并且定义数据流。`metal-server`会根据配置部署执行后端，下发执行数据流，跟踪后端状态和数据流执行状态。
 
 #### 服务
@@ -277,56 +226,15 @@ $SPARK_HOME/bin/spark-submit \
 ### metal-ui
 `metal-ui`实现了Metal的前端Web UI。你可以在`metal-ui`中便捷地创建Project，选择算子包，绘制数据流，检查数据流，提交执行数据流，发布新的处理算子包，管理算子包等。
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-home.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Home页面
-  	</div>
-</center>
+<img src="img/resources/metal-ui-home.png" width = "75%" alt="Home Page" align="center" />
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-designer.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      数据流编辑器
-  	</div>
-</center>
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-designer-profiler.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      数据流配置预览
-  	</div>
-</center>
+<img src="img/resources/metal-ui-designer.png" width = "75%" alt="Data flow designer" align="center" />
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-repo.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Metal算子仓库
-  	</div>
-</center>
+
+<img src="img/resources/metal-ui-designer-profiler.png" width = "75%" alt="Data flow profiler" align="center" />
+
+
+<img src="img/resources/metal-ui-repo.png" width = "75%" alt="Metal repository" align="center" />
 
 `metal-ui`是一个简易的数据流IDE，`metal-ui`会调用`metal-server`提供的REST-API完成操作

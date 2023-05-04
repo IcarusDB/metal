@@ -8,18 +8,8 @@
 
 ---
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-arch.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Metal Architecture
-  	</div>
-</center>
+<img src="img/resources/metal-arch.svg" width = "75%" alt="Metal Architecture" align="center" />
+
 The Metal project currently consists of the following components,
 
 ```shell
@@ -48,18 +38,7 @@ An overview of each component is as follows,
 
 Metal data flow processing operators include four types, namely Source, Mapper, Fusion, and Sink.
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-plugin-class.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Data Flow Operator Types
-  	</div>
-</center>
+<img src="img/resources/metal-plugin-class.svg" width = "75%" alt="Data Flow Operator Types" align="center" />
 
 As can be seen from the figure above, the final parent class of all operators/operations is `Metal`, and all subclasses that inherit `Metal` have `id`, `name` and configuration properties `props`. Among them, `props` is used to inject configuration for the operator. Metal abstract operators under `metal-core` are platform-independent. Currently, Metal only supports Spark as the backend execution engine.
 In the figure above, `MSource`, `MMapper`, `MFusion` and `MSink` define four basic processing logics of the data stream.
@@ -139,18 +118,7 @@ The following is a simple data flow Spec example,
 }
 ```
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-spec.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Data flow Spec example
-  	</div>
-</center>
+<img src="img/resources/metal-spec.svg" width = "75%" alt="Data flow Spec example" align="center" />
 
 In the example, source-00 will get JSON data from `src/test/resources/test.json`, mapper-00 will take source-00 as input and filter out `id != "0001"` records, sink-00 Print the data filtered by mapper-00 to the console. sink-00 will directly print the data of source-00 to the console. sink-00 will be scheduled for execution before sink-01.
 
@@ -179,18 +147,7 @@ Under the interactive model, `metal-backend` needs to process concurrent request
 
 Line 1, column 4 <analyse, exec> is non-concurrent, which means that when analyze is executed, the exec request will be blocked waiting for execution or a direct method. `metal-backend` defines `IBackendAPI` to achieve this kind of concurrency control, and the specific design diagram is as follows.
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-IBackendAPI.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Class diagram of IBackendAPI
-  	</div>
-</center>
+<img src="img/resources/metal-IBackendAPI.svg" width = "75%" alt="Class diagram of IBackendAPI" align="center" />
 
 The interface defined in `IBackendTryAPI` is a non-blocking interface.
 
@@ -255,18 +212,9 @@ Except for development and debugging, it is almost impossible to manually write 
 ## metal-server和metal-ui
 ### metal-server
 #### Model
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-server-model.svg" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Domain Entity Relationship Diagram of metal-server
-  	</div>
-</center>
+
+<img src="img/resources/metal-server-model.svg" width = "75%" alt="Domain Entity Relationship Diagram of metal-server" align="center" />
+
 `metal-server` establishes the concept of Project to manage data flow and related configuration. You can select the required Metal operator in Project and define the data flow. `metal-server` will deploy the execution backend according to the configuration, deliver the execution data flow, and track the backend status and data flow execution status.
 
 #### Services
@@ -278,56 +226,12 @@ Except for development and debugging, it is almost impossible to manually write 
 ### metal-ui
 `metal-ui` implements Metal's front-end web UI. You can easily create a project in `metal-ui`, select operator packages, draw data flows, check data flows, submit execution data flows, publish new processing operator packages, manage operator packages, etc.
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-home.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Home Page
-  	</div>
-</center>
+<img src="img/resources/metal-ui-home.png" width = "75%" alt="Home Page" align="center" />
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-designer.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Data flow designer
-  	</div>
-</center>
+<img src="img/resources/metal-ui-designer.png" width = "75%" alt="Data flow designer" align="center" />
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-designer-profiler.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Data flow profiler
-  	</div>
-</center>
+<img src="img/resources/metal-ui-designer-profiler.png" width = "75%" alt="Data flow profiler" align="center" />
 
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="img/resources/metal-ui-repo.png" width = "75%" alt=""/>
-    <br>
-    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-    display: inline-block;
-    color: #999;
-    padding: 2px;">
-      Metal repository
-  	</div>
-</center>
+<img src="img/resources/metal-ui-repo.png" width = "75%" alt="Metal repository" align="center" />
 
 `metal-ui` is a simple data flow IDE, `metal-ui` will call the REST-API provided by `metal-server` to complete the operation
