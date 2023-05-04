@@ -27,13 +27,24 @@ import { FaStop } from "react-icons/fa";
 import { ImDownload, ImUpload } from "react-icons/im";
 import { AiOutlineFunction } from "react-icons/ai";
 import { useAsync } from "../../api/Hooks";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { BackendState, Project } from "../../model/Project";
 import { getAllProjectOfUser } from "../../api/ProjectApi";
 import { MetalPkg } from "../../model/MetalPkg";
 import { metalType, MetalTypes } from "../../model/Metal";
 import { getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
 import { MainHandler } from "../main/Main";
+import { useUIAsync } from "../ui/UIHooks";
+import { Exec } from "../../model/Exec";
+import { getAllExecsOfUser } from "../../api/ExecApi";
+import moment from "moment";
+import _ from "lodash";
+import { State } from "../../api/State";
+import CalHeatmap from 'cal-heatmap';
+
+
+import { OptionsType } from "cal-heatmap/src/options/Options";
+
 
 export interface HomeProps {
     mainHandler: MainHandler;
@@ -59,7 +70,9 @@ export function Home(props: HomeProps) {
     };
 
     const onOpenMetalRepo = () => {
-        mainHandler.openMetalRepo({});
+        mainHandler.openMetalRepo({
+            mainHandler: mainHandler
+        });
     };
 
     const onOpenUserPage = () => {
@@ -107,11 +120,119 @@ export function Home(props: HomeProps) {
                     </Button>
                 </ListItem>
             </List>
+            <ExecutionSummary token={token} />
             <ProjectSummary token={token} />
             <MetalRepoSummary token={token} />
         </div>
     );
 }
+
+interface ExecutionSummaryProps {
+    token: string | null
+}
+
+function useExecutionSummary(token: string | null): [
+    () => void,
+    {date: string, value: number}[]
+] {
+    const [run, status, result] = useUIAsync<Exec[]>();
+    const fetch = useCallback(()=>{
+        if (token === null) {
+            return
+        }
+
+        run(getAllExecsOfUser(token));
+    }, [run, token]);
+
+    const summary = result === null
+            ? []
+            : _.entries(
+                 _.countBy(
+                    result, exec =>  moment(exec?.createTime).format("YYYY-MM-DD")
+                )
+            ).map(e => ({date: e[0], value: e[1]})) ;
+
+    useEffect(() => {
+        if (status === State.idle) {
+            fetch();
+        }
+    }, [fetch, status]);
+
+    return [fetch, summary];
+}
+
+function ExecutionSummary(props: ExecutionSummaryProps) {
+    const { token } = props;
+    const [, summary] = useExecutionSummary(token);
+    const start = moment().subtract(12, "month").format("YYYY-MM-DD");
+    return (
+        <Accordion defaultExpanded={true}>
+            <AccordionSummary expandIcon={<VscChevronDown size={"2em"} />}>
+                <Typography variant="h5">Executions</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Divider orientation="horizontal" flexItem />
+                <Heatmap 
+                    data={{
+                        source: summary,
+                        x: 'date',
+                        y: 'value'
+                    }}
+                    domain={{
+                        type: 'month'
+                    }}
+                    subDomain={{
+                        type: 'day',
+                        radius: 2,
+                        label: (timestamp: number, value: number) => (
+                            value
+                        )
+                    }}
+                    date={{
+                        start: new Date(start)
+                    }}
+                    scale={{
+                        color: {
+                            range: ['yellow', 'red'],
+                            interpolate: 'hsl',
+                            type: 'linear',
+                            domain: [0, 30]
+                        }
+                    }}
+                />
+            </AccordionDetails>
+        </Accordion>
+    );
+}
+
+declare type HeatmapProps = CalHeatmap.DeepPartial<OptionsType>;
+
+function Heatmap(props: HeatmapProps) {
+    
+    useEffect(()=>{
+        const cal: CalHeatmap = new CalHeatmap();
+ 
+        cal.paint({
+            ...props,
+            itemSelector: '#heat-map'
+        });
+        
+        return () => {
+            cal.destroy();
+        }
+    }, [props]);
+
+    return (
+        <div id='heat-map' style={{
+            boxSizing: "border-box",
+            padding: "1em"
+        }}>
+
+        </div>
+    )
+}
+
+
 
 const ICON_SIZE = "4vw";
 const CARD_H_PAD = "2vw";

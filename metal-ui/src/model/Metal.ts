@@ -52,7 +52,7 @@ export const MetalSink: IMetal = {
         return false
     },
     canAddInput: (graphTopology: GraphTopology, id: string) => {
-        return graphTopology.inDegree(id) == 0
+        return graphTopology.inDegree(id) === 0
     }
 }
 
@@ -64,7 +64,7 @@ export const MetalMapper: IMetal = {
         return true
     },
     canAddInput: (graphTopology: GraphTopology, id: string) => {
-        return graphTopology.inDegree(id) == 0
+        return graphTopology.inDegree(id) === 0
     }
 }
 

@@ -1,5 +1,5 @@
 import axios, {AxiosBasicCredentials} from "axios";
-import {ApiResponse, ApiResponseEntity, ApiResponseStatus, timeout} from "./APIs";
+import {ApiResponse, ApiResponseEntity, timeout} from "./APIs";
 import {User} from "../model/User";
 
 const instance = axios.create({
@@ -38,10 +38,9 @@ export async function sync(token: string): Promise<User> {
                 const user: User = resp.data
                 return user
             } else {
-                if (resp.msg == undefined) {
+                if (resp.msg === undefined) {
                     throw new Error('Response is failure, and no msg found in response.')
                 }
-                const msg: string = resp.msg
                 throw new Error(resp.msg)
             }
         } catch (err) {

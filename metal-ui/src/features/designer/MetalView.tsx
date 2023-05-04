@@ -510,7 +510,7 @@ export function MetalNode(props: NodeProps<MetalNodeProps>) {
                 </div>
             </Badge>
         ),
-        [badgeContent, isInputReady, isReadOnly, metal.id, metal.name, metal.props, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status]
+        [badgeContent, isInputReady, isPropDefined, isReadOnly, metal.id, metal.name, metalPkg.class, msg, nodeView, onDelete, onEdit, props.data, status]
     );
     return (<>{view}</>)
 

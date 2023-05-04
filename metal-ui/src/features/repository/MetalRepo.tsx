@@ -3,21 +3,26 @@ import {
     AccordionDetails,
     AccordionSummary,
     Alert,
+    Chip,
     Divider,
     FormControl,
+    Grid,
+    IconButton,
     InputLabel,
     MenuItem,
+    Paper,
     Select,
     SelectChangeEvent,
     Snackbar,
+    Stack,
     Typography,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import Editor, { Monaco } from "@monaco-editor/react";
 import * as EditorApi from "monaco-editor/esm/vs/editor/editor.api";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { VscChevronDown, VscCloudUpload } from "react-icons/vsc";
+import { VscBrowser, VscChevronDown, VscCloudUpload } from "react-icons/vsc";
 import { useAsync } from "../../api/Hooks";
 import { addMetalPkgsFromManifest, getAllMetalPkgsOfUserAccess } from "../../api/MetalPkgApi";
 import { useAppSelector } from "../../app/hooks";
@@ -27,9 +32,16 @@ import { Mutable } from "../../model/Mutable";
 import { State } from "../../api/State";
 import { Logger, loggerSelector, useNotice } from "../notice/Notice";
 import shallow from 'zustand/shallow';
-export interface MetalRepoProps {}
+import { MainHandler } from "../main/Main";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import moment from "moment";
+export interface MetalRepoProps {
+    mainHandler: MainHandler;
+}
 
 export function MetalRepo(props: MetalRepoProps) {
+    const {mainHandler} = props;
     const token: string | null = useAppSelector((state) => {
         return tokenSelector(state);
     });
@@ -44,14 +56,150 @@ export function MetalRepo(props: MetalRepoProps) {
                 paddingBottom: "1vh",
             }}
         >
-            <MetalRepoViewer token={token} />
+            <MetalRepoViewer token={token} mainHandler={mainHandler} />
             <MetalRepoMaintain token={token} />
+        </div>
+    );
+}
+
+export interface MetalPkgPageProps {
+    pkg: MetalPkg,
+    mainHandler: MainHandler
+}
+
+export function MetalPkgPage(props: MetalPkgPageProps) {
+    const { pkg } = props;
+    const { id } = pkg;
+    return (
+        <div
+            style={{
+                boxSizing: "border-box",
+                paddingLeft: "1vw",
+                paddingRight: "1vw",
+                paddingTop: "1vh",
+                paddingBottom: "1vh",
+            }}
+        >
+            <Typography variant="h6" color={"text.secondary"}>
+                {`${pkg.type} [${id}]`}
+            </Typography>
+            <Divider orientation={"horizontal"} />
+            <Paper
+                sx={{
+                    boxSizing: "border-box",
+                    marginTop: "2vh",
+                    padding: "1em",
+                }}
+                variant={"outlined"}
+                square
+            >
+                <Grid container spacing={1}>
+                    <Grid item xs={1}>
+                        {"Class"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        <Chip label={pkg.class} color="info" variant="filled" />
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Package"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        <Stack
+                            direction="row"
+                            justifyContent="flex-start"
+                            alignItems="center"
+                            spacing={1}
+                        >
+                            <Chip label={pkg.groupId} color="info" variant="outlined" />
+                            <Chip label={pkg.artifactId} color="info" variant="filled" />
+                            <Chip label={pkg.version} color="success" variant="outlined" />
+                        </Stack>
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Scope"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        {pkg.scope}
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Create Time"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        {moment(pkg.createTime).format("YYYY-MM-DD HH:mm:ss")}
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Publisher"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        {pkg.userId}
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Description"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        {pkg.description}
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"Form Schema"}
+                    </Grid>
+                    <Grid item xs={11}>
+                        <div
+                            style={{
+                                position: "relative",
+                                width: "100%",
+                                height: "100%",
+                                overflow: "hidden",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: "relative",
+                                    maxHeight: "30vh",
+                                    width: "100%",
+                                    overflow: "auto",
+                                }}
+                            >
+                                <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
+                                    {JSON.stringify(pkg.formSchema, null, 2)}
+                                </SyntaxHighlighter>
+                            </div>
+                        </div>
+                    </Grid>
+                    <Grid item xs={1}>
+                        {"UI Schema"}
+                    </Grid>
+                    <Grid item xs={11}>
+                    <div
+                            style={{
+                                position: "relative",
+                                width: "100%",
+                                height: "100%",
+                                overflow: "hidden",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    position: "relative",
+                                    maxHeight: "30vh",
+                                    width: "100%",
+                                    overflow: "auto",
+                                }}
+                            >
+                                <SyntaxHighlighter language={"json"} style={vscDarkPlus}>
+                                    {JSON.stringify(pkg.uiSchema, null, 2)}
+                                </SyntaxHighlighter>
+                            </div>
+                        </div>
+                    </Grid>
+                </Grid>
+            </Paper>
         </div>
     );
 }
 
 interface MetalRepoViewerProps {
     token: string | null;
+    mainHandler: MainHandler
 }
 
 const columns: GridColDef[] = [
@@ -61,6 +209,21 @@ const columns: GridColDef[] = [
     { field: "groupId", headerName: "Group ID", filterable: true, minWidth: 150 },
     { field: "artifactId", headerName: "Artifact ID", filterable: true, minWidth: 200 },
     { field: "version", headerName: "Version", filterable: true, minWidth: 150 },
+    { 
+        field: "action", 
+        headerName: "Action", 
+        filterable: false, 
+        minWidth: 150, 
+        renderCell: (params: GridRenderCellParams<()=>void>) => {
+            return (
+                <IconButton
+                    onClick={params.value}
+                >
+                    <VscBrowser />
+                </IconButton>
+            )
+        },
+    }
 ];
 
 function useMetalPkgs(token: string | null) {
@@ -75,8 +238,19 @@ function useMetalPkgs(token: string | null) {
 }
 
 function MetalRepoViewer(props: MetalRepoViewerProps) {
-    const { token } = props;
+    const { token, mainHandler } = props;
     const pkgs: MetalPkg[] | null = useMetalPkgs(token);
+    const pkgsWithAciton = pkgs === null
+                            ? []
+                            : pkgs.map(pkg => ({
+                                ...pkg,
+                                action: () => {
+                                    mainHandler.openMetalPkgPage({
+                                        pkg: pkg,
+                                        mainHandler: mainHandler
+                                    })
+                                }
+                            }))
 
     return (
         <Accordion defaultExpanded>
@@ -98,7 +272,7 @@ function MetalRepoViewer(props: MetalRepoViewerProps) {
                 >
                     <DataGrid
                         columns={columns}
-                        rows={pkgs === null ? [] : pkgs}
+                        rows={pkgsWithAciton}
                         pageSize={10}
                         rowsPerPageOptions={[10]}
                         autoHeight={true}

@@ -15,12 +15,12 @@ import { Skeleton } from "@mui/material";
 import { AiOutlineDeploymentUnit } from "react-icons/ai";
 import { FaProjectDiagram } from "react-icons/fa";
 import { RiFunctionLine } from "react-icons/ri";
-import { VscAccount, VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPreview } from "react-icons/vsc";
+import { VscAccount, VscBrowser, VscCircuitBoard, VscExtensions, VscHome, VscPackage, VscPreview } from "react-icons/vsc";
 import { GrTasks } from "react-icons/gr";
 import { ProjectStarter, ProjectStarterProps } from "../project/ProjectStarter";
 import { DesignerProvider } from "../designer/DesignerProvider";
 import { Home, HomeProps } from "../home/Home";
-import { MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
+import { MetalPkgPage, MetalPkgPageProps, MetalRepo, MetalRepoProps } from "../repository/MetalRepo";
 import create from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import _ from "lodash";
@@ -28,6 +28,7 @@ import { Executions, ExecutionsProps } from "../execution/Executions";
 import { Viewer, ViewerProps } from "../designer/Viewer";
 import { ExecutionPage, ExecutionPageProps } from "../execution/ExecutionPage";
 import { UserPage, UserPageProps } from "../user/UserPage";
+import { MetalPkgProps } from "../designer/explorer/MetalExplorer";
 
 interface Component {
     id: string,
@@ -85,6 +86,8 @@ function iconFatory(node: TabNode) {
             return <VscHome />;
         case "metalRepoIcon":
             return <VscExtensions />;
+        case "metalPkgPageIcon":
+            return <VscPackage />;
         case "deploymentIcon":
             return <AiOutlineDeploymentUnit />;
         case "executionPageIcon":
@@ -111,11 +114,16 @@ export function execPageId(id: string) {
     return `exec[${id}]`;
 }
 
+export function metalPkgPageId(id: string) {
+    return `metal pkg[${id}]`;
+}
+
 export interface MainHandler {
     openProjectStarter: (props: ProjectStarterProps) => void;
     openDesigner: (props: DesignerProps) => void;
     openViewer: (props: ViewerProps) => void;
     openMetalRepo: (props: MetalRepoProps) => void;
+    openMetalPkgPage: (props: MetalPkgPageProps) => void;
     openExecutionPage: (props: ExecutionPageProps) => void;
     openUserPage: (props: UserPageProps) => void;
     select: (id: string) => void;
@@ -346,6 +354,35 @@ export function Main() {
         }
     };
 
+    const openMetalPkgPage = (props: MetalPkgPageProps) => {
+        const {id} = props.pkg;
+        const tab: IJsonTabNode = {
+            type: "tab",
+            id: metalPkgPageId(id),
+            name: `Metal[${props.pkg.class}]`,
+            icon: "metalPkgPageIcon",
+            component: "metalPkgPage",
+            config: props,
+        }
+
+        const action: Action = Actions.addNode(
+            tab,
+            "main",
+            DockLocation.CENTER,
+            1
+        );
+        try{
+            layoutModel.doAction(action);
+        }catch (error) {
+            console.error(error);
+            if (
+                (error as Error).message.startsWith('Error: each node must have a unique id') &&
+                tab.id !== undefined) {
+                select(tab.id);
+            } 
+        }
+    };
+
 
 
     const close = (id: string) => {
@@ -407,6 +444,7 @@ export function Main() {
         openDesigner: openDesigner,
         openViewer: openViewer,
         openMetalRepo: openMetalRepo,
+        openMetalPkgPage: openMetalPkgPage,
         openExecutionPage: openExecutionPage,
         openUserPage: openUserPage,
         select: select,
@@ -460,9 +498,22 @@ export function Main() {
             }
 
             case "metalRepo": {
-                const props: MetalRepoProps = config;
+                const props: MetalRepoProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
                 return memorizeCmps(component, props, ()=>(
                     <MetalRepo {...props} />
+                ), id);
+            }
+
+            case "metalPkgPage": {
+                const props: MetalPkgPageProps = {
+                    ...config,
+                    mainHandler: mainHandler
+                };
+                return memorizeCmps(component, props, ()=>(
+                    <MetalPkgPage {...props} />
                 ), id);
             }
 
