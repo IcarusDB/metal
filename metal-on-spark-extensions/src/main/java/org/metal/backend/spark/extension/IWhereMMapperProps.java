@@ -9,5 +9,6 @@ import org.metal.core.props.IMMapperProps;
 @JsonDeserialize(as = ImmutableIWhereMMapperProps.class)
 @JsonSerialize(as = ImmutableIWhereMMapperProps.class)
 public interface IWhereMMapperProps extends IMMapperProps {
-    public String conditionExpr();
+
+  public String conditionExpr();
 }

@@ -1,6 +1,6 @@
 package org.metal.exception;
 
-public class MetalServiceException extends MetalException{
+public class MetalServiceException extends MetalException {
 
   public MetalServiceException() {
   }

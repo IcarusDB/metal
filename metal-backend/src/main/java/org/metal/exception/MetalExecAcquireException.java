@@ -1,6 +1,6 @@
 package org.metal.exception;
 
-public class MetalExecAcquireException extends RuntimeException{
+public class MetalExecAcquireException extends RuntimeException {
 
   public MetalExecAcquireException() {
     super();

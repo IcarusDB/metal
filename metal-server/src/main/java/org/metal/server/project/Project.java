@@ -17,14 +17,13 @@ import io.vertx.ext.auth.User;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
-import java.util.ArrayList;
 import java.util.List;
 import org.metal.server.exec.ExecService;
-import org.metal.server.util.JsonConvertor;
-import org.metal.server.util.RestServiceEnd;
-import org.metal.server.util.OnFailure;
-import org.metal.server.util.SendJson;
 import org.metal.server.project.service.IProjectService;
+import org.metal.server.util.JsonConvertor;
+import org.metal.server.util.OnFailure;
+import org.metal.server.util.RestServiceEnd;
+import org.metal.server.util.SendJson;
 import org.metal.server.util.SpecJson;
 
 public class Project extends AbstractVerticle {

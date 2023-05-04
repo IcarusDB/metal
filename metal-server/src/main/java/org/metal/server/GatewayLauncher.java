@@ -3,7 +3,6 @@ package org.metal.server;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.logging.Logger;
@@ -18,6 +17,7 @@ import org.metal.server.repo.MetalRepo;
 import org.metal.server.report.BackendReport;
 
 public class GatewayLauncher {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(GatewayLauncher.class);
 
   public static void main(String[] args) {
@@ -46,7 +46,6 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
-
       Future<String> deployProject = vertx.deployVerticle(project, deploymentOptions)
           .compose(deployID -> {
             LOGGER.info(String.format("Success to deploy %s:%s.", project.getClass(), deployID));
@@ -67,7 +66,8 @@ public class GatewayLauncher {
 
       Future<String> deployBackendReport = vertx.deployVerticle(backendReport, deploymentOptions)
           .compose(deployID -> {
-            LOGGER.info(String.format("Success to deploy %s:%s.", backendReport.getClass(), deployID));
+            LOGGER.info(
+                String.format("Success to deploy %s:%s.", backendReport.getClass(), deployID));
             return Future.succeededFuture();
           }, t -> {
             LOGGER.error(String.format("Fail to deploy %s.", backendReport.getClass()), t);
@@ -83,18 +83,19 @@ public class GatewayLauncher {
             return Future.failedFuture(t);
           });
 
-      CompositeFuture prepared = CompositeFuture.all(List.of(deployMetalRepo, deployProject, deployDetector, deployBackendReport, deployExec));
+      CompositeFuture prepared = CompositeFuture.all(
+          List.of(deployMetalRepo, deployProject, deployDetector, deployBackendReport, deployExec));
       Future<String> deployGateway = prepared.compose(
           ret -> {
             return vertx.deployVerticle(gateway, deploymentOptions);
           }
       ).compose(deployID -> {
-            LOGGER.info(String.format("Success to deploy %s:%s.", gateway.getClass(), deployID));
-            return Future.succeededFuture();
-          }, t -> {
-            LOGGER.error(String.format("Fail to deploy %s.", gateway.getClass()), t);
-            return Future.failedFuture(t);
-          });
+        LOGGER.info(String.format("Success to deploy %s:%s.", gateway.getClass(), deployID));
+        return Future.succeededFuture();
+      }, t -> {
+        LOGGER.error(String.format("Fail to deploy %s.", gateway.getClass()), t);
+        return Future.failedFuture(t);
+      });
       return Future.succeededFuture();
     }).onSuccess(ret -> {
       LOGGER.info("Success to deploy");

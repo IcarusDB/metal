@@ -15,8 +15,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.metal.backend.IBackend;
 import org.metal.backend.api.BackendService;
-import org.metal.server.api.BackendReportService;
-import org.metal.server.api.BackendState;
 import org.metal.draft.Draft;
 import org.metal.draft.DraftMaster;
 import org.metal.exception.MetalAnalyseAcquireException;
@@ -27,11 +25,14 @@ import org.metal.exception.MetalExecuteException;
 import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
 import org.metal.exception.MetalStatusAcquireException;
+import org.metal.server.api.BackendReportService;
+import org.metal.server.api.BackendState;
 import org.metal.server.api.ExecState;
 import org.metal.specs.Spec;
 import org.metal.specs.SpecFactoryOnJson;
 
 public class BackendServiceImpl implements BackendService {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendServiceImpl.class);
 
   private String deployId;
@@ -56,7 +57,8 @@ public class BackendServiceImpl implements BackendService {
     this.vertx = vertx;
     this.backend = backend;
     this.workerExecutor = workerExecutor;
-    this.reportor = BackendReportService.create(vertx, new JsonObject().put("address", reportAddress));
+    this.reportor = BackendReportService.create(vertx,
+        new JsonObject().put("address", reportAddress));
   }
 
   @Override
@@ -170,9 +172,9 @@ public class BackendServiceImpl implements BackendService {
                 .put("status", ExecState.FINISH.toString())
                 .put("finishTime", System.currentTimeMillis());
             reportor.reportExecFinish(finish)
-                    .onFailure(error -> {
-                      LOGGER.error("Fail to reprot finish exec " + execId, error);
-                    });
+                .onFailure(error -> {
+                  LOGGER.error("Fail to reprot finish exec " + execId, error);
+                });
             promise.complete();
           } catch (MetalExecuteException e) {
             JsonObject failure = new JsonObject();
@@ -222,15 +224,18 @@ public class BackendServiceImpl implements BackendService {
   }
 
   private static class ConcurrencyService implements BackendService {
+
     private BackendService innerService;
     private ReadLock analyseReadLock;
     private WriteLock analyseWriteLock;
     private ReentrantLock execLock;
 
-    private ConcurrencyService(BackendService backendService) throws IllegalArgumentException{
-      if (backendService instanceof  ConcurrencyService) {
+    private ConcurrencyService(BackendService backendService) throws IllegalArgumentException {
+      if (backendService instanceof ConcurrencyService) {
         throw new IllegalArgumentException(
-            String.format("Fail to construct object, because the backendService is one instance of %s", ConcurrencyService.class)
+            String.format(
+                "Fail to construct object, because the backendService is one instance of %s",
+                ConcurrencyService.class)
         );
       }
       this.innerService = backendService;
@@ -254,7 +259,8 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalAnalyseAcquireException("Analyse has been acquired by other request, wait a moment."));
+      return Future.failedFuture(new MetalAnalyseAcquireException(
+          "Analyse has been acquired by other request, wait a moment."));
     }
 
     @Override
@@ -271,7 +277,8 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalAnalyseAcquireException("Now analyse has been acquired by other request, wait a moment."));
+      return Future.failedFuture(new MetalAnalyseAcquireException(
+          "Now analyse has been acquired by other request, wait a moment."));
     }
 
     @Override
@@ -293,7 +300,8 @@ public class BackendServiceImpl implements BackendService {
             }
         );
       }
-      return Future.failedFuture(new MetalStatusAcquireException("Now analyse has been acquired by other request, wait a moment."));
+      return Future.failedFuture(new MetalStatusAcquireException(
+          "Now analyse has been acquired by other request, wait a moment."));
 
     }
 
@@ -315,9 +323,11 @@ public class BackendServiceImpl implements BackendService {
           );
         }
         analyseReadLock.unlock();
-        return Future.failedFuture(new MetalExecAcquireException("Now executor has been acquired by other request, wait a moment."));
+        return Future.failedFuture(new MetalExecAcquireException(
+            "Now executor has been acquired by other request, wait a moment."));
       }
-      return Future.failedFuture(new MetalExecAcquireException("Now analyse has been acquired by other request, wait a moment."));
+      return Future.failedFuture(new MetalExecAcquireException(
+          "Now analyse has been acquired by other request, wait a moment."));
     }
 
     @Override

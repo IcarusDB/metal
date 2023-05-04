@@ -4,15 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -26,8 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
-import javassist.tools.reflect.Reflection;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -37,7 +31,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-import org.metal.core.FormSchema;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanner;
 import org.reflections.scanners.Scanners;
@@ -46,6 +39,7 @@ import org.reflections.util.FilterBuilder;
 
 @Mojo(name = "manifest", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class Manifest extends AbstractMojo {
+
   @Component
   private MavenProject project;
 
@@ -73,7 +67,7 @@ public class Manifest extends AbstractMojo {
     }
 
     List<URL> urls = new ArrayList<>();
-    for(String compiled : compiledElements) {
+    for (String compiled : compiledElements) {
       try {
         urls.add(new File(compiled).toURI().toURL());
       } catch (MalformedURLException e) {
@@ -82,12 +76,11 @@ public class Manifest extends AbstractMojo {
       }
     }
 
-    URL[] urlArray  = urls.toArray(URL[]::new);
+    URL[] urlArray = urls.toArray(URL[]::new);
     URLClassLoader classLoader = new URLClassLoader(urlArray);
 
-
     List<Scanner> scanners = new ArrayList<>();
-    for (String pkg: this.packages) {
+    for (String pkg : this.packages) {
       Scanner scanner = Scanners.SubTypes.filterResultsBy(
           new FilterBuilder().includePackage(pkg)
       );
@@ -118,7 +111,7 @@ public class Manifest extends AbstractMojo {
     ObjectMapper objectMapper = new ObjectMapper();
     ObjectNode manifest = objectMapper.createObjectNode();
 
-    for(Map.Entry<String, String> entry: metalTypes.entrySet()) {
+    for (Map.Entry<String, String> entry : metalTypes.entrySet()) {
       String type = entry.getKey();
       String clz = entry.getValue();
       ArrayNode pkgs = objectMapper.createArrayNode();
@@ -151,9 +144,9 @@ public class Manifest extends AbstractMojo {
     Set<Class<?>> subClzs = reflections.get(
         Scanners.SubTypes.of(clz).asClass(classLoader)
     );
-    for(Class<?> subClz : subClzs) {
+    for (Class<?> subClz : subClzs) {
       Method formOf = null;
-      for(Method method: formOfClz.getMethods()) {
+      for (Method method : formOfClz.getMethods()) {
         if (!method.getName().equals("of")) {
           continue;
         }
@@ -217,7 +210,7 @@ public class Manifest extends AbstractMojo {
 
   private boolean excludedPkgs(Class<?> clz) {
     String pkg = clz.getPackageName();
-    for(String excludedPkg: this.excludedPackages) {
+    for (String excludedPkg : this.excludedPackages) {
       if (pkg.equals(excludedPkg) || pkg.startsWith(excludedPkg + ".")) {
         return true;
       }

@@ -54,16 +54,27 @@ public class ExecDB {
     return mongo.insert(DB, exec);
   }
 
-  public static Future<JsonObject> updateStatus(MongoClient mongo, String execId, JsonObject execStatus) {
+  public static Future<JsonObject> updateStatus(MongoClient mongo, String execId,
+      JsonObject execStatus) {
     ExecState status = ExecState.valueOf(execStatus.getString("status"));
     JsonObject update = new JsonObject();
     update.put(FIELD_STATUS, status.toString());
     switch (status) {
-      case CREATE: update.put(FIELD_CREATE_TIME, execStatus.getLong("createTime")); break;
-      case SUBMIT: update.put(FIELD_SUBMIT_TIME, execStatus.getLong("submitTime")); break;
-      case RUNNING: update.put(FIELD_BEAT_TIME, execStatus.getLong("beatTime")); break;
-      case FINISH: update.put(FIELD_FINISH_TIME, execStatus.getLong("finishTime")); break;
-      case FAILURE: update.put(FIELD_TERMINATE_TIME, execStatus.getLong("terminateTime")); break;
+      case CREATE:
+        update.put(FIELD_CREATE_TIME, execStatus.getLong("createTime"));
+        break;
+      case SUBMIT:
+        update.put(FIELD_SUBMIT_TIME, execStatus.getLong("submitTime"));
+        break;
+      case RUNNING:
+        update.put(FIELD_BEAT_TIME, execStatus.getLong("beatTime"));
+        break;
+      case FINISH:
+        update.put(FIELD_FINISH_TIME, execStatus.getLong("finishTime"));
+        break;
+      case FAILURE:
+        update.put(FIELD_TERMINATE_TIME, execStatus.getLong("terminateTime"));
+        break;
     }
 
     return mongo.updateCollection(
@@ -75,19 +86,22 @@ public class ExecDB {
     });
   }
 
-  public static Future<JsonObject> updateByPath(MongoClient mongo, String execId, JsonObject updateByPath) {
+  public static Future<JsonObject> updateByPath(MongoClient mongo, String execId,
+      JsonObject updateByPath) {
     return mongo.updateCollection(
         DB,
         new JsonObject().put(FIELD_ID, execId),
         new JsonObject().put("$set", updateByPath)
-    ).compose(ret -> {return Future.<JsonObject>succeededFuture(ret.toJson());});
+    ).compose(ret -> {
+      return Future.<JsonObject>succeededFuture(ret.toJson());
+    });
   }
 
   public static Future<JsonObject> getOfId(MongoClient mongo, String execId) {
     return mongo.findOne(
         DB,
         new JsonObject()
-            .put(FIELD_ID , execId),
+            .put(FIELD_ID, execId),
         new JsonObject()
     ).compose((JsonObject exec) -> {
       if (exec == null || exec.isEmpty()) {
@@ -153,9 +167,9 @@ public class ExecDB {
             .put(FIELD_FINISH_TIME, true)
             .put(FIELD_TERMINATE_TIME, true)
             .put(FIELD_FROM_PROJECT, true)
-            .put("fromProjectDetail", new JsonObject().put("$arrayElemAt", new JsonArray().add("$fromProjectCopy").add(0)))
+            .put("fromProjectDetail", new JsonObject().put("$arrayElemAt",
+                new JsonArray().add("$fromProjectCopy").add(0)))
     );
-
 
     reduceProject.put("$project",
         new JsonObject()
@@ -222,7 +236,8 @@ public class ExecDB {
     return getAllOfMatcher(mongo, matcher);
   }
 
-  public static Future<List<JsonObject>> getAllOfProjectNoDetail(MongoClient mongo, String projectId) {
+  public static Future<List<JsonObject>> getAllOfProjectNoDetail(MongoClient mongo,
+      String projectId) {
     JsonObject matcher = new JsonObject();
     matcher.put(FIELD_FROM_PROJECT, projectId);
 
@@ -232,25 +247,29 @@ public class ExecDB {
     );
   }
 
-  public static Future<JsonObject>  forceRemove(MongoClient mongo, String userId, String execId) {
-    return mongo.removeDocument(DB, new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_ID , execId)).compose(ret -> {
+  public static Future<JsonObject> forceRemove(MongoClient mongo, String userId, String execId) {
+    return mongo.removeDocument(DB,
+        new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_ID, execId)).compose(ret -> {
       return Future.succeededFuture(ret.toJson());
     });
   }
 
-  public static Future<JsonObject>  forceRemoveAllOfUser(MongoClient mongo, String userId) {
+  public static Future<JsonObject> forceRemoveAllOfUser(MongoClient mongo, String userId) {
     return mongo.removeDocuments(DB, new JsonObject().put(FIELD_USER_ID, userId)).compose(ret -> {
       return Future.succeededFuture(ret.toJson());
     });
   }
 
-  public static Future<JsonObject>  forceRemoveAllOfProject(MongoClient mongo, String userId, String projectId) {
-    return mongo.removeDocuments(DB, new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_FROM_PROJECT, projectId)).compose(ret -> {
-      return Future.succeededFuture(ret.toJson());
-    });
+  public static Future<JsonObject> forceRemoveAllOfProject(MongoClient mongo, String userId,
+      String projectId) {
+    return mongo.removeDocuments(DB,
+            new JsonObject().put(FIELD_USER_ID, userId).put(FIELD_FROM_PROJECT, projectId))
+        .compose(ret -> {
+          return Future.succeededFuture(ret.toJson());
+        });
   }
 
-  public static Future<JsonObject>  forceRemoveAll(MongoClient mongo) {
+  public static Future<JsonObject> forceRemoveAll(MongoClient mongo) {
     return mongo.removeDocuments(DB, new JsonObject()).compose(ret -> {
       return Future.succeededFuture(ret.toJson());
     });
@@ -269,7 +288,8 @@ public class ExecDB {
     JsonObject matcher = new JsonObject();
     matcher.put(
         FIELD_STATUS,
-        new JsonObject().put("$in", new JsonArray().add(ExecState.FINISH.toString()).add(ExecState.FAILURE.toString()))
+        new JsonObject().put("$in",
+            new JsonArray().add(ExecState.FINISH.toString()).add(ExecState.FAILURE.toString()))
     );
     return matcher;
   }
@@ -282,7 +302,8 @@ public class ExecDB {
     });
   }
 
-  public static Future<JsonObject> removeAllOfProject(MongoClient mongo, String userId, String projectId) {
+  public static Future<JsonObject> removeAllOfProject(MongoClient mongo, String userId,
+      String projectId) {
     JsonObject matcher = terminateMatcher();
     matcher.put(FIELD_USER_ID, userId);
     matcher.put(FIELD_FROM_PROJECT, projectId);

@@ -15,6 +15,7 @@ import org.metal.server.project.service.IProjectService;
 import org.metal.server.report.api.impl.BackendReportServiceImpl;
 
 public class BackendReport extends AbstractVerticle {
+
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
   public static final String MONGO_CONF = "mongoConf";
 
@@ -32,7 +33,8 @@ public class BackendReport extends AbstractVerticle {
   private BackendReportService report;
   private MessageConsumer<JsonObject> consumer;
 
-  private BackendReport() {}
+  private BackendReport() {
+  }
 
   public static BackendReport create() {
     return new BackendReport();
@@ -52,20 +54,28 @@ public class BackendReport extends AbstractVerticle {
       JsonObject backendReportConf = conf.getJsonObject(BACKEND_REPORT_CONF);
       JsonObject execServiceConf = backendReportConf.getJsonObject(EXEC_SERVICE_CONF);
       JsonObject projectServiceConf = backendReportConf.getJsonObject(PROJECT_SERVICE_CONF);
-      JsonObject backendReportServiceConf = backendReportConf.getJsonObject(BACKEND_REPORT_SERVICE_CONF);
-      String backendReportServiceAddress = backendReportServiceConf.getString(BACKEND_REPORT_SERVICE_ADDRESS_CONF);
+      JsonObject backendReportServiceConf = backendReportConf.getJsonObject(
+          BACKEND_REPORT_SERVICE_CONF);
+      String backendReportServiceAddress = backendReportServiceConf.getString(
+          BACKEND_REPORT_SERVICE_ADDRESS_CONF);
 
       if (execServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF,
+            CONF_METAL_SERVER_PATH));
       }
       if (projectServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", PROJECT_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", PROJECT_SERVICE_CONF,
+                CONF_METAL_SERVER_PATH));
       }
       if (backendReportServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", BACKEND_REPORT_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(String.format("%s is not configured in %s.", BACKEND_REPORT_CONF,
+            CONF_METAL_SERVER_PATH));
       }
       if (backendReportServiceAddress == null || backendReportServiceAddress.isBlank()) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", BACKEND_REPORT_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + BACKEND_REPORT_CONF));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", BACKEND_REPORT_SERVICE_ADDRESS_CONF,
+                CONF_METAL_SERVER_PATH + "." + BACKEND_REPORT_CONF));
       }
 
       execService = ExecService.create(getVertx(), execServiceConf);

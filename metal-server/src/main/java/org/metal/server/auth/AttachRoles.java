@@ -6,15 +6,15 @@ import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
-import io.vertx.ext.auth.authentication.AuthenticationProvider;
 import io.vertx.ext.auth.authorization.RoleBasedAuthorization;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.AuthorizationHandler;
 
 public class AttachRoles {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(AttachRoles.class);
   private MongoClient mongo;
+
   private AttachRoles(MongoClient client) {
     this.mongo = client;
   }

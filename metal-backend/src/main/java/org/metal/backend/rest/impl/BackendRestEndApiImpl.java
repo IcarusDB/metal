@@ -14,6 +14,7 @@ import org.metal.exception.MetalServiceException;
 import org.metal.exception.MetalSpecParseException;
 
 public class BackendRestEndApiImpl implements IBackendRestEndApi {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendRestEndApiImpl.class);
   private BackendService backendService;
 

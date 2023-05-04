@@ -6,7 +6,8 @@ import java.util.function.Supplier;
 
 public class OnFailure {
 
-  public static boolean doTry(RoutingContext ctx, Supplier<Boolean> condition, String msg, int code) {
+  public static boolean doTry(RoutingContext ctx, Supplier<Boolean> condition, String msg,
+      int code) {
     if (condition.get().booleanValue()) {
       JsonObject resp = new JsonObject();
       resp.put("status", "FAIL");

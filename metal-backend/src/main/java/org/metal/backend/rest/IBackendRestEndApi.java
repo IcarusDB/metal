@@ -5,6 +5,7 @@ import org.metal.backend.api.BackendService;
 import org.metal.backend.rest.impl.BackendRestEndApiImpl;
 
 public interface IBackendRestEndApi {
+
   public static IBackendRestEndApi create(BackendService backendService) {
     return new BackendRestEndApiImpl(backendService);
   }

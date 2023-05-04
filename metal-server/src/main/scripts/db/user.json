@@ -1,16 +1,16 @@
 {
-	"_id": "6311a56ae6bebe6274d4203a",
-	"username": "admin",
-	"password": "$sha256$$jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI",
-	"roles": [
-		"ADMIN"
-	]
+  "_id": "6311a56ae6bebe6274d4203a",
+  "username": "admin",
+  "password": "$sha256$$jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI",
+  "roles": [
+    "ADMIN"
+  ]
 }
 {
-	"_id": "63490d88c8c0b246291970aa",
-	"username": "jack",
-	"password": "$sha256$$jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI",
-	"roles": [
-		"USER"
-	]
+  "_id": "63490d88c8c0b246291970aa",
+  "username": "jack",
+  "password": "$sha256$$jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI",
+  "roles": [
+    "USER"
+  ]
 }

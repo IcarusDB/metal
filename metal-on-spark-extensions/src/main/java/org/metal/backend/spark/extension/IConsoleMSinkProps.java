@@ -9,5 +9,6 @@ import org.metal.core.props.IMSinkProps;
 @JsonDeserialize(as = ImmutableIConsoleMSinkProps.class)
 @JsonSerialize(as = ImmutableIConsoleMSinkProps.class)
 public interface IConsoleMSinkProps extends IMSinkProps {
-    public int numRows();
+
+  public int numRows();
 }

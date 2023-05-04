@@ -12,7 +12,7 @@ public class JsonConvertor {
       return ret;
     }
 
-    if (array != null ) {
+    if (array != null) {
       for (int idx = 0; idx < array.size(); idx++) {
         String e = array.getString(idx);
         if (e != null && !e.isBlank()) {

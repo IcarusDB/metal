@@ -18,13 +18,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.metal.backend.api.BackendService;
-import org.metal.server.api.BackendReportError;
 import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecService;
 import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.SpecJson;
 
-public class ProjectServiceImpl implements IProjectService{
+public class ProjectServiceImpl implements IProjectService {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(ProjectServiceImpl.class);
 
   private MongoClient mongo;
@@ -34,7 +34,8 @@ public class ProjectServiceImpl implements IProjectService{
   private WorkerExecutor workerExecutor;
   private JsonObject conf;
 
-  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, ExecService execService, JsonObject conf) {
+  public ProjectServiceImpl(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor,
+      ExecService execService, JsonObject conf) {
     this.vertx = vertx;
     this.mongo = mongo;
     this.conf = conf.copy();
@@ -184,7 +185,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch, BackendState current) {
+  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch,
+      BackendState current) {
     return ProjectDB.updateBackendStatusOnCreated(mongo, deployId, epoch, current);
   }
 
@@ -194,7 +196,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch, BackendState current) {
+  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch,
+      BackendState current) {
     return ProjectDB.updateBackendStatusOnUp(mongo, deployId, epoch, current);
   }
 
@@ -204,7 +207,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch, BackendState current) {
+  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch,
+      BackendState current) {
     return ProjectDB.updateBackendStatusOnDown(mongo, deployId, epoch, current);
   }
 
@@ -214,7 +218,8 @@ public class ProjectServiceImpl implements IProjectService{
   }
 
   @Override
-  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch, BackendState current, String failureMsg) {
+  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch,
+      BackendState current, String failureMsg) {
     return ProjectDB.updateBackendStatusOnFailure(mongo, deployId, epoch, current, failureMsg);
   }
 
@@ -371,7 +376,7 @@ public class ProjectServiceImpl implements IProjectService{
     });
   }
 
-  private static void maybeCreatedOrUp(JsonObject lastStatus) throws Exception{
+  private static void maybeCreatedOrUp(JsonObject lastStatus) throws Exception {
     BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
     if (lastState.equals(BackendState.CREATED) || lastState.equals(BackendState.UP)) {
       String msg = String.format("The status of exec has been marked %s.", lastState.toString());
@@ -387,7 +392,8 @@ public class ProjectServiceImpl implements IProjectService{
     int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
     List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDB.DEPLOY_PKGS));
     JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
-    List<String> backendArgs = JsonConvertor.jsonArrayToList(backend.getJsonArray(ProjectDB.DEPLOY_BACKEND_ARGS));
+    List<String> backendArgs = JsonConvertor.jsonArrayToList(
+        backend.getJsonArray(ProjectDB.DEPLOY_BACKEND_ARGS));
 
     backendArgs = antiInject(backendArgs);
     String reportServiceAddress = conf.getJsonObject("backendReportService").getString("address");
@@ -439,7 +445,7 @@ public class ProjectServiceImpl implements IProjectService{
     });
   }
 
-  private Future<JsonObject> reDeploy(JsonObject deploy ) {
+  private Future<JsonObject> reDeploy(JsonObject deploy) {
     try {
       if (deploy == null || deploy.isEmpty()) {
         String msg = "Fail to reDeploy, no deploy found.";
@@ -476,26 +482,26 @@ public class ProjectServiceImpl implements IProjectService{
     UriTemplate createURI = UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
 
     return webClient.post(restApiPort, restApiHost, createURI)
-          .sendJsonObject(conf)
+        .sendJsonObject(conf)
         .compose((HttpResponse<Buffer> response) -> {
-      try {
-        JsonObject resp = response.bodyAsJsonObject();
-        Boolean isSuccess = resp.getBoolean("success");
-        if (isSuccess == null || isSuccess == false) {
-          return Future.failedFuture(
-              String.format("Fail to deploy[%s-%d]. %s.", deployId, epoch, resp.toString()));
-        }
-        String driverId = resp.getString("submissionId");
-        JsonObject tracer = new JsonObject()
-            .put("driverId", driverId);
-        return ProjectDB.updateBackendStatusTracer(mongo, deployId, epoch, tracer)
-            .compose(ret -> {
-              return Future.succeededFuture(resp);
-            });
-      } catch (Exception e) {
-        return Future.failedFuture(e);
-      }
-    });
+          try {
+            JsonObject resp = response.bodyAsJsonObject();
+            Boolean isSuccess = resp.getBoolean("success");
+            if (isSuccess == null || isSuccess == false) {
+              return Future.failedFuture(
+                  String.format("Fail to deploy[%s-%d]. %s.", deployId, epoch, resp.toString()));
+            }
+            String driverId = resp.getString("submissionId");
+            JsonObject tracer = new JsonObject()
+                .put("driverId", driverId);
+            return ProjectDB.updateBackendStatusTracer(mongo, deployId, epoch, tracer)
+                .compose(ret -> {
+                  return Future.succeededFuture(resp);
+                });
+          } catch (Exception e) {
+            return Future.failedFuture(e);
+          }
+        });
   }
 
   @Override
@@ -557,7 +563,8 @@ public class ProjectServiceImpl implements IProjectService{
       if (backendStatus == null || backendStatus.isEmpty()) {
         throw new IllegalArgumentException("The backend is not UP.");
       }
-      BackendState current = BackendState.valueOf(backendStatus.getString(ProjectDB.DEPLOY_BACKEND_STATUS_CURRENT));
+      BackendState current = BackendState.valueOf(
+          backendStatus.getString(ProjectDB.DEPLOY_BACKEND_STATUS_CURRENT));
       if (!current.equals(BackendState.UP)) {
         throw new IllegalArgumentException("The backend is not UP.");
       }
@@ -573,10 +580,12 @@ public class ProjectServiceImpl implements IProjectService{
       Integer epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
       String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
       if (epoch == null) {
-        throw new IllegalArgumentException("Fail to get address, the epoch of backend is not existed.");
+        throw new IllegalArgumentException(
+            "Fail to get address, the epoch of backend is not existed.");
       }
       if (deployId == null || deployId.isBlank()) {
-        throw new IllegalArgumentException("Fail to get address, the deploy id of backend is not existed.");
+        throw new IllegalArgumentException(
+            "Fail to get address, the deploy id of backend is not existed.");
       }
       return new JsonObject().put("address", deployId + "-" + epoch);
     } catch (Exception e) {
@@ -678,7 +687,8 @@ public class ProjectServiceImpl implements IProjectService{
 
   private Future<JsonObject> sparkStandaloneForceKill(JsonObject tracer, JsonObject restApi) {
     if (tracer == null || !tracer.containsKey("driverId")) {
-      return Future.failedFuture("Fail to force kill spark in standalone, none driverId found in tracer.");
+      return Future.failedFuture(
+          "Fail to force kill spark in standalone, none driverId found in tracer.");
     }
     try {
       String driverId = tracer.getString("driverId");
@@ -709,7 +719,7 @@ public class ProjectServiceImpl implements IProjectService{
 
   private static List<String> antiInject(List<String> backendArgs) {
     List<String> ret = new ArrayList<>();
-    for(int idx = 0; idx < backendArgs.size(); idx++) {
+    for (int idx = 0; idx < backendArgs.size(); idx++) {
       String arg = backendArgs.get(idx).strip();
       if (arg.equals("--interactive-mode") || arg.equals("--cmd-mode")) {
         continue;
@@ -733,15 +743,16 @@ public class ProjectServiceImpl implements IProjectService{
       ret.add(arg);
     }
 
-   return Collections.unmodifiableList(ret);
+    return Collections.unmodifiableList(ret);
   }
 
 
-  private List<String> parsePlatformArgs(JsonArray platformArgs, JsonArray platformPkgs) throws IllegalArgumentException{
+  private List<String> parsePlatformArgs(JsonArray platformArgs, JsonArray platformPkgs)
+      throws IllegalArgumentException {
     List<String> args = platformArgs.stream().map(Object::toString).collect(Collectors.toList());
     boolean classArgReady = false;
     try {
-      for(int idx = 0; idx < args.size(); idx++) {
+      for (int idx = 0; idx < args.size(); idx++) {
         String arg = args.get(idx);
         if ("--class".equals(arg)) {
           String classArg = args.get(idx + 1);
@@ -761,7 +772,8 @@ public class ProjectServiceImpl implements IProjectService{
 //      args.add(BackendLauncher.class.toString());
 //    }
 
-    String packagesArg = platformPkgs.stream().map(Object::toString).collect(Collectors.joining(","));
+    String packagesArg = platformPkgs.stream().map(Object::toString)
+        .collect(Collectors.joining(","));
     if (!platformPkgs.isEmpty()) {
       args.add("--packages");
       args.add(packagesArg);
@@ -769,18 +781,18 @@ public class ProjectServiceImpl implements IProjectService{
     return args;
   }
 
-  private List<String> parseBackendArgs(JsonArray backendArgs) throws IllegalArgumentException{
+  private List<String> parseBackendArgs(JsonArray backendArgs) throws IllegalArgumentException {
     List<String> args = backendArgs.stream().map(Object::toString).collect(Collectors.toList());
 
     boolean interactiveReady = false;
-    for(int idx = 0; idx < args.size(); idx++) {
+    for (int idx = 0; idx < args.size(); idx++) {
       String arg = args.get(idx);
       if ("--interactive-mode".equals(arg)) {
         interactiveReady = true;
       }
     }
 
-    if (!interactiveReady){
+    if (!interactiveReady) {
       args.add("--interactive-mode");
     }
 

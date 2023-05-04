@@ -1,6 +1,6 @@
 package org.metal.exception;
 
-public class MetalSpecParseException extends MetalException{
+public class MetalSpecParseException extends MetalException {
 
   public MetalSpecParseException() {
   }

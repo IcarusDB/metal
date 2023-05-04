@@ -12,6 +12,7 @@ import org.metal.server.exec.ExecService;
 import org.metal.server.project.service.IProjectService;
 
 public class BackendReportServiceImpl implements BackendReportService {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(BackendReportServiceImpl.class);
 
   private ExecService execService;
@@ -50,7 +51,8 @@ public class BackendReportServiceImpl implements BackendReportService {
 
           ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
           if (!lastState.equals(ExecState.CREATE)) {
-            String msg = String.format("The status of exec can\'t switch from %s to %s.", lastState.toString(), ExecState.SUBMIT.toString());
+            String msg = String.format("The status of exec can\'t switch from %s to %s.",
+                lastState.toString(), ExecState.SUBMIT.toString());
             return Future.failedFuture(msg);
           }
 
@@ -61,14 +63,17 @@ public class BackendReportServiceImpl implements BackendReportService {
         });
   }
 
-  private static boolean checkBackendStatus(JsonObject report, BackendState expect) throws IllegalArgumentException {
+  private static boolean checkBackendStatus(JsonObject report, BackendState expect)
+      throws IllegalArgumentException {
     if (!report.containsKey("status")) {
       throw new IllegalArgumentException(String.format("status is lost in %s.", report.toString()));
     }
 
     BackendState backendState = BackendState.valueOf(report.getString("status"));
     if (!expect.equals(backendState)) {
-      throw new IllegalArgumentException(String.format("The parameter %s is not in '%s' status.", report.toString(), expect.toString()));
+      throw new IllegalArgumentException(
+          String.format("The parameter %s is not in '%s' status.", report.toString(),
+              expect.toString()));
     }
     return true;
   }
@@ -95,32 +100,36 @@ public class BackendReportServiceImpl implements BackendReportService {
     return true;
   }
 
-  private static boolean checkExecStatus(JsonObject report, ExecState expect) throws IllegalArgumentException {
+  private static boolean checkExecStatus(JsonObject report, ExecState expect)
+      throws IllegalArgumentException {
     if (!report.containsKey("status")) {
       throw new IllegalArgumentException(String.format("status is lost in %s.", report.toString()));
     }
 
     ExecState execState = ExecState.valueOf(report.getString("status"));
     if (!expect.equals(execState)) {
-      throw new IllegalArgumentException(String.format("The parameter %s is not in '%s' status.", report.toString(), expect.toString()));
+      throw new IllegalArgumentException(
+          String.format("The parameter %s is not in '%s' status.", report.toString(),
+              expect.toString()));
     }
     return true;
   }
 
   private static boolean checkExecReport(JsonObject report) throws IllegalArgumentException {
     if (!report.containsKey("id")) {
-      throw new IllegalArgumentException(String.format("The parameter %s lost id.", report.toString()));
+      throw new IllegalArgumentException(
+          String.format("The parameter %s lost id.", report.toString()));
     }
 
     if (!report.containsKey("deployId")) {
       throw new IllegalArgumentException(
-              String.format("The parameter %s lost deployId.", report.toString())
+          String.format("The parameter %s lost deployId.", report.toString())
       );
     }
 
     if (!report.containsKey("epoch")) {
       throw new IllegalArgumentException(
-              String.format("The parameter %s lost epoch.", report.toString())
+          String.format("The parameter %s lost epoch.", report.toString())
       );
     }
 
@@ -136,7 +145,7 @@ public class BackendReportServiceImpl implements BackendReportService {
   private static boolean checkTime(JsonObject report, String timeName) {
     if (!report.containsKey(timeName)) {
       throw new IllegalArgumentException(
-              String.format("The parameter %s lost %s.", report.toString(), timeName)
+          String.format("The parameter %s lost %s.", report.toString(), timeName)
       );
     }
 
@@ -189,7 +198,8 @@ public class BackendReportServiceImpl implements BackendReportService {
 
           ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
           if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            String msg = String.format("The status of exec is %s and terminated.",
+                lastState.toString());
             return Future.failedFuture(msg);
           }
 
@@ -227,7 +237,8 @@ public class BackendReportServiceImpl implements BackendReportService {
 
           ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
           if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            String msg = String.format("The status of exec is %s and terminated.",
+                lastState.toString());
             return Future.failedFuture(msg);
           }
 
@@ -266,7 +277,8 @@ public class BackendReportServiceImpl implements BackendReportService {
 
           ExecState lastState = ExecState.valueOf(lastStatus.getString("status"));
           if (lastState.equals(ExecState.FAILURE) || lastState.equals(ExecState.FINISH)) {
-            String msg = String.format("The status of exec is %s and terminated.", lastState.toString());
+            String msg = String.format("The status of exec is %s and terminated.",
+                lastState.toString());
             return Future.failedFuture(msg);
           }
 
@@ -371,9 +383,11 @@ public class BackendReportServiceImpl implements BackendReportService {
             maybeMarkedDown(lastStatus);
             maybeMarkedFailure(lastStatus);
 
-            return projectService.updateBackendStatusOnFailureWith(deployId, epoch, current, failureMsg)
+            return projectService.updateBackendStatusOnFailureWith(deployId, epoch, current,
+                    failureMsg)
                 .compose(ret -> {
-                  LOGGER.info(String.format("Backend[%s-%d] has failure: %s.", deployId, epoch, failureMsg));
+                  LOGGER.info(String.format("Backend[%s-%d] has failure: %s.", deployId, epoch,
+                      failureMsg));
                   return Future.succeededFuture();
                 });
           } catch (Exception e) {
@@ -382,23 +396,26 @@ public class BackendReportServiceImpl implements BackendReportService {
         });
   }
 
-  private static void maybeEpochIllegal(String deployId, int epoch, JsonObject lastStatus) throws Exception{
+  private static void maybeEpochIllegal(String deployId, int epoch, JsonObject lastStatus)
+      throws Exception {
     int lastEpoch = lastStatus.getInteger("epoch");
     checkLegalEpoch(lastEpoch, epoch, deployId);
   }
 
-  private static void maybeMarkedDown(JsonObject lastStatus) throws Exception{
+  private static void maybeMarkedDown(JsonObject lastStatus) throws Exception {
     BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
     if (lastState.equals(BackendState.DOWN)) {
-      String msg = String.format("[%s] The status of exec has been marked %s and terminated.", BackendReportError.MARKED_DOWN.toString(), lastState.toString());
+      String msg = String.format("[%s] The status of exec has been marked %s and terminated.",
+          BackendReportError.MARKED_DOWN.toString(), lastState.toString());
       throw new IllegalArgumentException(msg);
     }
   }
 
-  private static void maybeMarkedFailure(JsonObject lastStatus) throws Exception{
+  private static void maybeMarkedFailure(JsonObject lastStatus) throws Exception {
     BackendState lastState = BackendState.valueOf(lastStatus.getString("current"));
     if (lastState.equals(BackendState.FAILURE)) {
-      String msg = String.format("[%s] The status of exec has been marked %s and terminated.", BackendReportError.MARKED_FAILURE.toString(), lastState.toString());
+      String msg = String.format("[%s] The status of exec has been marked %s and terminated.",
+          BackendReportError.MARKED_FAILURE.toString(), lastState.toString());
       throw new IllegalArgumentException(msg);
     }
   }

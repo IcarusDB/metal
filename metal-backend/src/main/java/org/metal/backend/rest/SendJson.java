@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class SendJson {
+
   public static void send(RoutingContext ctx, JsonObject resp) {
     send(ctx, resp, 200);
   }

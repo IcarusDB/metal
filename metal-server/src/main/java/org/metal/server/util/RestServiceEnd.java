@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class RestServiceEnd {
+
   public static <T> void end(RoutingContext ctx, Future<T> result, Logger logger) {
     result.onSuccess((T ret) -> {
       JsonObject resp = new JsonObject();
@@ -13,11 +14,11 @@ public class RestServiceEnd {
           .put("data", ret);
       SendJson.send(ctx, resp, 200);
     }).onFailure((Throwable error) -> {
-          JsonObject resp = new JsonObject();
-          resp.put("status", "FAIL")
-              .put("msg", error.getLocalizedMessage());
-          SendJson.send(ctx, resp, 500);
-          logger.error(error);
+      JsonObject resp = new JsonObject();
+      resp.put("status", "FAIL")
+          .put("msg", error.getLocalizedMessage());
+      SendJson.send(ctx, resp, 500);
+      logger.error(error);
     });
   }
 }

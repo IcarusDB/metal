@@ -11,10 +11,13 @@ import java.util.List;
 import java.util.function.Function;
 
 public class ReadStreamCollector {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(ReadStreamCollector.class);
 
   public static <T> Future<List<T>> toList(ReadStream<T> stream) {
-    return ReadStreamCollector.<T, T>toList(stream, (T t) -> {return t;});
+    return ReadStreamCollector.<T, T>toList(stream, (T t) -> {
+      return t;
+    });
   }
 
   public static <T, R> Future<List<R>> toList(ReadStream<T> stream, Function<T, R> map) {

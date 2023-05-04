@@ -9,6 +9,7 @@ import org.metal.core.props.IMSourceProps;
 @JsonDeserialize(as = ImmutableIJsonFileMSourceProps.class)
 @JsonSerialize(as = ImmutableIJsonFileMSourceProps.class)
 public interface IJsonFileMSourceProps extends IMSourceProps {
-    public String path();
+
+  public String path();
 }
 

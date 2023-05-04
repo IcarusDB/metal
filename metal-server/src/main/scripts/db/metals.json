@@ -1,294 +1,294 @@
 {
-	"_id": "63a2bdb925753225a72317f4",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "SOURCE",
-	"scope": "PUBLIC",
-	"createTime": 1671609785426,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.JsonFileMSource",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:IJsonFileMSourceProps",
-		"properties": {
-			"schema": {
-				"type": "string"
-			},
-			"path": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317f4",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "SOURCE",
+  "scope": "PUBLIC",
+  "createTime": 1671609785426,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.JsonFileMSource",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:IJsonFileMSourceProps",
+    "properties": {
+      "schema": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }
 {
-	"_id": "63a2bdb925753225a72317f5",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "MAPPER",
-	"scope": "PUBLIC",
-	"createTime": 1671609785431,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.SqlMMapper",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMMapperProps",
-		"properties": {
-			"tableAlias": {
-				"type": "string"
-			},
-			"sql": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317f5",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "MAPPER",
+  "scope": "PUBLIC",
+  "createTime": 1671609785431,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.SqlMMapper",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMMapperProps",
+    "properties": {
+      "tableAlias": {
+        "type": "string"
+      },
+      "sql": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }
 {
-	"_id": "63a2bdb925753225a72317f6",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "MAPPER",
-	"scope": "PUBLIC",
-	"createTime": 1671609785431,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.WhereMMapper",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:IWhereMMapperProps",
-		"properties": {
-			"conditionExpr": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317f6",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "MAPPER",
+  "scope": "PUBLIC",
+  "createTime": 1671609785431,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.WhereMMapper",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:IWhereMMapperProps",
+    "properties": {
+      "conditionExpr": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }
 {
-	"_id": "63a2bdb925753225a72317f7",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "MAPPER",
-	"scope": "PUBLIC",
-	"createTime": 1671609785431,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.ml.LogisticRegressionPredictor",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionPredictorProps",
-		"required": [
-			"modelPath",
-			"featuresCol"
-		],
-		"properties": {
-			"featuresCol": {
-				"type": "string"
-			},
-			"predictionCol": {
-				"type": "string"
-			},
-			"probabilityCol": {
-				"type": "string"
-			},
-			"rawPredictionCol": {
-				"type": "string"
-			},
-			"thresholds": {
-				"type": "array",
-				"items": {
-					"type": "number"
-				}
-			},
-			"threshold": {
-				"type": "number"
-			},
-			"modelPath": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT",
-	"uiSchema": {
-		"ui:order": [
-			"modelPath",
-			"featuresCol",
-			"*"
-		]
-	}
+  "_id": "63a2bdb925753225a72317f7",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "MAPPER",
+  "scope": "PUBLIC",
+  "createTime": 1671609785431,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.ml.LogisticRegressionPredictor",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionPredictorProps",
+    "required": [
+      "modelPath",
+      "featuresCol"
+    ],
+    "properties": {
+      "featuresCol": {
+        "type": "string"
+      },
+      "predictionCol": {
+        "type": "string"
+      },
+      "probabilityCol": {
+        "type": "string"
+      },
+      "rawPredictionCol": {
+        "type": "string"
+      },
+      "thresholds": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "threshold": {
+        "type": "number"
+      },
+      "modelPath": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT",
+  "uiSchema": {
+    "ui:order": [
+      "modelPath",
+      "featuresCol",
+      "*"
+    ]
+  }
 }
 {
-	"_id": "63a2bdb925753225a72317f8",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "FUSION",
-	"scope": "PUBLIC",
-	"createTime": 1671609785434,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.SqlMFusion",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMFusionProps",
-		"properties": {
-			"tableAlias": {
-				"type": "object",
-				"additionalProperties": {
-					"type": "string"
-				}
-			},
-			"sql": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317f8",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "FUSION",
+  "scope": "PUBLIC",
+  "createTime": 1671609785434,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.SqlMFusion",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:ISqlMFusionProps",
+    "properties": {
+      "tableAlias": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "sql": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }
 {
-	"_id": "63a2bdb925753225a72317f9",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "SINK",
-	"scope": "PUBLIC",
-	"createTime": 1671609785435,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.ml.LogisticRegressionLearner",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionLearnerProps",
-		"required": [
-			"savePath",
-			"labelCol",
-			"featuresCol"
-		],
-		"properties": {
-			"labelCol": {
-				"type": "string"
-			},
-			"featuresCol": {
-				"type": "string"
-			},
-			"aggregationDepth": {
-				"type": "integer"
-			},
-			"elasticNetParam": {
-				"type": "number"
-			},
-			"family": {
-				"type": "string"
-			},
-			"fitIntercept": {
-				"type": "boolean"
-			},
-			"initialModel": {
-				"type": "string"
-			},
-			"lowerBoundsOnCoefficients": {
-				"type": "array",
-				"items": {
-					"type": "number"
-				}
-			},
-			"lowerBoundsOnIntercepts": {
-				"type": "array",
-				"items": {
-					"type": "number"
-				}
-			},
-			"maxBlockSizeInMB": {
-				"type": "number"
-			},
-			"maxIter": {
-				"type": "integer"
-			},
-			"regParam": {
-				"type": "number"
-			},
-			"standardization": {
-				"type": "boolean"
-			},
-			"thresholds": {
-				"type": "number"
-			},
-			"threshold": {
-				"type": "number"
-			},
-			"tol": {
-				"type": "number"
-			},
-			"upperBoundsOnCoefficients": {
-				"type": "array",
-				"items": {
-					"type": "number"
-				}
-			},
-			"upperBoundsOnIntercepts": {
-				"type": "array",
-				"items": {
-					"type": "number"
-				}
-			},
-			"weightCol": {
-				"type": "string"
-			},
-			"savePath": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT",
-	"uiSchema": {
-		"ui:order": [
-			"savePath",
-			"labelCol",
-			"featuresCol",
-			"*"
-		]
-	}
+  "_id": "63a2bdb925753225a72317f9",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "SINK",
+  "scope": "PUBLIC",
+  "createTime": 1671609785435,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.ml.LogisticRegressionLearner",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:ILogisticRegressionLearnerProps",
+    "required": [
+      "savePath",
+      "labelCol",
+      "featuresCol"
+    ],
+    "properties": {
+      "labelCol": {
+        "type": "string"
+      },
+      "featuresCol": {
+        "type": "string"
+      },
+      "aggregationDepth": {
+        "type": "integer"
+      },
+      "elasticNetParam": {
+        "type": "number"
+      },
+      "family": {
+        "type": "string"
+      },
+      "fitIntercept": {
+        "type": "boolean"
+      },
+      "initialModel": {
+        "type": "string"
+      },
+      "lowerBoundsOnCoefficients": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "lowerBoundsOnIntercepts": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "maxBlockSizeInMB": {
+        "type": "number"
+      },
+      "maxIter": {
+        "type": "integer"
+      },
+      "regParam": {
+        "type": "number"
+      },
+      "standardization": {
+        "type": "boolean"
+      },
+      "thresholds": {
+        "type": "number"
+      },
+      "threshold": {
+        "type": "number"
+      },
+      "tol": {
+        "type": "number"
+      },
+      "upperBoundsOnCoefficients": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "upperBoundsOnIntercepts": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "weightCol": {
+        "type": "string"
+      },
+      "savePath": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT",
+  "uiSchema": {
+    "ui:order": [
+      "savePath",
+      "labelCol",
+      "featuresCol",
+      "*"
+    ]
+  }
 }
 {
-	"_id": "63a2bdb925753225a72317fa",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "SINK",
-	"scope": "PUBLIC",
-	"createTime": 1671609785435,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.ConsoleMSink",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:IConsoleMSinkProps",
-		"properties": {
-			"numRows": {
-				"type": "integer"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317fa",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "SINK",
+  "scope": "PUBLIC",
+  "createTime": 1671609785435,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.ConsoleMSink",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:IConsoleMSinkProps",
+    "properties": {
+      "numRows": {
+        "type": "integer"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }
 {
-	"_id": "63a2bdb925753225a72317fb",
-	"userId": "63490d88c8c0b246291970aa",
-	"type": "SETUP",
-	"scope": "PUBLIC",
-	"createTime": 1671609785438,
-	"pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
-	"class": "org.metal.backend.spark.extension.ml.udf.AsVector",
-	"formSchema": {
-		"type": "object",
-		"id": "urn:jsonschema:org:metal:backend:spark:extension:ml:udf:AsVector",
-		"properties": {
-			"name": {
-				"type": "string"
-			}
-		}
-	},
-	"groupId": "org.metal",
-	"artifactId": "metal-on-spark-extensions",
-	"version": "1.0.0-SNAPSHOT"
+  "_id": "63a2bdb925753225a72317fb",
+  "userId": "63490d88c8c0b246291970aa",
+  "type": "SETUP",
+  "scope": "PUBLIC",
+  "createTime": 1671609785438,
+  "pkg": "org.metal:metal-on-spark-extensions:1.0.0-SNAPSHOT",
+  "class": "org.metal.backend.spark.extension.ml.udf.AsVector",
+  "formSchema": {
+    "type": "object",
+    "id": "urn:jsonschema:org:metal:backend:spark:extension:ml:udf:AsVector",
+    "properties": {
+      "name": {
+        "type": "string"
+      }
+    }
+  },
+  "groupId": "org.metal",
+  "artifactId": "metal-on-spark-extensions",
+  "version": "1.0.0-SNAPSHOT"
 }

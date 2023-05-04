@@ -20,12 +20,10 @@ import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
 import org.metal.backend.api.BackendService;
 import org.metal.server.api.BackendState;
-import org.metal.server.exec.Exec;
-import org.metal.server.project.Project;
-import org.metal.server.project.service.IProjectService;
 import org.metal.server.project.service.ProjectDB;
 
-public class Detector extends AbstractVerticle{
+public class Detector extends AbstractVerticle {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(Detector.class);
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
   public static final String MONGO_CONF = "mongoConf";
@@ -38,7 +36,8 @@ public class Detector extends AbstractVerticle{
 
   private long evictedDelay = 3 * detectorDuration;
 
-  private Detector () {}
+  private Detector() {
+  }
 
   public static Detector create() {
     return new Detector();
@@ -59,7 +58,8 @@ public class Detector extends AbstractVerticle{
       JsonObject detectorConf = conf.getJsonObject(DETECTOR_CONF);
 
       if (mongoConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
       }
       this.mongo = MongoClient.createShared(getVertx(), mongoConf);
       this.detectorStartTime = getTime();
@@ -118,7 +118,8 @@ public class Detector extends AbstractVerticle{
               continue;
             }
             if (createdTime < evictedTime) {
-              String failureMsg = String.format("Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
+              String failureMsg = String.format(
+                  "Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
                   deployId, epoch, current.toString(), createdTime, createdTime, evictedTime);
               ProjectDB.updateBackendStatusOnFailure(mongo, deployId, epoch, current, failureMsg)
                   .onSuccess(success -> {
@@ -138,11 +139,13 @@ public class Detector extends AbstractVerticle{
               heart(deploy, deployId, epoch, current);
             }
             if (upTime < evictedTime) {
-              String failureMsg = String.format("Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
+              String failureMsg = String.format(
+                  "Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
                   deployId, epoch, current.toString(), upTime, upTime, evictedTime);
               ProjectDB.updateBackendStatusOnFailure(mongo, deployId, epoch, current, failureMsg)
                   .onSuccess(success -> {
-                    String msg = String.format("Backend[%s-%d] is failure. Failure message: %s.", deployId, epoch, failureMsg);
+                    String msg = String.format("Backend[%s-%d] is failure. Failure message: %s.",
+                        deployId, epoch, failureMsg);
                     LOGGER.info(msg);
                   })
                   .onFailure(error -> {

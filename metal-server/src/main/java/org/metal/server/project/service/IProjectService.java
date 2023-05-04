@@ -14,8 +14,11 @@ import org.metal.server.exec.ExecService;
 @ProxyGen
 @VertxGen
 public interface IProjectService {
-  public static IProjectService createProvider(Vertx vertx, MongoClient mongo, WorkerExecutor workerExecutor, ExecService execService, JsonObject conf) {
-    IProjectService provider = new ProjectServiceImpl(vertx, mongo, workerExecutor, execService, conf);
+
+  public static IProjectService createProvider(Vertx vertx, MongoClient mongo,
+      WorkerExecutor workerExecutor, ExecService execService, JsonObject conf) {
+    IProjectService provider = new ProjectServiceImpl(vertx, mongo, workerExecutor, execService,
+        conf);
     return provider;
   }
 
@@ -82,13 +85,17 @@ public interface IProjectService {
 
   public Future<JsonObject> updateBackendStatusOnFailure(String deployId, String failureMsg);
 
-  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch, BackendState current);
+  public Future<JsonObject> updateBackendStatusOnCreatedWith(String deployId, int epoch,
+      BackendState current);
 
-  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch, BackendState current);
+  public Future<JsonObject> updateBackendStatusOnUpWith(String deployId, int epoch,
+      BackendState current);
 
-  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch, BackendState current);
+  public Future<JsonObject> updateBackendStatusOnDownWith(String deployId, int epoch,
+      BackendState current);
 
-  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch, BackendState current, String failureMsg);
+  public Future<JsonObject> updateBackendStatusOnFailureWith(String deployId, int epoch,
+      BackendState current, String failureMsg);
 
   public Future<JsonObject> getOfId(String userId, String projectId);
 
@@ -99,9 +106,11 @@ public interface IProjectService {
   public Future<JsonObject> getSpecSchemaOfMetalId(String deployId, String metalId);
 
   public Future<JsonObject> getDeploymentOfDeployId(String deployId);
+
   public Future<JsonObject> getBackendStatusOfDeployId(String deployId);
 
   public Future<JsonObject> getDeploymentOfDeployIdWithEpoch(String deployId, int epoch);
+
   public Future<JsonObject> getBackendStatusOfDeployIdWithEpoch(String deployId, int epoch);
 
   public Future<List<JsonObject>> getAllOfUser(String userId);
@@ -136,7 +145,8 @@ public interface IProjectService {
 
   public Future<JsonObject> saveSpecOfId(String userId, String id, JsonObject spec);
 
-  public Future<JsonObject> analysisSubSpecOfId(String userId, String id, JsonObject spec, JsonObject subSpec);
+  public Future<JsonObject> analysisSubSpecOfId(String userId, String id, JsonObject spec,
+      JsonObject subSpec);
 
   public Future<JsonObject> exec(String userId, String name);
 

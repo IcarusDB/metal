@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 public class BodyJsonValid {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(BodyJsonValid.class);
 
   public static void valid(RoutingContext ctx) {

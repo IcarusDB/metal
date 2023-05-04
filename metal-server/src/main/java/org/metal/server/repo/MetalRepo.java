@@ -17,13 +17,14 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.List;
+import org.metal.server.repo.service.IMetalRepoService;
 import org.metal.server.util.JsonConvertor;
+import org.metal.server.util.OnFailure;
 import org.metal.server.util.RestServiceEnd;
 import org.metal.server.util.SendJson;
-import org.metal.server.repo.service.IMetalRepoService;
-import org.metal.server.util.OnFailure;
 
 public class MetalRepo extends AbstractVerticle {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(MetalRepo.class);
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
   public static final String MONGO_CONF = "mongoConf";
@@ -36,7 +37,8 @@ public class MetalRepo extends AbstractVerticle {
   private MessageConsumer<JsonObject> consumer;
   private IMetalRepoService provider;
 
-  private MetalRepo() {}
+  private MetalRepo() {
+  }
 
   public static MetalRepo create() {
     return new MetalRepo();
@@ -55,7 +57,8 @@ public class MetalRepo extends AbstractVerticle {
     retriever.getConfig().compose((JsonObject conf) -> {
       JsonObject mongoConf = conf.getJsonObject(MONGO_CONF);
       if (mongoConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
       }
 
       mongo = MongoClient.createShared(
@@ -65,18 +68,21 @@ public class MetalRepo extends AbstractVerticle {
 
       JsonObject metalRepoConf = conf.getJsonObject(METAL_REPO_CONF);
       if (metalRepoConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", METAL_REPO_CONF, CONF_METAL_SERVER_PATH));
       }
 
       JsonObject metalRepoServiceConf = metalRepoConf.getJsonObject(METAL_REPO_SERVICE_CONF);
       if (metalRepoServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_CONF, CONF_METAL_SERVER_PATH + "." + METAL_REPO_CONF));
+        return Future.failedFuture(String.format("%s is not configured in %s.", METAL_REPO_CONF,
+            CONF_METAL_SERVER_PATH + "." + METAL_REPO_CONF));
       }
 
       String address = metalRepoServiceConf.getString(METAL_REPO_SERVICE_ADDRESS_CONF);
       if (address == null || address.isBlank()) {
         return Future.failedFuture(String.format("%s is not configured in %s.",
-            METAL_REPO_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + METAL_REPO_CONF + "." + METAL_REPO_SERVICE_CONF));
+            METAL_REPO_SERVICE_ADDRESS_CONF,
+            CONF_METAL_SERVER_PATH + "." + METAL_REPO_CONF + "." + METAL_REPO_SERVICE_CONF));
       }
       provider = IMetalRepoService.createProvider(getVertx(), mongo, metalRepoServiceConf);
       binder = new ServiceBinder(getVertx());
@@ -105,6 +111,7 @@ public class MetalRepo extends AbstractVerticle {
   }
 
   public static class RestApi {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(RestApi.class);
     private IMetalRepoService metalRepoService;
 
@@ -125,7 +132,9 @@ public class MetalRepo extends AbstractVerticle {
       JsonObject metal = body.getJsonObject("metal");
       boolean isFailed = false;
       isFailed = OnFailure.doTry(ctx,
-          ()-> {return type == null || type.isBlank();},
+          () -> {
+            return type == null || type.isBlank();
+          },
           "Fail to found type in request.",
           400
       );
@@ -134,19 +143,23 @@ public class MetalRepo extends AbstractVerticle {
       }
 
       isFailed = OnFailure.doTry(ctx,
-          ()-> {return scope == null || scope.isBlank();},
+          () -> {
+            return scope == null || scope.isBlank();
+          },
           "Fail to found scope in request.",
           400
-          );
+      );
       if (isFailed) {
         return;
       }
 
       isFailed = OnFailure.doTry(ctx,
-          ()-> {return metal == null || metal.isEmpty();},
+          () -> {
+            return metal == null || metal.isEmpty();
+          },
           "Fail to found metal in request.",
           400
-          );
+      );
       if (isFailed) {
         return;
       }
@@ -195,10 +208,12 @@ public class MetalRepo extends AbstractVerticle {
       String scope = ctx.request().params().get("scope");
 
       if (OnFailure.doTry(ctx,
-          ()-> {return scope == null || scope.isBlank();},
+          () -> {
+            return scope == null || scope.isBlank();
+          },
           "Fail to found scope field in request.",
           400
-          )){
+      )) {
         return;
       }
 
@@ -242,14 +257,16 @@ public class MetalRepo extends AbstractVerticle {
       String version = ctx.request().params().get("version");
 
       if (
-          OnFailure.doTry(ctx, ()->{return groupId == null || groupId.isBlank();}, "Fail to found groupId in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return groupId == null || groupId.isBlank();
+          }, "Fail to found groupId in request.", 400)
       ) {
         return;
       }
 
       metalRepoService.getAllOfPkg(
-          userId,
-          groupId, artifactId, version)
+              userId,
+              groupId, artifactId, version)
           .onFailure(error -> {
             JsonObject resp = new JsonObject();
             resp.put("status", "FAIL")
@@ -270,7 +287,9 @@ public class MetalRepo extends AbstractVerticle {
       String userId = user.get("_id");
       String metalType = ctx.request().params().get("metalType");
       if (
-          OnFailure.doTry(ctx, ()->{return metalType == null || metalType.isBlank();}, "Fail to found metalType in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return metalType == null || metalType.isBlank();
+          }, "Fail to found metalType in request.", 400)
       ) {
         return;
       }
@@ -296,7 +315,9 @@ public class MetalRepo extends AbstractVerticle {
       String userId = user.get("_id");
       String clazz = ctx.request().params().get("class");
 
-      if (OnFailure.doTry(ctx, ()-> {return clazz == null || clazz.isBlank();}, "The class field in request is invalid", 400)) {
+      if (OnFailure.doTry(ctx, () -> {
+        return clazz == null || clazz.isBlank();
+      }, "The class field in request is invalid", 400)) {
         return;
       }
 
@@ -313,7 +334,9 @@ public class MetalRepo extends AbstractVerticle {
         JsonArray classArray = body.getJsonArray("classes");
         classes = JsonConvertor.jsonArrayToList(classArray);
       } catch (ClassCastException e) {
-        if (OnFailure.doTry(ctx, ()-> {return true;}, "The classes field in request is invalid", 400)) {
+        if (OnFailure.doTry(ctx, () -> {
+          return true;
+        }, "The classes field in request is invalid", 400)) {
           return;
         }
       }
@@ -321,7 +344,6 @@ public class MetalRepo extends AbstractVerticle {
       Future<List<JsonObject>> result = metalRepoService.getAllOfClasses(userId, classes);
       RestServiceEnd.<List<JsonObject>>end(ctx, result, LOGGER);
     }
-
 
 
     public void addFromManifest(RoutingContext ctx) {
@@ -332,15 +354,19 @@ public class MetalRepo extends AbstractVerticle {
       JsonObject manifest = body.getJsonObject("manifest");
 
       if (OnFailure.doTry(ctx,
-          ()-> {return scope == null || scope.isBlank();},
+          () -> {
+            return scope == null || scope.isBlank();
+          },
           "Fail to found scope field in request.",
           400
-      )){
+      )) {
         return;
       }
 
       if (OnFailure.doTry(ctx,
-          ()-> {return manifest == null || manifest.isEmpty();},
+          () -> {
+            return manifest == null || manifest.isEmpty();
+          },
           "Fail to found manifest field in request.",
           400
       )) {
@@ -369,10 +395,12 @@ public class MetalRepo extends AbstractVerticle {
       String metalId = ctx.request().params().get("metalId");
 
       if (OnFailure.doTry(ctx,
-          ()-> {return metalId == null || metalId.isBlank();},
+          () -> {
+            return metalId == null || metalId.isBlank();
+          },
           "Fail to found metalId field in request.",
           400
-      )){
+      )) {
         return;
       }
 

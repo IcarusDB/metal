@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class MetalRepoDB {
+
   public static enum MetalType {
     SOURCE, MAPPER, FUSION, SINK, SETUP
   }
@@ -23,7 +24,7 @@ public class MetalRepoDB {
 
   public final static String DB = "metals";
 
-  private static JsonObject parsePkg(String pkg) throws IllegalArgumentException{
+  private static JsonObject parsePkg(String pkg) throws IllegalArgumentException {
     String[] s = pkg.strip().split(":");
     if (s.length != 3) {
       throw new IllegalArgumentException("Fail to parse groupId:artifactId:version from " + pkg);
@@ -67,12 +68,13 @@ public class MetalRepoDB {
       MetalScope scope,
       String pkg, String clazz,
       JsonObject formSchema, Optional<JsonObject> uiSchema
-      ) {
+  ) {
     JsonObject metal = metalOf(userId, type, scope, pkg, clazz, formSchema, uiSchema);
     return mongo.insert(DB, metal);
   }
 
-  private static BulkOperation wrapBulkOperation(JsonObject metalRaw, String userId, MetalType type, MetalScope scope) {
+  private static BulkOperation wrapBulkOperation(JsonObject metalRaw, String userId, MetalType type,
+      MetalScope scope) {
     JsonObject metal = metalOf(
         userId, type, scope,
         metalRaw.getString("pkg"),
@@ -91,31 +93,31 @@ public class MetalRepoDB {
   ) {
     List<BulkOperation> operations = new ArrayList<>();
     JsonArray sources = manifest.getJsonArray("sources");
-    sources.stream().map(obj -> (JsonObject)obj)
+    sources.stream().map(obj -> (JsonObject) obj)
         .map((JsonObject metalRaw) -> {
           return wrapBulkOperation(metalRaw, userId, MetalType.SOURCE, scope);
         }).forEach(operations::add);
 
     JsonArray mappers = manifest.getJsonArray("mappers");
-    mappers.stream().map(obj -> (JsonObject)obj)
+    mappers.stream().map(obj -> (JsonObject) obj)
         .map((JsonObject metalRaw) -> {
           return wrapBulkOperation(metalRaw, userId, MetalType.MAPPER, scope);
         }).forEach(operations::add);
 
     JsonArray fusions = manifest.getJsonArray("fusions");
-    fusions.stream().map(obj -> (JsonObject)obj)
+    fusions.stream().map(obj -> (JsonObject) obj)
         .map((JsonObject metalRaw) -> {
           return wrapBulkOperation(metalRaw, userId, MetalType.FUSION, scope);
         }).forEach(operations::add);
 
     JsonArray sinks = manifest.getJsonArray("sinks");
-    sinks.stream().map(obj -> (JsonObject)obj)
+    sinks.stream().map(obj -> (JsonObject) obj)
         .map((JsonObject metalRaw) -> {
           return wrapBulkOperation(metalRaw, userId, MetalType.SINK, scope);
         }).forEach(operations::add);
 
     JsonArray setups = manifest.getJsonArray("setups");
-    setups.stream().map(obj -> (JsonObject)obj)
+    setups.stream().map(obj -> (JsonObject) obj)
         .map((JsonObject metalRaw) -> {
           return wrapBulkOperation(metalRaw, userId, MetalType.SETUP, scope);
         }).forEach(operations::add);
@@ -147,7 +149,8 @@ public class MetalRepoDB {
         new JsonObject());
   }
 
-  public static Future<List<JsonObject>> getAllOfClasses(MongoClient mongo, String userId, List<String> clazzes) {
+  public static Future<List<JsonObject>> getAllOfClasses(MongoClient mongo, String userId,
+      List<String> clazzes) {
     JsonObject userPrivate = new JsonObject().put("userId", userId);
     JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
     JsonArray classQuery = new JsonArray();
@@ -179,7 +182,8 @@ public class MetalRepoDB {
     return mongo.find(DB, query);
   }
 
-  public static Future<List<JsonObject>> getAllOfType(MongoClient mongo, String userId, MetalType type) {
+  public static Future<List<JsonObject>> getAllOfType(MongoClient mongo, String userId,
+      MetalType type) {
     JsonObject userPrivate = new JsonObject().put("userId", userId);
     JsonObject publicAccess = new JsonObject().put("scope", MetalScope.PUBLIC.toString());
     JsonObject query = new JsonObject()
@@ -195,7 +199,8 @@ public class MetalRepoDB {
     );
   }
 
-  public static ReadStream<JsonObject> getAllOfUserScope(MongoClient mongo, String userId, MetalScope scope) {
+  public static ReadStream<JsonObject> getAllOfUserScope(MongoClient mongo, String userId,
+      MetalScope scope) {
     return mongo.findBatch(
         DB,
         new JsonObject().put("userId", userId).put("scope", scope.toString())
@@ -210,10 +215,8 @@ public class MetalRepoDB {
   }
 
 
-
-
-
-  public static Future<MongoClientDeleteResult> removePrivate(MongoClient mongo, String userId, String metalId) {
+  public static Future<MongoClientDeleteResult> removePrivate(MongoClient mongo, String userId,
+      String metalId) {
     return mongo.removeDocument(
         DB,
         new JsonObject()
@@ -223,7 +226,8 @@ public class MetalRepoDB {
     );
   }
 
-  public static Future<MongoClientDeleteResult> removeAllPrivateOfUser(MongoClient mongo, String userId) {
+  public static Future<MongoClientDeleteResult> removeAllPrivateOfUser(MongoClient mongo,
+      String userId) {
     return mongo.removeDocuments(
         DB,
         new JsonObject()

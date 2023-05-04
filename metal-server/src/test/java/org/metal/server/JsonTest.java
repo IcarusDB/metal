@@ -7,6 +7,7 @@ import java.util.Map;
 import org.junit.Test;
 
 public class JsonTest {
+
   @Test
   public void test() {
     List<JsonObject> arr = List.of();

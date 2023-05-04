@@ -6,11 +6,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 public class FormSchemaMethods {
+
   public static String of(Class<?> metalClz) {
     Method[] methods = metalClz.getMethods();
     Method formSchemaMethod = null;
-    for (Method method: methods) {
-      if(!Modifier.isStatic(method.getModifiers())) {
+    for (Method method : methods) {
+      if (!Modifier.isStatic(method.getModifiers())) {
         continue;
       }
 
@@ -35,7 +36,7 @@ public class FormSchemaMethods {
     }
     String schema = null;
     try {
-       schema = (String) formSchemaMethod.invoke(null);
+      schema = (String) formSchemaMethod.invoke(null);
     } catch (IllegalAccessException e) {
       e.printStackTrace();
     } catch (InvocationTargetException e) {

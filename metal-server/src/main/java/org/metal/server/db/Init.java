@@ -14,6 +14,7 @@ import io.vertx.ext.mongo.MongoClient;
 import org.metal.server.auth.Roles;
 
 public class Init {
+
   private final static Logger LOGGER = LoggerFactory.getLogger(Init.class);
 
   public static Future<Void> initUser(MongoClient mongo) {

@@ -16,11 +16,11 @@ public interface BackendReportService {
   }
 
   public Future<Void> reportExecSubmit(JsonObject create);
-  
+
   public Future<Void> reportExecRunning(JsonObject running);
-  
+
   public Future<Void> reportExecFinish(JsonObject finish);
-  
+
   public Future<Void> reportExecFailure(JsonObject failure);
 
   public Future<Void> reportBackendUp(JsonObject up);

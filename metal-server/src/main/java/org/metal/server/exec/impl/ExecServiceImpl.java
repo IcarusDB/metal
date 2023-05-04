@@ -11,6 +11,7 @@ import org.metal.server.exec.ExecService;
 import org.metal.server.project.service.ProjectDB;
 
 public class ExecServiceImpl implements ExecService {
+
   private Vertx vertx;
   private MongoClient mongo;
 
@@ -25,7 +26,7 @@ public class ExecServiceImpl implements ExecService {
   }
 
   @Override
-  public Future<JsonObject>remove(String userId, String execId) {
+  public Future<JsonObject> remove(String userId, String execId) {
     return ExecDB.remove(mongo, userId, execId);
   }
 
@@ -100,7 +101,9 @@ public class ExecServiceImpl implements ExecService {
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
         }
-      }; break;
+      }
+      ;
+      break;
       case SUBMIT: {
         try {
           Long submitTime = execStatus.getLong("submitTime");
@@ -111,7 +114,9 @@ public class ExecServiceImpl implements ExecService {
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
         }
-      }; break;
+      }
+      ;
+      break;
       case RUNNING: {
         try {
           Long beatTime = execStatus.getLong("beatTime");
@@ -122,7 +127,9 @@ public class ExecServiceImpl implements ExecService {
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
         }
-      }; break;
+      }
+      ;
+      break;
       case FINISH: {
         try {
           Long finishTime = execStatus.getLong("finishTime");
@@ -133,22 +140,29 @@ public class ExecServiceImpl implements ExecService {
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
         }
-      }; break;
+      }
+      ;
+      break;
       case FAILURE: {
         try {
           Long terminateTime = execStatus.getLong("terminateTime");
           if (terminateTime == null) {
-            return Future.failedFuture(String.format("%s lost terminateTime", execStatus.toString()));
+            return Future.failedFuture(
+                String.format("%s lost terminateTime", execStatus.toString()));
           }
           update.put("terminateTime", terminateTime);
           update.put("msg", execStatus.getString("msg"));
         } catch (ClassCastException e) {
           return Future.failedFuture(e);
         }
-      }; break;
+      }
+      ;
+      break;
     }
 
-    return ExecDB.updateStatus(mongo, execId, update).compose(ret -> {return Future.succeededFuture();});
+    return ExecDB.updateStatus(mongo, execId, update).compose(ret -> {
+      return Future.succeededFuture();
+    });
   }
 
   @Override

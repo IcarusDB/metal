@@ -12,7 +12,8 @@ import org.metal.server.repo.MetalRepoDB.MetalType;
 import org.metal.server.util.ReadStreamCollector;
 
 
-public class MetalRepoServiceImpl implements IMetalRepoService{
+public class MetalRepoServiceImpl implements IMetalRepoService {
+
   private MongoClient mongo;
   private JsonObject conf;
 
@@ -31,11 +32,11 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
     return true;
   }
 
-  private boolean checkMetal(JsonObject metal) throws IllegalArgumentException{
-    String pkg = metal.getString("pkg") ;
+  private boolean checkMetal(JsonObject metal) throws IllegalArgumentException {
+    String pkg = metal.getString("pkg");
     if (pkg == null || pkg.isBlank()) {
       throw new IllegalArgumentException(
-        String.format("Fail to found pkg value in %s.", metal.toString())
+          String.format("Fail to found pkg value in %s.", metal.toString())
       );
     }
 
@@ -71,9 +72,9 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
         "sources", "mappers", "fusions", "sinks", "setups"
     };
 
-    for (String metalType: metalTypes) {
+    for (String metalType : metalTypes) {
       JsonArray metals = manifest.getJsonArray(metalType, new JsonArray());
-      for(int idx = 0; idx < metals.size(); idx++) {
+      for (int idx = 0; idx < metals.size(); idx++) {
         JsonObject metal = metals.getJsonObject(idx);
         checkMetal(metal);
       }
@@ -107,7 +108,9 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
         formSchema,
         uiSchema
     );
-  };
+  }
+
+  ;
 
   public Future<JsonObject> get(String userId, String metalId) {
     return MetalRepoDB.get(mongo, userId, metalId);
@@ -145,7 +148,7 @@ public class MetalRepoServiceImpl implements IMetalRepoService{
 
     MetalScope metalScope = MetalScope.valueOf(scope);
     return ReadStreamCollector.<JsonObject>toList(
-      MetalRepoDB.getAllOfUserScope(mongo, userId, metalScope)
+        MetalRepoDB.getAllOfUserScope(mongo, userId, metalScope)
     );
   }
 

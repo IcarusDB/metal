@@ -34,7 +34,7 @@ public class Main {
 //        "--rest-api-port", "18989"
 //    };
 
-      BackendDeployManager.getBackendDeploy()
-          .get().deploy(args);
+    BackendDeployManager.getBackendDeploy()
+        .get().deploy(args);
   }
 }

@@ -10,6 +10,7 @@ import io.vertx.ext.auth.authentication.Credentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
 
 class ResultHandlerWrapper implements Handler<AsyncResult<User>> {
+
   private Handler<AsyncResult<User>> resultHandler;
   private AttachRoles attachRoles;
 
@@ -43,6 +44,7 @@ class ResultHandlerWrapper implements Handler<AsyncResult<User>> {
 
 
 public class JWTAuthWithAttachRoles implements JWTAuth {
+
   private JWTAuth wrapped;
   private AttachRoles attachRoles;
 

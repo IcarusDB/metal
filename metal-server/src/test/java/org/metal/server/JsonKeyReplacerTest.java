@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.metal.server.util.JsonKeyReplacer;
 
 public class JsonKeyReplacerTest {
+
   @Test
   public void test0() {
     JsonObject json = new JsonObject();

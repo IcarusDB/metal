@@ -12,7 +12,7 @@ public class SpecJson {
         .put("edges", new JsonArray());
   }
 
-  public static boolean check(JsonObject spec) throws IllegalArgumentException{
+  public static boolean check(JsonObject spec) throws IllegalArgumentException {
     String version = spec.getString("version");
 
     if (version == null || version.isBlank()) {
@@ -30,7 +30,7 @@ public class SpecJson {
 
     try {
       JsonArray edges = spec.getJsonArray("edges");
-      if (edges== null) {
+      if (edges == null) {
         throw new IllegalArgumentException("Fail to found edges in spec.");
       }
     } catch (ClassCastException e) {

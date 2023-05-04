@@ -7,11 +7,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import java.util.List;
-import java.util.Optional;
 
 @ProxyGen
 @VertxGen
 public interface IMetalRepoService {
+
   public static IMetalRepoService create(Vertx vertx, JsonObject conf) {
     String address = conf.getString("address");
     return new IMetalRepoServiceVertxEBProxy(vertx, address);
@@ -35,7 +35,8 @@ public interface IMetalRepoService {
 
   public Future<List<JsonObject>> getAllOfPublic();
 
-  public Future<List<JsonObject>> getAllOfPkg(String userId, String groupId, String artifactId, String version);
+  public Future<List<JsonObject>> getAllOfPkg(String userId, String groupId, String artifactId,
+      String version);
 
   public Future<List<JsonObject>> getAllOfType(String userId, String type);
 

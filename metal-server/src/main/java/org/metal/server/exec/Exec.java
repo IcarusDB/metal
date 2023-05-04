@@ -16,12 +16,11 @@ import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceBinder;
 import java.util.List;
-import org.metal.server.project.Project;
-import org.metal.server.project.Project.RestApi;
 import org.metal.server.util.OnFailure;
 import org.metal.server.util.RestServiceEnd;
 
 public class Exec extends AbstractVerticle {
+
   public static final String CONF_METAL_SERVER_PATH = "conf/metal-server.json";
   public static final String MONGO_CONF = "mongoConf";
   public static final String EXEC_SERVICE_CONF = "execService";
@@ -31,7 +30,9 @@ public class Exec extends AbstractVerticle {
   private ExecService execService;
   private MessageConsumer<JsonObject> consumer;
 
-  private Exec() {}
+  private Exec() {
+  }
+
   public static Exec create() {
     return new Exec();
   }
@@ -41,6 +42,7 @@ public class Exec extends AbstractVerticle {
   }
 
   public static class RestApi {
+
     private final static Logger LOGGER = LoggerFactory.getLogger(Exec.RestApi.class);
     private ExecService service;
 
@@ -51,7 +53,9 @@ public class Exec extends AbstractVerticle {
     public void getOfId(RoutingContext ctx) {
       String execId = ctx.request().params().get("execId");
       if (
-          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return execId == null || execId.isBlank();
+          }, "Fail to found exec id in request.", 400)
       ) {
         return;
       }
@@ -63,7 +67,9 @@ public class Exec extends AbstractVerticle {
     public void getOfIdNoDetail(RoutingContext ctx) {
       String execId = ctx.request().params().get("execId");
       if (
-          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return execId == null || execId.isBlank();
+          }, "Fail to found exec id in request.", 400)
       ) {
         return;
       }
@@ -91,7 +97,6 @@ public class Exec extends AbstractVerticle {
     }
 
 
-
     public void getAllOfUserNoDetail(RoutingContext ctx) {
       User user = ctx.user();
       String userId = user.get("_id");
@@ -103,7 +108,9 @@ public class Exec extends AbstractVerticle {
     public void getAllOfProject(RoutingContext ctx) {
       String projectId = ctx.request().params().get("projectId");
       if (
-          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return projectId == null || projectId.isBlank();
+          }, "Fail to found project id in request.", 400)
       ) {
         return;
       }
@@ -114,7 +121,9 @@ public class Exec extends AbstractVerticle {
     public void getAllOfProjectNoDetail(RoutingContext ctx) {
       String projectId = ctx.request().params().get("projectId");
       if (
-          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return projectId == null || projectId.isBlank();
+          }, "Fail to found project id in request.", 400)
       ) {
         return;
       }
@@ -127,7 +136,9 @@ public class Exec extends AbstractVerticle {
       String userId = user.get("_id");
       String execId = ctx.request().params().get("execId");
       if (
-          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return execId == null || execId.isBlank();
+          }, "Fail to found exec id in request.", 400)
       ) {
         return;
       }
@@ -141,7 +152,9 @@ public class Exec extends AbstractVerticle {
       String userId = user.get("_id");
       String execId = ctx.request().params().get("execId");
       if (
-          OnFailure.doTry(ctx, ()->{return execId == null || execId.isBlank();}, "Fail to found exec id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return execId == null || execId.isBlank();
+          }, "Fail to found exec id in request.", 400)
       ) {
         return;
       }
@@ -171,7 +184,9 @@ public class Exec extends AbstractVerticle {
       String userId = user.get("_id");
       String projectId = ctx.request().params().get("projectId");
       if (
-          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return projectId == null || projectId.isBlank();
+          }, "Fail to found project id in request.", 400)
       ) {
         return;
       }
@@ -185,7 +200,9 @@ public class Exec extends AbstractVerticle {
       String userId = user.get("_id");
       String projectId = ctx.request().params().get("projectId");
       if (
-          OnFailure.doTry(ctx, ()->{return projectId == null || projectId.isBlank();}, "Fail to found project id in request.", 400)
+          OnFailure.doTry(ctx, () -> {
+            return projectId == null || projectId.isBlank();
+          }, "Fail to found project id in request.", 400)
       ) {
         return;
       }
@@ -222,13 +239,17 @@ public class Exec extends AbstractVerticle {
       JsonObject execServiceConf = execConf.getJsonObject(EXEC_SERVICE_CONF);
       String execServiceAddress = execServiceConf.getString(EXEC_SERVICE_ADDRESS_CONF);
       if (mongoConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", MONGO_CONF, CONF_METAL_SERVER_PATH));
       }
       if (execServiceConf == null) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF, CONF_METAL_SERVER_PATH));
+        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_CONF,
+            CONF_METAL_SERVER_PATH));
       }
       if (execServiceAddress == null || execServiceAddress.isBlank()) {
-        return Future.failedFuture(String.format("%s is not configured in %s.", EXEC_SERVICE_ADDRESS_CONF, CONF_METAL_SERVER_PATH + "." + EXEC_SERVICE_CONF));
+        return Future.failedFuture(
+            String.format("%s is not configured in %s.", EXEC_SERVICE_ADDRESS_CONF,
+                CONF_METAL_SERVER_PATH + "." + EXEC_SERVICE_CONF));
       }
 
       this.mongo = MongoClient.createShared(getVertx(), mongoConf);
