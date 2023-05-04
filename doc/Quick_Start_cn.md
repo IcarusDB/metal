@@ -8,23 +8,22 @@
 
 ---
 
-In order to experience Metal quickly, you can create a test environment through the following installation steps.
-
-## Pre-Prepared
-- OpenJDK 11 and above
-- npm 9.5.0 and above
+为了快速体验Metal，你可通过以下安装方式建立一个测试体验环境。
+## 预先准备
+- OpenJDK 11及以上版本。
+- npm 9.5.0及以上版本。
 - Docker
 - docker-compose
 - maven
 - mongodb tools
 
-## Compile & Package
+## 编译打包
 
-Under the root directory of the Metal project, execute the following command to compile and package.
+在Metal项目根目录下，执行如下命令完成编译打包。
 ```shell
 mvn package -Dmaven.test.skip=true
 ```
-The packaged content is saved in the `./build` directory.
+打包出的内容保存在`./build`目录下。
 ```shell
 ./build/
 ├── conf
@@ -58,18 +57,18 @@ The packaged content is saved in the `./build` directory.
         ├── robots.txt
         └── static
 ```
-## Running Environment
-### Start Service
-Enter the `./metal-test/docker` directory under the project root directory, and start related dependent services (including MongoDB, MongoDB Express, Zookeeper, Spark Standalone cluster and HDFS) through the following command.
+## 准备运行依赖环境
+### 启动服务
+进入项目根目录下的`./metal-test/docker`目录，通过如下命令启动相关依赖服务（包括MongoDB、MongoDB Express、Zookeeper、Spark Standalone集群和HDFS）
 ```shell
 docker-compose up -d
 ```
-Of course, if you don't plan to perform any tasks and just want to experience the effect of Metal, you can only start MongoDB and Zookeeper. Just execute the following command.
+当然如果你不打算执行任何任务，只是想体验一下Metal的效果，你可以只启动MongoDB和Zookeeper。执行如下命令即可。
 ```shell
 docker-compose up -d mongo zoo0
 ```
-### Initialize MongoDB
-First, you need to create a separate database and user in MongoDB for Metal. For example, to create a user named metal and metalDB database, you can execute the following command in `mongosh`,
+### 初始化MongoDB
+首先，你需要在MongoDB中为Metal创建一个单独的数据库和用户。比如创建用户名为metal的用户和metalDB数据库，你可以在`mongosh`中执行如下命令，
 ```shell
 use metalDB
 db.createUser({
@@ -78,15 +77,15 @@ db.createUser({
   roles: [{role: 'root', db: 'admin'}]
 })
 ```
-> The root user password of MongoDB in the quick-start environment is 123456, the address is 192.168.42.50, and the port is 27017.
+> 体验环境中的MongoDB的root用户密码为123456，地址为192.168.42.50，端口为27017。
 
-Next, you need to import the db script in the build directory to the database. Just execute the following command,
+接下来，你需要将构建目录下的db脚本导入到数据库。执行如下命令即可，
 ```shell
 ls ../../build/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {} --type json --file ../../build/sbin/db/{}.json mongodb://<credentials>@<host>:<port>/metalDB
 ```
-### Configure
-After the project is compiled and packaged, the relevant configuration files will be copied to the `$METAL/build/conf` directory. If you use custom MongoDB and Zookeeper, you need to modify the relevant configuration files, otherwise skip this part.
-- MongoDB: The following items in `$METAL/build/conf/conf/metal-server.json` need to be modified to the service configuration you use.
+### 配置
+项目在编译打包后，会将相关配置文件复制到`$METAL/build/conf`目录下。如果你使用了自定义的MongoDB和Zookeeper，你需要修改相关配置文件，否则跳过该部分。
+- MongoDB：`$METAL/build/conf/conf/metal-server.json`的如下几项需要修改为你提供的服务配置。
   ```json
   {
     ...
@@ -97,7 +96,7 @@ After the project is compiled and packaged, the relevant configuration files wil
   }
   ```
 
-- Zookeeper: The following items in `$METAL/build/conf/zookeeper.json` need to be modified to the service configuration you use.
+- Zookeeper：`$METAL/build/conf/zookeeper.json`的如下几项需要修改为你提供的服务配置。
   ```json
   {
     ...
@@ -106,10 +105,10 @@ After the project is compiled and packaged, the relevant configuration files wil
   }
   ```
 
-## Start Metal Server
-In the root directory of the project, execute the following command to complete the startup.
+## 启动Metal
+在项目根目录下，执行如下命令完成启动。
 ```shell
 java -cp ./build/libs/metal-server-{VERSION}.jar:./build/ui:./build/conf org.metal.server.GatewayLauncher
 ```
-Finally, open the browser and access the link `http://localhost:19000`.
-> The test username is jack, and the password is 123456.
+最后打开浏览器，链接`http://localhost:19000`即可。
+> 测试用户名jack，密码123456。
