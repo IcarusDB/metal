@@ -1,6 +1,6 @@
 # Quick Start
 
-<img src="/metal-ui/public/images/metal_brand.svg" alt="metal logo" height="200px" align="center" />
+<img src="/metal-ui/public/images/metal_logo.svg" alt="metal logo" height="200px" align="right" />
 
 ---
 

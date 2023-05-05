@@ -1,6 +1,6 @@
 # Architecture
 
-<img src="/metal-ui/public/images/metal_brand.svg" alt="metal logo" height="200px" align="center" />
+<img src="/metal-ui/public/images/metal_logo.svg" alt="metal logo" height="200px" align="right" />
 
 ---
 
@@ -32,9 +32,9 @@ An overview of each component is as follows,
 
 `metal-core` is the core of Metal, which defines the type of Metal data flow processing operator, data flow analysis inspection and execution.
 
-### 数据流处理算子
+### Data flow processing operators
 
-#### 类型
+#### Types
 
 Metal data flow processing operators include four types, namely Source, Mapper, Fusion, and Sink.
 
