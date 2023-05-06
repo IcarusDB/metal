@@ -209,7 +209,7 @@ The Jar file of the operator used in the data flow spec also needs to be specifi
 
 Except for development and debugging, it is almost impossible to manually write interactive mode commands. Under normal circumstances, `metal-server` will automatically deliver the deployment Backend according to your Project configuration.
 
-## metal-server和metal-ui
+## metal-server & metal-ui
 ### metal-server
 #### Model
 
