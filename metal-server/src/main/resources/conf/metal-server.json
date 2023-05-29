@@ -32,6 +32,7 @@
       "backendReportService": {
         "address": "report.metal.org"
       },
+      "metalJarRootPath": "/home/spark/metal/",
       "platform": {
         "spark.standalone": {
           "rest.api": {

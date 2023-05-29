@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import org.metal.backend.api.BackendService;
 import org.metal.server.api.BackendState;
 import org.metal.server.exec.ExecService;
+import org.metal.server.project.Project;
 import org.metal.server.util.JsonConvertor;
 import org.metal.server.util.SpecJson;
 
@@ -404,7 +405,19 @@ public class ProjectServiceImpl implements IProjectService {
 
     String deployId = deploy.getString(ProjectDB.DEPLOY_ID);
     int epoch = deploy.getInteger(ProjectDB.DEPLOY_EPOCH);
+    String metalJarRootPath = conf.getString(Project.PROJECT_SERVICE_METAL_JAR_ROOT_PATH_CONF);
     List<String> pkgs = JsonConvertor.jsonArrayToList(deploy.getJsonArray(ProjectDB.DEPLOY_PKGS));
+    List<String> jars = pkgs.stream().map(pkg -> {
+      String[] pkgInfo = pkg.split(":");
+      if (pkgInfo.length == 3) {
+        return metalJarRootPath + "/" + pkgInfo[1] + "-" + pkgInfo[2] + ".jar";
+      } else {
+        return null;
+      }
+    }).filter(jar -> {
+      return jar != null && !jar.isBlank();
+    }).collect(Collectors.toList());
+
     JsonObject platform = deploy.getJsonObject(ProjectDB.DEPLOY_PLATFORM);
     List<String> backendArgs = JsonConvertor.jsonArrayToList(
         backend.getJsonArray(ProjectDB.DEPLOY_BACKEND_ARGS));
@@ -431,6 +444,23 @@ public class ProjectServiceImpl implements IProjectService {
               String.format("Fail deploy [%s-%d]. No spark.standalone configurations found.",
                   deployId, epoch));
         }
+
+        JsonObject conf = sparkStandalone.getJsonObject("conf");
+        if (conf == null || conf.isEmpty()) {
+          return Future.failedFuture(
+              String.format("Fail deploy [%s-%d]. No spark.standalone.conf configurations found.",
+                  deployId, epoch));
+        }
+
+        String confJars = conf.getString("spark.jars");
+        if (confJars == null || confJars.isBlank()) {
+          conf.put("spark.jars", String.join(",", jars));
+        } else {
+          jars.addAll(List.<String>of(confJars.split(",")));
+          String sparkJars = jars.stream().distinct().collect(Collectors.joining(","));
+          conf.put("spark.jars", sparkJars);
+        }
+
         return sparkStandaloneDeploy(deployId, epoch, appArgs, sparkStandalone);
       } catch (Exception e) {
         return Future.failedFuture(e);

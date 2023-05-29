@@ -53,6 +53,8 @@ public class Project extends AbstractVerticle {
   public static final String PROJECT_SERVICE_CONF = "projectService";
   public static final String PROJECT_SERVICE_ADDRESS_CONF = "address";
 
+  public static final String PROJECT_SERVICE_METAL_JAR_ROOT_PATH_CONF = "metalJarRootPath";
+
   private MongoClient mongo;
   private ServiceBinder binder;
   private MessageConsumer<JsonObject> consumer;
