@@ -40,6 +40,7 @@ If you use Metal, you can easily reuse these plugins. Metal provides two ways to
 
 ## Sponsor
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
-<strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong>
+<strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong><br>
+
 ## License
 [Apache 2.0 License.](LICENSE)
