@@ -38,5 +38,9 @@ Metal是一款数据流建模软件，通过Metal可以管理数据流处理算�
 ## Architecture
 [Architecture](/doc/Architecture_cn.md)
 
+## Sponsor
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
+Thanks to JetBrains for the [free license](https://jb.gg/OpenSourceSupport).
+
 ## License
 [Apache 2.0 License.](LICENSE)
