@@ -12,5 +12,8 @@
  * limitations under the License.
  */
 
-@io.vertx.codegen.annotations.ModuleGen(groupPackage = "org.metal.server", name = "api", useFutures = true)
+@io.vertx.codegen.annotations.ModuleGen(
+        groupPackage = "org.metal.server",
+        name = "api",
+        useFutures = true)
 package org.metal.server.api;

@@ -138,12 +138,12 @@ In interactive mode, the `metal-backend` process starts REST services and Vert.x
 
 Under the interactive model, `metal-backend` needs to process concurrent requests. Most of the above interface operations can be accessed concurrently, and some can only be accessed serially. heart, can be accessed concurrently, analyze, schema, status and exec need to do concurrency control. The concurrency control relationship is as follows,
 
-|                | analyse | schema | status | exec       |
-| -------------- | ------- | ------ | ------ | ---------- |
-| [prev] analyse | non-concurrency  | non-concurrency | non-concurrency | ==non-concurrency== |
-| [prev] schema  | non-concurrency  | concurrency   | concurrency   | concurrency       |
-| [prev] status  | non-concurrency  | concurrency   | concurrency   | concurrency       |
-| [prev] exec    | non-concurrency  | concurrency   | concurrency   | non-concurrency     |
+|                |     analyse     |     schema      |     status      |        exec         |
+|----------------|-----------------|-----------------|-----------------|---------------------|
+| [prev] analyse | non-concurrency | non-concurrency | non-concurrency | ==non-concurrency== |
+| [prev] schema  | non-concurrency | concurrency     | concurrency     | concurrency         |
+| [prev] status  | non-concurrency | concurrency     | concurrency     | concurrency         |
+| [prev] exec    | non-concurrency | concurrency     | concurrency     | non-concurrency     |
 
 Line 1, column 4 <analyse, exec> is non-concurrent, which means that when analyze is executed, the exec request will be blocked waiting for execution or a direct method. `metal-backend` defines `IBackendAPI` to achieve this kind of concurrency control, and the specific design diagram is as follows.
 
@@ -152,6 +152,7 @@ Line 1, column 4 <analyse, exec> is non-concurrent, which means that when analyz
 The interface defined in `IBackendTryAPI` is a non-blocking interface.
 
 ### Operating Mode
+
 #### Cli mode
 
 `metal-backend` implements the command line mode, you can configure the data flow when `spark-submit` submits the task. For example,
@@ -178,6 +179,7 @@ $SPARK_HOME/bin/spark-submit \
 	...
 	--spec "{'version':'1.0', 'metals':[...], 'edges':[...], 'waitFor':[...]}"
 ```
+
 The Jar file of the operator used in the data flow spec also needs to be specified. You can configure the path of the Jar file in `--jars`.
 
 *Currently, `metal-backend` has only been tested in the Spark Standalone cluster, and Yarn and K8S have not been verified.*
@@ -210,7 +212,9 @@ The Jar file of the operator used in the data flow spec also needs to be specifi
 Except for development and debugging, it is almost impossible to manually write interactive mode commands. Under normal circumstances, `metal-server` will automatically deliver the deployment Backend according to your Project configuration.
 
 ## metal-server & metal-ui
+
 ### metal-server
+
 #### Model
 
 <img src="img/resources/metal-server-model.svg" width = "75%" alt="Domain Entity Relationship Diagram of metal-server" align="center" />
@@ -218,12 +222,14 @@ Except for development and debugging, it is almost impossible to manually write 
 `metal-server` establishes the concept of Project to manage data flow and related configuration. You can select the required Metal operator in Project and define the data flow. `metal-server` will deploy the execution backend according to the configuration, deliver the execution data flow, and track the backend status and data flow execution status.
 
 #### Services
+
 `metal-server` implements Vert.x RPC and REST-API services.
 - Report service: used to receive the backend status and task execution status reported by `metal-backend`.
 - Failure Detector Service: A detection service that tracks backend failures, and will take offline execution backends with timeouts, process shutdowns, and high delays.
 - REST-API service: The service provided for `metal-ui`, including creating Project, configuring Project, saving data flow Spec, deploying backend, executing data flow, and tracking backend status, etc.
 
 ### metal-ui
+
 `metal-ui` implements Metal's front-end web UI. You can easily create a project in `metal-ui`, select operator packages, draw data flows, check data flows, submit execution data flows, publish new processing operator packages, manage operator packages, etc.
 
 <img src="img/resources/metal-ui-home.png" width = "75%" alt="Home Page" align="center" />

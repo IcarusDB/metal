@@ -12,24 +12,4 @@
  * limitations under the License.
  */
 
-package org.metal.dataset.spark;
 
-import org.metal.dataset.SchemaConvertor;
-
-import org.apache.spark.sql.types.StructType;
-import org.apache.spark.sql.util.ArrowUtils;
-
-import org.apache.arrow.vector.types.pojo.Schema;
-
-public class SchemaConvertorWithSpark implements SchemaConvertor<StructType> {
-
-    @Override
-    public StructType to(Schema schema) {
-        return ArrowUtils.fromArrowSchema(schema);
-    }
-
-    @Override
-    public Schema from(StructType schema, String timeZoneId) {
-        return ArrowUtils.toArrowSchema(schema, timeZoneId);
-    }
-}

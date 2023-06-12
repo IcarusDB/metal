@@ -18,11 +18,11 @@ import java.util.Optional;
 
 public interface IPredictorProps {
 
-  public String featuresCol();
+    public String featuresCol();
 
-  public Optional<String> predictionCol();
+    public Optional<String> predictionCol();
 
-  public Optional<String> probabilityCol();
+    public Optional<String> probabilityCol();
 
-  public Optional<String> rawPredictionCol();
+    public Optional<String> rawPredictionCol();
 }
