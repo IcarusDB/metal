@@ -123,4 +123,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>metal-dist</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
