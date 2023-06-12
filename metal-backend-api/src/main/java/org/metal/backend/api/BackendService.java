@@ -24,24 +24,24 @@ import io.vertx.core.json.JsonObject;
 @VertxGen
 public interface BackendService {
 
-  public static BackendService create(Vertx vertx, JsonObject config) {
-    String address = config.getString("address");
-    return new BackendServiceVertxEBProxy(vertx, address);
-  }
+    public static BackendService create(Vertx vertx, JsonObject config) {
+        String address = config.getString("address");
+        return new BackendServiceVertxEBProxy(vertx, address);
+    }
 
-  public Future<JsonObject> analyse(JsonObject spec);
+    public Future<JsonObject> analyse(JsonObject spec);
 
-  public Future<JsonObject> schema(String metalId);
+    public Future<JsonObject> schema(String metalId);
 
-  public Future<JsonObject> heart();
+    public Future<JsonObject> heart();
 
-  public Future<JsonObject> status();
+    public Future<JsonObject> status();
 
-  public Future<Void> exec(JsonObject exec);
+    public Future<Void> exec(JsonObject exec);
 
-  public Future<Void> killExec(JsonObject exec);
+    public Future<Void> killExec(JsonObject exec);
 
-  public Future<Void> stop();
+    public Future<Void> stop();
 
-  public Future<Void> gracefulStop();
+    public Future<Void> gracefulStop();
 }

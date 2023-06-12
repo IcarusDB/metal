@@ -29,32 +29,33 @@ import io.vertx.httpproxy.HttpProxy;
 
 public class Repo {
 
-  private final static Logger LOGGER = LoggerFactory.getLogger(Repo.class);
-  private final static String MVN_REPO_API_HOST = "124.223.66.8";
-  private final static int MVN_REPO_API_PORT = 8081;
-  private final static String MVN_REPO_API_URL = "/service/rest/v1";
-  private final static String credential = new UsernamePasswordCredentials("admin",
-      "123456").toHttpAuthorization();
-  private final static String repository = "maven-releases";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Repo.class);
+    private static final String MVN_REPO_API_HOST = "124.223.66.8";
+    private static final int MVN_REPO_API_PORT = 8081;
+    private static final String MVN_REPO_API_URL = "/service/rest/v1";
+    private static final String credential =
+            new UsernamePasswordCredentials("admin", "123456").toHttpAuthorization();
+    private static final String repository = "maven-releases";
 
-  public void createRepoProxy(Router router, Vertx vertx) {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setShared(true));
-    HttpProxy proxy = HttpProxy.reverseProxy(client);
-    proxy.origin(MVN_REPO_API_PORT, MVN_REPO_API_HOST);
-    ProxyHandler proxyHandler = ProxyHandler.create(proxy);
-    router.post(MVN_REPO_API_URL + "/components")
-        .handler(ctx -> {
-          ctx.request().headers().add("Authorization", credential);
-          ctx.next();
-        })
-        .handler(proxyHandler);
-  }
+    public void createRepoProxy(Router router, Vertx vertx) {
+        HttpClient client = vertx.createHttpClient(new HttpClientOptions().setShared(true));
+        HttpProxy proxy = HttpProxy.reverseProxy(client);
+        proxy.origin(MVN_REPO_API_PORT, MVN_REPO_API_HOST);
+        ProxyHandler proxyHandler = ProxyHandler.create(proxy);
+        router.post(MVN_REPO_API_URL + "/components")
+                .handler(
+                        ctx -> {
+                            ctx.request().headers().add("Authorization", credential);
+                            ctx.next();
+                        })
+                .handler(proxyHandler);
+    }
 
-  public void deploy(RoutingContext ctx) {
-    ctx.reroute(HttpMethod.POST, MVN_REPO_API_URL + "/components?repository=" + repository);
-  }
+    public void deploy(RoutingContext ctx) {
+        ctx.reroute(HttpMethod.POST, MVN_REPO_API_URL + "/components?repository=" + repository);
+    }
 
-  public void submitPkgManifest(RoutingContext ctx) {
-    JsonObject body = ctx.body().asJsonObject();
-  }
+    public void submitPkgManifest(RoutingContext ctx) {
+        JsonObject body = ctx.body().asJsonObject();
+    }
 }

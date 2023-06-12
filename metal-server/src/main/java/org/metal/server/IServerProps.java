@@ -19,9 +19,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 public interface IServerProps {
 
-  public int port();
+    public int port();
 
-  public String mongoConnection();
+    public String mongoConnection();
 
-  public boolean init();
+    public boolean init();
 }

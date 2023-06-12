@@ -40,7 +40,6 @@ Metal数据流处理算子包括四种，分别为Source、Mapper、Fusion和Sin
 
 <img src="img/resources/metal-plugin-class.svg" width = "75%" alt="Data Flow Operator Types" align="center" />
 
-
 从上图可以看出，所有算子/操作的最终父类为`Metal`，所有继承`Metal`的子类都有`id`、`name`以及配置属性`props`。其中，`props`用于为算子注入配置。`metal-core`下的Metal抽象算子是平台无关的。目前，Metal仅支持将Spark作为后端执行引擎。
 上图中`MSource`、`MMapper`、`MFusion`和`MSink`定义了数据流的四种基本处理逻辑。
 
@@ -139,12 +138,12 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 
 交互模型下，`metal-backend`要处理并发请求，上述接口操作大部分是可以并发访问的，一部分只能串行访问。heart、可以并发访问，analyse、schema、status和exec需要做并发控制。并发控制关系如下，
 
-|                | analyse | schema | status | exec       |
-| -------------- | ------- | ------ | ------ | ---------- |
-| [prev] analyse | 不并发  | 不并发 | 不并发 | ==不并发== |
-| [prev] schema  | 不并发  | 并发   | 并发   | 并发       |
-| [prev] status  | 不并发  | 并发   | 并发   | 并发       |
-| [prev] exec    | 不并发  | 并发   | 并发   | 不并发     |
+|                | analyse | schema | status |  exec   |
+|----------------|---------|--------|--------|---------|
+| [prev] analyse | 不并发     | 不并发    | 不并发    | ==不并发== |
+| [prev] schema  | 不并发     | 并发     | 并发     | 并发      |
+| [prev] status  | 不并发     | 并发     | 并发     | 并发      |
+| [prev] exec    | 不并发     | 并发     | 并发     | 不并发     |
 
 第1行第4列<analyse, exec>为不并发，这表示当analyse执行时，exec请求会被阻塞等待执行或直接方法。`metal-backend`定了`IBackendAPI`实现了这种并发控制，具体的设计图如下。
 
@@ -153,7 +152,9 @@ Metal提供了算子扩展能力，你需要按照如下步骤实现新的`Metal
 `IBackendTryAPI`中定义的接口为非阻塞接口。
 
 ### 运行模式
+
 #### 命令行模式
+
 `metal-backend`实现了命令行模式，你可在`spark-submit`提交任务时配置数据流。例如，
 
 ```shell
@@ -178,6 +179,7 @@ $SPARK_HOME/bin/spark-submit \
 	...
 	--spec "{'version':'1.0', 'metals':[...], 'edges':[...], 'waitFor':[...]}"
 ```
+
 数据流Spec中使用的算子所属的Jar文件也需要指明，你可将Jar文件的路径配置在`--jars`。
 
 *目前，`metal-backend`仅在Spark Standalone集群中测试过，Yarn和K8S还未进行过验证。*
@@ -210,7 +212,9 @@ $SPARK_HOME/bin/spark-submit \
 除了开发调试时，几乎不会手动编写交互模式的命令，正常情况下是`metal-server`根据你的Project配置来自动下发部署Backend。
 
 ## metal-server和metal-ui
+
 ### metal-server
+
 #### 模型
 
 <img src="img/resources/metal-server-model.svg" width = "75%" alt="Domain Entity Relationship Diagram of metal-server" align="center" />
@@ -218,22 +222,21 @@ $SPARK_HOME/bin/spark-submit \
 `metal-server`建立了Project的概念来管理数据流以及相关配置。你可以在Project中选择需要的Metal算子，并且定义数据流。`metal-server`会根据配置部署执行后端，下发执行数据流，跟踪后端状态和数据流执行状态。
 
 #### 服务
+
 `metal-server`实现了Vert.x RPC和REST-API服务。
 - Report服务：用于接收`metal-backend`上报的后端状态和任务执行状态。
 - Failure Detector服务：追踪后端故障的检测服务，会将超时离线、进程关闭、延时过高的执行后端做下线处理。
 - REST-API服务：为`metal-ui`提供的服务，包括创建Project、配置Project、保存数据流Spec、部署后端、执行数据流以及追踪后端状态等。
 
 ### metal-ui
+
 `metal-ui`实现了Metal的前端Web UI。你可以在`metal-ui`中便捷地创建Project，选择算子包，绘制数据流，检查数据流，提交执行数据流，发布新的处理算子包，管理算子包等。
 
 <img src="img/resources/metal-ui-home.png" width = "75%" alt="Home Page" align="center" />
 
-
 <img src="img/resources/metal-ui-designer.png" width = "75%" alt="Data flow designer" align="center" />
 
-
 <img src="img/resources/metal-ui-designer-profiler.png" width = "75%" alt="Data flow profiler" align="center" />
-
 
 <img src="img/resources/metal-ui-repo.png" width = "75%" alt="Metal repository" align="center" />
 
