@@ -29,8 +29,8 @@
         <module>metal-on-spark-extensions</module>
         <module>metal-backend-api</module>
         <module>metal-backend</module>
-        <module>metal-ui</module>
         <module>metal-server</module>
+        <module>metal-ui</module>
     </modules>
 
     <properties>
@@ -76,8 +76,12 @@
                         </replaceRegex>
                     </java>
                     <pom>
+                        <includes>
+                            <include>pom.xml</include>
+                            <include>src/main/assembly/assembly.xml</include>
+                        </includes>
                         <licenseHeader>
-                            <delimiter>(&lt;project( |\n))</delimiter>
+                            <delimiter>(&lt;(project|assembly)( |\n))</delimiter>
                             <file>licenses/header.xml</file>
                         </licenseHeader>
                         <sortPom>
@@ -123,4 +127,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>metal-dist</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

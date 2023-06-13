@@ -24,32 +24,53 @@ In order to experience Metal quickly, you can create a test environment through 
 Under the root directory of the Metal project, execute the following command to compile and package.
 
 ```shell
-mvn package -Dmaven.test.skip=true
+mvn clean package -pl metal-dist -am -Dmaven.test.skip=true 
 ```
 
-The packaged content is saved in the `./build` directory.
+If an error about `spotless` appears, you should execute `mvn spotless:apply` to format code and package again.
+
+The packaged content is saved in the `./metal-dist/target/metal-dist-${version}` directory.
 
 ```shell
-./build/
+./metal-dist/target/metal-dist-1.0.0-SNAPSHOT-bin
 ├── conf
-│   ├── backend
-│   │   ├── META-INF
-│   │   ├── log4j.properties
-│   │   └── zookeeper.json
-│   ├── conf
-│   │   └── metal-server.json
-│   ├── log4j.properties
-│   ├── metal-server.openapi.json
-│   └── zookeeper.json
+│   ├── backend
+│   │   ├── log4j.properties
+│   │   ├── META-INF
+│   │   └── zookeeper.json
+│   ├── conf
+│   │   └── metal-server.json
+│   ├── log4j.properties
+│   ├── metal-server.openapi.json
+│   └── zookeeper.json
+├── doc
+│   ├── Architecture_cn.md
+│   ├── Architecture.md
+│   ├── img
+│   │   └── resources
+│   ├── Quick_Start_cn.md
+│   └── Quick_Start.md
 ├── libs
-│   ├── metal-backend-{VERSION}.jar
-│   └── metal-server-{VERSION}.jar
+...
+│   ├── metal-backend-1.0.0-SNAPSHOT.jar
+│   ├── metal-backend-api-1.0.0-SNAPSHOT.jar
+│   ├── metal-core-1.0.0-SNAPSHOT.jar
+│   ├── metal-on-spark-1.0.0-SNAPSHOT.jar
+│   ├── metal-on-spark-extensions-1.0.0-SNAPSHOT.jar
+│   ├── metal-server-1.0.0-SNAPSHOT.jar
+...
+
+├── LICENSE
+├── README_cn.md
+├── README.md
 ├── sbin
-│   └── db
-│       ├── execs.json
-│       ├── metals.json
-│       ├── project.json
-│       └── user.json
+│   └── db
+│       ├── execs.json
+│       ├── metals.json
+│       ├── project.json
+│       └── user.json
+├── tools
+│   └── metal-maven-plugin-1.0.0-SNAPSHOT.jar
 └── ui
     └── webroot
         ├── asset-manifest.json
@@ -97,13 +118,13 @@ db.createUser({
 Next, you need to import the db script in the build directory to the database. Just execute the following command,
 
 ```shell
-ls ../../build/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {} --type json --file ../../build/sbin/db/{}.json mongodb://<credentials>@<host>:<port>/metalDB
+ls ../../metal-dist/target/metal-dist-${version}/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {} --type json --file ../../metal-dist/target/metal-dist-${version}/sbin/db/{}.json mongodb://<credentials>@<host>:<port>/metalDB
 ```
 
 ### Configure
 
-After the project is compiled and packaged, the relevant configuration files will be copied to the `$METAL/build/conf` directory. If you use custom MongoDB and Zookeeper, you need to modify the relevant configuration files, otherwise skip this part.
-- MongoDB: The following items in `$METAL/build/conf/conf/metal-server.json` need to be modified to the service configuration you use.
+After the project is compiled and packaged, the relevant configuration files will be copied to the `$METAL/metal-dist/target/metal-dist-${version}/conf` directory. If you use custom MongoDB and Zookeeper, you need to modify the relevant configuration files, otherwise skip this part.
+- MongoDB: The following items in `$METAL/metal-dist/target/metal-dist-${version}/conf/conf/metal-server.json` need to be modified to the service configuration you use.
 
 ```json
 {
@@ -115,7 +136,7 @@ After the project is compiled and packaged, the relevant configuration files wil
 }
 ```
 
-- Zookeeper: The following items in `$METAL/build/conf/zookeeper.json` need to be modified to the service configuration you use.
+- Zookeeper: The following items in `$METAL/metal-dist/target/metal-dist-${version}/conf/zookeeper.json` need to be modified to the service configuration you use.
 
   ```json
   {
@@ -130,7 +151,7 @@ After the project is compiled and packaged, the relevant configuration files wil
 In the root directory of the project, execute the following command to complete the startup.
 
 ```shell
-java -cp ./build/libs/metal-server-{VERSION}.jar:./build/ui:./build/conf org.metal.server.GatewayLauncher
+java -cp ./metal-dist/target/metal-dist-${version}/libs/metal-server-{VERSION}.jar:./metal-dist/target/metal-dist-${version}/ui:./metal-dist/target/metal-dist-${version}/conf org.metal.server.GatewayLauncher
 ```
 
 Finally, open the browser and access the link `http://localhost:19000`.

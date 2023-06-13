@@ -13,7 +13,7 @@
     limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.metal</groupId>
@@ -22,37 +22,46 @@
         <relativePath>../metal-parent</relativePath>
     </parent>
 
-    <artifactId>metal-ui</artifactId>
-    <packaging>jar</packaging>
-    <name>Metal UI</name>
+    <artifactId>metal-dist</artifactId>
+    <packaging>pom</packaging>
+    <name>Metal Dist</name>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-backend</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-server</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-ui</artifactId>
+            <version>${revision}</version>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${project.basedir}/build</directory>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
+                <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build-ui</id>
+                        <id>bin</id>
                         <goals>
-                            <goal>run</goal>
+                            <goal>single</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <phase>package</phase>
                         <configuration>
-                            <target>
-                                <exec executable="npm">
-                                    <arg line="run build" />
-                                </exec>
-                            </target>
+                            <descriptors>
+                                <descriptor>src/main/assembly/assembly.xml</descriptor>
+                            </descriptors>
+                            <appendAssemblyId>true</appendAssemblyId>
                         </configuration>
                     </execution>
                 </executions>
