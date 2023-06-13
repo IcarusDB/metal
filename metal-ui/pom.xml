@@ -23,6 +23,7 @@
     </parent>
 
     <artifactId>metal-ui</artifactId>
+    <packaging>jar</packaging>
     <name>Metal UI</name>
 
     <build>
@@ -51,25 +52,6 @@
                                 <exec executable="npm">
                                     <arg line="run build" />
                                 </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-ui</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <copy todir="${metal.ui.dir}">
-                                    <fileset dir="${project.basedir}/build" />
-                                </copy>
                             </target>
                         </configuration>
                     </execution>

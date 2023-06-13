@@ -24,32 +24,52 @@
 在Metal项目根目录下，执行如下命令完成编译打包。
 
 ```shell
-mvn package -Dmaven.test.skip=true
+mvn clean package -pl metal-dist -am -Dmaven.test.skip=true 
 ```
+如果你在执行后遇到与`spotless`相关的错误信息，请执行`mvn spotless:apply`，然后再次重新执行打包命令。
 
-打包出的内容保存在`./build`目录下。
+打包出的内容保存在`/metal-dist/target/metal-dist-${version}`目录下。
 
 ```shell
-./build/
+./metal-dist/target/metal-dist-1.0.0-SNAPSHOT-bin
 ├── conf
-│   ├── backend
-│   │   ├── META-INF
-│   │   ├── log4j.properties
-│   │   └── zookeeper.json
-│   ├── conf
-│   │   └── metal-server.json
-│   ├── log4j.properties
-│   ├── metal-server.openapi.json
-│   └── zookeeper.json
+│   ├── backend
+│   │   ├── log4j.properties
+│   │   ├── META-INF
+│   │   └── zookeeper.json
+│   ├── conf
+│   │   └── metal-server.json
+│   ├── log4j.properties
+│   ├── metal-server.openapi.json
+│   └── zookeeper.json
+├── doc
+│   ├── Architecture_cn.md
+│   ├── Architecture.md
+│   ├── img
+│   │   └── resources
+│   ├── Quick_Start_cn.md
+│   └── Quick_Start.md
 ├── libs
-│   ├── metal-backend-{VERSION}.jar
-│   └── metal-server-{VERSION}.jar
+...
+│   ├── metal-backend-1.0.0-SNAPSHOT.jar
+│   ├── metal-backend-api-1.0.0-SNAPSHOT.jar
+│   ├── metal-core-1.0.0-SNAPSHOT.jar
+│   ├── metal-on-spark-1.0.0-SNAPSHOT.jar
+│   ├── metal-on-spark-extensions-1.0.0-SNAPSHOT.jar
+│   ├── metal-server-1.0.0-SNAPSHOT.jar
+...
+
+├── LICENSE
+├── README_cn.md
+├── README.md
 ├── sbin
-│   └── db
-│       ├── execs.json
-│       ├── metals.json
-│       ├── project.json
-│       └── user.json
+│   └── db
+│       ├── execs.json
+│       ├── metals.json
+│       ├── project.json
+│       └── user.json
+├── tools
+│   └── metal-maven-plugin-1.0.0-SNAPSHOT.jar
 └── ui
     └── webroot
         ├── asset-manifest.json
@@ -97,13 +117,13 @@ db.createUser({
 接下来，你需要将构建目录下的db脚本导入到数据库。执行如下命令即可，
 
 ```shell
-ls ../../build/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {} --type json --file ../../build/sbin/db/{}.json mongodb://<credentials>@<host>:<port>/metalDB
+ls ../../metal-dist/target/metal-dist-${version}/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {} --type json --file ../../metal-dist/target/metal-dist-${version}/sbin/db/{}.json mongodb://<credentials>@<host>:<port>/metalDB
 ```
 
 ### 配置
 
-项目在编译打包后，会将相关配置文件复制到`$METAL/build/conf`目录下。如果你使用了自定义的MongoDB和Zookeeper，你需要修改相关配置文件，否则跳过该部分。
-- MongoDB：`$METAL/build/conf/conf/metal-server.json`的如下几项需要修改为你提供的服务配置。
+项目在编译打包后，会将相关配置文件复制到`$METAL/metal-dist/target/metal-dist-${version}/conf`目录下。如果你使用了自定义的MongoDB和Zookeeper，你需要修改相关配置文件，否则跳过该部分。
+- MongoDB：`$METAL/metal-dist/target/metal-dist-${version}/conf/conf/metal-server.json` 的如下几项需要修改为你提供的服务配置。
 
 ```json
 {
@@ -115,7 +135,7 @@ ls ../../build/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {}
 }
 ```
 
-- Zookeeper：`$METAL/build/conf/zookeeper.json`的如下几项需要修改为你提供的服务配置。
+- Zookeeper：`$METAL/metal-dist/target/metal-dist-${version}/conf/zookeeper.json` 的如下几项需要修改为你提供的服务配置。
 
   ```json
   {
@@ -130,7 +150,7 @@ ls ../../build/sbin/db | awk -F '.' '{print $1}' | xargs -I {} mongoimport -c {}
 在项目根目录下，执行如下命令完成启动。
 
 ```shell
-java -cp ./build/libs/metal-server-{VERSION}.jar:./build/ui:./build/conf org.metal.server.GatewayLauncher
+java -cp ./metal-dist/target/metal-dist-${version}/libs/metal-server-{VERSION}.jar:./metal-dist/target/metal-dist-${version}/ui:./metal-dist/target/metal-dist-${version}/conf org.metal.server.GatewayLauncher
 ```
 
 最后打开浏览器，链接`http://localhost:19000`即可。

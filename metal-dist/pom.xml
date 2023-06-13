@@ -29,6 +29,23 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-backend</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-server</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.metal</groupId>
+            <artifactId>metal-ui</artifactId>
+            <version>${revision}</version>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>

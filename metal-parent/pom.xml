@@ -54,12 +54,6 @@
         <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
         <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
         <maven-project.version>3.0-alpha-2</maven-project.version>
-        <metal.build.dir>../build</metal.build.dir>
-        <metal.libs.dir>${metal.build.dir}/libs</metal.libs.dir>
-        <metal.ui.dir>${metal.build.dir}/ui/webroot</metal.ui.dir>
-        <metal.conf.dir>${metal.build.dir}/conf</metal.conf.dir>
-        <metal.sbin.dir>${metal.build.dir}/sbin</metal.sbin.dir>
-        <metal.db.init.dir>${metal.sbin.dir}/db</metal.db.init.dir>
     </properties>
 
     <dependencyManagement>
@@ -325,17 +319,5 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${metal.build.dir}</directory>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 </project>
