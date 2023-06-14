@@ -54,6 +54,7 @@
         <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
         <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
         <maven-project.version>3.0-alpha-2</maven-project.version>
+        <frontend-maven-plugin.version>1.12.1</frontend-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -316,6 +317,11 @@
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven-assembly-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.eirslett</groupId>
+                    <artifactId>frontend-maven-plugin</artifactId>
+                    <version>${frontend-maven-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
