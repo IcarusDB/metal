@@ -59,20 +59,38 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <configuration>
+                    <nodeVersion>v17.1.0</nodeVersion>
+                    <npmVersion>8.3.0</npmVersion>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>build-ui</id>
+                        <id>Install node and npm</id>
                         <goals>
-                            <goal>run</goal>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                    </execution>
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm run build</id>
+                        <goals>
+                            <goal>npm</goal>
                         </goals>
                         <phase>compile</phase>
                         <configuration>
-                            <target>
-                                <exec executable="npm">
-                                    <arg line="run build" />
-                                </exec>
-                            </target>
+                            <arguments>run build</arguments>
                         </configuration>
                     </execution>
                 </executions>
