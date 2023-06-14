@@ -74,6 +74,16 @@
                         <phase>generate-sources</phase>
                     </execution>
                     <execution>
+                        <id>npm version sync</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <arguments>version ${revision}</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>npm install</id>
                         <goals>
                             <goal>npm</goal>
