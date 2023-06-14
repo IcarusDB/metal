@@ -26,6 +26,7 @@
 ```shell
 mvn clean package -pl metal-dist -am -Dmaven.test.skip=true 
 ```
+
 如果你在执行后遇到与`spotless`相关的错误信息，请执行`mvn spotless:apply`，然后再次重新执行打包命令。
 
 打包出的内容保存在`/metal-dist/target/metal-dist-${version}`目录下。
