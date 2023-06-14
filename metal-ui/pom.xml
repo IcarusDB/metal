@@ -29,6 +29,26 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <configuration>
+                    <typescript>
+                        <includes>
+                            <include>src/**/*.ts</include>
+                            <include>src/**/*.tsx</include>
+                        </includes>
+                        <excludes>
+                            <exclude>src/**/*.d.ts</exclude>
+                        </excludes>
+                        <prettier />
+                        <licenseHeader>
+                            <file>license-header.txt</file>
+                            <delimiter>(import|const|declare|export|var)</delimiter>
+                        </licenseHeader>
+                    </typescript>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
                     <filesets>
