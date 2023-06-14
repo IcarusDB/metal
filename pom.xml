@@ -19,7 +19,9 @@
     <artifactId>metal-main</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
+
     <name>Metal Main</name>
+    <description>Metal is a data flow modeling software that can manage data flow processing operators, visual modeling, and batch task execution through Metal.</description>
 
     <modules>
         <module>metal-parent</module>
@@ -136,6 +138,31 @@
             </plugin>
         </plugins>
     </build>
+    <url>https://github.com/CheneyYin/metal</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>ChengYu Yan</name>
+            <url>https://github.com/CheneyYin</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/CheneyYin/metal</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/CheneyYin/metal/issues</url>
+    </issueManagement>
 
     <profiles>
         <profile>
