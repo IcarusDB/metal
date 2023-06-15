@@ -41,9 +41,36 @@ Metal是一款数据流建模软件，通过Metal可以管理数据流处理算�
 ## Architecture
 [Architecture](/doc/Architecture_cn.md)
 
-## Code of Conduct
-[CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md)
+## How to Contribute
 
+感谢您对本项目贡献的兴趣! 了解如何对项目做贡献的最简单的方式是提交一次PR。在正式发起PR前，你需要了解如何构建源码以及提交前的主要事项。
+
+### 从源码构建
+
+构建Metal，需要使用JDK 11及以上版本。从仓库拉取最新代码，然后使用`maven`执行构建：
+
+```shell
+git pull origin master
+mvn clean package -pl metal-dist -am -Dmaven.test.skip=true 
+```
+
+### 提交PR前的注意项
+
+通过如下命令检查代码格式:
+
+```shell
+mvn spotless:check
+```
+
+您需要保证在发起PR前，已经修复了全部`spotless`错误。
+
+更多细节见[Contributing.md](CONTRIBUTING.md).
+
+## Code of Conduct
+[CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
+
+## Security
+[Security.md](SECURITY.md)
 ## Sponsor
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
 <strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong><br>

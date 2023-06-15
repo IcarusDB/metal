@@ -41,12 +41,39 @@ If you use Metal, you can easily reuse these plugins. Metal provides two ways to
 ## Architecture
 [Architecture](/doc/Architecture.md)
 
-## Code of Conduct
-[CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md)
+## How to Contribute
 
+Thanks for your interest in contributing! The easiest way is to just send a pull request(PR). Before send a PR, you need to understand how to build the source code and do somethings.
+
+### Building From source
+
+Building Metal requires at minimum JDK 11. Pull the latest source from the repository and use Maven install (or package) to build:
+
+```shell
+git pull origin master
+mvn clean package -pl metal-dist -am -Dmaven.test.skip=true 
+```
+
+### Before Send a pull request
+
+Please check code format and fix the `spotless` errors if any:
+
+```shell
+mvn spotless:check
+```
+
+More details in [Contributing.md](CONTRIBUTING.md).
+
+## Code of Conduct
+[CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
+
+## Security
+[Security.md](SECURITY.md)
 ## Sponsor
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
 <strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong><br>
 
 ## License
 [Apache 2.0 License.](LICENSE)
+
+
