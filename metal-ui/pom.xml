@@ -80,7 +80,7 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <arguments>version ${revision}</arguments>
+                            <arguments>version --allow-same-version ${revision}</arguments>
                         </configuration>
                     </execution>
                     <execution>
