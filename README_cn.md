@@ -41,6 +41,9 @@ Metal是一款数据流建模软件，通过Metal可以管理数据流处理算�
 ## Architecture
 [Architecture](/doc/Architecture_cn.md)
 
+## Code of Conduct
+[CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md)
+
 ## Sponsor
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
 <strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong><br>
