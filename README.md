@@ -25,6 +25,7 @@ If you use Metal, you can easily reuse these plugins. Metal provides two ways to
 - The second way is the visual style. Metal provides a Web UI for data flow design, namely metal-ui. Metal-ui is a simple data flow integrated development environment. Compared with the Cli style, metal-ui reduces the difficulty of configuring data flow. metal-ui manages each data flow with the concept of Project. In metal-ui, you can create projects, configure projects, draw data flows, track data processing tasks, manage operator plug-ins, and more.
 
 ## Features
+
 - Support Spark SQL batch processing engine
 - Supports multiplexing and management of processing operators
 - Support `spark-submit` command line submission
@@ -65,11 +66,14 @@ mvn spotless:check
 More details in [Contributing.md](CONTRIBUTING.md).
 
 ## Code of Conduct
+
 [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
 
 ## Security
+
 [Security.md](SECURITY.md)
 ## Sponsor
+
 <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="JetBrains Logo (Main) logo.">
 <strong>Thanks to JetBrains for the <a target="_blank" href="https://jb.gg/OpenSourceSupport">free license</a>.</strong><br>
 
