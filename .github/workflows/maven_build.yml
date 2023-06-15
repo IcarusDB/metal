@@ -28,5 +28,4 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      # Since github runner cannot provide enough memory to build metal-ui, the workflow skip executions about npm temporarily.provide
-      run: mvn -B clean package -pl metal-dist -am -Dskip.npm -Dmaven.test.skip=true --file pom.xml
+      run: mvn -B clean package -pl metal-dist -am -Dmaven.test.skip=true --file pom.xml
