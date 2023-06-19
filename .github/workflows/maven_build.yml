@@ -30,4 +30,5 @@ jobs:
     - name: Build with Maven
       env:
         GENERATE_SOURCEMAP: false
+        MAVEN_OPTS: '-Xmx1024m -Xms512m'
       run: mvn -B clean package -pl metal-dist -am -Dmaven.test.skip=true --file pom.xml
