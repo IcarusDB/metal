@@ -18,6 +18,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    outputs:
+      ci: ${{ steps.ci.outputs.done }}
+      ui: ${{ steps.ui.outputs.done }}
+      mod: ${{ steps.mod.outputs.done }}
+      chore: ${{ steps.chore.outputs.done }}
 
     steps:
     - name: Set Swap Space
