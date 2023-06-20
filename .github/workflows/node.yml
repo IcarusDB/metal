@@ -21,8 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - run: echo $PWD
-      working-directory: ./metal-ui
+    - run: cd ./metal-ui
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
