@@ -94,4 +94,9 @@ jobs:
         echo 'done=true' >> $GITHUB_OUTPUT
     
     - name: Finish
-      run: echo 'Build is finished.'
+      run: |
+        echo 'ci:'${{ steps.changes.outputs.ci }}
+        echo 'ui:'${{ steps.changes.outputs.ui }}
+        echo 'mod:'${{ steps.changes.outputs.mod }}
+        echo 'chore:'${{ steps.changes.outputs.chore }}
+        echo 'Build is finished.'
