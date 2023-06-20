@@ -28,4 +28,4 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn clean package -B -X -pl metal-dist -am -Dmaven.test.skip=true -Dskip.npm
+      run: mvn clean package -B -pl metal-dist -am -Dmaven.test.skip=true -Dskip.npm
