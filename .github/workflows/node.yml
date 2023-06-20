@@ -15,5 +15,5 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
-    - run: npm install && npm run build --omit=dev
+    - run: npm install && npm run start
       working-directory: ./metal-ui
