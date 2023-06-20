@@ -19,10 +19,10 @@ jobs:
 
     runs-on: ubuntu-latest
     outputs:
-      ci: ${{ steps.ci.outputs.done }}
-      ui: ${{ steps.ui.outputs.done }}
-      mod: ${{ steps.mod.outputs.done }}
-      chore: ${{ steps.chore.outputs.done }}
+      ci: ${{ steps.ci.outputs.done='false' }}
+      ui: ${{ steps.ui.outputs.done='false' }}
+      mod: ${{ steps.mod.outputs.done='false' }}
+      chore: ${{ steps.chore.outputs.done='false' }}
 
     steps:
     - name: Set Swap Space
