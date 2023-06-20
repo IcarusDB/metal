@@ -1,6 +1,6 @@
 # next-release
 
-## Bug fix
+## Bug Fix
 
 - [Bug][module] title (`issue/PR`)
 
