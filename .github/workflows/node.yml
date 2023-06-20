@@ -14,6 +14,10 @@ jobs:
     
     runs-on: macos-latest
     steps:
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 5
     - uses: actions/checkout@v3
     - run: npm install && npm run start
       working-directory: ./metal-ui
