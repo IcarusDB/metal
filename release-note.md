@@ -2,15 +2,15 @@
 
 ## Bug fix
 
-- [Bug][module] title (`issue/PR`)
+- [Bug][Module] title (`issue/PR`)
 
 ## Improve
 
-- [Improve][module] title (`issue/PR`)
+- [Improve][Module] title (`issue/PR`)
 
 ## Feature
 
-- [Feature][module] title (`issue/PR`)
+- [Feature][Module] title (`issue/PR`)
 
 ## Document
 
