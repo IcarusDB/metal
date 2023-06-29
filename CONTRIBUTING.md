@@ -11,7 +11,7 @@ There are multiple ways to contribute:
 Note that you don't need to be a developer to help us.
 Contributions that improve the documentation are always appreciated.
 
-If you feel yourself in need of assistance, please reach us directly via [Discussions/Assistance](https://github.com/CheneyYin/metal/discussions/28).
+If you feel yourself in need of assistance, please reach us directly via [Discussions/Assistance](https://github.com/IcarusDB/metal/discussions/28).
 
 ## Issue Reports
 

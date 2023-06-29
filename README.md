@@ -5,8 +5,8 @@
 ---
 
 [![EN doc](https://img.shields.io/badge/document-English-blue.svg)](README.md) [![CN doc](https://img.shields.io/badge/document-Chinese-yellow.svg)](README_cn.md)
-[![Check Format](https://github.com/CheneyYin/metal/actions/workflows/check_format.yml/badge.svg)](https://github.com/CheneyYin/metal/actions/workflows/check_format.yml)
-[![Build](https://github.com/CheneyYin/metal/actions/workflows/maven_build.yml/badge.svg)](https://github.com/CheneyYin/metal/actions/workflows/maven_build.yml)
+[![Check Format](https://github.com/IcarusDB/metal/actions/workflows/check_format.yml/badge.svg)](https://github.com/IcarusDB/metal/actions/workflows/check_format.yml)
+[![Build](https://github.com/IcarusDB/metal/actions/workflows/maven_build.yml/badge.svg)](https://github.com/IcarusDB/metal/actions/workflows/maven_build.yml)
 
 ---
 ## What is Metal?

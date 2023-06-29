@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-To find out which Metal versions are currently being supported please visit [releases](https://github.com/CheneyYin/metal/releases).
+To find out which Metal versions are currently being supported please visit [releases](https://github.com/IcarusDB/metal/releases).
 
 
 ## Reporting a Vulnerability
