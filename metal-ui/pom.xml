@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.metal</groupId>
         <artifactId>metal-parent</artifactId>
-        <version>${revision}</version>
+        <version>0.1.0</version>
         <relativePath>../metal-parent</relativePath>
     </parent>
 
@@ -92,7 +92,7 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <arguments>version --allow-same-version ${revision}</arguments>
+                            <arguments>version --allow-same-version 0.1.0</arguments>
                         </configuration>
                     </execution>
                     <execution>
