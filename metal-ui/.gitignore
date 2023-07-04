@@ -27,3 +27,5 @@ package-lock.json
 /.vscode
 metal-ui.iml
 node/
+lib/
+bin/

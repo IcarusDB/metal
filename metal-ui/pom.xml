@@ -55,6 +55,18 @@
                         <fileset>
                             <directory>${project.basedir}/build</directory>
                         </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/node</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/node_modules</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}</directory>
+                            <includes>
+                                <include>package-lock.json</include>
+                            </includes>
+                        </fileset>
                     </filesets>
                 </configuration>
             </plugin>
@@ -90,7 +102,7 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <arguments>install</arguments>
+                            <arguments>install --save-exact</arguments>
                         </configuration>
                     </execution>
                     <execution>
