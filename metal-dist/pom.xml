@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.metal</groupId>
         <artifactId>metal-parent</artifactId>
-        <version>${revision}</version>
+        <version>0.1.0</version>
         <relativePath>../metal-parent</relativePath>
     </parent>
 
@@ -33,17 +33,17 @@
         <dependency>
             <groupId>org.metal</groupId>
             <artifactId>metal-backend</artifactId>
-            <version>${revision}</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.metal</groupId>
             <artifactId>metal-server</artifactId>
-            <version>${revision}</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.metal</groupId>
             <artifactId>metal-ui</artifactId>
-            <version>${revision}</version>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
     <build>

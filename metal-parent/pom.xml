@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.metal</groupId>
         <artifactId>metal-main</artifactId>
-        <version>${revision}</version>
+        <version>0.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
