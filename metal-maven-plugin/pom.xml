@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.metal</groupId>
         <artifactId>metal-parent</artifactId>
-        <version>0.1.0</version>
+        <version>${revision}</version>
         <relativePath>../metal-parent</relativePath>
     </parent>
 
