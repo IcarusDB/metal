@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    if: github.repository == 'IcarusDB/metal'
+    if: github.repository == 'IcarusDB/metal' && github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
     - name: Set Swap Space
