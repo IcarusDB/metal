@@ -11,7 +11,7 @@
 ---
 ## What is Metal?
 
-Metal is a data flow modeling software that can manage data flow processing operators, visual modeling, and batch task execution through Metal.
+Metal is a data flow modeling software that can manage data flow processing operators, support visual modeling and submit batch jobs.
 
 
 ## What Metal can do for you?
