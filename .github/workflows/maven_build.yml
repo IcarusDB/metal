@@ -16,6 +16,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'IcarusDB/metal'
     runs-on: ubuntu-latest
     steps:
     - name: Set Swap Space
