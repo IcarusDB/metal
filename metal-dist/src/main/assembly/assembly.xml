@@ -46,7 +46,8 @@
                 </fileSets>
             </sources>
             <binaries>
-                <outputDirectory>libs</outputDirectory>
+                <outputDirectory>libs/backend</outputDirectory>
+                <attachmentClassifier>jar-with-dependencies</attachmentClassifier>
                 <unpack>false</unpack>
             </binaries>
         </moduleSet>
@@ -69,7 +70,7 @@
                 </fileSets>
             </sources>
             <binaries>
-                <outputDirectory>libs</outputDirectory>
+                <outputDirectory>libs/server</outputDirectory>
                 <unpack>false</unpack>
             </binaries>
         </moduleSet>

@@ -2,3 +2,6 @@
 /build/
 /file-uploads/
 /target
+**/.flattened-pom.xml
+**/pom.xml.versionsBackup
+**/dependency-reduced-pom.xml

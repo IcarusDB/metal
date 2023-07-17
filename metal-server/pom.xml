@@ -17,9 +17,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.metal</groupId>
-        <artifactId>metal-parent</artifactId>
-        <version>${revision}</version>
-        <relativePath>../metal-parent</relativePath>
+        <artifactId>metal</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>metal-server</artifactId>
@@ -121,6 +120,27 @@
                                     <shadedPattern>metal.shade.curator</shadedPattern>
                                 </relocation>
                             </relocations>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                                    <exclude>io.vertx:*</exclude>
+                                    <exclude>org.mongodb:*</exclude>
+                                    <exclude>org.reactivestreams:*</exclude>
+                                    <exclude>org.apache.commons:commons-collections4</exclude>
+                                    <exclude>org.metal:metal-backend-api</exclude>
+                                    <exclude>org.apache.curator:*</exclude>
+                                    <exclude>org.codehaus.jackson:*</exclude>
+                                    <exclude>org.apache.zookeeper:*</exclude>
+                                    <exclude>com.google.guava:*</exclude>
+                                    <exclude>org.checkerframework:*</exclude>
+                                    <exclude>com.google.errorprone:*</exclude>
+                                    <exclude>com.google.j2objc:*</exclude>
+                                    <exclude>com.google.code.findbugs:*</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>log4j:*</exclude>
+                                    <exclude>org.apache.yetus:audience-annotations</exclude>
+                                </excludes>
+                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>

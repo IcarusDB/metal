@@ -2,16 +2,14 @@ rest_host=$1
 curl -X POST http://$rest_host:6066/v1/submissions/create --header "Content-Type:application/json;charset=UTF-8" --data \
 '
 {
-  "appResource": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+  "appResource": "/home/spark/metal/backend/metal-backend-0.1.0-SNAPSHOT-jar-with-dependencies.jar",
   "sparkProperties": {
     "spark.executor.userClassPathFirst": "true",
     "spark.driver.userClassPathFirst": "true",
     "spark.master": "spark://master-0.spark.metal.org:7077",
     "spark.app.name": "Spark REST API - Metal-Backend",
     "spark.submit.deployMode": "cluster",
-    "spark.eventLog.enabled": "true",
-    "spark.eventLog.dir": "hdfs://namenode.hdfs.metal.org:9000/shared/spark-logs",
-    "spark.jars": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar"
+    "spark.jars": "/home/spark/metal/backend/metal-backend-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
   },
   "clientSparkVersion": "3.3.0",
   "mainClass": "org.metal.backend.BackendLauncher",
