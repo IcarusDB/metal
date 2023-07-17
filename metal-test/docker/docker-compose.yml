@@ -64,8 +64,8 @@ services:
     tty: true
     hostname: master-0.spark.metal.org
     volumes:
-      - ../../build/libs:/home/spark/metal
-      - ../../build/conf/backend:/home/spark/metal-conf
+      - ../../metal-dist/target/metal-dist-0.1.0-SNAPSHOT-bin/libs:/home/spark/metal
+      - ../../metal-dist/target/metal-dist-0.1.0-SNAPSHOT-bin/conf/backend:/home/spark/metal-conf
     networks:
       metal-test-net:
         ipv4_address: 192.168.42.30
@@ -83,8 +83,8 @@ services:
     tty: true
     hostname: worker-0.spark.metal.org
     volumes:
-      - ../../build/libs:/home/spark/metal
-      - ../../build/conf/backend:/home/spark/metal-conf
+      - ../../metal-dist/target/metal-dist-0.1.0-SNAPSHOT-bin/libs:/home/spark/metal
+      - ../../metal-dist/target/metal-dist-0.1.0-SNAPSHOT-bin/conf/backend:/home/spark/metal-conf
     networks:
       metal-test-net:
         ipv4_address: 192.168.42.40

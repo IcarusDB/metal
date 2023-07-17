@@ -17,9 +17,8 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.metal</groupId>
-        <artifactId>metal-parent</artifactId>
-        <version>${revision}</version>
-        <relativePath>../metal-parent</relativePath>
+        <artifactId>metal</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>metal-backend</artifactId>
@@ -103,7 +102,51 @@
                                     <shadedPattern>metal.shade.curator</shadedPattern>
                                 </relocation>
                             </relocations>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.metal:metal-core</exclude>
+                                    <exclude>org.metal:metal-backend-api</exclude>
+                                    <exclude>org.metal:metal-on-spark</exclude>
+                                    <exclude>org.metal:metal-on-spark-extensions</exclude>
+                                    <exclude>commons-cli:commons-cli</exclude>
+                                    <exclude>log4j:log4j</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>io.vertx:*</exclude>
+                                    <exclude>com.google.guava:*</exclude>
+                                    <exclude>org.checkerframework:*</exclude>
+                                    <exclude>com.google.errorprone:*</exclude>
+                                    <exclude>com.google.j2objc:*</exclude>
+                                    <exclude>com.google.code.findbugs:</exclude>
+                                    <exclude>javax.validation:validation-api</exclude>
+                                    <exclude>com.fasterxml.jackson.core:*</exclude>
+                                    <exclude>com.fasterxml.jackson.module:*</exclude>
+                                    <exclude>com.fasterxml.jackson.datatype:*</exclude>
+                                    <exclude>org.apache.commons:commons-lang3</exclude>
+                                    <exclude>org.apache.curator:*</exclude>
+                                    <exclude>org.codehaus.jackson:*</exclude>
+                                    <exclude>commons-lang:commons-lang</exclude>
+                                    <exclude>org.apache.zookeeper:*</exclude>
+                                    <exclude>org.apache.yetus:audience-annotations</exclude>
+                                </excludes>
+                            </artifactSet>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>assembly backend</id>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

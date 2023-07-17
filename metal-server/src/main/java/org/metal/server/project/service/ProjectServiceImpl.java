@@ -486,13 +486,21 @@ public class ProjectServiceImpl implements IProjectService {
                                     deployId, epoch));
                 }
 
-                String confJars = conf.getString("spark.jars");
+                JsonObject sparkProperties = conf.getJsonObject("sparkProperties");
+                if (sparkProperties == null || sparkProperties.isEmpty()) {
+                    return Future.failedFuture(
+                            String.format(
+                                    "Fail deploy [%s-%d]. No spark.standalone.conf.sparkProperties configurations found.",
+                                    deployId, epoch));
+                }
+
+                String confJars = sparkProperties.getString("spark.jars");
                 if (confJars == null || confJars.isBlank()) {
-                    conf.put("spark.jars", String.join(",", jars));
+                    sparkProperties.put("spark.jars", String.join(",", jars));
                 } else {
                     jars.addAll(List.<String>of(confJars.split(",")));
                     String sparkJars = jars.stream().distinct().collect(Collectors.joining(","));
-                    conf.put("spark.jars", sparkJars);
+                    sparkProperties.put("spark.jars", sparkJars);
                 }
 
                 return sparkStandaloneDeploy(deployId, epoch, appArgs, sparkStandalone);
@@ -565,7 +573,7 @@ public class ProjectServiceImpl implements IProjectService {
         WebClient webClient = WebClient.create(vertx);
         UriTemplate createURI =
                 UriTemplate.of(restApi.getJsonObject("requestURI").getString("create"));
-
+        LOGGER.info(conf);
         return webClient
                 .post(restApiPort, restApiHost, createURI)
                 .sendJsonObject(conf)
@@ -575,10 +583,14 @@ public class ProjectServiceImpl implements IProjectService {
                                 JsonObject resp = response.bodyAsJsonObject();
                                 Boolean isSuccess = resp.getBoolean("success");
                                 if (isSuccess == null || isSuccess == false) {
-                                    return Future.failedFuture(
+                                    String failureMsg =
                                             String.format(
                                                     "Fail to deploy[%s-%d]. %s.",
-                                                    deployId, epoch, resp.toString()));
+                                                    deployId, epoch, resp.toString());
+
+                                    updateBackendStatusOnFailureWith(
+                                            deployId, epoch, BackendState.FAILURE, failureMsg);
+                                    return Future.failedFuture(failureMsg);
                                 }
                                 String driverId = resp.getString("submissionId");
                                 JsonObject tracer = new JsonObject().put("driverId", driverId);
@@ -591,6 +603,16 @@ public class ProjectServiceImpl implements IProjectService {
                             } catch (Exception e) {
                                 return Future.failedFuture(e);
                             }
+                        },
+                        (error) -> {
+                            String failureMsg =
+                                    String.format(
+                                            "Fail to deploy[%s-%d]. %s.",
+                                            deployId, epoch, error.toString());
+
+                            updateBackendStatusOnFailureWith(
+                                    deployId, epoch, BackendState.FAILURE, failureMsg);
+                            return Future.failedFuture(failureMsg);
                         });
     }
 

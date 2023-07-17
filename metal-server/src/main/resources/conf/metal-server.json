@@ -28,11 +28,11 @@
     },
     "projectService": {
       "address": "project.metal.org",
-      "backendJar": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+      "backendJar": "/home/spark/metal/backend/metal-backend-0.1.0-SNAPSHOT-jar-with-dependencies.jar",
       "backendReportService": {
         "address": "report.metal.org"
       },
-      "metalJarRootPath": "/home/spark/metal/",
+      "metalJarRootPath": "/home/spark/metal/backend",
       "platform": {
         "spark.standalone": {
           "rest.api": {
@@ -45,7 +45,7 @@
             }
           },
           "conf": {
-            "appResource": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar",
+            "appResource": "/home/spark/metal/backend/metal-backend-0.1.0-SNAPSHOT-jar-with-dependencies.jar",
             "sparkProperties": {
               "spark.executor.userClassPathFirst": "true",
               "spark.driver.userClassPathFirst": "true",
@@ -53,7 +53,7 @@
               "spark.master": "spark://master-0.spark.metal.org:7077",
               "spark.app.name": "Spark REST API - Metal-Backend",
               "spark.submit.deployMode": "cluster",
-              "spark.jars": "/home/spark/metal/metal-backend-1.0.0-SNAPSHOT.jar"
+              "spark.jars": "/home/spark/metal/backend/metal-backend-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
             },
             "clientSparkVersion": "3.3.0",
             "mainClass": "org.metal.backend.BackendLauncher",

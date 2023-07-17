@@ -23,6 +23,7 @@ import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -144,6 +145,7 @@ public class Detector extends AbstractVerticle {
                 .compose(
                         (List<JsonObject> inActiveProjects) -> {
                             long evictedTime = getTime() - evictedDelay;
+                            long beforeStartEvictedTime = 2 * evictedTime;
                             for (JsonObject proj : inActiveProjects) {
                                 try {
                                     JsonObject deploy = proj.getJsonObject(ProjectDB.DEPLOY);
@@ -155,88 +157,105 @@ public class Detector extends AbstractVerticle {
                                             backend.getJsonObject(ProjectDB.DEPLOY_BACKEND_STATUS);
                                     BackendState current =
                                             BackendState.valueOf(status.getString("current"));
+                                    LOGGER.info(
+                                            String.format(
+                                                    "Backend[%s-%d] recent status is %s",
+                                                    deployId, epoch, current.toString()));
+
                                     if (current.equals(BackendState.CREATED)) {
                                         long createdTime =
                                                 status.getLong(
                                                         ProjectDB
                                                                 .DEPLOY_BACKEND_STATUS_CREATED_TIME);
+                                        LOGGER.info(
+                                                String.format(
+                                                        "Backend[%s-%d] create time: %d, detector start time: %d",
+                                                        deployId,
+                                                        epoch,
+                                                        createdTime,
+                                                        detectorStartTime));
                                         if (createdTime < detectorStartTime) {
-                                            heart(deploy, deployId, epoch, current);
-                                            continue;
-                                        }
-                                        if (createdTime < evictedTime) {
-                                            String failureMsg =
+                                            LOGGER.info(
                                                     String.format(
-                                                            "Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
-                                                            deployId,
-                                                            epoch,
-                                                            current.toString(),
-                                                            createdTime,
-                                                            createdTime,
-                                                            evictedTime);
-                                            ProjectDB.updateBackendStatusOnFailure(
-                                                            mongo,
-                                                            deployId,
-                                                            epoch,
-                                                            current,
-                                                            failureMsg)
-                                                    .onSuccess(
-                                                            success -> {
-                                                                String msg =
-                                                                        String.format(
-                                                                                "Backend[%s-%d] is up.",
-                                                                                deployId, epoch);
-                                                                LOGGER.info(msg);
-                                                            })
-                                                    .onFailure(
-                                                            error -> {
-                                                                LOGGER.error(error);
-                                                            });
+                                                            "Send heart beat to Backend[%s-%d]",
+                                                            deployId, epoch));
+                                            heart(
+                                                    deploy,
+                                                    deployId,
+                                                    epoch,
+                                                    current,
+                                                    (error) -> {
+                                                        String failureMsg =
+                                                                String.format(
+                                                                        "Backend[%s-%d] status is %s, create at %d before detector started. Fail to send heart beat to it.",
+                                                                        deployId,
+                                                                        epoch,
+                                                                        current.toString(),
+                                                                        createdTime);
+                                                        LOGGER.info(failureMsg);
+                                                        updateBackendStatusToFailure(
+                                                                deployId,
+                                                                epoch,
+                                                                current,
+                                                                failureMsg);
+                                                    });
                                             continue;
                                         }
+                                        maybeEvicted(
+                                                evictedTime,
+                                                deploy,
+                                                deployId,
+                                                epoch,
+                                                current,
+                                                createdTime);
                                     }
 
                                     if (current.equals(BackendState.UP)) {
                                         long upTime =
                                                 status.getLong(
                                                         ProjectDB.DEPLOY_BACKEND_STATUS_UP_TIME);
+                                        LOGGER.info(
+                                                String.format(
+                                                        "Backend[%s-%d] up time: %d, detector start time: %d",
+                                                        deployId,
+                                                        epoch,
+                                                        upTime,
+                                                        detectorStartTime));
                                         if (upTime < detectorStartTime) {
-                                            heart(deploy, deployId, epoch, current);
-                                        }
-                                        if (upTime < evictedTime) {
-                                            String failureMsg =
+                                            LOGGER.info(
                                                     String.format(
-                                                            "Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
-                                                            deployId,
-                                                            epoch,
-                                                            current.toString(),
-                                                            upTime,
-                                                            upTime,
-                                                            evictedTime);
-                                            ProjectDB.updateBackendStatusOnFailure(
-                                                            mongo,
-                                                            deployId,
-                                                            epoch,
-                                                            current,
-                                                            failureMsg)
-                                                    .onSuccess(
-                                                            success -> {
-                                                                String msg =
-                                                                        String.format(
-                                                                                "Backend[%s-%d] is failure. Failure message: %s.",
-                                                                                deployId,
-                                                                                epoch,
-                                                                                failureMsg);
-                                                                LOGGER.info(msg);
-                                                            })
-                                                    .onFailure(
-                                                            error -> {
-                                                                LOGGER.error(error);
-                                                            });
+                                                            "Send heart beat to Backend[%s-%d]",
+                                                            deployId, epoch));
+                                            heart(
+                                                    deploy,
+                                                    deployId,
+                                                    epoch,
+                                                    current,
+                                                    (error) -> {
+                                                        String failureMsg =
+                                                                String.format(
+                                                                        "Backend[%s-%d] status is %s, up at %d before detector started. Fail to send heart beat to it.",
+                                                                        deployId,
+                                                                        epoch,
+                                                                        current.toString(),
+                                                                        upTime);
+                                                        LOGGER.info(failureMsg);
+                                                        updateBackendStatusToFailure(
+                                                                deployId,
+                                                                epoch,
+                                                                current,
+                                                                failureMsg);
+                                                    });
                                             continue;
                                         }
+                                        maybeEvicted(
+                                                evictedTime,
+                                                deploy,
+                                                deployId,
+                                                epoch,
+                                                current,
+                                                upTime);
                                     }
-                                    heart(deploy, deployId, epoch, current);
                                 } catch (Exception e) {
                                     LOGGER.error(e);
                                 }
@@ -245,7 +264,61 @@ public class Detector extends AbstractVerticle {
                         });
     }
 
+    private void maybeEvicted(
+            long evictedTime,
+            JsonObject deploy,
+            String deployId,
+            int epoch,
+            BackendState current,
+            long currentStatusTime) {
+        if (currentStatusTime < evictedTime) {
+            String failureMsg =
+                    String.format(
+                            "Backend[%s-%d] is %s state at %d, and has meet evicted condition[%d < %d].",
+                            deployId,
+                            epoch,
+                            current.toString(),
+                            currentStatusTime,
+                            currentStatusTime,
+                            evictedTime);
+            LOGGER.info(failureMsg);
+            updateBackendStatusToFailure(deployId, epoch, current, failureMsg);
+        } else {
+            heart(deploy, deployId, epoch, current);
+        }
+    }
+
+    private void updateBackendStatusToFailure(
+            String deployId, int epoch, BackendState current, String failureMsg) {
+        ProjectDB.updateBackendStatusOnFailure(mongo, deployId, epoch, current, failureMsg)
+                .onSuccess(
+                        success -> {
+                            String msg =
+                                    String.format(
+                                            "Update Backend[%s-%d] status to %s.",
+                                            deployId, epoch, BackendState.FAILURE.toString());
+                            LOGGER.info(msg);
+                        })
+                .onFailure(
+                        error -> {
+                            LOGGER.error(
+                                    String.format(
+                                            "Fail to update Backend[%s-%d] status to %s",
+                                            deployId, epoch, BackendState.FAILURE.toString()));
+                            LOGGER.error(error);
+                        });
+    }
+
     private void heart(JsonObject deploy, String deployId, int epoch, BackendState current) {
+        heart(deploy, deployId, epoch, current, (error) -> {});
+    }
+
+    private void heart(
+            JsonObject deploy,
+            String deployId,
+            int epoch,
+            BackendState current,
+            Handler<Throwable> onFailure) {
         JsonObject address = backendAddress(deploy);
         BackendService backendService = BackendService.create(getVertx(), address);
         backendService
@@ -263,11 +336,21 @@ public class Detector extends AbstractVerticle {
                                             })
                                     .onFailure(
                                             error -> {
+                                                onFailure.handle(error);
+                                                LOGGER.error(
+                                                        String.format(
+                                                                "Fail to update Backend[%s-%d] status to %s.",
+                                                                deployId,
+                                                                epoch,
+                                                                BackendState.UP.toString()));
                                                 LOGGER.error(error);
                                             });
                         })
                 .onFailure(
                         error -> {
+                            onFailure.handle(error);
+                            LOGGER.error(
+                                    String.format("Fail to heart Backend[%s-%d]", deployId, epoch));
                             LOGGER.error(error);
                         });
     }
